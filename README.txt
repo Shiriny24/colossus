@@ -1,6 +1,6 @@
 #####################################################################################
 
-This is the Colossus public code repository - please see the documentation at 
+This is the COLOSSUS public code repository - please see the documentation at 
 
     http://bdiemer.bitbucket.org
 
