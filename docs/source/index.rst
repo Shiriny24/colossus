@@ -45,6 +45,7 @@ Contents
     :maxdepth: 3
 
     Cosmology
+    Halo
     HaloDensityProfile
     HaloConcentration
     Utilities

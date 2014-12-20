@@ -7,7 +7,8 @@
 ###################################################################################################
 
 """
-This module implements a generic base class for halo density profiles, as well as derived classes
+This module implements radial density profiles of dark matter halos, and functions that rely on 
+them. It contains a generic base class for halo density profiles, as well as derived classes
 for particular functional forms of the profile.
 
 ---------------------------------------------------------------------------------------------------
@@ -22,7 +23,8 @@ NFW profile::
 	rho = profile.density(Rvir)
 
 See the documentation of the abstract base class :class:`HaloDensityProfile.HaloDensityProfile` 
-for the functionality of the profile objects. 
+for the functionality of the profile objects. For documentation on spherical overdensity mass
+definitions, please see the documentation of the :mod:`Halo` module.
 
 ***************************************************************************************************
 Implemented density profile forms
@@ -37,19 +39,7 @@ Class                        Explanation                     Paper              
 ============================ =============================== ========================== =============
 
 ***************************************************************************************************
-Functions that are independent of the form of the profile
-***************************************************************************************************
-
-.. autosummary:: 
-    M_to_R
-    R_to_M
-    deltaVir
-    densityThreshold
-    haloBiasFromNu
-    haloBias
-
-***************************************************************************************************
-Functions that depend on the profile form
+Other functions
 ***************************************************************************************************
 
 .. autosummary::
@@ -58,16 +48,11 @@ Functions that depend on the profile form
 	radiusFromPdf
 
 ***************************************************************************************************
-Mass definitions
+Alternative mass definitions
 ***************************************************************************************************
-	
-Mass definitions are given in a string format. Valid inputs are:
 
-* vir: A varying overdensity mass definition, implemented using the fitting formula of Bryan & Norman 1998.
-* <Number>c: An integer number times the critical density of the universe, e.g. `200c`
-* <Number>m: An integer number times the matter density of the universe, e.g. `200m`
-
-Two alternative mass definitions are described in More, Diemer & Kravtsov 2015. Those include:
+Two alternative mass definitions (as in, not spherical overdensity masses) are described in 
+More, Diemer & Kravtsov 2015. Those include:
 
 * :math:`M_{caustic}`: The mass contained within the radius of the outermost density caustic. 
   Caustics correspond to particles piling up at the apocenter of their orbits. The most pronounced
@@ -80,7 +65,13 @@ Two alternative mass definitions are described in More, Diemer & Kravtsov 2015. 
 
 :math:`M_{<4r_s}`: can be computed from both NFW and DK14 profiles. :math:`R_{caustic}` and 
 :math:`M_{caustic}` can only be computed from DK14 profiles. For both mass definitions there are
-converter functions.
+converter functions:
+
+.. autosummary::	
+	M4rs
+	McausticOverM200m
+	RcausticOverR200m
+	Mcaustic
 
 ***************************************************************************************************
 Units
@@ -113,6 +104,7 @@ import scipy.interpolate
 
 import Utilities
 import Cosmology
+import Halo
 import HaloConcentration
 
 ###################################################################################################
@@ -377,7 +369,7 @@ class HaloDensityProfile():
 		RMDelta: The spherical overdensity radius and mass of a given mass definition.
 		"""		
 
-		density_threshold = densityThreshold(z, mdef)
+		density_threshold = Halo.densityThreshold(z, mdef)
 		R = scipy.optimize.brentq(self._thresholdEquation, self.min_RDelta, self.max_RDelta, density_threshold)
 
 		return R
@@ -411,7 +403,7 @@ class HaloDensityProfile():
 		"""		
 		
 		R = self.RDelta(z, mdef)
-		M = R_to_M(R, z, mdef)
+		M = Halo.R_to_M(R, z, mdef)
 		
 		return R, M
 
@@ -598,7 +590,7 @@ class NFWProfile(HaloDensityProfile):
 		# Alternatively, the user can give a mass and concentration, together with mass definition
 		# and redshift.
 		elif M != None and c != None and mdef != None and z != None:
-			self.rs = M_to_R(M, z, mdef) / c
+			self.rs = Halo.M_to_R(M, z, mdef) / c
 			self.rhos = M / self.rs**3 / 4.0 / math.pi / self.mu(c)
 		
 		else:
@@ -713,7 +705,7 @@ class NFWProfile(HaloDensityProfile):
 
 	def RDelta(self, z, mdef, cmin = 0.1, cmax = 50.0):
 	
-		density_threshold = densityThreshold(z, mdef)
+		density_threshold = Halo.densityThreshold(z, mdef)
 		R = scipy.optimize.brentq(self._thresholdEquation, self.rs * cmin, self.rs * cmax, density_threshold)
 
 		return R
@@ -881,7 +873,7 @@ class DK14Profile(HaloDensityProfile):
 			self.par.R200m = R200m
 			
 			# Set nu_vir from previous Rvir
-			Mvir = R_to_M(par2['Rvir'], z, 'vir')
+			Mvir = Halo.R_to_M(par2['Rvir'], z, 'vir')
 			par2['nu'] = cosmo.peakHeight(Mvir, z)
 	
 			# Set profile parameters
@@ -892,7 +884,7 @@ class DK14Profile(HaloDensityProfile):
 			# Find rho_s; this can be done without iterating
 			self.par.rho_s = 1.0
 			self.par.part = 'inner'
-			M200m = R_to_M(R200m, z, '200m')
+			M200m = Halo.R_to_M(R200m, z, '200m')
 			Mr_inner = self.enclosedMass(R200m, accuracy = MTOL)
 			
 			if part == 'both':
@@ -924,7 +916,7 @@ class DK14Profile(HaloDensityProfile):
 		# Get concentration if the user hasn't supplied it, compute scale radius
 		if c == None:
 			c = HaloConcentration.concentration(M, mdef, z, statistic = 'median')
-		R_target = M_to_R(M, z, mdef)
+		R_target = Halo.M_to_R(M, z, mdef)
 		par2['RDelta'] = R_target
 		self.par.rs = R_target / c
 		
@@ -936,7 +928,7 @@ class DK14Profile(HaloDensityProfile):
 		par2['nu'] = cosmo.peakHeight(Mvir, z)
 		
 		if mdef == '200m':
-			R200m_guess = M_to_R(M, z, '200m')
+			R200m_guess = Halo.M_to_R(M, z, '200m')
 		else:
 			_, R200m_guess, _ = changeMassDefinition(M, c, z, mdef, '200m')
 		
@@ -945,14 +937,14 @@ class DK14Profile(HaloDensityProfile):
 		self.par.be = be
 		self.par.se = se
 		self.par.part = part
-		rho_target = densityThreshold(z, mdef)
-		rho_vir = densityThreshold(z, 'vir')
+		rho_target = Halo.densityThreshold(z, mdef)
+		rho_vir = Halo.densityThreshold(z, 'vir')
 		args = par2, Gamma, rho_target, rho_vir, R_target
 		self.par.R200m = scipy.optimize.brentq(radius_diff, R200m_guess / 1.3, R200m_guess * 1.3, \
 							args = args, xtol = RTOL)
 	
 		# Check the accuracy of the result; M should be very close to MDelta now
-		M_result = R_to_M(par2['RDelta'], z, mdef)
+		M_result = Halo.R_to_M(par2['RDelta'], z, mdef)
 		err = (M_result - M) / M
 		
 		if abs(err) > acc_warn:
@@ -1073,9 +1065,9 @@ class DK14Profile(HaloDensityProfile):
 	
 	def RDelta(self, z, mdef):
 	
-		M200m = R_to_M(self.par.R200m, z, mdef)
+		M200m = Halo.R_to_M(self.par.R200m, z, mdef)
 		_, R_guess, _ = changeMassDefinition(M200m, self.par.R200m / self.par.rs, z, '200m', mdef)
-		density_threshold = densityThreshold(z, mdef)
+		density_threshold = Halo.densityThreshold(z, mdef)
 		R = self._RDeltaLowlevel(R_guess, density_threshold)
 	
 		return R
@@ -1187,234 +1179,6 @@ class DK14Profile(HaloDensityProfile):
 		_, Mcaustic = self.RMcaustic(search_range = search_range)
 
 		return Mcaustic
-	
-###################################################################################################
-# FUNCTIONS THAT ARE INDEPENDENT OF THE FORM OF THE DENSITY PROFILE
-###################################################################################################
-
-def M_to_R(M, z, mdef):
-	"""
-	Spherical overdensity mass from radius.
-	
-	This function returns a spherical overdensity halo radius for a halo mass M. Note that this 
-	function is independent of the form of the density profile.
-
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	M: array_like
-		Mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
-	z: float
-		Redshift
-	mdef: str
-		The mass definition
-		
-	Returns
-	-----------------------------------------------------------------------------------------------
-	R: array_like
-		Halo radius in physical kpc/h; has the same dimensions as M.
-
-	See also
-	-----------------------------------------------------------------------------------------------
-	R_to_M: Spherical overdensity radius from mass.
-	"""
-	
-	rho = densityThreshold(z, mdef)
-	R = (M * 3.0 / 4.0 / math.pi / rho)**(1.0 / 3.0)
-
-	return R
-
-###################################################################################################
-
-def R_to_M(R, z, mdef):
-	"""
-	Spherical overdensity radius from mass.
-	
-	This function returns a spherical overdensity halo mass for a halo radius R. Note that this 
-	function is independent of the form of the density profile.
-
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	R: array_like
-		Halo radius in physical kpc/h; can be a number or a numpy array.
-	z: float
-		Redshift
-	mdef: str
-		The mass definition
-		
-	Returns
-	-----------------------------------------------------------------------------------------------
-	M: array_like
-		Mass in :math:`M_{\odot}/h`; has the same dimensions as R.
-
-	See also
-	-----------------------------------------------------------------------------------------------
-	M_to_R: Spherical overdensity mass from radius.
-	"""
-	
-	rho = densityThreshold(z, mdef)
-	M = 4.0 / 3.0 * math.pi * rho * R**3
-
-	return M
-
-###################################################################################################
-
-# The virial overdensity, 
-
-def deltaVir(z):
-	"""
-	The virial overdensity in units of the critical density.
-	
-	This function uses the fitting formula of Bryan & Norman 1998 to determine the virial 
-	overdensity. While the universe is dominated by matter, this overdensity is about 178. Once 
-	dark energy starts to matter, it decreases. 
-	
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	z: array_like
-		Redshift; can be a number or a numpy array.
-		
-	Returns
-	-----------------------------------------------------------------------------------------------
-	Delta: array_like
-		The virial overdensity; has the same dimensions as z.
-
-	See also
-	-----------------------------------------------------------------------------------------------
-	densityThreshold: The threshold density for a given mass definition.
-	"""
-	
-	cosmo = Cosmology.getCurrent()
-	x = cosmo.Om(z) - 1.0
-	Delta = 18 * math.pi**2 + 82.0 * x - 39.0 * x**2
-
-	return Delta
-
-###################################################################################################
-
-# Returns a density threshold in Msun h^2 / kpc^3 at a redshift z. See the documentation at the top
-# of this file for valid mass definition formats.
-
-def densityThreshold(z, mdef):
-	"""
-	The threshold density for a given mass definition.
-	
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	z: array_like
-		Redshift; can be a number or a numpy array.
-	mdef: str
-		The mass definition
-		
-	Returns
-	-----------------------------------------------------------------------------------------------
-	rho: array_like
-		The threshold density in physical :math:`M_{\odot}h^2/kpc^3`; has the same dimensions as z.
-
-	See also
-	-----------------------------------------------------------------------------------------------
-	deltaVir: The virial overdensity in units of the critical density.
-	"""
-	
-	cosmo = Cosmology.getCurrent()
-	rho_crit = Cosmology.AST_rho_crit_0_kpc3 * cosmo.Ez(z)**2
-
-	if mdef[len(mdef) - 1] == 'c':
-		delta = int(mdef[:-1])
-		rho_treshold = rho_crit * delta
-
-	elif mdef[len(mdef) - 1] == 'm':
-		delta = int(mdef[:-1])
-		rho_m = Cosmology.AST_rho_crit_0_kpc3 * cosmo.Om0 * (1.0 + z)**3
-		rho_treshold = delta * rho_m
-
-	elif mdef == 'vir':
-		delta = deltaVir(z)
-		rho_treshold = rho_crit * delta
-
-	else:
-		msg = 'Invalid mass definition, %s.' % mdef
-		raise Exception(msg)
-
-	return rho_treshold
-
-###################################################################################################
-
-def haloBiasFromNu(nu, z, mdef):
-	"""
-	The halo bias at a given peak height. 
-
-	The halo bias, using the approximation of Tinker et al. 2010, ApJ 724, 878. The mass definition,
-	mdef, must correspond to the mass that was used to evaluate the peak height. Note that the 
-	Tinker bias function is universal in redshift at fixed peak height, but only for mass 
-	definitions defined wrt the mean density of the universe. For other definitions, :math:`\\Delta_m`
-	evolves with redshift, leading to an evolving bias at fixed peak height. 
-	
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	nu: array_like
-		Peak height; can be a number or a numpy array.
-	z: array_like
-		Redshift; can be a number or a numpy array.
-	mdef: str
-		The mass definition
-		
-	Returns
-	-----------------------------------------------------------------------------------------------
-	bias: array_like
-		Halo bias; has the same dimensions as nu or z.
-
-	See also
-	-----------------------------------------------------------------------------------------------
-	haloBias: The halo bias at a given mass. 
-	"""
-	
-	cosmo = Cosmology.getCurrent()
-	Delta = densityThreshold(z, mdef) / cosmo.matterDensity(z)
-	y = numpy.log10(Delta)
-
-	A = 1.0 + 0.24 * y * numpy.exp(-1.0 * (4.0 / y)**4)
-	a = 0.44 * y - 0.88
-	B = 0.183
-	b = 1.5
-	C = 0.019 + 0.107 * y + 0.19 * numpy.exp(-1.0 * (4.0 / y)**4)
-	c = 2.4
-
-	bias = 1.0 - A * nu**a / (nu**a + Cosmology.AST_delta_collapse**a) + B * nu**b + C * nu**c
-
-	return bias
-
-###################################################################################################
-
-def haloBias(M, z, mdef):
-	"""
-	The halo bias at a given mass. 
-
-	This function is a wrapper around haloBiasFromNu.
-	
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	M: array_like
-		Halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
-	z: array_like
-		Redshift; can be a number or a numpy array.
-	mdef: str
-		The mass definition
-
-	Returns
-	-----------------------------------------------------------------------------------------------
-	bias: array_like
-		Halo bias; has the same dimensions as M or z.
-
-	See also
-	-----------------------------------------------------------------------------------------------
-	haloBiasFromNu: The halo bias at a given peak height. 
-	"""
-		
-	cosmo = Cosmology.getCurrent()
-	nu = cosmo.peakHeight(M, z)
-	b = haloBiasFromNu(nu, z, mdef)
-	
-	return b
 
 ###################################################################################################
 # FUNCTIONS THAT CAN REFER TO DIFFERENT FORMS OF THE DENSITY PROFILE
@@ -1495,7 +1259,7 @@ def pseudoEvolve(M_i, c_i, z_i, mdef_i, z_f, mdef_f, profile = 'nfw'):
 		Rnew = Rnew[0]
 		cnew = cnew[0]
 
-	Mnew = R_to_M(Rnew, z_f, mdef_f)
+	Mnew = Halo.R_to_M(Rnew, z_f, mdef_f)
 	
 	return Mnew, Rnew, cnew
 
@@ -1693,7 +1457,7 @@ def radiusFromPdf(M, z, mdef, cumulativePdf, c = None, c_model = 'diemer14', \
 		return x
 	
 	M_array, is_array = Utilities.getArray(M)
-	R = M_to_R(M, z, mdef)
+	R = Halo.M_to_R(M, z, mdef)
 	N = len(M_array)
 	x = 0.0 * M_array
 	if c == None:

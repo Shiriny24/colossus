@@ -21,9 +21,11 @@ The main function in this module, :func:`concentration`, is a wrapper for all mo
 
 Alternatively, the user can also call the individual model functions directly. Note, however, that 
 most models are only valid over a certain range of masses, redshifts, and cosmologies.
+
 Furthermore, each model was only calibrated for one of a few particular mass definitions, such as 
 :math:`c_{200c}`, :math:`c_{vir}`, or :math:`c_{200m}`. The :func:`concentration` function 
-automatically converts these definitions to the definition chosen by the user.
+automatically converts these definitions to the definition chosen by the user. For documentation 
+on spherical overdensity mass definitions, please see the documentation of the :mod:`Halo` module.
 
 ***************************************************************************************************
 Concentration models
@@ -49,14 +51,8 @@ bullock01	   200c             Almost any         Any         Any             Bul
 ============== ================ ================== =========== =============== ========================== =================
 
 ***************************************************************************************************
-Mass definitions
+Conversion between mass definitions
 ***************************************************************************************************
-	
-Mass definitions are given in a string format. Valid inputs are:
-
-* vir: A varying overdensity mass definition, implemented using the fitting formula of Bryan & Norman 1998.
-* <Number>c: An integer number times the critical density of the universe, e.g. 200c
-* <Number>m: An integer number times the matter density of the universe, e.g. 200m
 	
 If the user requests a mass definition that is not one of the native definitions of the c-M model,
 the mass and concentration are converted, necessarily assuming a particular form of the density
