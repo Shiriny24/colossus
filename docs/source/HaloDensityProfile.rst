@@ -1,0 +1,6 @@
+=====================================
+HaloDensityProfile
+=====================================
+
+.. automodule:: HaloDensityProfile
+    :members:

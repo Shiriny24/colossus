@@ -1,0 +1,6 @@
+syntax:glob
+.project
+.pydevproject
+.settings
+colossus/cache
+*.pyc
