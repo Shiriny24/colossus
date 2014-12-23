@@ -24,11 +24,8 @@ NFW profile::
 
 See the documentation of the abstract base class :class:`HaloDensityProfile.HaloDensityProfile` 
 for the functionality of the profile objects. For documentation on spherical overdensity mass
-definitions, please see the documentation of the :mod:`Halo` module.
-
-***************************************************************************************************
-Implemented density profile forms
-***************************************************************************************************
+definitions, please see the documentation of the :mod:`Halo` module. The following functional forms
+for the density profile are implmented:
 
 ============================ =============================== ========================== =============
 Class                        Explanation                     Paper                      Reference
@@ -38,14 +35,32 @@ Class                        Explanation                     Paper              
 :func:`SplineDensityProfile` A arbitrary density profile     ---                        ---
 ============================ =============================== ========================== =============
 
-***************************************************************************************************
-Other functions
-***************************************************************************************************
+Some functions make use of density profiles, but are not necessarily tied to a particular 
+functional form:
 
 .. autosummary::
 	pseudoEvolve
 	changeMassDefinition
 	radiusFromPdf
+
+Pseudo-evolution is the evolution of a spherical overdensity halo radius, mass, and concentration 
+due to an evolving reference density (see Diemer, More & Kravtsov 2013 for more information). 
+The :func:`pseudoEvolve` function is a very general implementation of this effect. The function 
+assumes a profile that is fixed in physical units, and computes how the radius, mass and 
+concentration evolve due to changes in mass definition and/or redshift. In the following 
+example we compute the pseudo-evolution of a halo with virial mass :math:`M_{vir}=10^{12} M_{\odot}/h` 
+from z=1 to z=0::
+
+	M, R, c = pseudoEvolve(1E12, 10.0, 1.0, 'vir', 0.0, 'vir')
+	
+Here we have assumed that the halo has a concentration :math:`c_{vir} = 10` at z=1. Another 
+useful application of this function is to convert one spherical overdensity mass definitions 
+to another::
+
+	M200m, R200m, c200m = changeMassDefinition(1E12, 10.0, 1.0, 'vir', '200m')
+	
+Here we again assumed a halo with :math:`M_{vir}=10^{12} M_{\odot}/h` and :math:`c_{vir} = 10` 
+at z=1, and converted it to the 200m mass definition.
 
 ***************************************************************************************************
 Alternative mass definitions
@@ -580,6 +595,18 @@ class NFWProfile(HaloDensityProfile):
 		The mass definition in which M and c are given.
 	"""
 	
+	###############################################################################################
+	# CONSTANTS
+	###############################################################################################
+
+	# See the xDelta function for the meaning of these constants
+	xdelta_guess_factors = [5.0, 10.0, 20.0, 100.0, 10000.0]
+	xdelta_n_guess_factors = len(xdelta_guess_factors)
+
+	###############################################################################################
+	# CONSTRUCTOR
+	###############################################################################################
+
 	def __init__(self, rhos = None, rs = None, \
 				M = None, c = None, z = None, mdef = None):
 		
@@ -593,8 +620,7 @@ class NFWProfile(HaloDensityProfile):
 		# Alternatively, the user can give a mass and concentration, together with mass definition
 		# and redshift.
 		elif M != None and c != None and mdef != None and z != None:
-			self.rs = Halo.M_to_R(M, z, mdef) / c
-			self.rhos = M / self.rs**3 / 4.0 / math.pi / self.mu(c)
+			self.rhos, self.rs = self.fundamentalParameters(M, c, z, mdef)
 		
 		else:
 			msg = 'An NFW profile must be define either using rhos and rs, or M, c, mdef, and z.'
@@ -604,6 +630,44 @@ class NFWProfile(HaloDensityProfile):
 
 	###############################################################################################
 	# STATIC METHODS
+	###############################################################################################
+
+	@classmethod
+	def fundamentalParameters(cls, M, c, z, mdef):
+		"""
+		The fundamental NFW parameters, :math:`\\rho_s` and :math:`r_s`, from mass and 
+		concentration.
+		
+		This routine is called in the constructor of the NFW profile class (unless :math:`\\rho_s` 
+		and :math:`r_s` are passed by the user), but can also be called without instantiating an 
+		NFWProfile object.
+	
+		Parameters
+		-------------------------------------------------------------------------------------------
+		M: array_like
+			Spherical overdensity mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
+		c: array_like
+			The concentration, :math:`c = R / r_s`, corresponding to the given halo mass and mass 
+			definition; must have the same dimensions as M.
+		z: float
+			Redshift
+		mdef: str
+			The mass definition in which M and c are given.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		rhos: float
+			The central density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions
+			as M.
+		rs: float
+			The scale radius in physical kpc/h; has the same dimensions as M.
+		"""
+				
+		rs = Halo.M_to_R(M, z, mdef) / c
+		rhos = M / rs**3 / 4.0 / math.pi / cls.mu(c)
+		
+		return rhos, rs
+
 	###############################################################################################
 
 	@staticmethod
@@ -664,8 +728,8 @@ class NFWProfile(HaloDensityProfile):
 	
 	###############################################################################################
 
-	@staticmethod
-	def M(rhos, rs, x):
+	@classmethod
+	def M(cls, rhos, rs, x):
 		"""
 		The enclosed mass in an NFW profile as a function of :math:`x=r/r_s`.
 
@@ -693,8 +757,70 @@ class NFWProfile(HaloDensityProfile):
 		HaloDensityProfile.enclosedMass: The mass enclosed within radius r.
 		"""
 		
-		return 4.0 * math.pi * rs**3 * rhos * NFWProfile.mu(x)
+		return 4.0 * math.pi * rs**3 * rhos * cls.mu(x)
+
+	###############################################################################################
+
+	@classmethod
+	def _thresholdEquationX(cls, x, rhos, density_threshold):
+		
+		return rhos * cls.mu(x) * 3.0 / x**3 - density_threshold
+
+	###############################################################################################
 	
+	@classmethod
+	def xDelta(cls, rhos, rs, density_threshold, x_guess = 5.0):
+		"""
+		Find :math:`x=r/r_s` where the enclosed density has a particular value.
+		
+		This function is the basis for the :func:`HaloDensityProfile.RDelta` routine, but can 
+		be used without instantiating an NFWProfile object. This is preferable when the function 
+		needs to be evaluated many times, for example when converting a large number of mass 
+		definitions.
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		rhos: float
+			The central density in physical :math:`M_{\odot} h^2 / kpc^3`.
+		rs: float
+			The scale radius in physical kpc/h.
+		density_threshold: float
+			The desired enclosed density threshold in physical :math:`M_{\odot} h^2 / kpc^3`. This 
+			number can be generated from a mass definition and redshift using the 
+			:func:`Halo.densityThreshold` function. 
+		
+		Returns
+		-------------------------------------------------------------------------------------------
+		x: float
+			The radius in units of the scale radius, :math:`x=r/r_s`, where the enclosed density
+			reaches ``density_threshold``. 
+
+		See also
+		-------------------------------------------------------------------------------------------
+		HaloDensityProfile.RDelta: The spherical overdensity radius of a given mass definition.
+		"""
+		
+		# A priori, we have no idea at what radius the result will come out, but we need to 
+		# provide lower and upper limits for the root finder. To balance stability and performance,
+		# we do so iteratively: if there is no result within relatively aggressive limits, we 
+		# try again with more conservative limits.
+		args = rhos, density_threshold
+		x = None
+		i = 0
+		while x == None and i < cls.xdelta_n_guess_factors:
+			try:
+				xmin = x_guess / cls.xdelta_guess_factors[i]
+				xmax = x_guess * cls.xdelta_guess_factors[i]
+				x = scipy.optimize.brentq(cls._thresholdEquationX, xmin, xmax, args)
+			except Exception:
+				i += 1
+		
+		if x == None:
+			msg = 'Could not determine x where the density threshold is satisfied.'
+			raise Exception(msg)
+		
+		return x
+		
 	###############################################################################################
 	# METHODS BOUND TO THE CLASS
 	###############################################################################################
@@ -774,15 +900,14 @@ class NFWProfile(HaloDensityProfile):
 		return surfaceDensity
 
 	###############################################################################################
-
-	# This equation is 0 when the enclosed density matches the given density_threshold.
+	
+	# This equation is 0 when the enclosed density matches the given density_threshold. This 
+	# function matches the abstract interface in HaloDensityProfile, but for the NFW profile it is
+	# easier to solve the equation in x (see the _thresholdEquationX() function).
 		
 	def _thresholdEquation(self, r, density_threshold):
 		
-		x = r / self.rs
-		diff = self.rhos * self.mu(x) * 3.0 / x**3 - density_threshold
-		
-		return diff
+		return self._thresholdEquationX(r / self.rs, self.rhos, density_threshold)
 
 	###############################################################################################
 
@@ -791,11 +916,12 @@ class NFWProfile(HaloDensityProfile):
 	# radius, namely the scale radius. Thus, the user can specify a minimum and maximum concentra-
 	# tion that is considered.
 
-	def RDelta(self, z, mdef, cmin = 0.1, cmax = 50.0):
+	def RDelta(self, z, mdef):
 	
 		density_threshold = Halo.densityThreshold(z, mdef)
-		R = scipy.optimize.brentq(self._thresholdEquation, self.rs * cmin, self.rs * cmax, density_threshold)
-
+		x = self.xDelta(self.rhos, self.rs, density_threshold)
+		R = x * self.rs
+		
 		return R
 
 	###############################################################################################
@@ -1320,28 +1446,29 @@ def pseudoEvolve(M_i, c_i, z_i, mdef_i, z_f, mdef_f, profile = 'nfw'):
 	Rnew = numpy.zeros((N), dtype = float)
 	cnew = numpy.zeros((N), dtype = float)
 
-	for i in range(N):
-	
-		if profile == 'nfw':
-	
-			prof = NFWProfile(M = M_i[i], c = c_i[i], z = z_i, mdef = mdef_i)
-			Rnew[i] = prof.RDelta(z_f, mdef_f)
-			cnew[i] = Rnew[i] / prof.rs
+	if profile == 'nfw':
 		
-		elif profile == 'dk14':
-			
+		# We do not instantiate NFW profile objects, but instead use the faster static functions
+		rhos, rs = NFWProfile.fundamentalParameters(M_i, c_i, z_i, mdef_i)
+		density_threshold = Halo.densityThreshold(z_f, mdef_f)
+		for i in range(N):
+			cnew[i] = NFWProfile.xDelta(rhos[i], rs[i], density_threshold, x_guess = c_i[i])
+		Rnew = rs * cnew
+
+	elif profile == 'dk14':
+		
+		for i in range(N):
 			prof = DK14Profile(M = M_i[i], mdef = mdef_i, z = z_i, c = c_i[i], \
 							selected = 'by_mass', part = 'inner')
-			
 			if mdef_f == '200m':
 				Rnew[i] = prof.par.R200m
 			else:
 				Rnew[i] = prof.RDelta(z_f, mdef_f)
 			cnew[i] = Rnew[i] / prof.rs
-			
-		else:
-			msg = 'This function is not defined for profile %s.' % (profile)
-			raise Exception(msg)
+		
+	else:
+		msg = 'This function is not defined for profile %s.' % (profile)
+		raise Exception(msg)
 
 	if not is_array:
 		Rnew = Rnew[0]
