@@ -101,6 +101,7 @@ import scipy.misc
 import scipy.optimize
 import scipy.integrate
 import scipy.interpolate
+import abc
 
 import Utilities
 import Cosmology
@@ -121,6 +122,8 @@ class HaloDensityProfile():
 	are often faster implementations for particular forms of the profile.
 	"""
 	
+	__metaclass__ = abc.ABCMeta
+
 	def __init__(self):
 		
 		# The radial limits within which the profile is valid
@@ -136,6 +139,7 @@ class HaloDensityProfile():
 	
 	###############################################################################################
 
+	@abc.abstractmethod
 	def density(self, r):
 		"""
 		Density as a function of radius.
@@ -153,10 +157,7 @@ class HaloDensityProfile():
 			Density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions 
 			as r.
 		"""
-		
-		msg = 'The density(r) function must be overwritten by child classes.'
-		raise Exception(msg)
-	
+
 		return
 
 	###############################################################################################
@@ -557,8 +558,10 @@ class NFWProfile(HaloDensityProfile):
 		
 	The constructor accepts either the free parameters in this formula, central density and scale 
 	radius, or a spherical overdensity mass and concentration (in this case the mass definition 
-	and redshift also need to be specified).
-		
+	and redshift also need to be specified). The density and other commonly used routines are 
+	implemented both as class and as static routines, meaning they can be called without 
+	instantiating the class.
+
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	rhos: float
@@ -600,6 +603,101 @@ class NFWProfile(HaloDensityProfile):
 		return
 
 	###############################################################################################
+	# STATIC METHODS
+	###############################################################################################
+
+	@staticmethod
+	def rho(rhos, x):
+		"""
+		The NFW density as a function of :math:`x=r/r_s`.
+		
+		This routine can be called without instantiating an NFWProfile object. In most cases, the 
+		:func:`HaloDensityProfile.density` function should be used instead.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		rhos: float
+			The central density in physical :math:`M_{\odot} h^2 / kpc^3`.
+		x: array_like
+			The radius in units of the scale radius, :math:`x=r/r_s`; can be a number or a numpy
+			array.
+		
+		Returns
+		-------------------------------------------------------------------------------------------
+		rho: array_like
+			Density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions as x.
+
+		See also
+		-------------------------------------------------------------------------------------------
+		HaloDensityProfile.density: Density as a function of radius.
+		"""
+		
+		return rhos / x / (1.0 + x)**2
+	
+	###############################################################################################
+	
+	@staticmethod
+	def mu(x):
+		"""
+		A function of :math:`x=r/r_s` that appears in the NFW enclosed mass.
+
+		This routine can be called without instantiating an NFWProfile object.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		x: array_like
+			The radius in units of the scale radius, :math:`x=r/r_s`; can be a number or a numpy
+			array.
+		
+		Returns
+		-------------------------------------------------------------------------------------------
+		mu: array_like
+			Has the same dimensions as x.
+
+		See also
+		-------------------------------------------------------------------------------------------
+		M: The enclosed mass in an NFW profile as a function of :math:`x=r/r_s`.
+		HaloDensityProfile.enclosedMass: The mass enclosed within radius r.
+		"""
+		
+		return numpy.log(1.0 + x) - x / (1.0 + x)
+	
+	###############################################################################################
+
+	@staticmethod
+	def M(rhos, rs, x):
+		"""
+		The enclosed mass in an NFW profile as a function of :math:`x=r/r_s`.
+
+		This routine can be called without instantiating an NFWProfile object. In most cases, the 
+		:func:`HaloDensityProfile.enclosedMass` function should be used instead.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		rhos: float
+			The central density in physical :math:`M_{\odot} h^2 / kpc^3`.
+		rs: float
+			The scale radius in physical kpc/h.
+		x: array_like
+			The radius in units of the scale radius, :math:`x=r/r_s`; can be a number or a numpy
+			array.
+		
+		Returns
+		-------------------------------------------------------------------------------------------
+		M: array_like
+			The enclosed mass in :math:`M_{\odot}/h`; has the same dimensions as x.
+
+		See also
+		-------------------------------------------------------------------------------------------
+		mu: A function of :math:`x=r/r_s` that appears in the NFW enclosed mass.
+		HaloDensityProfile.enclosedMass: The mass enclosed within radius r.
+		"""
+		
+		return 4.0 * math.pi * rs**3 * rhos * NFWProfile.mu(x)
+	
+	###############################################################################################
+	# METHODS BOUND TO THE CLASS
+	###############################################################################################
 
 	# The density for an NFW profile with central density rhos (in Msun h^2 / kpc^3) and scale radius 
 	# rs (in kpc / h), as a function of x = r / rs.
@@ -607,7 +705,7 @@ class NFWProfile(HaloDensityProfile):
 	def density(self, r):
 	
 		x = r / self.rs
-		density = self.rhos / x / (1.0 + x)**2
+		density = self.rho(self.rhos, x)
 		
 		return density
 
@@ -628,16 +726,6 @@ class NFWProfile(HaloDensityProfile):
 		density_der = -(1.0 + 2.0 * x / (1.0 + x))
 
 		return density_der
-	
-	###############################################################################################
-
-	# The mu(c) function that appears in the expression for the enclosed mass in NFW profiles.
-	
-	def mu(self, c):
-		
-		mu = numpy.log(1.0 + c) - c / (1.0 + c)
-		
-		return mu
 
 	###############################################################################################
 
@@ -647,7 +735,7 @@ class NFWProfile(HaloDensityProfile):
 	def enclosedMass(self, r):
 		
 		x = r / self.rs
-		mass = 4.0 * math.pi * self.rs**3 * self.rhos * self.mu(x)
+		mass = self.M(self.rhos, self.rs, x)
 		
 		return mass
 	
@@ -1332,14 +1420,11 @@ def M4rs(M, z, mdef, c = None):
 		The mass within 4 scale radii, :math:`M_{<4rs}`, in :math:`M_{\odot} / h`; has the 
 		same dimensions as M.
 	"""
-	
-	def mu(c):
-		return numpy.log(1.0 + c) - c / (1.0 + c)
 
 	if c == None:
 		c = HaloConcentration.concentration(M, mdef, z)
 	
-	Mfrs = M * mu(4.0) / mu(c)
+	Mfrs = M * NFWProfile.mu(4.0) / NFWProfile.mu(c)
 	
 	return Mfrs
 
@@ -1529,16 +1614,13 @@ def radiusFromPdf(M, z, mdef, cumulativePdf, c = None, c_model = 'diemer14', \
 		If many pdf values fall below ``min_interpolate_pdf``, this will slow the function
 		down significantly.
 	"""
-	
-	def mu(c):
-		return numpy.log(1.0 + c) - c / (1.0 + c)
 
 	def equ(c, target):
-		return mu(c) - target
+		return NFWProfile.mu(c) - target
 	
 	def getX(c, p):
 		
-		target = mu(c) * p
+		target = NFWProfile.mu(c) * p
 		x = scipy.optimize.brentq(equ, 0.0, c, args = target)
 		
 		return x
@@ -1572,7 +1654,7 @@ def radiusFromPdf(M, z, mdef, cumulativePdf, c = None, c_model = 'diemer14', \
 		for i in range(N_c):			
 			for j in range(N_p):
 				p = p_bins[j]
-				target = mu(c_bins[i]) * p
+				target = NFWProfile.mu(c_bins[i]) * p
 				x_[i, j] = scipy.optimize.brentq(equ, 0.0, c_bins[i], args = target) / c_bins[i]
 		
 		spl = scipy.interpolate.RectBivariateSpline(c_bins, p_bins, x_)
