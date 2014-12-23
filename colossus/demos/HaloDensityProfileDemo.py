@@ -11,6 +11,7 @@
 ###################################################################################################
 
 import Cosmology
+import Halo
 import HaloDensityProfile
 
 ###################################################################################################
@@ -32,7 +33,7 @@ def demonstrateMassDefinitions():
 	z = 0.0
 	Cosmology.setCosmology('WMAP9')
 
-	Rvir = HaloDensityProfile.M_to_R(Mvir, z, 'vir')
+	Rvir = Halo.M_to_R(Mvir, z, 'vir')
 	
 	print(("Mvir:   %.2e Msun / h" % Mvir))
 	print(("Rvir:   %.2e kpc / h" % Rvir))

@@ -1314,7 +1314,7 @@ def M4rs(M, z, mdef, c = None):
 	See the section on mass definitions for the definition of :math:`M_{<4rs}`.
 
 	Parameters
-	-------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------
 	M: array_like
 		Spherical overdensity halo mass in :math:`M_{\odot} / h`; can be a number or a numpy
 		array.
@@ -1327,7 +1327,7 @@ def M4rs(M, z, mdef, c = None):
 		computed. Must have the same dimensions as M.
 		
 	Returns
-	-------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------
 	M4rs: array_like
 		The mass within 4 scale radii, :math:`M_{<4rs}`, in :math:`M_{\odot} / h`; has the 
 		same dimensions as M.
@@ -1345,26 +1345,89 @@ def M4rs(M, z, mdef, c = None):
 
 ###################################################################################################
 
-def McausticOverM200m(Gamma, z):
+def RcausticOverR200m(z, Gamma = None, nu_vir = None):
 	"""
-	The ratio :math:`M_{caustic} / M_{200m}` from the accretion rate, :math:`\Gamma`.
-	"""
+	The ratio :math:`R_{caustic} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or
+	the peak height, :math:`\\nu`.
 	
-	cosmo = Cosmology.getCurrent()
-	ratio =  0.612 * (1 + 0.408 * cosmo.Om(z)) * (1 + 0.866 * numpy.exp(-Gamma / 3.406))
+	This function implements the relations calibrated in More, Diemer & Kravtsov 2015. Either
+	the accretion rate :math:`\\Gamma` or the peak height :math:`\\nu` must not be ``None``. 
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	z: array_like
+		Redshift; can be a number or a numpy array.
+	Gamma: array_like
+		The mass accretion rate, as defined in Diemer & Kravtsov 2014; can be a number or a 
+		numpy array.
+	nu_vir: array_like
+		The peak height as computed from :math:`M_{vir}`; can be a number or a numpy array.
+
+	Returns
+	-----------------------------------------------------------------------------------------------
+	ratio: array_like
+		:math:`R_{caustic} / R_{200m}`; has the same dimensions as z, Gamma, or nu, depending
+		on which of those parameters is an array.
+		
+	See also
+	-----------------------------------------------------------------------------------------------
+	McausticOverM200m: The ratio :math:`M_{caustic} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
+	Mcaustic: :math:`M_{caustic}` as a function of spherical overdensity mass.
+	"""
+
+	if Gamma != None:
+		cosmo = Cosmology.getCurrent()
+		ratio =  0.54 * (1 + 0.53 * cosmo.Om(z)) * (1 + 1.36 * numpy.exp(-Gamma / 3.04))
+	elif nu_vir != None:
+		ratio = 1.40 - 0.13 * nu_vir
+	else:
+		msg = 'Need either Gamma or nu.'
+		raise Exception(msg)
 
 	return ratio
 
 ###################################################################################################
 
-def RcausticOverR200m(Gamma, z):
+def McausticOverM200m(z, Gamma = None, nu_vir = None):
 	"""
-	The ratio :math:`R_{caustic} / R_{200m}` from the accretion rate, :math:`\Gamma`.
+	The ratio :math:`M_{caustic} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or
+	the peak height, :math:`\\nu`.
+	
+	This function implements the relations calibrated in More, Diemer & Kravtsov 2015. Note that
+	the mass :math:`M_{caustic}` is calibrated independently from :math:`R_{caustic}`. Either
+	the accretion rate :math:`\\Gamma` or the peak height :math:`\\nu` must not be ``None``.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	z: array_like
+		Redshift; can be a number or a numpy array.
+	Gamma: array_like
+		The mass accretion rate, as defined in Diemer & Kravtsov 2014; can be a number or a 
+		numpy array.
+	nu_vir: array_like
+		The peak height as computed from :math:`M_{vir}`; can be a number or a numpy array.
+
+	Returns
+	-----------------------------------------------------------------------------------------------
+	ratio: array_like
+		:math:`M_{caustic} / M_{200m}`; has the same dimensions as z, Gamma, or nu, depending
+		on which of those parameters is an array.
+		
+	See also
+	-----------------------------------------------------------------------------------------------
+	RcausticOverR200m: The ratio :math:`R_{caustic} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
+	Mcaustic: :math:`M_{caustic}` as a function of spherical overdensity mass.
 	"""
 	
-	cosmo = Cosmology.getCurrent()
-	ratio =  0.54 * (1 + 0.29 * cosmo.Om(z)) * (1 + 1.35 * numpy.exp(-Gamma / 3.0))
-
+	if Gamma != None:
+		cosmo = Cosmology.getCurrent()
+		ratio =  0.59 * (1 + 0.35 * cosmo.Om(z)) * (1 + 0.92 * numpy.exp(-Gamma / 4.54))
+	elif nu_vir != None:
+		ratio = 1.24 - 0.08 * nu_vir
+	else:
+		msg = 'Need either Gamma or nu.'
+		raise Exception(msg)
+		
 	return ratio
 
 ###################################################################################################
@@ -1372,6 +1435,31 @@ def RcausticOverR200m(Gamma, z):
 def Mcaustic(M, z, mdef, c = None, profile = 'nfw'):
 	"""
 	:math:`M_{caustic}` as a function of spherical overdensity mass.
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	M: array_like
+		Spherical overdensity mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
+	z: float
+		Redshift
+	mdef: str
+		Mass definition in which M and c are given.
+	c: array_like
+		Halo concentration; must have the same dimensions as M, or be ``None`` in which case the 
+		concentration is computed automatically.
+	profile: str
+		The functional form of the profile assumed in the conversion between mass definitions; 
+		can be ``nfw`` or ``dk14``.
+
+	Returns
+	-----------------------------------------------------------------------------------------------
+	Mcaustic: array_like
+		:math:`M_{caustic}` in :math:`M_{\odot}/h`; has the same dimensions as M.
+		
+	See also
+	-----------------------------------------------------------------------------------------------
+	RcausticOverR200m: The ratio :math:`R_{caustic} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
+	McausticOverM200m: The ratio :math:`M_{caustic} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
 	"""
 	
 	if mdef == '200m':
@@ -1386,10 +1474,9 @@ def Mcaustic(M, z, mdef, c = None, profile = 'nfw'):
 	
 	cosmo = Cosmology.getCurrent()
 	nu_vir = cosmo.peakHeight(Mvir, z)
-		
-	Mc = M200m * (1.3 - 0.09 * nu_vir)
+	Mcaustic = M200m * McausticOverM200m(z, nu_vir = nu_vir)
 	
-	return Mc
+	return Mcaustic
 
 ###################################################################################################
 

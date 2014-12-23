@@ -131,11 +131,11 @@ The kpc/h units for density make them compatible with the HaloDensityProfile mod
 lengths are expressed in physical kpc/h.
 
 ---------------------------------------------------------------------------------------------------
-Performance optimization
+Performance optimization and accuracy
 ---------------------------------------------------------------------------------------------------
 
 This module is optimized for fast performance, particularly in computationally intensive
-functions such as the correlation function. All computationally intensive quantities are, by 
+functions such as the correlation function. Almost all quantities are, by 
 default, tabulated, stored in files, and re-loaded when the same cosmology is set again. For 
 some rare applications (for example, MCMC chains where functions are evaluated few times, but for 
 a large number of cosmologies), the user can turn this behavior off::
@@ -143,6 +143,16 @@ a large number of cosmologies), the user can turn this behavior off::
 	cosmo = Cosmology.setCosmology('WMAP9', {"interpolation": False, "storage": False})
 
 For more details, please see the documentation of the ``interpolation`` and ``storage`` parameters.
+In order to turn off the interpolation temporarily, the user can simply switch the ``interpolation``
+parameter off::
+	
+	cosmo.interpolation = False
+	Pk = cosmo.matterPowerSpectrum(k)
+	cosmo.interpolation = True
+	
+In this example, the power spectrum is evaluated directly without interpolation. The 
+interpolation is accurate to better than 0.2% unless specifically noted in the function 
+documentation, meaning that it is very rarely necessary to use the exact routines. 
 
 ---------------------------------------------------------------------------------------------------
 Detailed Documentation
@@ -331,13 +341,14 @@ class Cosmology():
 		self.print_info = print_info
 		self.print_warnings = print_warnings
 		
-		# Lookup table for the linear growth factor, D+(z). This table runs from the future 
-		# (a = 1000.0) to a = 0.001. Due to some interpolation errors at high z, the table runs
-		# to slightly higher z than the interpolation is allowed for.
-		self.z_min_Dplus = -0.999
-		self.z_max_Dplus = 500.0
-		self.z_max_Dplus_table = 1000.0
-		self.z_Nbins_Dplus = 40
+		# Lookup table for functions of z. This table runs from the future (a = 1000.0) to 
+		# a = 0.001. Due to some interpolation errors at the extrema of the range, the table 
+		# runs to slightly lower and higher z than the interpolation is allowed for.
+		self.z_min = -0.995
+		self.z_min_compute = -0.998
+		self.z_max = 200.01
+		self.z_max_compute = 500.0
+		self.z_Nbins = 50
 		
 		# Lookup table for P(k). The Pk_norm field is only needed if interpolation == False.
 		# Note that the binning is highly irregular for P(k), since much more resolution is
@@ -711,6 +722,55 @@ class Cosmology():
 		return self._integral(integrand, z_min, z_max)
 
 	###############################################################################################
+
+	# General container for methods that are functions of z and use interpolation
+	
+	def _zFunction(self, table_name, func, z, inverse = False, future = True):
+
+		if self.interpolation:
+			
+			# Get interpolator. If it does not exist, create it.
+			table_name = table_name + '_%s' % (self.name) 
+			interpolator = self._getStoredObject(table_name, interpolator = True, inverse = inverse)
+			
+			if interpolator == None:
+				if self.print_info:
+					print("Computing lookup table in z.")
+				
+				if future:
+					log_min = numpy.log10(1.0 + self.z_min_compute)
+				else:
+					log_min = 0.0
+				log_max = numpy.log10(1.0 + self.z_max_compute)
+				bin_width = (log_max - log_min) / self.z_Nbins
+				z_table = 10**numpy.arange(log_min, log_max + bin_width, bin_width) - 1.0
+				x_table = func(z_table)
+				
+				self._storeObject(table_name, numpy.array([z_table, x_table]))
+				if self.print_info:
+					print("Lookup table completed.")
+				interpolator = self._getStoredObject(table_name, interpolator = True, inverse = inverse)
+			
+			# Check limits of z array
+			if numpy.min(z) < self.z_min:
+				msg = "z = %.2f outside range (min. z is %.2f)." \
+					% (numpy.min(z), self.z_min)
+				raise Exception(msg)
+				
+			if numpy.max(z) > self.z_max:
+				msg = "z = %.2f outside range (max. z is %.2f)." \
+					% (numpy.max(z), self.z_max)
+				raise Exception(msg)
+			
+			# Interpolate
+			ret = interpolator(z)				
+			
+		else:
+			ret = func(z)
+		
+		return ret
+
+	###############################################################################################
 	# Times & distances
 	###############################################################################################
 	
@@ -735,6 +795,14 @@ class Cosmology():
 	
 	###############################################################################################
 
+	def _lookbackTimeExact(self, z):
+		
+		t = self.hubbleTime() * self._integral_oneOverEz1pz(0.0, z)
+
+		return t
+
+	###############################################################################################
+
 	def lookbackTime(self, z):
 		"""
 		The lookback time since z.
@@ -745,7 +813,7 @@ class Cosmology():
 		Parameters
 		-------------------------------------------------------------------------------------------
 		z: array_like
-			Redshift; can be a number or a numpy array.
+			Redshift, where :math:`-0.995 < z < 200`; can be a number or a numpy array.
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -758,7 +826,15 @@ class Cosmology():
 		age: The age of the universe at redshift z.
 		"""
 		
-		t = self.hubbleTime() * self._integral_oneOverEz1pz(0.0, z)
+		t = self._zFunction('lookbacktime', self._lookbackTimeExact, z)
+		
+		return t
+	
+	###############################################################################################
+
+	def _ageExact(self, z):
+		
+		t = self.hubbleTime() * self._integral_oneOverEz1pz(z, numpy.inf)
 		
 		return t
 	
@@ -771,7 +847,7 @@ class Cosmology():
 		Parameters
 		-------------------------------------------------------------------------------------------
 		z: array_like
-			Redshift; can be a number or a numpy array.
+			Redshift, where :math:`-0.995 < z < 200`; can be a number or a numpy array.
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -783,12 +859,15 @@ class Cosmology():
 		hubbleTime: The Hubble time, :math:`1/H_0`.
 		lookbackTime: The lookback time since z.
 		"""
-		
-		t = self.hubbleTime() * self._integral_oneOverEz1pz(z, numpy.inf)
+
+		t = self._zFunction('age', self._ageExact, z)
 		
 		return t
 	
 	###############################################################################################
+	
+	# This function does not use interpolation because both zmin and zmax are free, which would 
+	# lead to a more complicated 2D-interpolation.
 	
 	def comovingDistance(self, z_min = 0.0, z_max = 0.0):
 		"""
@@ -797,7 +876,7 @@ class Cosmology():
 		Either z_min or z_min can be a numpy array; in those cases, the same z_min / z_max is 
 		applied to all values of the other. If both are numpy arrays, they need to have 
 		the same dimensions, and the comoving distance returned corresponds to a series of 
-		different z_min and z_max values.
+		different z_min and z_max values. 
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -823,6 +902,14 @@ class Cosmology():
 
 	###############################################################################################
 
+	def _luminosityDistanceExact(self, z):
+		
+		d = self.comovingDistance(z_min = 0.0, z_max = z) * (1.0 + z)
+		
+		return d
+
+	###############################################################################################
+	
 	def luminosityDistance(self, z):
 		"""
 		The luminosity distance to redshift z.
@@ -830,7 +917,7 @@ class Cosmology():
 		Parameters
 		-------------------------------------------------------------------------------------------
 		z: array_like
-			Redshift; can be a number or a numpy array.
+			Redshift, where :math:`-0.995 < z < 200`; can be a number or a numpy array.
 			
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -843,10 +930,18 @@ class Cosmology():
 		angularDiameterDistance: The angular diameter distance to redshift z.
 		"""
 		
-		d = self.comovingDistance(z_min = 0.0, z_max = z) * (1.0 + z)
+		d = self._zFunction('luminositydist', self._luminosityDistanceExact, z, future = False)
 		
 		return d
 	
+	###############################################################################################
+
+	def _angularDiameterDistanceExact(self, z):
+		
+		d = self.comovingDistance(z_min = 0.0, z_max = z) / (1.0 + z)
+		
+		return d
+
 	###############################################################################################
 
 	def angularDiameterDistance(self, z):
@@ -856,7 +951,7 @@ class Cosmology():
 		Parameters
 		-------------------------------------------------------------------------------------------
 		z: array_like
-			Redshift; can be a number or a numpy array.
+			Redshift, where :math:`-0.995 < z < 200`; can be a number or a numpy array.
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -868,12 +963,14 @@ class Cosmology():
 		comovingDistance: The comoving distance between redshift :math:`z_{min}` and :math:`z_{max}`.
 		luminosityDistance: The luminosity distance to redshift z.
 		"""
-		
-		d = self.comovingDistance(z_min = 0.0, z_max = z) / (1.0 + z)
+
+		d = self._zFunction('angdiamdist', self._angularDiameterDistanceExact, z, future = False)
 		
 		return d
 
 	###############################################################################################
+
+	# This function is not interpolated because the distance modulus is not defined at z = 0.
 
 	def distanceModulus(self, z):
 		"""
@@ -1124,7 +1221,7 @@ class Cosmology():
 		Parameters
 		-------------------------------------------------------------------------------------------
 		z: array_like
-			Redshift, where :math:`-0.999 < z < 500`; can be a number or a numpy array.
+			Redshift, where :math:`-0.995 < z < 200`; can be a number or a numpy array.
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -1146,29 +1243,11 @@ class Cosmology():
 
 	###############################################################################################
 
-	# Return a spline interpolator for the growth factor. Generally, the growth factor should be 
-	# evaluated using the growthFactor() function below.
-	
-	def _growthFactorInterpolator(self, inverse = False):
-
-		table_name = 'growthfactor_%s' % (self.name)
-		interpolator = self._getStoredObject(table_name, interpolator = True, inverse = inverse)
+	def _growthFactorExact(self, z):
 		
-		if interpolator == None:
-			if self.print_info:
-				print("Cosmology.growthFactor: Computing lookup table.")
-			log_min = numpy.log10(1.0 + self.z_min_Dplus)
-			log_max = numpy.log10(1.0 + self.z_max_Dplus_table)
-			bin_width = (log_max - log_min) / self.z_Nbins_Dplus
-			z_table = 10**numpy.arange(log_min, log_max + bin_width, bin_width) - 1.0
-			D_table = self.growthFactorUnnormalized(z_table) / self.growthFactorUnnormalized(0.0)
-			table_ = numpy.array([z_table, D_table])
-			self._storeObject(table_name, table_)
-			if self.print_info:
-				print("Cosmology.growthFactor: Lookup table completed.")
-			interpolator = self._getStoredObject(table_name, interpolator = True, inverse = inverse)
+		D = self.growthFactorUnnormalized(z) / self.growthFactorUnnormalized(0.0)
 		
-		return interpolator
+		return D
 
 	###############################################################################################
 
@@ -1194,24 +1273,8 @@ class Cosmology():
 		-------------------------------------------------------------------------------------------
 		growthFactorUnnormalized: The linear growth factor, :math:`D_+(z)`.
 		"""
-		
-		if self.interpolation:
-			interpolator = self._growthFactorInterpolator()
 
-			if numpy.min(z) < self.z_min_Dplus:
-				msg = "Cosmology.growthFactor: z = %.2f outside range (min. z is %.2f)." \
-					% (numpy.min(z), self.z_min_Dplus)
-				raise Exception(msg)
-				
-			if numpy.max(z) > self.z_max_Dplus:
-				msg = "Cosmology.growthFactor: z = %.2f outside range (max. z is %.2f)." \
-					% (numpy.max(z), self.z_max_Dplus)
-				raise Exception(msg)
-			
-			D = interpolator(z)
-		
-		else:
-			D = self.growthFactorUnnormalized(z) / self.growthFactorUnnormalized(0.0)
+		D = self._zFunction('growthfactor', self._growthFactorExact, z)
 
 		return D
 
@@ -1434,36 +1497,8 @@ class Cosmology():
 
 	###############################################################################################
 
-	def matterPowerSpectrumExact(self, k, Pk_source = 'eh98', ignore_norm = False):
-		"""
-		The matter power spectrum at a scale k.
-		
-		Parameters
-		-------------------------------------------------------------------------------------------
-		k: array_like
-			The wavenumber k (in comoving h/Mpc); can be a number or a numpy array.
-		Pk_source: str
-			See the same parameter in the matterPowerSpectrum function.
-		ignore_norm: bool
-			For internal use, should always be False.
-			
-		Returns
-		-------------------------------------------------------------------------------------------
-		Pk: array_like
-			The matter power spectrum; has the same dimensions as k.
+	def _matterPowerSpectrumExact(self, k, Pk_source = 'eh98', ignore_norm = False):
 
-		See also
-		-------------------------------------------------------------------------------------------
-		transferFunctionEH98: The transfer function according to Eisenstein & Hu 1998.
-		transferFunctionEH98Smooth: The transfer function according to Eisenstein & Hu 1998, without the BAO features.
-		matterPowerSpectrum: The matter power spectrum at a scale k.
-		
-		Warnings
-		-------------------------------------------------------------------------------------------
-		This function directly evaluates the matter power spectrum. The matterPowerSpectrum() 
-		function uses fast, accurate interpolation, and should be used in almost all cases.
-		"""
-		
 		if self.power_law:
 			
 			Pk_source = 'powerlaw'
@@ -1503,7 +1538,7 @@ class Cosmology():
 			norm_name = 'Pk_norm_%s_%s' % (self.name, Pk_source)
 			norm = self._getStoredObject(norm_name)
 			if norm == None:
-				sigma_8Mpc = self.sigmaExact(8.0, filt = 'tophat', Pk_source = Pk_source, \
+				sigma_8Mpc = self._sigmaExact(8.0, filt = 'tophat', Pk_source = Pk_source, \
 											exact_Pk = True, ignore_norm = True)
 				norm = (self.sigma8 / sigma_8Mpc)**2
 				self._storeObject(norm_name, norm, persistent = False)
@@ -1565,7 +1600,7 @@ class Cosmology():
 						10**numpy.arange(log_min, log_max, bin_width)
 				k_computed += self.k_Pk_Nbins[i]
 			
-			data_Pk = self.matterPowerSpectrumExact(data_k, Pk_source = Pk_source, ignore_norm = False)
+			data_Pk = self._matterPowerSpectrumExact(data_k, Pk_source = Pk_source, ignore_norm = False)
 			table_ = numpy.array([numpy.log10(data_k), numpy.log10(data_Pk)])
 			self._storeObject(table_name, table_)
 			if self.print_info:
@@ -1610,7 +1645,6 @@ class Cosmology():
 		-------------------------------------------------------------------------------------------
 		transferFunctionEH98: The transfer function according to Eisenstein & Hu 1998.
 		transferFunctionEH98Smooth: The transfer function according to Eisenstein & Hu 1998, without the BAO features.
-		matterPowerSpectrumExact: The matter power spectrum at a scale k.
 		"""
 			
 		if self.interpolation and (Pk_source == 'eh98' or Pk_source == 'eh98smooth'):
@@ -1643,9 +1677,9 @@ class Cosmology():
 			if Utilities.isArray(k):
 				Pk = k * 0.0
 				for i in range(len(k)):
-					Pk[i] = self.matterPowerSpectrumExact(k[i], Pk_source = Pk_source, ignore_norm = False)
+					Pk[i] = self._matterPowerSpectrumExact(k[i], Pk_source = Pk_source, ignore_norm = False)
 			else:
-				Pk = self.matterPowerSpectrumExact(k, Pk_source = Pk_source, ignore_norm = False)
+				Pk = self._matterPowerSpectrumExact(k, Pk_source = Pk_source, ignore_norm = False)
 
 		return Pk
 	
@@ -1701,47 +1735,8 @@ class Cosmology():
 
 	###############################################################################################
 
-	def sigmaExact(self, R, j = 0, filt = 'tophat', Pk_source = 'eh98', exact_Pk = False, ignore_norm = False):
-		"""
-		The variance of the linear density field on a scale R, :math:`\sigma(R)`.
-		
-		For details, please see the documentation of the :func:`sigma` function. This function 
-		computes :math:`\sigma(R)` by integration, and should only be called by the user if it is 
-		absolutely necessary.
+	def _sigmaExact(self, R, j = 0, filt = 'tophat', Pk_source = 'eh98', exact_Pk = False, ignore_norm = False):
 
-		Parameters
-		-------------------------------------------------------------------------------------------
-		R: float
-			The radius of the filter in comoving Mpc/h.
-		j: integer
-			The order of the integral. j = 0 corresponds to the variance, j = 1 to the same integral 
-			with an extra :math:`k^2` term etc; see Bardeen et al. 1986 for mathematical details.
-		filt: str
-			Either ``tophat`` or ``gaussian``. Higher moments (j > 0) can only be computed for the 
-			gaussian filter.
-		Pk_source: str
-			Either ``eh98``, ``eh98smooth``, or the name of a user-supplied table.
-		exact_Pk: bool
-			For internal use only.
-		ignore_norm: bool
-			For internal use only.
-
-		Returns
-		-------------------------------------------------------------------------------------------
-		sigma: float
-			The variance.
-
-		See also
-		-------------------------------------------------------------------------------------------
-		sigma: The variance of the linear density field on a scale R, :math:`\sigma(R)`.
-		matterPowerSpectrum: The matter power spectrum at a scale k.
-		
-		Warnings
-		-------------------------------------------------------------------------------------------
-		This function directly evaluates the variance by integration. The :func:`sigma` function uses 
-		fast, accurate interpolation, and should be used in almost all cases.
-		"""
-		
 		# -----------------------------------------------------------------------------------------
 		def logIntegrand(lnk, Pk_interpolator, test = False):
 			
@@ -1749,7 +1744,7 @@ class Cosmology():
 			W = self.filterFunction(filt, k, R, no_oscillation = test)
 			
 			if exact_Pk or (not self.interpolation):
-				Pk = self.matterPowerSpectrumExact(k, Pk_source = Pk_source, ignore_norm = ignore_norm)
+				Pk = self._matterPowerSpectrumExact(k, Pk_source = Pk_source, ignore_norm = ignore_norm)
 			else:
 				Pk = 10**Pk_interpolator(numpy.log10(k))
 			
@@ -1855,7 +1850,7 @@ class Cosmology():
 			data_R = 10**log_R
 			data_sigma = data_R * 0.0
 			for i in range(len(data_R)):
-				data_sigma[i] = self.sigmaExact(data_R[i], j = j, filt = filt, Pk_source = Pk_source)
+				data_sigma[i] = self._sigmaExact(data_R[i], j = j, filt = filt, Pk_source = Pk_source)
 			table_ = numpy.array([numpy.log10(data_R), numpy.log10(data_sigma)])
 			self._storeObject(table_name, table_)
 			if self.print_info:
@@ -1880,8 +1875,9 @@ class Cosmology():
 		:math:`P(k,z) = D_+^2(z)P(k,0)` is the :func:`matterPowerSpectrum`. By default, the power 
 		spectrum is computed using the transfer function approximation of Eisenstein & Hu 1998 
 		(``eh98``) which is accurate to about 1%. The integration and interpolation introduce errors 
-		somewhat smaller than that. Higher moments of the variance (such as :math:`\sigma_1`, 
-		:math:`\sigma_2` etc) can be computed by setting j > 0 (see Bardeen et al. 1986). 
+		smaller than that. Higher moments of the variance (such as :math:`\sigma_1`, 
+		:math:`\sigma_2` etc) can be computed by setting j > 0 (see Bardeen et al. 1986). For the
+		higher moments, the interpolation error increases to up to ~0.5%.
 		Furthermore, the logarithmic derivative of :math:`\sigma(R)` can be evaluated by setting 
 		``derivative == True``.
 		
@@ -1915,7 +1911,6 @@ class Cosmology():
 
 		See also
 		-------------------------------------------------------------------------------------------
-		sigmaExact: The variance of the linear density field on a scale R, :math:`\sigma(R)`.
 		matterPowerSpectrum: The matter power spectrum at a scale k.
 		"""
 		
@@ -1993,9 +1988,9 @@ class Cosmology():
 			if Utilities.isArray(R):
 				ret = R * 0.0
 				for i in range(len(R)):
-					ret[i] = self.sigmaExact(R[i], j = j, filt = filt, Pk_source = Pk_source)
+					ret[i] = self._sigmaExact(R[i], j = j, filt = filt, Pk_source = Pk_source)
 			else:
-				ret = self.sigmaExact(R, j = j, filt = filt, Pk_source = Pk_source)
+				ret = self._sigmaExact(R, j = j, filt = filt, Pk_source = Pk_source)
 			if z > 1E-5:
 				ret *= self.growthFactor(z)
 		
@@ -2292,38 +2287,7 @@ class Cosmology():
 
 	###############################################################################################
 
-	def correlationFunctionExact(self, R, Pk_source = 'eh98'):
-		"""
-		The linear matter-matter correlation function at radius R.
-		
-		For details, please see the documentation of the :func:`correlationFunction` function. 
-		This function computes :math:`\\xi(R)` directly by integration, and should only be called
-		by the user if absolutely necessary. It is accurate to about 1-2% over the range 
-		:math:`10^{-3} < R < 500`. 
-
-		Parameters
-		-------------------------------------------------------------------------------------------
-		R: float
-			The radius of the filter in comoving Mpc/h.
-		Pk_source: str
-			Either ``eh98``, ``eh98smooth``, or the name of a user-supplied table.
-
-		Returns
-		-------------------------------------------------------------------------------------------
-		xi: float
-			The correlation function.
-
-		See also
-		-------------------------------------------------------------------------------------------
-		correlationFunction: The matter-matter correlation function at radius R.
-		matterPowerSpectrum: The matter power spectrum at a scale k.
-		
-		Warnings
-		-------------------------------------------------------------------------------------------
-		This function directly evaluates the correlation function by integration. The 
-		correlationFunction() function uses fast, accurate interpolation, and should be used in 
-		almost all cases.
-		"""
+	def _correlationFunctionExact(self, R, Pk_source = 'eh98'):
 		
 		f_cut = 0.001
 
@@ -2394,7 +2358,7 @@ class Cosmology():
 			
 			data_xi = data_R * 0.0
 			for i in range(len(data_R)):
-				data_xi[i] = self.correlationFunctionExact(data_R[i], Pk_source = Pk_source)
+				data_xi[i] = self._correlationFunctionExact(data_R[i], Pk_source = Pk_source)
 			table_ = numpy.array([data_R, data_xi])
 			self._storeObject(table_name, table_)
 			if self.print_info:
@@ -2415,7 +2379,7 @@ class Cosmology():
 			\\xi(R) = \\frac{1}{2 \\pi^2} \\int_0^\\infty k^2 P(k) \\frac{\\sin(kR)}{kR} dk
 		
 		where P(k) is the :func:`matterPowerSpectrum`. The integration, as well as the 
-		interpolation routine, are accurate to ~1-2%. 
+		interpolation routine, are accurate to ~1-2% over the range :math:`10^{-3} < R < 500`. 
 		
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -2435,7 +2399,6 @@ class Cosmology():
 
 		See also
 		-------------------------------------------------------------------------------------------
-		correlationFunctionExact: The matter-matter correlation function at radius R.
 		matterPowerSpectrum: The matter power spectrum at a scale k.
 		"""
 		

@@ -12,24 +12,21 @@ and halo bias. For functions that rely on a particular form of the halo density 
 see the :mod:`HaloDensityProfile` module.
 
 ---------------------------------------------------------------------------------------------------
-Basic usage
+Spherical overdensity masses
 ---------------------------------------------------------------------------------------------------
+
+Halo masses and radii are most commonly defined using spherical overdensity mass definitions. A
+spherical overdensity radius is the radius within which the halo has an overdensity :math:`\Delta`
+with respect to some reference density, usually the mean or critical density of the universe. The
+following functions compute the overdensity threshold :math:`\Delta` and convert from radius to 
+mass and vice versa:
 
 .. autosummary:: 
 	densityThreshold
 	deltaVir
     M_to_R
     R_to_M
-    haloBiasFromNu
-    haloBias
 
-***************************************************************************************************
-Mass definitions
-***************************************************************************************************
-
-Halo masses and radii are most commonly defined using spherical overdensity mass definitions. A
-spherical overdensity radius is the radius within which the halo has an overdensity :math:`\Delta`
-with respect to some reference density, usually the mean or critical density of the universe.
 Throughout all Colossus modules that use spherical overdensity masses, the definition is passed
 through a parameter called ``mdef`` which is a string and can take on the following values:
 
@@ -41,6 +38,14 @@ Critical   '<int>c'   200c, 500c, 2500c    An integer number times the critical 
 Virial     'vir'      vir                  An overdensity that varies with redshift (Bryan & Norman 1998)
 ========== ========== ==================== ================================================================
 
+---------------------------------------------------------------------------------------------------
+Halo bias
+---------------------------------------------------------------------------------------------------
+
+.. autosummary:: 
+    haloBiasFromNu
+    haloBias
+    
 ---------------------------------------------------------------------------------------------------
 Detailed Documentation
 ---------------------------------------------------------------------------------------------------
