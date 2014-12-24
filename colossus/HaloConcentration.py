@@ -89,6 +89,7 @@ import warnings
 
 import Utilities
 import Cosmology
+import Halo
 import HaloDensityProfile
 
 ###################################################################################################
@@ -141,6 +142,9 @@ def concentration(M, mdef, z, \
 	consistency with other calculations.
 	"""
 	
+	guess_factors = [5.0, 10.0, 100.0, 10000.0]
+	n_guess_factors = len(guess_factors)
+
 	# Evaluate the concentration model
 	def evaluateC(func, M, limited, args):
 		if limited:
@@ -244,25 +248,38 @@ def concentration(M, mdef, z, \
 		mdef_model = mdefs_model[0]
 		if len(mdefs_model) > 1:
 			args = args + (mdef_model,)
-		
+
+		# To a good approximation, the relation M2 / M1 = Delta1 / Delta2. We use this mass
+		# as a guess around which to look for the solution.
+		Delta_ratio = Halo.densityThreshold(z, mdef) / Halo.densityThreshold(z, mdef_model)
+		M_guess = M_array * Delta_ratio
 		c = numpy.zeros((N), dtype = float)
 		
 		for i in range(N):
-			M_min = 0.1 * M_array[i]
-			M_max = 10.0 * M_array[i]
+			
+			# Iteratively enlarge the search range, if necessary
 			args_solver = M_array[i], mdef_model, func, limited, args
-			try:
-				MDelta = scipy.optimize.brentq(eq, M_min, M_max, args = args_solver)
-				cDelta, mask_element = evaluateC(func, MDelta, limited, args)
-				_, _, c[i] = HaloDensityProfile.changeMassDefinition(MDelta, cDelta, z, mdef_model, \
-										mdef, profile = conversion_profile)
-				if limited:
-					mask[i] = mask_element
-			except:
+			j = 0
+			MDelta = None
+			while MDelta == None and j < n_guess_factors:
+				try:
+					M_min = M_guess[i] / guess_factors[j]
+					M_max = M_guess[i] * guess_factors[j]
+					MDelta = scipy.optimize.brentq(eq, M_min, M_max, args = args_solver)
+				except Exception:
+					j += 1
+
+			if MDelta == None:
 				msg = 'Could not find concentration for mass %.2e, mdef %s. The mask array indicates invalid concentrations.' % (MDelta, mdef)
 				warnings.warn(msg)
 				c[i] = 0.0
 				mask[i] = False
+				
+			cDelta, mask_element = evaluateC(func, MDelta, limited, args)
+			_, _, c[i] = HaloDensityProfile.changeMassDefinition(MDelta, cDelta, z, mdef_model, \
+									mdef, profile = conversion_profile)
+			if limited:
+				mask[i] = mask_element
 	
 		# If necessary, convert back to scalars
 		if not is_array:
@@ -877,9 +894,10 @@ def bullock01_c200c(M200c, z):
 	K = 3.85
 	F = 0.01
 
-	# Get an inverse interpolator to determine D+ from z.
+	# Get an inverse interpolator to determine D+ from z. This is an advanced use of the internal
+	# table system of the cosmology class.
 	cosmo = Cosmology.getCurrent()
-	interp = cosmo._growthFactorInterpolator(inverse = True)
+	interp = cosmo._zInterpolator('growthfactor', cosmo._growthFactorExact, inverse = True, future = True)
 	Dmin = interp.get_knots()[0]
 	Dmax = interp.get_knots()[-1]
 

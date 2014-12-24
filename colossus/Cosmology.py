@@ -723,6 +723,35 @@ class Cosmology():
 
 	###############################################################################################
 
+	# Used by _zFunction
+
+	def _zInterpolator(self, table_name, func, inverse = False, future = True):
+
+		table_name = table_name + '_%s' % (self.name) 
+		interpolator = self._getStoredObject(table_name, interpolator = True, inverse = inverse)
+		
+		if interpolator == None:
+			if self.print_info:
+				print("Computing lookup table in z.")
+			
+			if future:
+				log_min = numpy.log10(1.0 + self.z_min_compute)
+			else:
+				log_min = 0.0
+			log_max = numpy.log10(1.0 + self.z_max_compute)
+			bin_width = (log_max - log_min) / self.z_Nbins
+			z_table = 10**numpy.arange(log_min, log_max + bin_width, bin_width) - 1.0
+			x_table = func(z_table)
+			
+			self._storeObject(table_name, numpy.array([z_table, x_table]))
+			if self.print_info:
+				print("Lookup table completed.")
+			interpolator = self._getStoredObject(table_name, interpolator = True, inverse = inverse)
+		
+		return interpolator
+
+	###############################################################################################
+
 	# General container for methods that are functions of z and use interpolation
 	
 	def _zFunction(self, table_name, func, z, inverse = False, future = True):
@@ -730,26 +759,7 @@ class Cosmology():
 		if self.interpolation:
 			
 			# Get interpolator. If it does not exist, create it.
-			table_name = table_name + '_%s' % (self.name) 
-			interpolator = self._getStoredObject(table_name, interpolator = True, inverse = inverse)
-			
-			if interpolator == None:
-				if self.print_info:
-					print("Computing lookup table in z.")
-				
-				if future:
-					log_min = numpy.log10(1.0 + self.z_min_compute)
-				else:
-					log_min = 0.0
-				log_max = numpy.log10(1.0 + self.z_max_compute)
-				bin_width = (log_max - log_min) / self.z_Nbins
-				z_table = 10**numpy.arange(log_min, log_max + bin_width, bin_width) - 1.0
-				x_table = func(z_table)
-				
-				self._storeObject(table_name, numpy.array([z_table, x_table]))
-				if self.print_info:
-					print("Lookup table completed.")
-				interpolator = self._getStoredObject(table_name, interpolator = True, inverse = inverse)
+			interpolator = self._zInterpolator(table_name, func, inverse = inverse, future = future)
 			
 			# Check limits of z array
 			if numpy.min(z) < self.z_min:
