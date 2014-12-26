@@ -233,7 +233,7 @@ cosmologies['powerlaw']     = {'flat': True, 'H0': 70.00, 'Om0': 1.0000, 'Ob0': 
 # Cosmology class
 ###################################################################################################
 
-class Cosmology():
+class Cosmology(object):
 	"""
 	A cosmology is set through the parameters passed to the constructor. Any parameter whose default
 	value is ``None`` must be set by the user. This can easily be done using the 

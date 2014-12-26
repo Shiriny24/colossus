@@ -127,7 +127,7 @@ import HaloConcentration
 # ABSTRACT BASE CLASS FOR HALO DENSITY PROFILES
 ###################################################################################################
 
-class HaloDensityProfile():
+class HaloDensityProfile(object):
 	"""
 	Abstract base class for a halo density profile in physical units.
 	
@@ -946,7 +946,7 @@ class NFWProfile(HaloDensityProfile):
 # DIEMER & KRAVTSOV 2014 PROFILE
 ###################################################################################################
 
-class DK14Parameters():
+class DK14Parameters(object):
 	"""
 	The parameters of the Diemer & Kravtsov 2014 profile
 	
