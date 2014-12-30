@@ -496,7 +496,7 @@ class SplineDensityProfile(HaloDensityProfile):
 		self.min_RDelta = self.rmin
 		self.max_RDelta = self.rmax
 
-		if rho == None and M == None:
+		if rho is None and M is None:
 			msg = 'Either mass or density must be specified.'
 			raise Exception(msg)
 		
@@ -514,7 +514,7 @@ class SplineDensityProfile(HaloDensityProfile):
 
 		# Construct M(r) from density. For some reason, the spline integrator fails on the 
 		# innermost bin, and the quad integrator fails on the outermost bin. 
-		if self.M_spline == None:
+		if self.M_spline is None:
 			integrand = 4.0 * numpy.pi * r**2 * rho
 			integrand_spline = scipy.interpolate.InterpolatedUnivariateSpline(r, integrand)
 			logM = 0.0 * r
@@ -524,7 +524,7 @@ class SplineDensityProfile(HaloDensityProfile):
 			logM = numpy.log(logM)
 			self.M_spline = scipy.interpolate.InterpolatedUnivariateSpline(logr, logM)
 
-		if self.rho_spline == None:
+		if self.rho_spline is None:
 			deriv = self.M_spline(numpy.log(r), nu = 1) * M / r
 			logrho = numpy.log(deriv / 4.0 / numpy.pi / r**2)
 			self.rho_spline = scipy.interpolate.InterpolatedUnivariateSpline(logr, logrho)
@@ -807,7 +807,7 @@ class NFWProfile(HaloDensityProfile):
 		args = rhos, density_threshold
 		x = None
 		i = 0
-		while x == None and i < cls.xdelta_n_guess_factors:
+		while x is None and i < cls.xdelta_n_guess_factors:
 			try:
 				xmin = x_guess / cls.xdelta_guess_factors[i]
 				xmax = x_guess * cls.xdelta_guess_factors[i]
@@ -815,7 +815,7 @@ class NFWProfile(HaloDensityProfile):
 			except Exception:
 				i += 1
 		
-		if x == None:
+		if x is None:
 			msg = 'Could not determine x where the density threshold is satisfied.'
 			raise Exception(msg)
 		
@@ -1120,7 +1120,7 @@ class DK14Profile(HaloDensityProfile):
 			return par2['RDelta'] - R_target
 		
 		# Test for wrong user input
-		if part in ['outer', 'both'] and (be == None or se == None):
+		if part in ['outer', 'both'] and (be is None or se is None):
 			msg = "Since part = %s, the parameters be and se must be set. The recommended values are 1.0 and 1.5." % (part)
 			raise Exception(msg)
 		
@@ -1128,7 +1128,7 @@ class DK14Profile(HaloDensityProfile):
 		cosmo = Cosmology.getCurrent()
 		
 		# Get concentration if the user hasn't supplied it, compute scale radius
-		if c == None:
+		if c is None:
 			c = HaloConcentration.concentration(M, mdef, z, statistic = 'median')
 		R_target = Halo.M_to_R(M, z, mdef)
 		par2['RDelta'] = R_target
@@ -1548,7 +1548,7 @@ def M4rs(M, z, mdef, c = None):
 		same dimensions as M.
 	"""
 
-	if c == None:
+	if c is None:
 		c = HaloConcentration.concentration(M, mdef, z)
 	
 	Mfrs = M * NFWProfile.mu(4.0) / NFWProfile.mu(c)
@@ -1717,11 +1717,11 @@ def radiusFromPdf(M, z, mdef, cumulativePdf, c = None, c_model = 'diemer14', \
 		The cumulative pdf that we are seeking. If an array, this array needs to have the same 
 		dimensions as the M array.
 	c: array_like
-		If ``c == None``, the ``c_model`` concentration model is used to determine the mean c for each
+		If ``c is None``, the ``c_model`` concentration model is used to determine the mean c for each
 		mass. The user can also supply concentrations in an array of the same dimensions as the
 		M array.
 	c_model: str
-		The model used to evaluate concentration if ``c == None``.
+		The model used to evaluate concentration if ``c is None``.
 	interpolate: bool
 		If ``interpolate == True``, an interpolation table is built before computing the radii. This 
 		is much faster if M is a large array. 
@@ -1756,7 +1756,7 @@ def radiusFromPdf(M, z, mdef, cumulativePdf, c = None, c_model = 'diemer14', \
 	R = Halo.M_to_R(M, z, mdef)
 	N = len(M_array)
 	x = 0.0 * M_array
-	if c == None:
+	if c is None:
 		c = HaloConcentration.concentration(M, mdef, z, model = c_model)
 	c_array, _ = Utilities.getArray(c)
 	p_array, _ = Utilities.getArray(cumulativePdf)

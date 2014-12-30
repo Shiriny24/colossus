@@ -297,23 +297,23 @@ class Cosmology(object):
 		print_info = False, print_warnings = True, \
 		interpolation = True, storage = True, text_output = False):
 		
-		if name == None:
+		if name is None:
 			raise Exception('A name for the cosmology must be set.')
-		if Om0 == None:
+		if Om0 is None:
 			raise Exception('Parameter Om0 must be set.')
-		if Ob0 == None:
+		if Ob0 is None:
 			raise Exception('Parameter Ob0 must be set.')
-		if H0 == None:
+		if H0 is None:
 			raise Exception('Parameter H0 must be set.')
-		if sigma8 == None:
+		if sigma8 is None:
 			raise Exception('Parameter sigma8 must be set.')
-		if ns == None:
+		if ns is None:
 			raise Exception('Parameter ns must be set.')
-		if Tcmb0 == None:
+		if Tcmb0 is None:
 			raise Exception('Parameter Tcmb0 must be set.')
-		if power_law and power_law_n == None:
+		if power_law and power_law_n is None:
 			raise Exception('For a power-law cosmology, power_law_n must be set.')
-		if not flat and OL0 == None:
+		if not flat and OL0 is None:
 			raise Exception('OL0 must be set for non-flat cosmologies.')
 	
 		self.name = name
@@ -536,7 +536,7 @@ class Cosmology(object):
 					object_raw = numpy.loadtxt(self.data_dir + object_name, usecols = (0, 1), \
 									skiprows = 0, unpack = True)
 
-				if object_raw == None:
+				if object_raw is None:
 					
 					# We cannot find an object to convert, return none.
 					object_data = None
@@ -730,7 +730,7 @@ class Cosmology(object):
 		table_name = table_name + '_%s' % (self.name) 
 		interpolator = self._getStoredObject(table_name, interpolator = True, inverse = inverse)
 		
-		if interpolator == None:
+		if interpolator is None:
 			if self.print_info:
 				print("Computing lookup table in z.")
 			
@@ -1529,7 +1529,7 @@ class Cosmology(object):
 			table_name = 'matterpower_%s_%s' % (self.name, Pk_source)
 			table = self._getStoredObject(table_name)
 
-			if table == None:
+			if table is None:
 				msg = "Could not load data table, %s." % (table_name)
 				raise Exception(msg)
 			if numpy.max(k) > numpy.max(table[0]):
@@ -1547,7 +1547,7 @@ class Cosmology(object):
 		if not ignore_norm:
 			norm_name = 'Pk_norm_%s_%s' % (self.name, Pk_source)
 			norm = self._getStoredObject(norm_name)
-			if norm == None:
+			if norm is None:
 				sigma_8Mpc = self._sigmaExact(8.0, filt = 'tophat', Pk_source = Pk_source, \
 											exact_Pk = True, ignore_norm = True)
 				norm = (self.sigma8 / sigma_8Mpc)**2
@@ -1570,7 +1570,7 @@ class Cosmology(object):
 			table_name = 'matterpower_%s_%s' % (self.name, Pk_source)
 			table = self._getStoredObject(table_name)
 
-			if table == None:
+			if table is None:
 				msg = "Could not load data table, %s." % (table_name)
 				raise Exception(msg)
 	
@@ -1591,7 +1591,7 @@ class Cosmology(object):
 		table_name = 'Pk_%s_%s' % (self.name, Pk_source)
 		interpolator = self._getStoredObject(table_name, interpolator = True, inverse = inverse)
 	
-		if interpolator == None:
+		if interpolator is None:
 			if self.print_info:
 				print("Cosmology.matterPowerSpectrum: Computing lookup table.")				
 			data_k = numpy.zeros((numpy.sum(self.k_Pk_Nbins) + 1), numpy.float)
@@ -1848,7 +1848,7 @@ class Cosmology(object):
 		table_name = 'sigma%d_%s_%s_%s' % (j, self.name, Pk_source, filt)
 		interpolator = self._getStoredObject(table_name, interpolator = True, inverse = inverse)
 		
-		if interpolator == None:
+		if interpolator is None:
 			if self.print_info:
 				print("Cosmology.sigma: Computing lookup table.")
 			max_log = numpy.log10(self.R_max_sigma)
@@ -1963,7 +1963,7 @@ class Cosmology(object):
 				# the cosmology changes and sigma is re-computed.
 				sigma_min = self._getStoredObject('sigma_min')
 				sigma_max = self._getStoredObject('sigma_max')
-				if sigma_min == None or sigma_min == None:
+				if sigma_min is None or sigma_min is None:
 					knots = interpolator.get_knots()
 					sigma_min = 10**numpy.min(knots)
 					sigma_max = 10**numpy.max(knots)
@@ -2346,7 +2346,7 @@ class Cosmology(object):
 		table_name = 'correlation_%s_%s' % (self.name, Pk_source)
 		interpolator = self._getStoredObject(table_name, interpolator = True)
 		
-		if interpolator == None:
+		if interpolator is None:
 			if self.print_info:
 				print("correlationFunction: Computing lookup table. This may take a few minutes, please do not interrupt.")
 			
@@ -2563,7 +2563,7 @@ def getCurrent():
 		The current globally set cosmology. 
 	"""
 	
-	if current_cosmo == None:
+	if current_cosmo is None:
 		raise Exception('Cosmology is not set.')
 
 	return current_cosmo

@@ -261,7 +261,7 @@ def concentration(M, mdef, z, \
 			args_solver = M_array[i], mdef_model, func, limited, args
 			j = 0
 			MDelta = None
-			while MDelta == None and j < n_guess_factors:
+			while MDelta is None and j < n_guess_factors:
 				try:
 					M_min = M_guess[i] / guess_factors[j]
 					M_max = M_guess[i] * guess_factors[j]
@@ -269,7 +269,7 @@ def concentration(M, mdef, z, \
 				except Exception:
 					j += 1
 
-			if MDelta == None:
+			if MDelta is None:
 				msg = 'Could not find concentration for mass %.2e, mdef %s. The mask array indicates invalid concentrations.' % (MDelta, mdef)
 				warnings.warn(msg)
 				c[i] = 0.0
