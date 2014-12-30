@@ -299,9 +299,9 @@ class HaloDensityProfile(object):
 		"""		
 		
 		Rmax_use = None
-		if Rmax != None:
+		if Rmax is not None:
 			Rmax_use = Rmax
-		elif mdef != None and z != None:
+		elif mdef is not None and z is not None:
 			Rmax_use = self.RDelta(z, mdef)
 		else:
 			msg = 'The cumulative pdf function needs an outer radius for the profile.'
@@ -504,11 +504,11 @@ class SplineDensityProfile(HaloDensityProfile):
 		self.M_spline = None
 		logr = numpy.log(r)
 		
-		if M != None:
+		if M is not None:
 			logM = numpy.log(M)
 			self.M_spline = scipy.interpolate.InterpolatedUnivariateSpline(logr, logM)
 
-		if rho != None:
+		if rho is not None:
 			logrho = numpy.log(rho)
 			self.rho_spline = scipy.interpolate.InterpolatedUnivariateSpline(logr, logrho)
 
@@ -613,13 +613,13 @@ class NFWProfile(HaloDensityProfile):
 		HaloDensityProfile.__init__(self)
 
 		# The fundamental way to define an NFW profile by the central density and scale radius
-		if rhos != None and rs != None:
+		if rhos is not None and rs is not None:
 			self.rhos = rhos
 			self.rs = rs
 			
 		# Alternatively, the user can give a mass and concentration, together with mass definition
 		# and redshift.
-		elif M != None and c != None and mdef != None and z != None:
+		elif M is not None and c is not None and mdef is not None and z is not None:
 			self.rhos, self.rs = self.fundamentalParameters(M, c, z, mdef)
 		
 		else:
@@ -1012,7 +1012,7 @@ class DK14Profile(HaloDensityProfile):
 	
 		HaloDensityProfile.__init__(self)
 		
-		if par != None:
+		if par is not None:
 			self.par = par
 		else:
 			self.deriveParameters(**kwargs)
@@ -1587,10 +1587,10 @@ def RcausticOverR200m(z, Gamma = None, nu_vir = None):
 	Mcaustic: :math:`M_{caustic}` as a function of spherical overdensity mass.
 	"""
 
-	if Gamma != None:
+	if Gamma is not None:
 		cosmo = Cosmology.getCurrent()
 		ratio =  0.54 * (1 + 0.53 * cosmo.Om(z)) * (1 + 1.36 * numpy.exp(-Gamma / 3.04))
-	elif nu_vir != None:
+	elif nu_vir is not None:
 		ratio = 1.40 - 0.13 * nu_vir
 	else:
 		msg = 'Need either Gamma or nu.'
@@ -1631,10 +1631,10 @@ def McausticOverM200m(z, Gamma = None, nu_vir = None):
 	Mcaustic: :math:`M_{caustic}` as a function of spherical overdensity mass.
 	"""
 	
-	if Gamma != None:
+	if Gamma is not None:
 		cosmo = Cosmology.getCurrent()
 		ratio =  0.59 * (1 + 0.35 * cosmo.Om(z)) * (1 + 0.92 * numpy.exp(-Gamma / 4.54))
-	elif nu_vir != None:
+	elif nu_vir is not None:
 		ratio = 1.24 - 0.08 * nu_vir
 	else:
 		msg = 'Need either Gamma or nu.'

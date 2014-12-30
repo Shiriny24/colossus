@@ -2483,16 +2483,16 @@ def setCosmology(cosmo_name, params = None):
 		param_dict = cosmologies['powerlaw']
 		param_dict['power_law'] = True
 		param_dict['power_law_n'] = n
-		if params != None:
+		if params is not None:
 			param_dict = dict(param_dict.items() + params.items())
 			
 	elif cosmo_name in cosmologies:		
 		param_dict = cosmologies[cosmo_name]
-		if params != None:
+		if params is not None:
 			param_dict = dict(param_dict.items() + params.items())
 			
 	else:
-		if params != None:
+		if params is not None:
 			param_dict = params.copy()
 		else:
 			msg = "Invalid cosmology (%s)." % (cosmo_name)
