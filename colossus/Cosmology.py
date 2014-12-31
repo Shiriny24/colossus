@@ -754,7 +754,7 @@ class Cosmology(object):
 
 	# General container for methods that are functions of z and use interpolation
 	
-	def _zFunction(self, table_name, func, z, inverse = False, future = True):
+	def _zFunction(self, table_name, func, z, inverse = False, future = True, derivative = 0):
 
 		if self.interpolation:
 			
@@ -772,10 +772,12 @@ class Cosmology(object):
 					% (numpy.max(z), self.z_max)
 				raise Exception(msg)
 			
-			# Interpolate
-			ret = interpolator(z)				
+			ret = interpolator(z, nu = derivative)				
 			
 		else:
+			if derivative > 0:
+				raise Exception("Derivative can only be evaluated if interpolation == True.")
+
 			ret = func(z)
 		
 		return ret
@@ -813,7 +815,7 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	def lookbackTime(self, z):
+	def lookbackTime(self, z, derivative = 0):
 		"""
 		The lookback time since z.
 		
@@ -824,11 +826,14 @@ class Cosmology(object):
 		-------------------------------------------------------------------------------------------
 		z: array_like
 			Redshift, where :math:`-0.995 < z < 200`; can be a number or a numpy array.
+		derivative: int
+			If greater than 0, evaluate the nth derivative, :math:`d^nt/dz^n`.
 
 		Returns
 		-------------------------------------------------------------------------------------------
 		t: array_like
-			The lookback time since z in units of Gigayears; has the same dimensions as z.
+			The lookback time (or its derivative) since z in units of Gigayears; has the same 
+			dimensions as z.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -836,7 +841,7 @@ class Cosmology(object):
 		age: The age of the universe at redshift z.
 		"""
 		
-		t = self._zFunction('lookbacktime', self._lookbackTimeExact, z)
+		t = self._zFunction('lookbacktime', self._lookbackTimeExact, z, derivative = derivative)
 		
 		return t
 	
@@ -850,7 +855,7 @@ class Cosmology(object):
 	
 	###############################################################################################
 	
-	def age(self, z = 0.0):
+	def age(self, z = 0.0, derivative = 0):
 		"""
 		The age of the universe at redshift z.
 
@@ -858,11 +863,14 @@ class Cosmology(object):
 		-------------------------------------------------------------------------------------------
 		z: array_like
 			Redshift, where :math:`-0.995 < z < 200`; can be a number or a numpy array.
+		derivative: int
+			If greater than 0, evaluate the nth derivative, :math:`d^nt/dz^n`.
 
 		Returns
 		-------------------------------------------------------------------------------------------
 		t: array_like
-			The age of the universe at redshift z in Gigayears; has the same dimensions as z.
+			The age of the universe (or its derivative) at redshift z in Gigayears; has the 
+			same dimensions as z.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -870,7 +878,7 @@ class Cosmology(object):
 		lookbackTime: The lookback time since z.
 		"""
 
-		t = self._zFunction('age', self._ageExact, z)
+		t = self._zFunction('age', self._ageExact, z, derivative = derivative)
 		
 		return t
 	
@@ -920,7 +928,7 @@ class Cosmology(object):
 
 	###############################################################################################
 	
-	def luminosityDistance(self, z):
+	def luminosityDistance(self, z, derivative = 0):
 		"""
 		The luminosity distance to redshift z.
 
@@ -928,11 +936,13 @@ class Cosmology(object):
 		-------------------------------------------------------------------------------------------
 		z: array_like
 			Redshift, where :math:`-0.995 < z < 200`; can be a number or a numpy array.
+		derivative: int
+			If greater than 0, evaluate the nth derivative, :math:`d^nD/dz^n`.
 			
 		Returns
 		-------------------------------------------------------------------------------------------
 		d: array_like
-			The luminosity distance in Mpc/h; has the same dimensions as z.
+			The luminosity distance (or its derivative) in Mpc/h; has the same dimensions as z.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -940,7 +950,8 @@ class Cosmology(object):
 		angularDiameterDistance: The angular diameter distance to redshift z.
 		"""
 		
-		d = self._zFunction('luminositydist', self._luminosityDistanceExact, z, future = False)
+		d = self._zFunction('luminositydist', self._luminosityDistanceExact, z, \
+						future = False, derivative = derivative)
 		
 		return d
 	
@@ -954,7 +965,7 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	def angularDiameterDistance(self, z):
+	def angularDiameterDistance(self, z, derivative = 0):
 		"""
 		The angular diameter distance to redshift z.
 
@@ -962,11 +973,13 @@ class Cosmology(object):
 		-------------------------------------------------------------------------------------------
 		z: array_like
 			Redshift, where :math:`-0.995 < z < 200`; can be a number or a numpy array.
+		derivative: int
+			If greater than 0, evaluate the nth derivative, :math:`d^nD/dz^n`.
 
 		Returns
 		-------------------------------------------------------------------------------------------
 		d: array_like
-			The angular diameter distance in Mpc/h; has the same dimensions as z.
+			The angular diameter distance (or its derivative) in Mpc/h; has the same dimensions as z.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -974,7 +987,8 @@ class Cosmology(object):
 		luminosityDistance: The luminosity distance to redshift z.
 		"""
 
-		d = self._zFunction('angdiamdist', self._angularDiameterDistanceExact, z, future = False)
+		d = self._zFunction('angdiamdist', self._angularDiameterDistanceExact, z, \
+						future = False, derivative = derivative)
 		
 		return d
 
@@ -1261,7 +1275,7 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	def growthFactor(self, z):
+	def growthFactor(self, z, derivative = 0):
 		"""
 		The linear growth factor normalized to z = 0, :math:`D_+(z) / D_+(0)`.
 
@@ -1273,18 +1287,20 @@ class Cosmology(object):
 		-------------------------------------------------------------------------------------------
 		z: array_like
 			Redshift, where :math:`-0.999 < z < 500`; can be a number or a numpy array.
+		derivative: int
+			If greater than 0, evaluate the nth derivative, :math:`d^nD_+/dz^n`.
 
 		Returns
 		-------------------------------------------------------------------------------------------
 		D: array_like
-			The linear growth factor; has the same dimensions as z.
+			The linear growth factor (or its derivative); has the same dimensions as z.
 
 		See also
 		-------------------------------------------------------------------------------------------
 		growthFactorUnnormalized: The linear growth factor, :math:`D_+(z)`.
 		"""
 
-		D = self._zFunction('growthfactor', self._growthFactorExact, z)
+		D = self._zFunction('growthfactor', self._growthFactorExact, z, derivative = derivative)
 
 		return D
 
