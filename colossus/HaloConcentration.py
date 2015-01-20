@@ -17,7 +17,7 @@ Basic usage
 The main function in this module, :func:`concentration`, is a wrapper for all models::
 	
 	setCosmology('WMAP9')
-	cvir = concentration(1E12, 'vir', 0.0, model = 'diemer14')
+	cvir = concentration(1E12, 'vir', 0.0, model = 'diemer15')
 
 Alternatively, the user can also call the individual model functions directly. Note, however, that 
 most models are only valid over a certain range of masses, redshifts, and cosmologies.
@@ -39,7 +39,7 @@ functions do not convert mass definitions, check on the validity of the results 
 ============== ================ ================== =========== =============== ========================== =================
 ID             Native mdefs     M range (z=0)      z range     Cosmology       Paper                      Reference
 ============== ================ ================== =========== =============== ========================== =================
-diemer14       200c             Any                Any         Any             Diemer & Kravtsov 2014
+diemer15       200c             Any                Any         Any             Diemer & Kravtsov 2015     ApJ 799, 108
 klypin15_nu    200c, vir        M > 1E10           0 < z < 5   Planck1         Klypin et al. 2014
 klypin15_m     200c, vir        M > 1E10           0 < z < 5   Planck1/WMAP7   Klypin et al. 2014
 dutton14       200c, vir        M > 1E10           0 < z < 5   Planck1         Dutton & Maccio 2014       MNRAS 441, 3359
@@ -69,7 +69,7 @@ profile. For this purpose, the user can choose between ``nfw`` and ``dk14`` prof
 Performance optimization
 ---------------------------------------------------------------------------------------------------
 
-Some models, including the diemer14 model, use certain cosmological quantities, such as 
+Some models, including the diemer15 model, use certain cosmological quantities, such as 
 :math:`\sigma(R)`, that can be computationally intensive. If you wish to compute concentration for 
 many different cosmologies (for example, in an MCMC chain), please consult the documentation of the 
 ``interpolation`` switch in the Cosmology module.
@@ -95,7 +95,7 @@ import HaloDensityProfile
 ###################################################################################################
 
 def concentration(M, mdef, z, \
-				model = 'diemer14', statistic = 'median', conversion_profile = 'nfw', \
+				model = 'diemer15', statistic = 'median', conversion_profile = 'nfw', \
 				range_return = False, range_warning = True):
 	"""
 	Concentration as a function of halo mass and redshift, for different concentration models, 
@@ -163,9 +163,9 @@ def concentration(M, mdef, z, \
 		return Mnew - M_desired
 
 	# Distinguish between models
-	if model == 'diemer14':
+	if model == 'diemer15':
 		mdefs_model = ['200c']
-		func = diemer14_c200c_M
+		func = diemer15_c200c_M
 		args = (z, statistic)
 		limited = False
 		
@@ -301,25 +301,25 @@ def concentration(M, mdef, z, \
 # DIEMER & KRAVTSOV 2014 MODEL
 ###################################################################################################
 
-diemer14_kappa = 0.69
+diemer15_kappa = 0.69
 
-diemer14_median_phi_0 = 6.58
-diemer14_median_phi_1 = 1.37
-diemer14_median_eta_0 = 6.82
-diemer14_median_eta_1 = 1.42
-diemer14_median_alpha = 1.12
-diemer14_median_beta = 1.69
+diemer15_median_phi_0 = 6.58
+diemer15_median_phi_1 = 1.37
+diemer15_median_eta_0 = 6.82
+diemer15_median_eta_1 = 1.42
+diemer15_median_alpha = 1.12
+diemer15_median_beta = 1.69
 
-diemer14_mean_phi_0 = 7.14
-diemer14_mean_phi_1 = 1.60
-diemer14_mean_eta_0 = 4.10
-diemer14_mean_eta_1 = 0.75
-diemer14_mean_alpha = 1.40
-diemer14_mean_beta = 0.67
+diemer15_mean_phi_0 = 7.14
+diemer15_mean_phi_1 = 1.60
+diemer15_mean_eta_0 = 4.10
+diemer15_mean_eta_1 = 0.75
+diemer15_mean_alpha = 1.40
+diemer15_mean_beta = 0.67
 
 ###################################################################################################
 
-def diemer14_c200c_M(M200c, z, statistic = 'median'):
+def diemer15_c200c_M(M200c, z, statistic = 'median'):
 	"""
 	The Diemer & Kravtsov 2014 model for concentration, as a function of mass :math:`M_{200c}` and 
 	redhsift. A cosmology must be set before executing this function (see the documentation of the 
@@ -341,7 +341,7 @@ def diemer14_c200c_M(M200c, z, statistic = 'median'):
 	
 	See also
 	-----------------------------------------------------------------------------------------------
-	diemer14_c200c_nu: The same function, but with peak height as input.
+	diemer15_c200c_nu: The same function, but with peak height as input.
 	"""
 	
 	cosmo = Cosmology.getCurrent()
@@ -349,16 +349,16 @@ def diemer14_c200c_M(M200c, z, statistic = 'median'):
 	if cosmo.power_law:
 		n = cosmo.power_law_n * M200c / M200c
 	else:
-		n = diemer14_compute_n_M(M200c)
+		n = diemer15_compute_n_M(M200c)
 	
 	nu = cosmo.peakHeight(M200c, z)
-	c200c = diemer14_c200c_n(nu, n, statistic)
+	c200c = diemer15_c200c_n(nu, n, statistic)
 
 	return c200c
 
 ###################################################################################################
 
-def diemer14_c200c_nu(nu200c, z, statistic = 'median'):
+def diemer15_c200c_nu(nu200c, z, statistic = 'median'):
 	"""
 	The Diemer & Kravtsov 2014 model for concentration, as a function of peak height 
 	:math:`\\nu_{200c}` and redhsift. A cosmology must be set before executing this function (see 
@@ -381,7 +381,7 @@ def diemer14_c200c_nu(nu200c, z, statistic = 'median'):
 	
 	See also
 	-----------------------------------------------------------------------------------------------
-	diemer14_c200c_M: The same function, but with mass as input.
+	diemer15_c200c_M: The same function, but with mass as input.
 	"""
 
 	cosmo = Cosmology.getCurrent()
@@ -389,9 +389,9 @@ def diemer14_c200c_nu(nu200c, z, statistic = 'median'):
 	if cosmo.power_law:
 		n = cosmo.power_law_n * nu200c / nu200c
 	else:
-		n = diemer14_compute_n_nu(nu200c, z)
+		n = diemer15_compute_n_nu(nu200c, z)
 	
-	ret = diemer14_c200c_n(nu200c, n, statistic)
+	ret = diemer15_c200c_n(nu200c, n, statistic)
 
 	return ret
 
@@ -400,18 +400,18 @@ def diemer14_c200c_nu(nu200c, z, statistic = 'median'):
 # The universal prediction of the Diemer & Kravtsov 2014 model for a given peak height, power 
 # spectrum slope, and statistic.
 
-def diemer14_c200c_n(nu, n, statistic = 'median'):
+def diemer15_c200c_n(nu, n, statistic = 'median'):
 
 	if statistic == 'median':
-		floor = diemer14_median_phi_0 + n * diemer14_median_phi_1
-		nu0 = diemer14_median_eta_0 + n * diemer14_median_eta_1
-		alpha = diemer14_median_alpha
-		beta = diemer14_median_beta
+		floor = diemer15_median_phi_0 + n * diemer15_median_phi_1
+		nu0 = diemer15_median_eta_0 + n * diemer15_median_eta_1
+		alpha = diemer15_median_alpha
+		beta = diemer15_median_beta
 	elif statistic == 'mean':
-		floor = diemer14_mean_phi_0 + n * diemer14_mean_phi_1
-		nu0 = diemer14_mean_eta_0 + n * diemer14_mean_eta_1
-		alpha = diemer14_mean_alpha
-		beta = diemer14_mean_beta
+		floor = diemer15_mean_phi_0 + n * diemer15_mean_phi_1
+		nu0 = diemer15_mean_eta_0 + n * diemer15_mean_eta_1
+		alpha = diemer15_mean_alpha
+		beta = diemer15_mean_beta
 	else:
 		raise Exception("Unknown statistic.")
 	
@@ -423,12 +423,12 @@ def diemer14_c200c_n(nu, n, statistic = 'median'):
 
 # Compute the characteristic wavenumber for a particular halo mass.
 
-def diemer14_wavenumber_k_R(M):
+def diemer15_wavenumber_k_R(M):
 
 	cosmo = Cosmology.getCurrent()
 	rho0 = cosmo.matterDensity(0.0)
 	R = (3.0 * M / 4.0 / math.pi / rho0) ** (1.0 / 3.0) / 1000.0
-	k_R = 2.0 * math.pi / R * diemer14_kappa
+	k_R = 2.0 * math.pi / R * diemer15_kappa
 
 	return k_R
 
@@ -437,7 +437,7 @@ def diemer14_wavenumber_k_R(M):
 # Get the slope n = d log(P) / d log(k) at a scale k_R and a redshift z. The slope is computed from
 # the Eisenstein & Hu 1998 approximation to the power spectrum (without BAO).
 
-def diemer14_compute_n(k_R):
+def diemer15_compute_n(k_R):
 
 	if numpy.min(k_R) < 0:
 		raise Exception("k_R < 0.")
@@ -466,10 +466,10 @@ def diemer14_compute_n(k_R):
 
 # Wrapper for the function above which accepts M instead of k.
 
-def diemer14_compute_n_M(M):
+def diemer15_compute_n_M(M):
 
-	k_R = diemer14_wavenumber_k_R(M)
-	n = diemer14_compute_n(k_R)
+	k_R = diemer15_wavenumber_k_R(M)
+	n = diemer15_compute_n(k_R)
 	
 	return n
 
@@ -477,11 +477,11 @@ def diemer14_compute_n_M(M):
 
 # Wrapper for the function above which accepts nu instead of M.
 
-def diemer14_compute_n_nu(nu, z):
+def diemer15_compute_n_nu(nu, z):
 
 	cosmo = Cosmology.getCurrent()
 	M = cosmo.massFromPeakHeight(nu, z)
-	n = diemer14_compute_n_M(M)
+	n = diemer15_compute_n_M(M)
 	
 	return n
 

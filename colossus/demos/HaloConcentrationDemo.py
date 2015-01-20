@@ -41,13 +41,13 @@ def computeConcentration():
 	
 	Utilities.printLine()
 	print("Now compute concentrations for M200c:")
-	c = HaloConcentration.diemer14_c200c_M(M, 0.0, statistic = 'median')
+	c = HaloConcentration.diemer15_c200c_M(M, 0.0, statistic = 'median')
 	for i in range(len(M)):
 		print(("M200c = %.2e, c200c = %5.2f" % (M[i], c[i])))
 
 	Utilities.printLine()
 	print("Now compute concentrations for another mass definition, Mvir:")
-	c = HaloConcentration.concentration(M, 'vir', 0.0, model = 'diemer14', statistic = 'median')
+	c = HaloConcentration.concentration(M, 'vir', 0.0, model = 'diemer15', statistic = 'median')
 	for i in range(len(M)):
 		print(("Mvir = %.2e, cvir = %5.2f" % (M[i], c[i])))
 
@@ -131,8 +131,8 @@ def computeConcentrationTable(cosmo_name):
 		M200c = 10**numpy.arange(log_M_min, log_M_max + bin_width_logM, bin_width_logM)
 		M200c = M200c[:n_M_bins]	
 		nu200c = cosmo.peakHeight(M200c, z[i])
-		c200c_median = HaloConcentration.diemer14_c200c_nu(nu200c, z[i], statistic = 'median')
-		c200c_mean = HaloConcentration.diemer14_c200c_nu(nu200c, z[i], statistic = 'mean')
+		c200c_median = HaloConcentration.diemer15_c200c_nu(nu200c, z[i], statistic = 'median')
+		c200c_mean = HaloConcentration.diemer15_c200c_nu(nu200c, z[i], statistic = 'mean')
 			
 		for j in range(len(M200c)):
 			line = '%5.2f  %5.3f  %8.2e  %5.2f  %5.2f' % (z[i], nu200c[j], M200c[j], c200c_median[j], c200c_mean[j])

@@ -1692,7 +1692,7 @@ def Mcaustic(M, z, mdef, c = None, profile = 'nfw'):
 
 ###################################################################################################
 
-def radiusFromPdf(M, z, mdef, cumulativePdf, c = None, c_model = 'diemer14', \
+def radiusFromPdf(M, z, mdef, cumulativePdf, c = None, c_model = 'diemer15', \
 					interpolate = True, min_interpolate_pdf = 0.01):
 	"""
 	Get the radius where the cumulative density distribution of a halo has a certain value, 
