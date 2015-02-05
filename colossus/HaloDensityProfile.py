@@ -1557,24 +1557,33 @@ def M4rs(M, z, mdef, c = None):
 
 ###################################################################################################
 
-def RcausticOverR200m(z, Gamma = None, nu_vir = None):
+def RcausticOverR200m(nu_vir = None, z = None, Gamma = None, averaged_profile = False):
 	"""
 	The ratio :math:`R_{caustic} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or
 	the peak height, :math:`\\nu`.
 	
 	This function implements the relations calibrated in More, Diemer & Kravtsov 2015. Either
-	the accretion rate :math:`\\Gamma` or the peak height :math:`\\nu` must not be ``None``. 
+	the accretion rate :math:`\\Gamma` and redshift, or the peak height :math:`\\nu`, must not 
+	be ``None``. 
+	
+	When using the calibration as a function of :math:`\\nu`, their are two separate calibrations
+	for :math:`R_{caustic} / R_{200m}` derived from the averaged density profile of halos of a 
+	certain peak height (``averaged_profile = True``), and the median :math:`R_{caustic} / R_{200m}`
+	of halos (``averaged_profile = False``). The latter is calibrated via the mass accretion rate, 
+	and more reliable in general.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
+	nu_vir: array_like
+		The peak height as computed from :math:`M_{vir}`; can be a number or a numpy array.
 	z: array_like
 		Redshift; can be a number or a numpy array.
 	Gamma: array_like
 		The mass accretion rate, as defined in Diemer & Kravtsov 2014; can be a number or a 
 		numpy array.
-	nu_vir: array_like
-		The peak height as computed from :math:`M_{vir}`; can be a number or a numpy array.
-
+	averaged_profile: bool
+		See documentation above.
+	
 	Returns
 	-----------------------------------------------------------------------------------------------
 	ratio: array_like
@@ -1587,38 +1596,49 @@ def RcausticOverR200m(z, Gamma = None, nu_vir = None):
 	Mcaustic: :math:`M_{caustic}` as a function of spherical overdensity mass.
 	"""
 
-	if Gamma is not None:
+	if (Gamma is not None) and (z is not None):
 		cosmo = Cosmology.getCurrent()
 		ratio =  0.54 * (1 + 0.53 * cosmo.Om(z)) * (1 + 1.36 * numpy.exp(-Gamma / 3.04))
 	elif nu_vir is not None:
-		ratio = 1.40 - 0.13 * nu_vir
+		if averaged_profile:
+			ratio = 1.50 - 0.14 * nu_vir
+		else:
+			ratio = 0.89 * (1.0 + 0.73 * numpy.exp(-nu_vir / 1.74))
 	else:
-		msg = 'Need either Gamma or nu.'
+		msg = 'Need either Gamma and z, or nu.'
 		raise Exception(msg)
 
 	return ratio
 
 ###################################################################################################
 
-def McausticOverM200m(z, Gamma = None, nu_vir = None):
+def McausticOverM200m(nu_vir = None, z = None, Gamma = None, averaged_profile = False):
 	"""
 	The ratio :math:`M_{caustic} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or
 	the peak height, :math:`\\nu`.
 	
-	This function implements the relations calibrated in More, Diemer & Kravtsov 2015. Note that
-	the mass :math:`M_{caustic}` is calibrated independently from :math:`R_{caustic}`. Either
-	the accretion rate :math:`\\Gamma` or the peak height :math:`\\nu` must not be ``None``.
+	This function implements the relations calibrated in More, Diemer & Kravtsov 2015. Either
+	the accretion rate :math:`\\Gamma` and redshift, or the peak height :math:`\\nu`, must not 
+	be ``None``. 
+	
+	When using the calibration as a function of :math:`\\nu`, their are two separate calibrations
+	for :math:`M_{caustic} / M_{200m}` derived from the averaged density profile of halos of a 
+	certain peak height (``averaged_profile = True``), and the median :math:`M_{caustic} / M_{200m}`
+	of halos (``averaged_profile = False``). The latter is calibrated via the mass accretion rate, 
+	and more reliable in general.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
+	nu_vir: array_like
+		The peak height as computed from :math:`M_{vir}`; can be a number or a numpy array.
 	z: array_like
 		Redshift; can be a number or a numpy array.
 	Gamma: array_like
 		The mass accretion rate, as defined in Diemer & Kravtsov 2014; can be a number or a 
 		numpy array.
-	nu_vir: array_like
-		The peak height as computed from :math:`M_{vir}`; can be a number or a numpy array.
-
+	averaged_profile: bool
+		See documentation above.
+	
 	Returns
 	-----------------------------------------------------------------------------------------------
 	ratio: array_like
@@ -1631,13 +1651,16 @@ def McausticOverM200m(z, Gamma = None, nu_vir = None):
 	Mcaustic: :math:`M_{caustic}` as a function of spherical overdensity mass.
 	"""
 	
-	if Gamma is not None:
+	if (Gamma is not None) and (z is not None):
 		cosmo = Cosmology.getCurrent()
 		ratio =  0.59 * (1 + 0.35 * cosmo.Om(z)) * (1 + 0.92 * numpy.exp(-Gamma / 4.54))
 	elif nu_vir is not None:
-		ratio = 1.24 - 0.08 * nu_vir
+		if averaged_profile:
+			ratio = 1.31 - 0.09 * nu_vir
+		else:
+			ratio = 0.86 * (1.0 + 0.49 * numpy.exp(-nu_vir / 2.85))
 	else:
-		msg = 'Need either Gamma or nu.'
+		msg = 'Need either Gamma and z, or nu.'
 		raise Exception(msg)
 		
 	return ratio
