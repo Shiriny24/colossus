@@ -165,7 +165,7 @@ class HaloDensityProfile(object):
 		-------------------------------------------------------------------------------------------
 		r: array_like
 			Radius in physical kpc/h; can be a number or a numpy array.
-			
+
 		Returns
 		-------------------------------------------------------------------------------------------
 		density: array_like
@@ -1137,6 +1137,7 @@ class DK14Profile(HaloDensityProfile):
 		# Take a guess at nu_vir and R200m
 		if mdef == 'vir':
 			Mvir = M
+			par2['Rvir'] = Halo.M_to_R(Mvir, z, 'vir')
 		else:
 			Mvir, par2['Rvir'], _ = changeMassDefinition(M, c, z, mdef, 'vir')
 		par2['nu'] = cosmo.peakHeight(Mvir, z)
@@ -1300,7 +1301,7 @@ class DK14Profile(HaloDensityProfile):
 			The mass within 4 scale radii, :math:`M_{<4rs}`, in :math:`M_{\odot} / h`.
 		"""
 		
-		M = self.enclosedMass(4.0 * self.rs)
+		M = self.enclosedMass(4.0 * self.par.rs)
 		
 		return M
 
