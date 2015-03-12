@@ -761,17 +761,19 @@ class Cosmology(object):
 			# Get interpolator. If it does not exist, create it.
 			interpolator = self._zInterpolator(table_name, func, inverse = inverse, future = future)
 			
-			# Check limits of z array
-			if numpy.min(z) < self.z_min:
-				msg = "z = %.2f outside range (min. z is %.2f)." \
-					% (numpy.min(z), self.z_min)
-				raise Exception(msg)
+			# Check limits of z array. If inverse == True, we would need to check the limits on 
+			# the result function for which we do not necessarily know the limits. 
+			if not inverse:
+				if numpy.min(z) < self.z_min:
+					msg = "z = %.2f outside range (min. z is %.2f)." \
+						% (numpy.min(z), self.z_min)
+					raise Exception(msg)
+					
+				if numpy.max(z) > self.z_max:
+					msg = "z = %.2f outside range (max. z is %.2f)." \
+						% (numpy.max(z), self.z_max)
+					raise Exception(msg)
 				
-			if numpy.max(z) > self.z_max:
-				msg = "z = %.2f outside range (max. z is %.2f)." \
-					% (numpy.max(z), self.z_max)
-				raise Exception(msg)
-			
 			ret = interpolator(z, nu = derivative)				
 			
 		else:

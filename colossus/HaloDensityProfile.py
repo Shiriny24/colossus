@@ -41,6 +41,7 @@ functional form:
 .. autosummary::
 	pseudoEvolve
 	changeMassDefinition
+	changeMassDefinitionCModel
 	radiusFromPdf
 
 Pseudo-evolution is the evolution of a spherical overdensity halo radius, mass, and concentration 
@@ -69,24 +70,24 @@ Alternative mass definitions
 Two alternative mass definitions (as in, not spherical overdensity masses) are described in 
 More, Diemer & Kravtsov 2015. Those include:
 
-* :math:`M_{caustic}`: The mass contained within the radius of the outermost density caustic. 
+* :math:`M_{sp}`: The mass contained within the radius of the outermost density caustic. 
   Caustics correspond to particles piling up at the apocenter of their orbits. The most pronounced
   caustic is due to the most recently accreted matter, and that caustic is also found at the
-  largest radius, :math:`R_{caustic}`. This is designed as a physically meaningful radius 
-  definition that encloses all the mass ever accreted by a halo.
+  largest radius which we call the splashback radius, :math:`R_{sp}`. This is designed as a 
+  physically meaningful radius definition that encloses all the mass ever accreted by a halo.
 * :math:`M_{<4r_s}`: The mass within 4 scale radii. This mass definition quantifies the mass in
   the inner part of the halo. During the fast accretion regime, this mass definition tracks
   :math:`M_{vir}`, but when the halo stops accreting it approaches a constant. 
 
-:math:`M_{<4r_s}`: can be computed from both NFW and DK14 profiles. :math:`R_{caustic}` and 
-:math:`M_{caustic}` can only be computed from DK14 profiles. For both mass definitions there are
+:math:`M_{<4r_s}`: can be computed from both NFW and DK14 profiles. :math:`R_{sp}` and 
+:math:`M_{sp}` can only be computed from DK14 profiles. For both mass definitions there are
 converter functions:
 
 .. autosummary::	
 	M4rs
-	McausticOverM200m
-	RcausticOverR200m
-	Mcaustic
+	MspOverM200m
+	RspOverR200m
+	Msp
 
 ***************************************************************************************************
 Units
@@ -1176,6 +1177,8 @@ class DK14Profile(HaloDensityProfile):
 	# Get the parameter values for the DK14 profile that should be fixed, or can be determined from the 
 	# peak height or mass accretion rate. If selected is 'by_mass', only nu must be passed. If selected 
 	# is 'by_accretion_rate', then both z and Gamma must be passed.
+	#
+	# Some parameter dependencies were updated in More et al. 2015.
 	
 	def getFixedParameters(self, selected, nu = None, z = None, Gamma = None):
 	
@@ -1188,7 +1191,7 @@ class DK14Profile(HaloDensityProfile):
 		elif selected == 'by_accretion_rate':
 			beta = 6.0
 			gamma = 4.0
-			rt_R200m = (0.425 + 0.402 * cosmo.Om(z)) * (1 + 2.148 * numpy.exp(-Gamma / 1.962))
+			rt_R200m = 0.43 * (1.0 + 0.92 * cosmo.Om(z)) * (1.0 + 2.18 * numpy.exp(-Gamma / 1.91))
 		else:
 			msg = "HaloDensityProfile.DK14_getFixedParameters: Unknown sample selection, %s." % (selected)
 			raise Exception(msg)
@@ -1307,11 +1310,11 @@ class DK14Profile(HaloDensityProfile):
 
 	###############################################################################################
 
-	def Rcaustic(self, search_range = 5.0):
+	def Rsp(self, search_range = 5.0):
 		"""
-		The radius of the outermost caustic, :math:`R_{caustic}`.
+		The splashback radius, :math:`R_{sp}`.
 		
-		See the section on mass definitions for details. Operationally, we define :math:`R_{caustic}`
+		See the section on mass definitions for details. Operationally, we define :math:`R_{sp}`
 		as the radius where the profile reaches its steepest logarithmic slope.
 		
 		Parameters
@@ -1322,13 +1325,13 @@ class DK14Profile(HaloDensityProfile):
 			
 		Returns
 		-------------------------------------------------------------------------------------------
-		Rcaustic: float
-			The radius of the outermost caustic, :math:`R_{caustic}`, in physical kpc/h.
+		Rsp: float
+			The splashback radius, :math:`R_{sp}`, in physical kpc/h.
 			
 		See also
 		-------------------------------------------------------------------------------------------
-		RMcaustic: The radius and mass of/within the outermost caustic, :math:`R_{caustic}` and :math:`M_{caustic}`.
-		Mcaustic: The mass enclosed within :math:`R_{caustic}`, :math:`M_{caustic}`.
+		RMsp: The splashback radius and mass within, :math:`R_{sp}` and :math:`M_{sp}`.
+		Msp: The mass enclosed within :math:`R_{sp}`, :math:`M_{sp}`.
 		"""
 		
 		R200m = self.par.R200m
@@ -1338,9 +1341,9 @@ class DK14Profile(HaloDensityProfile):
 	
 	###############################################################################################
 
-	def RMcaustic(self, search_range = 5.0):
+	def RMsp(self, search_range = 5.0):
 		"""
-		The radius and mass of/within the outermost caustic, :math:`R_{caustic}` and :math:`M_{caustic}`.
+		The splashback radius and mass within, :math:`R_{sp}` and :math:`M_{sp}`.
 		
 		See the section on mass definitions for details.		
 		
@@ -1352,25 +1355,27 @@ class DK14Profile(HaloDensityProfile):
 			
 		Returns
 		-------------------------------------------------------------------------------------------
-		Rcaustic: float
-			The radius of the outermost caustic, :math:`R_{caustic}`, in physical kpc/h.
+		Rsp: float
+			The splashback radius, :math:`R_{sp}`, in physical kpc/h.
+		Msp: float
+			The mass enclosed within the splashback radius, :math:`M_{sp}`, in :math:`M_{\odot} / h`.
 			
 		See also
 		-------------------------------------------------------------------------------------------
-		Rcaustic: The radius of the outermost caustic, :math:`R_{caustic}`.
-		Mcaustic: The mass enclosed within :math:`R_{caustic}`, :math:`M_{caustic}`.
+		Rsp: The splashback radius, :math:`R_{sp}`.
+		Msp: The mass enclosed within :math:`R_{sp}`, :math:`M_{sp}`.
 		"""
 		
-		Rcaustic = self.Rcaustic(search_range = search_range)
-		Mcaustic = self.enclosedMass(Rcaustic)
+		Rsp = self.Rsp(search_range = search_range)
+		Msp = self.enclosedMass(Rsp)
 
-		return Rcaustic, Mcaustic
+		return Rsp, Msp
 	
 	###############################################################################################
 
-	def Mcaustic(self, search_range = 5.0):
+	def Msp(self, search_range = 5.0):
 		"""
-		The mass enclosed within :math:`R_{caustic}`, :math:`M_{caustic}`.
+		The mass enclosed within :math:`R_{sp}`, :math:`M_{sp}`.
 		
 		See the section on mass definitions for details.		
 		
@@ -1382,18 +1387,18 @@ class DK14Profile(HaloDensityProfile):
 			
 		Returns
 		-------------------------------------------------------------------------------------------
-		Rcaustic: float
-			The radius of the outermost caustic, :math:`R_{caustic}`, in physical kpc/h.
+		Msp: float
+			The mass enclosed within the splashback radius, :math:`M_{sp}`, in :math:`M_{\odot} / h`.
 			
 		See also
 		-------------------------------------------------------------------------------------------
-		Rcaustic: The radius of the outermost caustic, :math:`R_{caustic}`.
-		RMcaustic: The radius and mass of/within the outermost caustic, :math:`R_{caustic}` and :math:`M_{caustic}`.
+		Rsp: The splashback radius, :math:`R_{sp}`.
+		RMsp: The splashback radius and mass within, :math:`R_{sp}` and :math:`M_{sp}`.
 		"""
 		
-		_, Mcaustic = self.RMcaustic(search_range = search_range)
+		_, Msp = self.RMsp(search_range = search_range)
 
-		return Mcaustic
+		return Msp
 
 ###################################################################################################
 # FUNCTIONS THAT CAN REFER TO DIFFERENT FORMS OF THE DENSITY PROFILE
@@ -1517,7 +1522,53 @@ def changeMassDefinition(M, c, z, mdef_in, mdef_out, profile = 'nfw'):
 	See also
 	-----------------------------------------------------------------------------------------------
 	pseudoEvolve: Evolve the spherical overdensity radius for a fixed profile.
+	changeMassDefinitionCModel: Change the spherical overdensity mass definition, using a model for the concentration.
 	"""
+	
+	return pseudoEvolve(M, c, z, mdef_in, z, mdef_out, profile = profile)
+
+###################################################################################################
+
+def changeMassDefinitionCModel(M, z, mdef_in, mdef_out, profile = 'nfw', c_model = 'diemer15'):
+	"""
+	Change the spherical overdensity mass definition, using a model for the concentration.
+	
+	This function is a wrapper for the :func:`changeMassDefinition` function. Instead of forcing 
+	the user to provide concentrations, they are computed from a model indicated by the ``c_model``
+	parameter.
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	M_i: array_like
+		The initial halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
+	z_i: float
+		The initial redshift.
+	mdef_i: str
+		The initial mass definition.
+	mdef_f: str
+		The final mass definition (can be the same as mdef_i, or different).
+	profile: str
+		The functional form of the profile assumed in the computation; can be ``nfw`` or ``dk14``.
+	c_model: str
+		The identifier of a concentration model (see :mod:`HaloConcentration` for valid inputs).
+
+	Returns
+	-----------------------------------------------------------------------------------------------
+	Mnew: array_like
+		The new halo mass in :math:`M_{\odot}/h`; has the same dimensions as M_i.
+	Rnew: array_like
+		The new halo radius in physical kpc/h; has the same dimensions as M_i.
+	cnew: array_like
+		The new concentration (now referring to the new mass definition); has the same dimensions 
+		as M_i.
+		
+	See also
+	-----------------------------------------------------------------------------------------------
+	pseudoEvolve: Evolve the spherical overdensity radius for a fixed profile.
+	changeMassDefinition: Change the spherical overdensity mass definition.
+	"""
+	
+	c = HaloConcentration.concentration(M, mdef_in, z, model = c_model)
 	
 	return pseudoEvolve(M, c, z, mdef_in, z, mdef_out, profile = profile)
 
@@ -1558,9 +1609,9 @@ def M4rs(M, z, mdef, c = None):
 
 ###################################################################################################
 
-def RcausticOverR200m(nu_vir = None, z = None, Gamma = None, averaged_profile = False):
+def RspOverR200m(nu_vir = None, z = None, Gamma = None, averaged_profile = False):
 	"""
-	The ratio :math:`R_{caustic} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or
+	The ratio :math:`R_{sp} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or
 	the peak height, :math:`\\nu`.
 	
 	This function implements the relations calibrated in More, Diemer & Kravtsov 2015. Either
@@ -1568,8 +1619,8 @@ def RcausticOverR200m(nu_vir = None, z = None, Gamma = None, averaged_profile = 
 	be ``None``. 
 	
 	When using the calibration as a function of :math:`\\nu`, their are two separate calibrations
-	for :math:`R_{caustic} / R_{200m}` derived from the averaged density profile of halos of a 
-	certain peak height (``averaged_profile = True``), and the median :math:`R_{caustic} / R_{200m}`
+	for :math:`R_{sp} / R_{200m}` derived from the averaged density profile of halos of a 
+	certain peak height (``averaged_profile = True``), and the median :math:`R_{sp} / R_{200m}`
 	of halos (``averaged_profile = False``). The latter is calibrated via the mass accretion rate, 
 	and more reliable in general.
 
@@ -1588,13 +1639,13 @@ def RcausticOverR200m(nu_vir = None, z = None, Gamma = None, averaged_profile = 
 	Returns
 	-----------------------------------------------------------------------------------------------
 	ratio: array_like
-		:math:`R_{caustic} / R_{200m}`; has the same dimensions as z, Gamma, or nu, depending
+		:math:`R_{sp} / R_{200m}`; has the same dimensions as z, Gamma, or nu, depending
 		on which of those parameters is an array.
 		
 	See also
 	-----------------------------------------------------------------------------------------------
-	McausticOverM200m: The ratio :math:`M_{caustic} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
-	Mcaustic: :math:`M_{caustic}` as a function of spherical overdensity mass.
+	MspOverM200m: The ratio :math:`M_{sp} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
+	Msp: :math:`M_{sp}` as a function of spherical overdensity mass.
 	"""
 
 	if (Gamma is not None) and (z is not None):
@@ -1613,9 +1664,9 @@ def RcausticOverR200m(nu_vir = None, z = None, Gamma = None, averaged_profile = 
 
 ###################################################################################################
 
-def McausticOverM200m(nu_vir = None, z = None, Gamma = None, averaged_profile = False):
+def MspOverM200m(nu_vir = None, z = None, Gamma = None, averaged_profile = False):
 	"""
-	The ratio :math:`M_{caustic} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or
+	The ratio :math:`M_{sp} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or
 	the peak height, :math:`\\nu`.
 	
 	This function implements the relations calibrated in More, Diemer & Kravtsov 2015. Either
@@ -1623,8 +1674,8 @@ def McausticOverM200m(nu_vir = None, z = None, Gamma = None, averaged_profile = 
 	be ``None``. 
 	
 	When using the calibration as a function of :math:`\\nu`, their are two separate calibrations
-	for :math:`M_{caustic} / M_{200m}` derived from the averaged density profile of halos of a 
-	certain peak height (``averaged_profile = True``), and the median :math:`M_{caustic} / M_{200m}`
+	for :math:`M_{sp} / M_{200m}` derived from the averaged density profile of halos of a 
+	certain peak height (``averaged_profile = True``), and the median :math:`M_{sp} / M_{200m}`
 	of halos (``averaged_profile = False``). The latter is calibrated via the mass accretion rate, 
 	and more reliable in general.
 
@@ -1643,13 +1694,13 @@ def McausticOverM200m(nu_vir = None, z = None, Gamma = None, averaged_profile = 
 	Returns
 	-----------------------------------------------------------------------------------------------
 	ratio: array_like
-		:math:`M_{caustic} / M_{200m}`; has the same dimensions as z, Gamma, or nu, depending
+		:math:`M_{sp} / M_{200m}`; has the same dimensions as z, Gamma, or nu, depending
 		on which of those parameters is an array.
 		
 	See also
 	-----------------------------------------------------------------------------------------------
-	RcausticOverR200m: The ratio :math:`R_{caustic} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
-	Mcaustic: :math:`M_{caustic}` as a function of spherical overdensity mass.
+	RspOverR200m: The ratio :math:`R_{sp} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
+	Msp: :math:`M_{sp}` as a function of spherical overdensity mass.
 	"""
 	
 	if (Gamma is not None) and (z is not None):
@@ -1668,9 +1719,9 @@ def McausticOverM200m(nu_vir = None, z = None, Gamma = None, averaged_profile = 
 
 ###################################################################################################
 
-def Mcaustic(M, z, mdef, c = None, profile = 'nfw'):
+def Msp(M, z, mdef, c = None, profile = 'nfw'):
 	"""
-	:math:`M_{caustic}` as a function of spherical overdensity mass.
+	:math:`M_{sp}` as a function of spherical overdensity mass.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -1689,13 +1740,13 @@ def Mcaustic(M, z, mdef, c = None, profile = 'nfw'):
 
 	Returns
 	-----------------------------------------------------------------------------------------------
-	Mcaustic: array_like
-		:math:`M_{caustic}` in :math:`M_{\odot}/h`; has the same dimensions as M.
+	Msp: array_like
+		:math:`M_{sp}` in :math:`M_{\odot}/h`; has the same dimensions as M.
 		
 	See also
 	-----------------------------------------------------------------------------------------------
-	RcausticOverR200m: The ratio :math:`R_{caustic} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
-	McausticOverM200m: The ratio :math:`M_{caustic} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
+	RspOverR200m: The ratio :math:`R_{sp} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
+	MspOverM200m: The ratio :math:`M_{sp} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
 	"""
 	
 	if mdef == '200m':
@@ -1710,9 +1761,9 @@ def Mcaustic(M, z, mdef, c = None, profile = 'nfw'):
 	
 	cosmo = Cosmology.getCurrent()
 	nu_vir = cosmo.peakHeight(Mvir, z)
-	Mcaustic = M200m * McausticOverM200m(z, nu_vir = nu_vir)
+	Msp = M200m * MspOverM200m(z, nu_vir = nu_vir)
 	
-	return Mcaustic
+	return Msp
 
 ###################################################################################################
 
