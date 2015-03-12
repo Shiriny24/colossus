@@ -1174,6 +1174,35 @@ class DK14Profile(HaloDensityProfile):
 
 	###############################################################################################
 
+	# This function returns various calibrations of rt / R200m. Depending on selected, the chosen
+	# beta and gamma are different, and thus rt is rather different. If selected == by_accretion_rate,
+	# there are multiple ways to calibrate the relation: from Gamma and z directly, or for the 
+	# nu-selected samples but fitted like the accretion rate-selected samples (i.e., with beta
+	# = 6 and gamma = 4.
+
+	@staticmethod
+	def rtOverR200m(selected, nu200m = None, z = None, Gamma = None, averaged_profile = False):
+		
+		if selected == 'by_mass':
+			ratio = 1.9 - 0.18 * nu200m
+		
+		elif selected == 'by_accretion_rate':
+			if (Gamma is not None) and (z is not None):
+				cosmo = Cosmology.getCurrent()
+				ratio =  0.43 * (1.0 + 0.92 * cosmo.Om(z)) * (1.0 + 2.18 * numpy.exp(-Gamma / 1.91))
+			elif nu200m is not None:
+				if averaged_profile:
+					ratio = 0.79 * (1.0 + 1.63 * numpy.exp(-nu200m / 1.56))
+				else:
+					ratio = 0.76 * (1.0 + 1.56 * numpy.exp(-nu200m / 1.63))
+			else:
+				msg = 'Need either Gamma and z, or nu.'
+				raise Exception(msg)
+
+		return ratio
+
+	###############################################################################################
+
 	# Get the parameter values for the DK14 profile that should be fixed, or can be determined from the 
 	# peak height or mass accretion rate. If selected is 'by_mass', only nu must be passed. If selected 
 	# is 'by_accretion_rate', then both z and Gamma must be passed.
@@ -1182,16 +1211,14 @@ class DK14Profile(HaloDensityProfile):
 	
 	def getFixedParameters(self, selected, nu = None, z = None, Gamma = None):
 	
-		cosmo = Cosmology.getCurrent()
-	
 		if selected == 'by_mass':
 			beta = 4.0
 			gamma = 8.0
-			rt_R200m = abs(1.9 - 0.18 * nu)
+			rt_R200m = self.rtOverR200m('by_mass')
 		elif selected == 'by_accretion_rate':
 			beta = 6.0
 			gamma = 4.0
-			rt_R200m = 0.43 * (1.0 + 0.92 * cosmo.Om(z)) * (1.0 + 2.18 * numpy.exp(-Gamma / 1.91))
+			rt_R200m = self.rtOverR200m('by_accretion_rate', z = z, Gamma = Gamma)
 		else:
 			msg = "HaloDensityProfile.DK14_getFixedParameters: Unknown sample selection, %s." % (selected)
 			raise Exception(msg)
@@ -1471,7 +1498,7 @@ def pseudoEvolve(M_i, c_i, z_i, mdef_i, z_f, mdef_f, profile = 'nfw'):
 			else:
 				Rnew[i] = prof.RDelta(z_f, mdef_f)
 			cnew[i] = Rnew[i] / prof.rs
-		
+
 	else:
 		msg = 'This function is not defined for profile %s.' % (profile)
 		raise Exception(msg)
@@ -1609,7 +1636,7 @@ def M4rs(M, z, mdef, c = None):
 
 ###################################################################################################
 
-def RspOverR200m(nu_vir = None, z = None, Gamma = None, averaged_profile = False):
+def RspOverR200m(nu200m = None, z = None, Gamma = None, averaged_profile = False):
 	"""
 	The ratio :math:`R_{sp} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or
 	the peak height, :math:`\\nu`.
@@ -1626,8 +1653,8 @@ def RspOverR200m(nu_vir = None, z = None, Gamma = None, averaged_profile = False
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
-	nu_vir: array_like
-		The peak height as computed from :math:`M_{vir}`; can be a number or a numpy array.
+	nu200m: array_like
+		The peak height as computed from :math:`M_{200m}`; can be a number or a numpy array.
 	z: array_like
 		Redshift; can be a number or a numpy array.
 	Gamma: array_like
@@ -1651,11 +1678,11 @@ def RspOverR200m(nu_vir = None, z = None, Gamma = None, averaged_profile = False
 	if (Gamma is not None) and (z is not None):
 		cosmo = Cosmology.getCurrent()
 		ratio =  0.54 * (1 + 0.53 * cosmo.Om(z)) * (1 + 1.36 * numpy.exp(-Gamma / 3.04))
-	elif nu_vir is not None:
+	elif nu200m is not None:
 		if averaged_profile:
-			ratio = 1.50 - 0.14 * nu_vir
+			ratio = 0.74 * (1.0 + 1.26 * numpy.exp(-nu200m / 2.86))
 		else:
-			ratio = 0.89 * (1.0 + 0.73 * numpy.exp(-nu_vir / 1.74))
+			ratio = 0.81 * (1.0 + 0.97 * numpy.exp(-nu200m / 2.44))
 	else:
 		msg = 'Need either Gamma and z, or nu.'
 		raise Exception(msg)
@@ -1664,7 +1691,7 @@ def RspOverR200m(nu_vir = None, z = None, Gamma = None, averaged_profile = False
 
 ###################################################################################################
 
-def MspOverM200m(nu_vir = None, z = None, Gamma = None, averaged_profile = False):
+def MspOverM200m(nu200m = None, z = None, Gamma = None, averaged_profile = False):
 	"""
 	The ratio :math:`M_{sp} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or
 	the peak height, :math:`\\nu`.
@@ -1682,7 +1709,7 @@ def MspOverM200m(nu_vir = None, z = None, Gamma = None, averaged_profile = False
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	nu_vir: array_like
-		The peak height as computed from :math:`M_{vir}`; can be a number or a numpy array.
+		The peak height as computed from :math:`M_{200m}`; can be a number or a numpy array.
 	z: array_like
 		Redshift; can be a number or a numpy array.
 	Gamma: array_like
@@ -1706,15 +1733,15 @@ def MspOverM200m(nu_vir = None, z = None, Gamma = None, averaged_profile = False
 	if (Gamma is not None) and (z is not None):
 		cosmo = Cosmology.getCurrent()
 		ratio =  0.59 * (1 + 0.35 * cosmo.Om(z)) * (1 + 0.92 * numpy.exp(-Gamma / 4.54))
-	elif nu_vir is not None:
+	elif nu200m is not None:
 		if averaged_profile:
-			ratio = 1.31 - 0.09 * nu_vir
+			ratio = 0.78 * (1.0 + 0.80 * numpy.exp(-nu200m / 3.57))
 		else:
-			ratio = 0.86 * (1.0 + 0.49 * numpy.exp(-nu_vir / 2.85))
+			ratio = 0.82 * (1.0 + 0.63 * numpy.exp(-nu200m / 3.52))
 	else:
 		msg = 'Need either Gamma and z, or nu.'
 		raise Exception(msg)
-		
+	
 	return ratio
 
 ###################################################################################################
