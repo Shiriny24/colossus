@@ -788,14 +788,20 @@ class Cosmology(object):
 	# Times & distances
 	###############################################################################################
 	
-	def hubbleTime(self):
+	def hubbleTime(self, z = 0.0):
 		"""
-		The Hubble time, :math:`1/H_0`.
+		The Hubble time, :math:`1/H(z)`.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		z: array_like
+			Redshift; can be a number or a numpy array.
 
 		Returns
 		-------------------------------------------------------------------------------------------
 		tH: float
-			:math:`1/H_0` in units of Gyr.
+			:math:`1/H` in units of Gyr; has the same dimensions as z. By default returns 
+			:math:`1/H_0`.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -803,7 +809,7 @@ class Cosmology(object):
 		age: The age of the universe at redshift z.
 		"""
 		
-		tH = 1E-16 * AST_Mpc / AST_year / self.h
+		tH = 1E-16 * AST_Mpc / AST_year / self.h / self.Ez(z)
 		
 		return tH
 	
