@@ -103,8 +103,8 @@ WMAP5-ML       Komatsu et al. 2009   Table 1     Max. likelihood, with BAO and S
 WMAP5 	       Komatsu et al. 2009   Table 1     Best-fit, with BAO and SN 			
 WMAP3-ML       Spergel et al. 2007   Table 2     Max.likelihood, WMAP only 				
 WMAP3          Spergel et al. 2007   Table 5     Best fit, WMAP only 					
-WMAP1-ML       Spergel et al. 2005   Table 1 / 4 Max.likelihood, WMAP only 				
-WMAP1          Spergel et al. 2005   Table 7 / 4 Best fit, WMAP only 					
+WMAP1-ML       Spergel et al. 2005   Table 1/4   Max.likelihood, WMAP only 				
+WMAP1          Spergel et al. 2005   Table 7/4   Best fit, WMAP only 					
 bolshoi	       Klypin et al. 2011    --          Cosmology of the Bolshoi simulation
 millennium     Springel et al. 2005	 --          Cosmology of the Millennium simulation 
 powerlaw       --                    --          Default settings for power-law cosms.
@@ -129,6 +129,29 @@ Density      Physical :math:`M_{\odot} h^2 / kpc^3`
 Note that densities use physical kpc/h whereas all other lengths are expressed in comoving Mpc/h. 
 The kpc/h units for density make them compatible with the HaloDensityProfile module, where all 
 lengths are expressed in physical kpc/h.
+
+***************************************************************************************************
+Derivatives and Inverses
+***************************************************************************************************
+
+Almost all cosmology functions that are interpolated (e.g., :func:`Cosmology.age()`, 
+:func:`Cosmology.luminosityDistance()` or :func:`Cosmology.sigma()`) can be evaluated as an nth 
+derivative. Please note that some functions are interpolated in log space, resulting in a logarithmic
+derivative, while others are interpolated and differentiated in linear space. Please see the 
+function documentations below for details.
+
+The derivative functions were not systematically tested for accuracy. Their accuracy will depend
+on how well the function in question is represented by the spline approximation. In general, 
+the accuracy of the derivatives will be worse that the error quoted on the function itself, and 
+get worse with the order of the derivative.
+
+Furthermore, the inverse of interpolated functions can be evaluated by passing ``inverse = True``.
+In this case, for a function y(x), x(y) is returned instead. Those functions raise an Exception if
+the requested value lies outside the range of the interpolating spline.
+
+The inverse and derivative flags can be combined to give the derivative of the inverse, i.e. dx/dy. 
+Once again, please check the function documentation whether that derivative is in linear or 
+logarithmic units.
 
 ---------------------------------------------------------------------------------------------------
 Performance optimization and accuracy
@@ -547,7 +570,7 @@ class Cosmology(object):
 					if inverse: 
 						
 						# There is a subtlety: the spline interpolator can't deal with decreasing 
-						# x-values, so if the y-values 
+						# x-values, so if the y-values are decreasing, we reverse their order.
 						if object_raw[1][-1] < object_raw[1][0]:
 							object_raw = object_raw[:,::-1]
 						
@@ -761,9 +784,23 @@ class Cosmology(object):
 			# Get interpolator. If it does not exist, create it.
 			interpolator = self._zInterpolator(table_name, func, inverse = inverse, future = future)
 			
-			# Check limits of z array. If inverse == True, we would need to check the limits on 
-			# the result function for which we do not necessarily know the limits. 
-			if not inverse:
+			# Check limits of z array. If inverse == True, we need to check the limits on 
+			# the result function.
+			if inverse:
+				min_ = interpolator.get_knots()[0]
+				max_ = interpolator.get_knots()[-1]
+				
+				if numpy.min(z) < min_:
+					msg = "f = %.3f outside range (min. f is %.3f)." \
+						% (numpy.min(z), min_)
+					raise Exception(msg)
+					
+				if numpy.max(z) > max_:
+					msg = "f = %.3f outside range (max. f is %.3f)." \
+						% (numpy.max(z), max_)
+					raise Exception(msg)
+				
+			else:
 				if numpy.min(z) < self.z_min:
 					msg = "z = %.2f outside range (min. z is %.2f)." \
 						% (numpy.min(z), self.z_min)
@@ -823,7 +860,7 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	def lookbackTime(self, z, derivative = 0):
+	def lookbackTime(self, z, derivative = 0, inverse = False):
 		"""
 		The lookback time since z.
 		
@@ -836,6 +873,8 @@ class Cosmology(object):
 			Redshift, where :math:`-0.995 < z < 200`; can be a number or a numpy array.
 		derivative: int
 			If greater than 0, evaluate the nth derivative, :math:`d^nt/dz^n`.
+		inverse: bool
+			If True, evaluate :math:`z(t)` instead of :math:`t(z)`.
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -849,7 +888,8 @@ class Cosmology(object):
 		age: The age of the universe at redshift z.
 		"""
 		
-		t = self._zFunction('lookbacktime', self._lookbackTimeExact, z, derivative = derivative)
+		t = self._zFunction('lookbacktime', self._lookbackTimeExact, z, derivative = derivative, \
+						inverse = inverse)
 		
 		return t
 	
@@ -863,7 +903,7 @@ class Cosmology(object):
 	
 	###############################################################################################
 	
-	def age(self, z = 0.0, derivative = 0):
+	def age(self, z = 0.0, derivative = 0, inverse = False):
 		"""
 		The age of the universe at redshift z.
 
@@ -873,6 +913,8 @@ class Cosmology(object):
 			Redshift, where :math:`-0.995 < z < 200`; can be a number or a numpy array.
 		derivative: int
 			If greater than 0, evaluate the nth derivative, :math:`d^nt/dz^n`.
+		inverse: bool
+			If True, evaluate :math:`z(t)` instead of :math:`t(z)`.
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -886,7 +928,7 @@ class Cosmology(object):
 		lookbackTime: The lookback time since z.
 		"""
 
-		t = self._zFunction('age', self._ageExact, z, derivative = derivative)
+		t = self._zFunction('age', self._ageExact, z, derivative = derivative, inverse = inverse)
 		
 		return t
 	
@@ -936,7 +978,7 @@ class Cosmology(object):
 
 	###############################################################################################
 	
-	def luminosityDistance(self, z, derivative = 0):
+	def luminosityDistance(self, z, derivative = 0, inverse = False):
 		"""
 		The luminosity distance to redshift z.
 
@@ -946,6 +988,8 @@ class Cosmology(object):
 			Redshift, where :math:`-0.995 < z < 200`; can be a number or a numpy array.
 		derivative: int
 			If greater than 0, evaluate the nth derivative, :math:`d^nD/dz^n`.
+		inverse: bool
+			If True, evaluate :math:`z(D)` instead of :math:`D(z)`.
 			
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -959,7 +1003,7 @@ class Cosmology(object):
 		"""
 		
 		d = self._zFunction('luminositydist', self._luminosityDistanceExact, z, \
-						future = False, derivative = derivative)
+						future = False, derivative = derivative, inverse = inverse)
 		
 		return d
 	
@@ -973,7 +1017,7 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	def angularDiameterDistance(self, z, derivative = 0):
+	def angularDiameterDistance(self, z, derivative = 0, inverse = False):
 		"""
 		The angular diameter distance to redshift z.
 
@@ -983,6 +1027,8 @@ class Cosmology(object):
 			Redshift, where :math:`-0.995 < z < 200`; can be a number or a numpy array.
 		derivative: int
 			If greater than 0, evaluate the nth derivative, :math:`d^nD/dz^n`.
+		inverse: bool
+			If True, evaluate :math:`z(D)` instead of :math:`D(z)`.
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -996,7 +1042,7 @@ class Cosmology(object):
 		"""
 
 		d = self._zFunction('angdiamdist', self._angularDiameterDistanceExact, z, \
-						future = False, derivative = derivative)
+						future = False, derivative = derivative, inverse = inverse)
 		
 		return d
 
@@ -1283,7 +1329,7 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	def growthFactor(self, z, derivative = 0):
+	def growthFactor(self, z, derivative = 0, inverse = False):
 		"""
 		The linear growth factor normalized to z = 0, :math:`D_+(z) / D_+(0)`.
 
@@ -1297,6 +1343,8 @@ class Cosmology(object):
 			Redshift, where :math:`-0.999 < z < 500`; can be a number or a numpy array.
 		derivative: int
 			If greater than 0, evaluate the nth derivative, :math:`d^nD_+/dz^n`.
+		inverse: bool
+			If True, evaluate :math:`z(D_+)` instead of :math:`D_+(z)`.
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -1308,7 +1356,8 @@ class Cosmology(object):
 		growthFactorUnnormalized: The linear growth factor, :math:`D_+(z)`.
 		"""
 
-		D = self._zFunction('growthfactor', self._growthFactorExact, z, derivative = derivative)
+		D = self._zFunction('growthfactor', self._growthFactorExact, z, derivative = derivative, \
+						inverse = inverse)
 
 		return D
 

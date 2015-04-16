@@ -32,8 +32,8 @@ documentation to the developer.
 Citing Colossus
 ***************************************************************************************************
 
-If you use Colossus for a publication, please cite Diemer & Kravtsov 2015, 
-`arXiv:1407.4730 <http://arxiv.org/abs/1407.4730>`_, as well as any other papers that 
+If you use Colossus for a publication, please cite Diemer & Kravtsov 2015 
+(`ApJ 799, 108 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_), as well as any other papers that 
 form the basis for the Colossus routines you are using. Such references are mentioned 
 in the documentation.
 
