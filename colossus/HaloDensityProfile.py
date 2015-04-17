@@ -61,7 +61,13 @@ to another::
 	M200m, R200m, c200m = changeMassDefinition(1E12, 10.0, 1.0, 'vir', '200m')
 	
 Here we again assumed a halo with :math:`M_{vir}=10^{12} M_{\odot}/h` and :math:`c_{vir} = 10` 
-at z=1, and converted it to the 200m mass definition.
+at z=1, and converted it to the 200m mass definition. If we do not know the concentration in
+the initial mass definition, we can use a concentration model to estimate it::
+
+	M200m, R200m, c200m = changeMassDefinitionCModel(1E12, 1.0, 'vir', '200m')
+	
+By default, the function uses the ``diemer_15`` concentration model (see the documentation of the
+:mod:`HaloConcentration` module).
 
 ***************************************************************************************************
 Alternative mass definitions
@@ -84,10 +90,11 @@ More, Diemer & Kravtsov 2015. Those include:
 converter functions:
 
 .. autosummary::	
-	M4rs
-	MspOverM200m
 	RspOverR200m
+	MspOverM200m
+	Rsp
 	Msp
+	M4rs
 
 ***************************************************************************************************
 Units
@@ -217,7 +224,7 @@ class HaloDensityProfile(object):
 		-------------------------------------------------------------------------------------------
 		r: array_like
 			Radius in physical kpc/h; can be a number or a numpy array.
-			
+
 		Returns
 		-------------------------------------------------------------------------------------------
 		derivative: array_like
@@ -998,8 +1005,27 @@ class DK14Profile(HaloDensityProfile):
 	The Diemer & Kravtsov 2014 density profile.
 	
 	This profile corresponds to an Einasto profile at small radii, and steepens around the virial 
-	radius. At large radii, the profile approaches a power-law in r. See Diemer & Kravtsov 2014
-	for details.
+	radius. At large radii, the profile approaches a power-law in r. The profile formula has 8
+	free parameters, but most of those are fixed to particular values. This is done automatically,
+	the user only needs to pass the mass of a halo, and optionally concentration. However, there are
+	some further options.
+	
+	The profile was calibrated for the median and mean profiles of two types of halo samples, 
+	namely samples selected by mass, and samples selected by both mass and mass accretion rate. 
+	When a new profile object is created, the user can choose between those by setting 
+	``selected = 'by_mass'`` or ``selected = 'by_accretion_rate'``. The latter option results 
+	in a more accurate representation of the density profile, but the mass accretion rate must be 
+	known. 
+	
+	Furthermore, the parameters for the power-law outer profile (be and se) exhibit a complicated 
+	dependence on halo mass, redshift and cosmology. At the moment, they are not automatically 
+	determined and must be set by the user if ``part == both``, i.e. if the outer profile is to
+	be included which is recommended if the profile is to be reliable beyond the virial radius. 
+	At low redshift, and for the cosmology considered in our paper, ``be = 1.0`` and ``se = 1.5`` 
+	are good values over a wide range of masses (see Figure 18 in Diemer & Kravtsov 2014). 
+	
+	The parameter values, and their dependence on mass etc, are explained in Section 3.3 of
+	Diemer & Kravtsov 2014.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -1029,7 +1055,7 @@ class DK14Profile(HaloDensityProfile):
 			selected = 'by_mass', Gamma = None, part = 'both', be = None, se = None, \
 			acc_warn = 0.01, acc_err = 0.05):
 		"""
-		Get the native DK14 parameters given a halo mass and concentration.
+		Get the native DK14 parameters given a halo mass, and possibly concentration.
 		
 		Get the DK14 parameters that correspond to a profile with a particular mass M in some mass
 		definition mdef. Optionally, the user can define the concentration c; otherwise, it is 
@@ -1041,14 +1067,15 @@ class DK14Profile(HaloDensityProfile):
 			Halo mass in :math:`M_{\odot}/h`.
 		c: float
 			Concentration. If this parameter is None, c is estimated using the model of 
-			Diemer & Kravtsov 2014b. 
+			Diemer & Kravtsov 2015. 
 		z: float
 			Redshift
 		mdef: str
 			The mass definition to which M corresponds.
 		selected: str
 			The halo sample to which this profile refers can be selected ``by_mass`` or 
-			``by_accretion_rate``.
+			``by_accretion_rate``. This parameter influences how some of the fixed parameters in the 
+			profile are set, in particular those that describe the steepening term.
 		Gamma: float
 			The mass accretion rate as defined in DK14. This parameter only needs to be passed if 
 			``selected == by_accretion_rate``.
@@ -1058,8 +1085,12 @@ class DK14Profile(HaloDensityProfile):
 			normalized to have the mass M.
 		be: float
 			Normalization of the power-law outer profile. Only needs to be passed if ``part == both``.
+			The best-fit be and se parameters depend on redshift, halo mass, cosmology etc,
+			and there is no convenient formula to describe their values. At low redshift, ``be = 1.0``
+			and ``se = 1.5`` are a good assumption (see Figure 18 in Diemer & Kravtsov 2014). 
 		se: float
-			Slope of the power-law outer profile. Only needs to be passed if ``part == both``.
+			Slope of the power-law outer profile (see parameter ``be`` above). Only needs to be 
+			passed if ``part == both``.
 		acc_warn: float
 			If the function achieves a relative accuracy in matching M less than this value, a warning 
 			is printed.
@@ -1070,9 +1101,7 @@ class DK14Profile(HaloDensityProfile):
 		
 		# Declare shared variables; these parameters are advanced during the iterations
 		par2 = {}
-		par2['Rvir'] = 0.0
 		par2['RDelta'] = 0.0
-		par2['nu'] = 0.0
 		self.par = DK14Parameters()
 		
 		RTOL = 0.01
@@ -1080,45 +1109,27 @@ class DK14Profile(HaloDensityProfile):
 		GUESS_TOL = 2.5
 		self.accuracy_mass = MTOL
 		self.accuracy_radius = RTOL
+	
+		# -----------------------------------------------------------------------------------------
+
+		# Try a radius R200m, compute the resulting RDelta using the old RDelta as a starting guess
 		
-		def radius_diff(R200m, par2, Gamma, rho_target, rho_vir, R_target):
+		def radius_diff(R200m, par2, Gamma, rho_target, R_target):
 			
-			# Remember the parts we need to evaluate; this will get overwritten
-			part_true = self.par.part
 			self.par.R200m = R200m
-			
-			# Set nu_vir from previous Rvir
-			Mvir = Halo.R_to_M(par2['Rvir'], z, 'vir')
-			par2['nu'] = cosmo.peakHeight(Mvir, z)
-	
-			# Set profile parameters
-			self.par.alpha, self.par.beta, self.par.gamma, rt_R200m = \
-				self.getFixedParameters(selected, nu = par2['nu'], z = z, Gamma = Gamma)
-			self.par.rt = rt_R200m * R200m
-	
-			# Find rho_s; this can be done without iterating
-			self.par.rho_s = 1.0
-			self.par.part = 'inner'
 			M200m = Halo.R_to_M(R200m, z, '200m')
-			Mr_inner = self.enclosedMass(R200m, accuracy = MTOL)
-			
-			if part == 'both':
-				self.par.part = 'outer'
-				Mr_outer = self.enclosedMass(R200m, accuracy = MTOL)
-			elif part == 'inner':
-				Mr_outer = 0.0
-			else:
-				msg = "Invalid value for part, %s." % (part)
-				raise Exception(msg)
-				
-			self.par.rho_s = (M200m - Mr_outer) / Mr_inner
-			self.par.part = part_true
-	
-			# Now compute MDelta and Mvir from this new profile
+			nu200m = cosmo.peakHeight(M200m, z)
+
+			self.par.alpha, self.par.beta, self.par.gamma, rt_R200m = \
+				self.getFixedParameters(selected, nu200m = nu200m, z = z, Gamma = Gamma)
+			self.par.rt = rt_R200m * R200m
+			self.normalize(R200m, M200m, mtol = MTOL)
+
 			par2['RDelta'] = self._RDeltaLowlevel(par2['RDelta'], rho_target, guess_tolerance = GUESS_TOL)
-			par2['Rvir'] = self._RDeltaLowlevel(par2['Rvir'], rho_vir, guess_tolerance = GUESS_TOL)
 			
 			return par2['RDelta'] - R_target
+		
+		# -----------------------------------------------------------------------------------------
 		
 		# Test for wrong user input
 		if part in ['outer', 'both'] and (be is None or se is None):
@@ -1132,56 +1143,63 @@ class DK14Profile(HaloDensityProfile):
 		if c is None:
 			c = HaloConcentration.concentration(M, mdef, z, statistic = 'median')
 		R_target = Halo.M_to_R(M, z, mdef)
-		par2['RDelta'] = R_target
+
 		self.par.rs = R_target / c
-		
-		# Take a guess at nu_vir and R200m
-		if mdef == 'vir':
-			Mvir = M
-			par2['Rvir'] = Halo.M_to_R(Mvir, z, 'vir')
-		else:
-			Mvir, par2['Rvir'], _ = changeMassDefinition(M, c, z, mdef, 'vir')
-		par2['nu'] = cosmo.peakHeight(Mvir, z)
-		
-		if mdef == '200m':
-			R200m_guess = Halo.M_to_R(M, z, '200m')
-		else:
-			_, R200m_guess, _ = changeMassDefinition(M, c, z, mdef, '200m')
-		
-		# Iterate to find an M200m for which the desired mass is correct
 		self.par.rho_m = cosmo.matterDensity(z)
 		self.par.be = be
 		self.par.se = se
 		self.par.part = part
-		rho_target = Halo.densityThreshold(z, mdef)
-		rho_vir = Halo.densityThreshold(z, 'vir')
-		args = par2, Gamma, rho_target, rho_vir, R_target
-		self.par.R200m = scipy.optimize.brentq(radius_diff, R200m_guess / 1.3, R200m_guess * 1.3, \
-							args = args, xtol = RTOL)
-	
-		# Check the accuracy of the result; M should be very close to MDelta now
-		M_result = Halo.R_to_M(par2['RDelta'], z, mdef)
-		err = (M_result - M) / M
 		
-		if abs(err) > acc_warn:
-			msg = 'WARNING: DK14 profile parameters converged to an accuracy of %.1f percent.' % (abs(err) * 100.0)
-			print(msg)
-		if abs(err) > acc_err:
-			msg = 'DK14 profile parameters not converged (%.1f percent error).' % (abs(err) * 100.0)
-			raise Exception(msg)
+		if mdef == '200m':
+			
+			# The user has supplied M200m, the parameters follow directly from the input
+			M200m = M
+			self.par.R200m = Halo.M_to_R(M200m, z, '200m')
+			nu200m = cosmo.peakHeight(M200m, z)
+			self.par.alpha, self.par.beta, self.par.gamma, rt_R200m = \
+				self.getFixedParameters(selected, nu200m = nu200m, z = z, Gamma = Gamma)
+			self.par.rt = rt_R200m * self.par.R200m
+			self.normalize(self.par.R200m, M200m, mtol = MTOL)
+			
+		else:
+			
+			# The user has supplied some other mass definition, we need to iterate.
+			_, R200m_guess, _ = changeMassDefinition(M, c, z, mdef, '200m')
+			par2['RDelta'] = R_target
+
+			# Iterate to find an M200m for which the desired mass is correct
+			rho_target = Halo.densityThreshold(z, mdef)
+			args = par2, Gamma, rho_target, R_target
+			self.par.R200m = scipy.optimize.brentq(radius_diff, R200m_guess / 1.3, R200m_guess * 1.3, \
+								args = args, xtol = RTOL)
+
+			# Check the accuracy of the result; M should be very close to MDelta now
+			M_result = Halo.R_to_M(par2['RDelta'], z, mdef)
+			err = (M_result - M) / M
+			
+			if abs(err) > acc_warn:
+				msg = 'WARNING: DK14 profile parameters converged to an accuracy of %.1f percent.' % (abs(err) * 100.0)
+				print(msg)
+			if abs(err) > acc_err:
+				msg = 'DK14 profile parameters not converged (%.1f percent error).' % (abs(err) * 100.0)
+				raise Exception(msg)
 		
 		return
 
 	###############################################################################################
 
 	# This function returns various calibrations of rt / R200m. Depending on selected, the chosen
-	# beta and gamma are different, and thus rt is rather different. If selected == by_accretion_rate,
-	# there are multiple ways to calibrate the relation: from Gamma and z directly, or for the 
-	# nu-selected samples but fitted like the accretion rate-selected samples (i.e., with beta
-	# = 6 and gamma = 4.
+	# beta and gamma are different, and thus rt is rather different. 
+	#
+	# If selected ==  by_nu, we use Equation 6 in DK14. Though this relation was originally 
+	# calibrated for nu = nu_vir, the difference is small (<5%). 
+	#
+	# If selected == by_accretion_rate, there are multiple ways to calibrate the relation: from 
+	# Gamma and z directly, or for the nu-selected samples but fitted like the accretion 
+	# rate-selected samples (i.e., with beta = 6 and gamma = 4).
 
 	@staticmethod
-	def rtOverR200m(selected, nu200m = None, z = None, Gamma = None, averaged_profile = False):
+	def rtOverR200m(selected, nu200m = None, z = None, Gamma = None):
 		
 		if selected == 'by_mass':
 			ratio = 1.9 - 0.18 * nu200m
@@ -1191,10 +1209,7 @@ class DK14Profile(HaloDensityProfile):
 				cosmo = Cosmology.getCurrent()
 				ratio =  0.43 * (1.0 + 0.92 * cosmo.Om(z)) * (1.0 + 2.18 * numpy.exp(-Gamma / 1.91))
 			elif nu200m is not None:
-				if averaged_profile:
-					ratio = 0.79 * (1.0 + 1.63 * numpy.exp(-nu200m / 1.56))
-				else:
-					ratio = 0.76 * (1.0 + 1.56 * numpy.exp(-nu200m / 1.63))
+				ratio = 0.79 * (1.0 + 1.63 * numpy.exp(-nu200m / 1.56))
 			else:
 				msg = 'Need either Gamma and z, or nu.'
 				raise Exception(msg)
@@ -1206,15 +1221,13 @@ class DK14Profile(HaloDensityProfile):
 	# Get the parameter values for the DK14 profile that should be fixed, or can be determined from the 
 	# peak height or mass accretion rate. If selected is 'by_mass', only nu must be passed. If selected 
 	# is 'by_accretion_rate', then both z and Gamma must be passed.
-	#
-	# Some parameter dependencies were updated in More et al. 2015.
 	
-	def getFixedParameters(self, selected, nu = None, z = None, Gamma = None):
+	def getFixedParameters(self, selected, nu200m = None, z = None, Gamma = None):
 	
 		if selected == 'by_mass':
 			beta = 4.0
 			gamma = 8.0
-			rt_R200m = self.rtOverR200m('by_mass')
+			rt_R200m = self.rtOverR200m('by_mass', nu200m = nu200m)
 		elif selected == 'by_accretion_rate':
 			beta = 6.0
 			gamma = 4.0
@@ -1223,9 +1236,36 @@ class DK14Profile(HaloDensityProfile):
 			msg = "HaloDensityProfile.DK14_getFixedParameters: Unknown sample selection, %s." % (selected)
 			raise Exception(msg)
 		
-		alpha = 0.155 + 0.0095 * nu**2
-				
+		# Gao et al relation between alpha and nu. This function was originally calibrated for 
+		# nu = nu_vir, but the difference is very small.
+		alpha = 0.155 + 0.0095 * nu200m**2
+
 		return alpha, beta, gamma, rt_R200m
+
+	###############################################################################################
+
+	# Set the rhos parameter such that the profile encloses mass M at radius R
+
+	def normalize(self, R, M, mtol = 0.01):
+
+		part_true = self.par.part
+		self.par.part = 'inner'
+		self.par.rho_s = 1.0
+
+		Mr_inner = self.enclosedMass(R)
+		if part_true == 'both':
+			self.par.part = 'outer'
+			Mr_outer = self.enclosedMass(R)
+		elif part_true == 'inner':
+			Mr_outer = 0.0
+		else:
+			msg = "Invalid value for part, %s." % (part_true)
+			raise Exception(msg)
+			
+		self.par.rho_s = (M - Mr_outer) / Mr_inner
+		self.par.part = part_true
+		
+		return
 
 	###############################################################################################
 
@@ -1636,7 +1676,7 @@ def M4rs(M, z, mdef, c = None):
 
 ###################################################################################################
 
-def RspOverR200m(nu200m = None, z = None, Gamma = None, averaged_profile = False):
+def RspOverR200m(nu200m = None, z = None, Gamma = None):
 	"""
 	The ratio :math:`R_{sp} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or
 	the peak height, :math:`\\nu`.
@@ -1644,12 +1684,6 @@ def RspOverR200m(nu200m = None, z = None, Gamma = None, averaged_profile = False
 	This function implements the relations calibrated in More, Diemer & Kravtsov 2015. Either
 	the accretion rate :math:`\\Gamma` and redshift, or the peak height :math:`\\nu`, must not 
 	be ``None``. 
-	
-	When using the calibration as a function of :math:`\\nu`, their are two separate calibrations
-	for :math:`R_{sp} / R_{200m}` derived from the averaged density profile of halos of a 
-	certain peak height (``averaged_profile = True``), and the median :math:`R_{sp} / R_{200m}`
-	of halos (``averaged_profile = False``). The latter is calibrated via the mass accretion rate, 
-	and more reliable in general.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -1660,8 +1694,6 @@ def RspOverR200m(nu200m = None, z = None, Gamma = None, averaged_profile = False
 	Gamma: array_like
 		The mass accretion rate, as defined in Diemer & Kravtsov 2014; can be a number or a 
 		numpy array.
-	averaged_profile: bool
-		See documentation above.
 	
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -1672,6 +1704,7 @@ def RspOverR200m(nu200m = None, z = None, Gamma = None, averaged_profile = False
 	See also
 	-----------------------------------------------------------------------------------------------
 	MspOverM200m: The ratio :math:`M_{sp} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
+	Rsp: :math:`R_{sp}` as a function of spherical overdensity radius.
 	Msp: :math:`M_{sp}` as a function of spherical overdensity mass.
 	"""
 
@@ -1679,10 +1712,7 @@ def RspOverR200m(nu200m = None, z = None, Gamma = None, averaged_profile = False
 		cosmo = Cosmology.getCurrent()
 		ratio =  0.54 * (1 + 0.53 * cosmo.Om(z)) * (1 + 1.36 * numpy.exp(-Gamma / 3.04))
 	elif nu200m is not None:
-		if averaged_profile:
-			ratio = 0.74 * (1.0 + 1.26 * numpy.exp(-nu200m / 2.86))
-		else:
-			ratio = 0.81 * (1.0 + 0.97 * numpy.exp(-nu200m / 2.44))
+		ratio = 0.81 * (1.0 + 0.97 * numpy.exp(-nu200m / 2.44))
 	else:
 		msg = 'Need either Gamma and z, or nu.'
 		raise Exception(msg)
@@ -1691,7 +1721,7 @@ def RspOverR200m(nu200m = None, z = None, Gamma = None, averaged_profile = False
 
 ###################################################################################################
 
-def MspOverM200m(nu200m = None, z = None, Gamma = None, averaged_profile = False):
+def MspOverM200m(nu200m = None, z = None, Gamma = None):
 	"""
 	The ratio :math:`M_{sp} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or
 	the peak height, :math:`\\nu`.
@@ -1699,12 +1729,6 @@ def MspOverM200m(nu200m = None, z = None, Gamma = None, averaged_profile = False
 	This function implements the relations calibrated in More, Diemer & Kravtsov 2015. Either
 	the accretion rate :math:`\\Gamma` and redshift, or the peak height :math:`\\nu`, must not 
 	be ``None``. 
-	
-	When using the calibration as a function of :math:`\\nu`, their are two separate calibrations
-	for :math:`M_{sp} / M_{200m}` derived from the averaged density profile of halos of a 
-	certain peak height (``averaged_profile = True``), and the median :math:`M_{sp} / M_{200m}`
-	of halos (``averaged_profile = False``). The latter is calibrated via the mass accretion rate, 
-	and more reliable in general.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -1715,8 +1739,6 @@ def MspOverM200m(nu200m = None, z = None, Gamma = None, averaged_profile = False
 	Gamma: array_like
 		The mass accretion rate, as defined in Diemer & Kravtsov 2014; can be a number or a 
 		numpy array.
-	averaged_profile: bool
-		See documentation above.
 	
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -1727,6 +1749,7 @@ def MspOverM200m(nu200m = None, z = None, Gamma = None, averaged_profile = False
 	See also
 	-----------------------------------------------------------------------------------------------
 	RspOverR200m: The ratio :math:`R_{sp} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
+	Rsp: :math:`R_{sp}` as a function of spherical overdensity radius.
 	Msp: :math:`M_{sp}` as a function of spherical overdensity mass.
 	"""
 	
@@ -1734,15 +1757,58 @@ def MspOverM200m(nu200m = None, z = None, Gamma = None, averaged_profile = False
 		cosmo = Cosmology.getCurrent()
 		ratio =  0.59 * (1 + 0.35 * cosmo.Om(z)) * (1 + 0.92 * numpy.exp(-Gamma / 4.54))
 	elif nu200m is not None:
-		if averaged_profile:
-			ratio = 0.78 * (1.0 + 0.80 * numpy.exp(-nu200m / 3.57))
-		else:
-			ratio = 0.82 * (1.0 + 0.63 * numpy.exp(-nu200m / 3.52))
+		ratio = 0.82 * (1.0 + 0.63 * numpy.exp(-nu200m / 3.52))
 	else:
 		msg = 'Need either Gamma and z, or nu.'
 		raise Exception(msg)
 	
 	return ratio
+
+###################################################################################################
+
+def Rsp(R, z, mdef, c = None, profile = 'nfw'):
+	"""
+	:math:`R_{sp}` as a function of spherical overdensity radius.
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	R: array_like
+		Spherical overdensity radius in physical :math:`kpc/h`; can be a number or a numpy array.
+	z: float
+		Redshift
+	mdef: str
+		Mass definition in which R and c are given.
+	c: array_like
+		Halo concentration; must have the same dimensions as R, or be ``None`` in which case the 
+		concentration is computed automatically.
+	profile: str
+		The functional form of the profile assumed in the conversion between mass definitions; 
+		can be ``nfw`` or ``dk14``.
+
+	Returns
+	-----------------------------------------------------------------------------------------------
+	Rsp: array_like
+		:math:`R_{sp}` in physical :math:`kpc/h`; has the same dimensions as R.
+		
+	See also
+	-----------------------------------------------------------------------------------------------
+	RspOverR200m: The ratio :math:`R_{sp} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
+	MspOverM200m: The ratio :math:`M_{sp} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
+	Msp: :math:`M_{sp}` as a function of spherical overdensity mass.
+	"""
+	
+	if mdef == '200m':
+		R200m = R
+		M200m = Halo.R_to_M(R200m, z, '200m')
+	else:
+		M = Halo.R_to_M(R, z, mdef)
+		M200m, R200m, _ = changeMassDefinition(M, c, z, mdef, '200m', profile = profile)
+
+	cosmo = Cosmology.getCurrent()
+	nu200m = cosmo.peakHeight(M200m, z)
+	Rsp = R200m * RspOverR200m(nu200m = nu200m)
+	
+	return Rsp
 
 ###################################################################################################
 
@@ -1774,6 +1840,7 @@ def Msp(M, z, mdef, c = None, profile = 'nfw'):
 	-----------------------------------------------------------------------------------------------
 	RspOverR200m: The ratio :math:`R_{sp} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
 	MspOverM200m: The ratio :math:`M_{sp} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
+	Rsp: :math:`R_{sp}` as a function of spherical overdensity radius.
 	"""
 	
 	if mdef == '200m':
@@ -1781,14 +1848,9 @@ def Msp(M, z, mdef, c = None, profile = 'nfw'):
 	else:
 		M200m, _, _ = changeMassDefinition(M, c, z, mdef, '200m', profile = profile)
 	
-	if mdef == 'vir':
-		Mvir = M
-	else:
-		Mvir, _, _ = changeMassDefinition(M, c, z, mdef, 'vir', profile = profile)
-	
 	cosmo = Cosmology.getCurrent()
-	nu_vir = cosmo.peakHeight(Mvir, z)
-	Msp = M200m * MspOverM200m(z, nu_vir = nu_vir)
+	nu200m = cosmo.peakHeight(M200m, z)
+	Msp = M200m * MspOverM200m(nu200m = nu200m)
 	
 	return Msp
 
