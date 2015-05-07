@@ -12,6 +12,7 @@ Common routines for Colossus modules.
 
 import os
 import numpy
+import sys
 
 ###################################################################################################
 
@@ -26,10 +27,17 @@ def printLine():
 
 ###################################################################################################
 
-def getCacheDir():
+def getCacheDir(module = None):
 	"""
-	Get a directory for the persistent caching of data. Here, this directory is chosen to be the
-	directory where this file is located. This directory obviously already exists.
+	Get a directory for the persistent caching of data. The function attempts to locate the home 
+	directory and (if necessary) create a .colossus sub-directory. In the rare case where that 
+	fails, the location of this code file is used as a base directory.
+
+	Parameters
+	---------------------------
+	module: string
+		The name of the module that is requesting this cache directory. Each module has its own
+		directory in order to avoid name conflicts.
 	
 	Returns
 	-------
@@ -37,9 +45,71 @@ def getCacheDir():
 		The cache directory.
 	"""
 	
-	path = getCodeDir() + '/cache/'
+	base_dir = getHomeDir()
+	if base_dir is None:
+		base_dir = getCodeDir()
 	
-	return path
+	cache_dir = base_dir + '/.colossus/cache/'
+	
+	if module is not None:
+		cache_dir += module + '/'
+
+	if not os.path.exists(cache_dir):
+		os.makedirs(cache_dir)
+	
+	return cache_dir
+
+###################################################################################################
+
+def getHomeDir():
+	""" 
+	Finds the home directory on this system.
+
+	Returns
+	-------
+	path : string
+		The home directory, or None if home cannot be found.
+	"""
+	
+	def decodePath(path):
+		return path.decode(sys.getfilesystemencoding())
+	
+	# There are basically two options for the operating system, either it's POSIX compatible of 
+	# windows. POSIX includes UNIX, LINUX, Mac OS etc. The following choices were inspired by the 
+	# astropy routine for finding a home directory.
+	
+	if os.name == 'posix':
+		
+		if 'HOME' in os.environ:
+			home_dir = decodePath(os.environ['HOME'])
+		else:
+			raise Warning('Could not find HOME variable on POSIX-compatible operating system.')
+			home_dir = None
+	
+	elif os.name == 'nt':
+	
+		if 'MSYSTEM' in os.environ and os.environ.get('HOME'):
+			home_dir = decodePath(os.environ['HOME'])
+		elif 'HOMESHARE' in os.environ:
+			home_dir = decodePath(os.environ['HOMESHARE'])
+		elif 'HOMEDRIVE' in os.environ and 'HOMEPATH' in os.environ:
+			home_dir = os.path.join(os.environ['HOMEDRIVE'], os.environ['HOMEPATH'])
+			home_dir = decodePath(home_dir)
+		elif 'USERPROFILE' in os.environ:
+			home_dir = decodePath(os.path.join(os.environ['USERPROFILE']))
+		elif 'HOME' in os.environ:
+			home_dir = decodePath(os.environ['HOME'])
+		else:
+			raise Warning('Could not find HOME directory on Windows system.')
+			home_dir = None
+
+	else:
+	
+		msg = 'Unknown operating system type, %s. Cannot find home directory.' % os.name
+		raise Warning(msg)
+		home_dir = None
+	
+	return home_dir
 
 ###################################################################################################
 
@@ -65,12 +135,12 @@ def isArray(var):
 
 	Parameters
 	---------------------------
-	var : array_like
+	var: array_like
 		Variable to be tested.
 	
 	Returns
 	-------
-	is_array : boolean
+	is_array: boolean
 		Whether var is a numpy array or not.
 	"""
 	

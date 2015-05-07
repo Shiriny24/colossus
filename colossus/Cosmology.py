@@ -396,9 +396,7 @@ class Cosmology(object):
 		# Some functions permanently store lookup tables for faster execution. For this purpose,
 		# we compute and save the storage path. 
 		if self.storage:
-			self.data_dir = Utilities.getCacheDir() + '/cosmology/'
-			if not os.path.exists(self.data_dir):
-				os.makedirs(self.data_dir)
+			self.cache_dir = Utilities.getCacheDir(module = 'cosmology')
 		
 		# Note that the storage is active even if interpolation == False or storage == False, 
 		# since fields can still be stored non-persistently (without writing to file).
@@ -463,7 +461,7 @@ class Cosmology(object):
 
 	def _getUniqueFilename(self):
 		
-		return self.data_dir + self.name + '_' + self._getHash()
+		return self.cache_dir + self.name + '_' + self._getHash()
 	
 	###############################################################################################
 
@@ -531,8 +529,8 @@ class Cosmology(object):
 		elif object_id in self.storage_temp:	
 			object_data = self.storage_temp[object_id]
 
-		elif self.storage and os.path.exists(self.data_dir + object_id):
-			object_data = numpy.loadtxt(self.data_dir + object_id, usecols = (0, 1), \
+		elif self.storage and os.path.exists(self.cache_dir + object_id):
+			object_data = numpy.loadtxt(self.cache_dir + object_id, usecols = (0, 1), \
 									skiprows = 0, unpack = True)
 			self.storage_temp[object_id] = object_data
 			
@@ -555,8 +553,8 @@ class Cosmology(object):
 				if object_name in self.storage_pers:	
 					object_raw = self.storage_pers[object_name]
 		
-				elif self.storage and os.path.exists(self.data_dir + object_name):
-					object_raw = numpy.loadtxt(self.data_dir + object_name, usecols = (0, 1), \
+				elif self.storage and os.path.exists(self.cache_dir + object_name):
+					object_raw = numpy.loadtxt(self.cache_dir + object_name, usecols = (0, 1), \
 									skiprows = 0, unpack = True)
 
 				if object_raw is None:
@@ -605,7 +603,7 @@ class Cosmology(object):
 			if self.storage:
 				# If the user has chosen text output, write a text file.
 				if self.text_output:
-					filename_text =  self.data_dir + object_name
+					filename_text =  self.cache_dir + object_name
 					numpy.savetxt(filename_text, numpy.transpose(object_data), fmt = "%.8e")
 			
 				# Store in file. We do not wish to save the entire storage dictionary, as there might be
