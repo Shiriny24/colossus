@@ -32,7 +32,7 @@ documentation to the developer.
 Documentation
 -------------
 
-Please see the [Online Documentation] for details.
+Please see the [Online Documentation](http://bdiemer.bitbucket.org/) for details.
 
 Installation
 ------------
