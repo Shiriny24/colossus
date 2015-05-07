@@ -15,14 +15,14 @@ cosmology and dark matter halos, the most important of which are:
 
 Colossus is developed with the following design goals in mind:
 
-* \ **Performance**\ : Computationally intensive routines have been optimized for fast execution, 
+* **Performance**: Computationally intensive routines have been optimized for fast execution, 
   often using smart interpolation. Virtually all functions accept both numbers and numpy arrays 
   as input.
-* \ **Pure Python**\ : No C modules that need to be compiled, and no dependencies beyond the 
+* **Pure Python**: No C modules that need to be compiled, and no dependencies beyond the 
   standard numpy and scipy libraries.
-* \ **Object-orientation**\ : Class-based implementations wherever it makes sense and does not 
+* **Object-orientation**: Class-based implementations wherever it makes sense and does not 
   hurt performance.
-* \ **Easy (or no) installation**\ : You can either install Colossus as a python package with 
+* **Easy (or no) installation**: You can either install Colossus as a python package with 
   pip/easy_install, or clone the repository and develop the code yourself.
 
 While Colossus has been tested against various other codes, there is no guarantee that it is free 
