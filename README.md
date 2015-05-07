@@ -29,11 +29,11 @@ While Colossus has been tested against various other codes, there is no guarante
 of bugs. Use it at your own risk, and please report any errors, inconveniences and unclear 
 documentation to the developer.
 
-Copyright (c) 2014-2015
+Documentation
+*************
 
-Benedikt Diemer, University of Chicago
+Please see the [Online Documentation] for details.
 
-bdiemer@oddjob.uchicago.edu
 
 ***************************************************************************************************
 Installation
@@ -62,3 +62,13 @@ If you use Colossus for a publication, please cite Diemer & Kravtsov 2015
 based on other papers that proposed, for example, density profile or concentration-mass models. 
 If you use such routines, please cite the paper(s) mentioned in the function and/or module
 documentation.
+
+License
+
+MIT
+
+Copyright (c) 2014-2015
+
+Benedikt Diemer, University of Chicago
+
+bdiemer@oddjob.uchicago.edu
