@@ -1,7 +1,7 @@
 Colossus
 ========
 
-Colossus is an acronym for **CO**\ smology, ha\ **LO** and large-\ **S**\ cale **S**\ tr\ **U**\ cture 
+Colossus is an acronym for **CO**smology, ha\ **LO** and large-\ **S**\ cale **S**\ tr\ **U**\ cture 
 tool\ **S**\ . As the name suggests, Colossus constitutes a collection of modules pertaining to 
 cosmology and dark matter halos, the most important of which are:
 
