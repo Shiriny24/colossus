@@ -30,7 +30,7 @@ of bugs. Use it at your own risk, and please report any errors, inconveniences a
 documentation to the developer.
 
 Documentation
-*************
+-------------
 
 Please see the [Online Documentation] for details.
 
