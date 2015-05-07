@@ -7,5 +7,6 @@ setup(name = 'colossus',
 	author = 'Benedikt Diemer',
 	author_email = 'bdiemer@oddjob.uchicago.edu',
 	license = 'MIT',
-	packages = ['colossus'],
+	requires=['numpy', 'scipy'],
+	packages = ['colossus', 'colossus.demos'],
 	zip_safe = False)
