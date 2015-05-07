@@ -32,7 +32,7 @@ documentation to the developer.
 Documentation
 -------------
 
-Please see the [Online Documentation](http://bdiemer.bitbucket.org/) for details.
+Please see the [[Online Documentation](http://bdiemer.bitbucket.org/)] for details.
 
 Installation
 ------------
@@ -48,7 +48,7 @@ Alternatively, you can clone this BitBucket repository by executing::
     hg clone https://bitbucket.org/bdiemer/colossus
 
 For the latter method, you will need the version control system Mercurial (hg), which you can 
-download [here](http://mercurial.selenic.com/).
+download [[here](http://mercurial.selenic.com/)].
 
 Citing Colossus
 ---------------
