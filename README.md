@@ -38,12 +38,12 @@ Installation
 ------------
 
 You can install Colossus as a python package by executing one of the following commands, depending 
-on your preferred installer software. You might need to prefix these commands with 'sudo'::
+on your preferred installer software. You might need to prefix these commands with 'sudo':
 
     pip install https://bitbucket.org/bdiemer/colossus/get/tip.tar.gz
     easy_install https://bitbucket.org/bdiemer/colossus/get/tip.tar.gz
 
-Alternatively, you can clone this BitBucket repository by executing::
+Alternatively, you can clone this BitBucket repository by executing:
 
     hg clone https://bitbucket.org/bdiemer/colossus
 
