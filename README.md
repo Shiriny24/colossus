@@ -5,12 +5,12 @@ Colossus is an acronym for **CO**smology, ha**LO** and large-**S**cale **S**tr**
 tool**S**. As the name suggests, Colossus constitutes a collection of modules pertaining to 
 cosmology and dark matter halos, the most important of which are:
 
-* \ **Cosmology**\ : Cosmological calculations with an emphasis on structure formation applications 
+* **Cosmology**: Cosmological calculations with an emphasis on structure formation applications 
   (power spectrum, variance, correlation function, peaks in Gaussian random fields and such).
-* \ **HaloDensityProfile**\ : Implementation of general and specific density profiles (including the 
+* **HaloDensityProfile**: Implementation of general and specific density profiles (including the 
   NFW and Diemer & Kravtsov 2014 profiles), pseudo-evolution, and alternative radius and mass 
   definitions such as the splashback radius.
-* \ **HaloConcentration**\ : A large range of models for the concentration-mass relation (including 
+* **HaloConcentration**: A large range of models for the concentration-mass relation (including 
   the Diemer & Kravtsov 2015 model), with a conversion to arbitrary mass definitions.
 
 Colossus is developed with the following design goals in mind:
