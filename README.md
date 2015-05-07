@@ -34,10 +34,8 @@ Documentation
 
 Please see the [Online Documentation] for details.
 
-
-***************************************************************************************************
 Installation
-***************************************************************************************************
+------------
 
 You can install Colossus as a python package by executing one of the following commands, depending 
 on your preferred installer software. You might need to prefix these commands with 'sudo'::
@@ -53,9 +51,8 @@ by executing::
 For the latter method, you will need the version control system Mercurial (hg), which you can 
 download [`here <http://mercurial.selenic.com/>`_].
 
-***************************************************************************************************
 Citing Colossus
-***************************************************************************************************
+---------------
 
 If you use Colossus for a publication, please cite Diemer & Kravtsov 2015 
 [`ApJ 799, 108 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_]. Many Colossus routines are 
@@ -64,11 +61,10 @@ If you use such routines, please cite the paper(s) mentioned in the function and
 documentation.
 
 License
+-------
 
 MIT
 
-Copyright (c) 2014-2015
-
-Benedikt Diemer, University of Chicago
+Copyright (c) 2014-2015, Benedikt Diemer, University of Chicago
 
 bdiemer@oddjob.uchicago.edu
