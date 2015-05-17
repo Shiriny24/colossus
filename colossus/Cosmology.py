@@ -364,8 +364,8 @@ class Cosmology(object):
 		self.print_info = print_info
 		self.print_warnings = print_warnings
 		
-		# Lookup table for functions of z. This table runs from the future (a = 1000.0) to 
-		# a = 0.001. Due to some interpolation errors at the extrema of the range, the table 
+		# Lookup table for functions of z. This table runs from the future (a = 200.0) to 
+		# a = 0.005. Due to some interpolation errors at the extrema of the range, the table 
 		# runs to slightly lower and higher z than the interpolation is allowed for.
 		self.z_min = -0.995
 		self.z_min_compute = -0.998
@@ -1288,11 +1288,11 @@ class Cosmology(object):
 		The over- and underdensities in a linearly evolving density field in the universe grow
 		with time as this factor. In the matter-dominated regime, :math:`D_+(z) \propto a`, but when 
 		dark energy begins to dominate, the growth slows down. Here, :math:`D_+(z)` is defined as 
-		in Eisenstein & Hu 99, Equation 8. The normalization
-		is such that the growth factor approaches :math:`1/(1+z)` at high z. There are other 
-		normalizations of this quantity (e.g., Percival 2005, Equation 15), but since we almost 
-		always care about the growth factor normalized to z = 0, the normalization does not matter
-		too much (see the :func:`growthFactor` function).
+		in Eisenstein & Hu 99, Equation 8. The normalization is such that the growth factor 
+		approaches :math:`1/(1+z)` at high z. There are other normalizations of this quantity 
+		(e.g., Percival 2005, Equation 15), but since we almost always care about the growth factor 
+		normalized to z = 0, the normalization does not matter too much (see the 
+		:func:`growthFactor` function).
 		
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -1338,7 +1338,7 @@ class Cosmology(object):
 		Parameters
 		-------------------------------------------------------------------------------------------
 		z: array_like
-			Redshift, where :math:`-0.999 < z < 500`; can be a number or a numpy array.
+			Redshift, where :math:`-0.995 < z < 200`; can be a number or a numpy array.
 		derivative: int
 			If greater than 0, evaluate the nth derivative, :math:`d^nD_+/dz^n`.
 		inverse: bool
@@ -1376,7 +1376,7 @@ class Cosmology(object):
 			If True, the function returns the constant top-hat model collapse overdensity. If False,
 			a correction due to the ellipticity of halos is applied.
 		sigma: float
-			The variance on the scale of the halo; only necessary if ``deltac_const == False``.
+			The rms variance on the scale of the halo; only necessary if ``deltac_const == False``.
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -1385,7 +1385,7 @@ class Cosmology(object):
 
 		See also
 		-------------------------------------------------------------------------------------------
-		sigma: The variance of the linear density field on a scale R, :math:`\\sigma(R)`.
+		sigma: The rms variance of the linear density field on a scale R, :math:`\\sigma(R)`.
 		"""
 				
 		if deltac_const:
@@ -1945,7 +1945,7 @@ class Cosmology(object):
 	
 	def sigma(self, R, j = 0, z = 0.0, inverse = False, derivative = False, Pk_source = 'eh98', filt = 'tophat'):
 		"""
-		The variance of the linear density field on a scale R, :math:`\\sigma(R)`.
+		The rms variance of the linear density field on a scale R, :math:`\\sigma(R)`.
 		
 		The variance and its higher moments are defined as the integral
 		
@@ -1986,9 +1986,9 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		sigma: array_like
-			The variance; has the same dimensions as R. If inverse and/or derivative are True, the 
-			inverse, derivative, or derivative of the inverse are returned. If j > 0, those refer 
-			to higher moments.
+			The rms variance; has the same dimensions as R. If inverse and/or derivative are True, 
+			the inverse, derivative, or derivative of the inverse are returned. If j > 0, those 
+			refer to higher moments.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -2108,7 +2108,7 @@ class Cosmology(object):
 		See also
 		-------------------------------------------------------------------------------------------
 		massFromPeakHeight: Halo mass from peak height, :math:`\\nu`.
-		sigma: The variance of the linear density field on a scale R, :math:`\sigma(R)`.
+		sigma: The rms variance of the linear density field on a scale R, :math:`\sigma(R)`.
 		"""
 				
 		R = self.lagrangianR(M)
@@ -2148,7 +2148,7 @@ class Cosmology(object):
 		See also
 		-------------------------------------------------------------------------------------------
 		peakHeight: Peak height, :math:`\\nu`, given a halo mass.
-		sigma: The variance of the linear density field on a scale R, :math:`\sigma(R)`.
+		sigma: The rms variance of the linear density field on a scale R, :math:`\sigma(R)`.
 		"""
 		
 		sigma = self.collapseOverdensity(deltac_const = deltac_const) / nu
@@ -2184,7 +2184,7 @@ class Cosmology(object):
 		See also
 		-------------------------------------------------------------------------------------------
 		massFromPeakHeight: Halo mass from peak height, :math:`\\nu`.
-		sigma: The variance of the linear density field on a scale R, :math:`\sigma(R)`.
+		sigma: The rms variance of the linear density field on a scale R, :math:`\sigma(R)`.
 		"""
 				
 		return self.massFromPeakHeight(1.0, z = z, filt = filt, Pk_source = Pk_source, deltac_const = True)
@@ -2303,8 +2303,8 @@ class Cosmology(object):
 		The average curvature of peaks for a halo mass M.
 		
 		In a Gaussian random field, :math:`\delta`, the peak height is defined as 
-		:math:`\delta / \\sigma` where :math:`\\sigma = \\sigma_0` is the variance. The curvature
-		of the field is defined as :math:`x = -\\nabla^2 \delta / \\sigma_2` where 
+		:math:`\delta / \\sigma` where :math:`\\sigma = \\sigma_0` is the rms variance. The 
+		curvature of the field is defined as :math:`x = -\\nabla^2 \delta / \\sigma_2` where 
 		:math:`\\sigma_2` is the second moment of the variance.
 		
 		This function computes the average curvature of peaks in a Gaussian random field, <x>,
