@@ -64,7 +64,7 @@ def demonstrateSettingAndGetting():
 	Utilities.printLine()
 	print("Now let's temporarily switch cosmology without destroying the cosmology objects.")
 	old_cosmo = cosmo
-	cosmo = Cosmology.setCosmology('planck1')
+	cosmo = Cosmology.setCosmology('planck13')
 	printCosmologyName()
 	Cosmology.setCurrent(old_cosmo)
 	printCosmologyName()
@@ -105,7 +105,7 @@ def demonstrateAdding():
 
 def demonstrateChanging():
 	
-	cosmo = Cosmology.setCosmology('planck1')
+	cosmo = Cosmology.setCosmology('planck13')
 	print(("We are in the " + cosmo.name + " cosmology"))
 	print(("Omega_m = %.2f, Omega_L = %.2f" % (cosmo.Om0, cosmo.OL0)))
 	Utilities.printLine()
@@ -138,7 +138,7 @@ def compute():
 	print(("Comoving distance = " + str(cosmo.comovingDistance(z_max = z))))
 	Utilities.printLine()
 	print("Densities are output in astronomical units, Msun h^2 / kpc^3, for example:")
-	print(("Critical density  = " + str(cosmo.criticalDensity(z))))
+	print(("Critical density  = " + str(cosmo.rho_c(z))))
 
 	return
 

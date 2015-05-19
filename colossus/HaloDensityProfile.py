@@ -1145,7 +1145,7 @@ class DK14Profile(HaloDensityProfile):
 		R_target = Halo.M_to_R(M, z, mdef)
 
 		self.par.rs = R_target / c
-		self.par.rho_m = cosmo.matterDensity(z)
+		self.par.rho_m = cosmo.rho_m(z)
 		self.par.be = be
 		self.par.se = se
 		self.par.part = part

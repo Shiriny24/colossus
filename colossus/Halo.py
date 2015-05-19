@@ -236,7 +236,7 @@ def haloBiasFromNu(nu, z, mdef):
 	"""
 	
 	cosmo = Cosmology.getCurrent()
-	Delta = densityThreshold(z, mdef) / cosmo.matterDensity(z)
+	Delta = densityThreshold(z, mdef) / cosmo.rho_m(z)
 	y = numpy.log10(Delta)
 
 	A = 1.0 + 0.24 * y * numpy.exp(-1.0 * (4.0 / y)**4)

@@ -426,7 +426,7 @@ def diemer15_c200c_n(nu, n, statistic = 'median'):
 def diemer15_wavenumber_k_R(M):
 
 	cosmo = Cosmology.getCurrent()
-	rho0 = cosmo.matterDensity(0.0)
+	rho0 = cosmo.rho_m(0.0)
 	R = (3.0 * M / 4.0 / math.pi / rho0) ** (1.0 / 3.0) / 1000.0
 	k_R = 2.0 * math.pi / R * diemer15_kappa
 
@@ -495,7 +495,7 @@ def klypin15_nu_c(M, z, mdef):
 	
 	Klypin et al. 2015 suggest both peak height-based and mass-based fitting functions for 
 	concentration; this function implements the peak height-based version. For this version, the 
-	fits are only given for the ``planck1`` cosmology. Thus, the user must set this cosmology
+	fits are only given for the ``planck13`` cosmology. Thus, the user must set this cosmology
 	before evaluating this model. The best-fit parameters refer to the mass-selected samples of 
 	all halos (as opposed to :math:`v_{max}`-selected samples, or relaxed halos).
 
@@ -556,7 +556,7 @@ def klypin15_m_c(M, z, mdef):
 	
 	Klypin et al. 2015 suggest both peak height-based and mass-based fitting functions for 
 	concentration; this function implements the mass-based version. For this version, the 
-	fits are only given for the ``planck1`` and ``bolshoi`` cosmologies. Thus, the user must set 
+	fits are only given for the ``planck13`` and ``bolshoi`` cosmologies. Thus, the user must set 
 	one of those cosmologies before evaluating this model. The best-fit parameters refer to the 
 	mass-selected samples of all halos (as opposed to :math:`v_{max}`-selected samples, or relaxed 
 	halos).
@@ -590,7 +590,7 @@ def klypin15_m_c(M, z, mdef):
 
 	cosmo = Cosmology.getCurrent()
 
-	if cosmo.name == 'planck1':
+	if cosmo.name == 'planck13':
 		z_bins = [0.0, 0.35, 0.5, 1.0, 1.44, 2.15, 2.5, 2.9, 4.1, 5.4]
 		if mdef == '200c':
 			C0_bins = [7.4, 6.25, 5.65, 4.3, 3.53, 2.7, 2.42, 2.2, 1.92, 1.65]
@@ -634,7 +634,7 @@ def klypin15_m_c(M, z, mdef):
 def dutton14_c(M, z, mdef):
 	"""
 	The power-law fits of Dutton & Maccio 2014, MNRAS 441, 3359. This model was calibrated for the 
-	``planck1`` cosmology.
+	``planck13`` cosmology.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------

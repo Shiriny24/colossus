@@ -9,7 +9,8 @@
 """
 This module is an implementation of the standard :math:`\Lambda CDM` cosmology, with a focus on 
 structure formation applications. It assumes a fixed dark energy equation of state, w = -1, and 
-ignores the constribution of relativistic species (photons and neutrinos).
+includes the contributions from dark matter, dark energy, baryons, curvature, photons, and
+neutrinos.
 
 ---------------------------------------------------------------------------------------------------
 Basic usage
@@ -62,7 +63,7 @@ The current cosmology can also be set to an already existing cosmology object, f
 switching between cosmologies::
 
 	cosmo1 = setCosmology('WMAP9')
-	cosmo2 = setCosmology('planck1')
+	cosmo2 = setCosmology('planck13')
 	setCurrent(cosmo1)
 
 The user can change the cosmological parameters of an existing cosmology object at run-time, but 
@@ -90,8 +91,10 @@ Standard cosmologies
 ============== ===================== =========== =======================================
 ID             Paper                 Location    Explanation
 ============== ===================== =========== =======================================
-planck1-only   Planck Collab. 2013   Table 2     Best-fit, Planck only 					
-planck1	       Planck Collab. 2013 	 Table 5     Best-fit with BAO etc. 					
+planck15-only  Planck Collab. 2015   Table 4     Best-fit, Planck only (column 2) 					
+planck15       Planck Collab. 2015 	 Table 4     Best-fit with ext (column 6)			
+planck13-only  Planck Collab. 2013   Table 2     Best-fit, Planck only 					
+planck13       Planck Collab. 2013 	 Table 5     Best-fit with BAO etc. 					
 WMAP9-only     Hinshaw et al. 2013   Table 1     Max. likelihood, WMAP only 				
 WMAP9-ML       Hinshaw et al. 2013   Table 1     Max. likelihood, with eCMB, BAO and H0 	
 WMAP9          Hinshaw et al. 2013   Table 4     Best-fit, with eCMB, BAO and H0 		
@@ -109,6 +112,9 @@ bolshoi	       Klypin et al. 2011    --          Cosmology of the Bolshoi simula
 millennium     Springel et al. 2005	 --          Cosmology of the Millennium simulation 
 powerlaw       --                    --          Default settings for power-law cosms.
 ============== ===================== =========== =======================================
+
+Those cosmologies that refer to particular simulations (such as bolshoi and millennium) are set 
+to ignore relativistic species, i.e. photons and neutrinos.
 
 ***************************************************************************************************
 Units
@@ -229,28 +235,28 @@ current_cosmo = None
 
 # The following named cosmologies can be set by calling setCosmology(name). Note that changes in
 # cosmological parameters are tracked to the fourth digit, which is why all parameters are rounded
-# to at most four digits. See documentation at the top of this file.
+# to at most four digits. See documentation at the top of this file for references.
 cosmologies = {}
-
-# The 'powerlaw' cosmology sets the default 
-cosmologies['planck1-only'] = {'flat': True, 'H0': 67.11, 'Om0': 0.3175, 'Ob0': 0.0490, 'sigma8': 0.8344, 'ns': 0.9624}
-cosmologies['planck1']      = {'flat': True, 'H0': 67.77, 'Om0': 0.3071, 'Ob0': 0.0483, 'sigma8': 0.8288, 'ns': 0.9611}
-cosmologies['WMAP9-only']   = {'flat': True, 'H0': 69.70, 'Om0': 0.2814, 'Ob0': 0.0464, 'sigma8': 0.8200, 'ns': 0.9710}
-cosmologies['WMAP9-ML']     = {'flat': True, 'H0': 69.70, 'Om0': 0.2821, 'Ob0': 0.0461, 'sigma8': 0.8170, 'ns': 0.9646}
-cosmologies['WMAP9']        = {'flat': True, 'H0': 69.32, 'Om0': 0.2865, 'Ob0': 0.0463, 'sigma8': 0.8200, 'ns': 0.9608}
-cosmologies['WMAP7-only']   = {'flat': True, 'H0': 70.30, 'Om0': 0.2711, 'Ob0': 0.0451, 'sigma8': 0.8090, 'ns': 0.9660}
-cosmologies['WMAP7-ML']     = {'flat': True, 'H0': 70.40, 'Om0': 0.2715, 'Ob0': 0.0455, 'sigma8': 0.8100, 'ns': 0.9670}
-cosmologies['WMAP7']        = {'flat': True, 'H0': 70.20, 'Om0': 0.2743, 'Ob0': 0.0458, 'sigma8': 0.8160, 'ns': 0.9680}
-cosmologies['WMAP5-only']   = {'flat': True, 'H0': 72.40, 'Om0': 0.2495, 'Ob0': 0.0432, 'sigma8': 0.7870, 'ns': 0.9610}
-cosmologies['WMAP5-ML']     = {'flat': True, 'H0': 70.20, 'Om0': 0.2769, 'Ob0': 0.0459, 'sigma8': 0.8170, 'ns': 0.9620}
-cosmologies['WMAP5']        = {'flat': True, 'H0': 70.50, 'Om0': 0.2732, 'Ob0': 0.0456, 'sigma8': 0.8120, 'ns': 0.9600}
-cosmologies['WMAP3-ML']     = {'flat': True, 'H0': 73.20, 'Om0': 0.2370, 'Ob0': 0.0414, 'sigma8': 0.7560, 'ns': 0.9540}
-cosmologies['WMAP3']        = {'flat': True, 'H0': 73.50, 'Om0': 0.2342, 'Ob0': 0.0413, 'sigma8': 0.7420, 'ns': 0.9510}
-cosmologies['WMAP1-ML']     = {'flat': True, 'H0': 68.00, 'Om0': 0.3136, 'Ob0': 0.0497, 'sigma8': 0.9000, 'ns': 0.9700}
-cosmologies['WMAP1']        = {'flat': True, 'H0': 72.00, 'Om0': 0.2700, 'Ob0': 0.0463, 'sigma8': 0.9000, 'ns': 0.9900}
-cosmologies['bolshoi']      = {'flat': True, 'H0': 70.00, 'Om0': 0.2700, 'Ob0': 0.0469, 'sigma8': 0.8200, 'ns': 0.9500}
-cosmologies['millennium']   = {'flat': True, 'H0': 73.00, 'Om0': 0.2500, 'Ob0': 0.0450, 'sigma8': 0.9000, 'ns': 1.0000}
-cosmologies['powerlaw']     = {'flat': True, 'H0': 70.00, 'Om0': 1.0000, 'Ob0': 0.0000, 'sigma8': 0.8200, 'ns': 1.0000}
+cosmologies['planck15-only'] = {'flat': True, 'H0': 67.81, 'Om0': 0.3080, 'Ob0': 0.0484, 'sigma8': 0.8149, 'ns': 0.9677}
+cosmologies['planck15']      = {'flat': True, 'H0': 67.74, 'Om0': 0.3089, 'Ob0': 0.0486, 'sigma8': 0.8159, 'ns': 0.9667}
+cosmologies['planck13-only'] = {'flat': True, 'H0': 67.11, 'Om0': 0.3175, 'Ob0': 0.0490, 'sigma8': 0.8344, 'ns': 0.9624}
+cosmologies['planck13']      = {'flat': True, 'H0': 67.77, 'Om0': 0.3071, 'Ob0': 0.0483, 'sigma8': 0.8288, 'ns': 0.9611}
+cosmologies['WMAP9-only']    = {'flat': True, 'H0': 69.70, 'Om0': 0.2814, 'Ob0': 0.0464, 'sigma8': 0.8200, 'ns': 0.9710}
+cosmologies['WMAP9-ML']      = {'flat': True, 'H0': 69.70, 'Om0': 0.2821, 'Ob0': 0.0461, 'sigma8': 0.8170, 'ns': 0.9646}
+cosmologies['WMAP9']         = {'flat': True, 'H0': 69.32, 'Om0': 0.2865, 'Ob0': 0.0463, 'sigma8': 0.8200, 'ns': 0.9608}
+cosmologies['WMAP7-only']    = {'flat': True, 'H0': 70.30, 'Om0': 0.2711, 'Ob0': 0.0451, 'sigma8': 0.8090, 'ns': 0.9660}
+cosmologies['WMAP7-ML']      = {'flat': True, 'H0': 70.40, 'Om0': 0.2715, 'Ob0': 0.0455, 'sigma8': 0.8100, 'ns': 0.9670}
+cosmologies['WMAP7']         = {'flat': True, 'H0': 70.20, 'Om0': 0.2743, 'Ob0': 0.0458, 'sigma8': 0.8160, 'ns': 0.9680}
+cosmologies['WMAP5-only']    = {'flat': True, 'H0': 72.40, 'Om0': 0.2495, 'Ob0': 0.0432, 'sigma8': 0.7870, 'ns': 0.9610}
+cosmologies['WMAP5-ML']      = {'flat': True, 'H0': 70.20, 'Om0': 0.2769, 'Ob0': 0.0459, 'sigma8': 0.8170, 'ns': 0.9620}
+cosmologies['WMAP5']         = {'flat': True, 'H0': 70.50, 'Om0': 0.2732, 'Ob0': 0.0456, 'sigma8': 0.8120, 'ns': 0.9600}
+cosmologies['WMAP3-ML']      = {'flat': True, 'H0': 73.20, 'Om0': 0.2370, 'Ob0': 0.0414, 'sigma8': 0.7560, 'ns': 0.9540}
+cosmologies['WMAP3']         = {'flat': True, 'H0': 73.50, 'Om0': 0.2342, 'Ob0': 0.0413, 'sigma8': 0.7420, 'ns': 0.9510}
+cosmologies['WMAP1-ML']      = {'flat': True, 'H0': 68.00, 'Om0': 0.3136, 'Ob0': 0.0497, 'sigma8': 0.9000, 'ns': 0.9700}
+cosmologies['WMAP1']         = {'flat': True, 'H0': 72.00, 'Om0': 0.2700, 'Ob0': 0.0463, 'sigma8': 0.9000, 'ns': 0.9900}
+cosmologies['bolshoi']       = {'flat': True, 'H0': 70.00, 'Om0': 0.2700, 'Ob0': 0.0469, 'sigma8': 0.8200, 'ns': 0.9500, 'relspecies': False}
+cosmologies['millennium']    = {'flat': True, 'H0': 73.00, 'Om0': 0.2500, 'Ob0': 0.0450, 'sigma8': 0.9000, 'ns': 1.0000, 'relspecies': False}
+cosmologies['powerlaw']      = {'flat': True, 'H0': 70.00, 'Om0': 1.0000, 'Ob0': 0.0000, 'sigma8': 0.8200, 'ns': 1.0000, 'relspecies': False}
 
 ###################################################################################################
 # Cosmology class
@@ -263,12 +269,20 @@ class Cosmology(object):
 	:func:`setCosmology()` function with one of the pre-defined sets of cosmological parameters 
 	listed above. 
 	
+	Some parameters that are well constrained and have a sub-dominant impact on the computations
+	have pre-set default values, such as the CMB temperature (T = 2.7255 K) and the effective number 
+	of neutrino species (Neff = 3.046). These values are compatible with the most recent 
+	measurements and can be changed by the user. 
+	
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	name: str		
-		A name for the cosmology, e.g. ``planck1``.
+		A name for the cosmology, e.g. ``WMAP9``.
 	flat: bool
 		If flat, there is no curvature, :math:`\Omega_k = 0`, and :math:`\Omega_{\Lambda} = 1 - \Omega_m`.
+	relspecies: bool
+		If False, all relativistic contributions to the energy density of the universe (such as 
+		photons and neutrinos) are ignored.
 	Om0: float
 		:math:`\Omega_m` at z = 0.
 	OL0: float
@@ -284,6 +298,8 @@ class Cosmology(object):
 		The tilt of the primordial power spectrum.
 	Tcmb0: float
 		The temperature of the CMB today in Kelvin.
+	Neff: float
+		The effective number of neutrino species.
 	power_law: bool
 		Assume a power-law matter power spectrum, :math:`P(k) = k^{power\_law\_n}`.
 	power_law_n: float
@@ -314,8 +330,9 @@ class Cosmology(object):
 		after use. 
 	"""
 	
-	def __init__(self, name = None, flat = True, \
-		Om0 = None, OL0 = None, Ob0 = None, H0 = None, sigma8 = None, ns = None, Tcmb0 = 2.725, \
+	def __init__(self, name = None, \
+		Om0 = None, OL0 = None, Ob0 = None, H0 = None, sigma8 = None, ns = None, \
+		flat = True, relspecies = True, Tcmb0 = 2.7255, Neff = 3.046, \
 		power_law = False, power_law_n = 0.0, \
 		print_info = False, print_warnings = True, \
 		interpolation = True, storage = True, text_output = False):
@@ -334,26 +351,59 @@ class Cosmology(object):
 			raise Exception('Parameter ns must be set.')
 		if Tcmb0 is None:
 			raise Exception('Parameter Tcmb0 must be set.')
+		if Neff is None:
+			raise Exception('Parameter Neff must be set.')
 		if power_law and power_law_n is None:
 			raise Exception('For a power-law cosmology, power_law_n must be set.')
 		if not flat and OL0 is None:
 			raise Exception('OL0 must be set for non-flat cosmologies.')
 	
+		# Copy the cosmological parameters into the class
 		self.name = name
 		self.flat = flat
+		self.relspecies = relspecies
 		self.power_law = power_law
 		self.power_law_n = power_law_n
 		self.Om0 = Om0
 		self.OL0 = OL0
 		self.Ob0 = Ob0
 		self.H0 = H0
-		self.h = H0 / 100.0
-		self.Omh2 = self.Om0 * self.h**2
-		self.Ombh2 = self.Ob0 * self.h**2
 		self.sigma8 = sigma8
 		self.ns = ns
 		self.Tcmb0 = Tcmb0
+		self.Neff = Neff
+
+		# Compute some derived cosmological variables
+		self.h = H0 / 100.0
+		self.h2 = self.h**2
+		self.Omh2 = self.Om0 * self.h2
+		self.Ombh2 = self.Ob0 * self.h2
 		
+		if self.relspecies:
+			# To convert the CMB temperature into a fractional energy density, we follow these
+			# steps:
+			# 
+			# rho_gamma   = 4 sigma_SB / c * T_CMB^4 [erg/cm^3]
+			#             = 4 sigma_SB / c^3 * T_CMB^4 [g/cm^3]
+			#
+			# where sigmaSB = 5.670373E-5 erg/cm^2/s/K^4. Then,
+			#
+			# Omega_gamma = rho_gamma / (Msun/g) * (kpc/cm)^3 * h^2 / AST_rho_crit_0_kpc3
+			#
+			# Most of these steps are summarized in one constant.
+			self.Ogamma0 = 4.48131796342E-07 * self.Tcmb0**4 * self.h2
+			
+			# The energy density in neutrinos is 7/8 (4/11)^(4/3) times the energy density in 
+			# photons, per effective neutrino species.
+			self.Onu0 = 0.22710731766 * self.Neff * self.Ogamma0
+			
+			# The density of relativistic species is the sum of the photon and neutrino densities.
+			self.Or0 = self.Ogamma0 + self.Onu0
+		else:
+			self.Ogamma0 = 0.0
+			self.Onu0 = 0.0
+			self.Or0 = 0.0
+
 		# Make sure flatness is obeyed
 		self._ensureConsistency()
 		
@@ -431,10 +481,10 @@ class Cosmology(object):
 	def _ensureConsistency(self):
 		
 		if self.flat:
-			self.OL0 = 1.0 - self.Om0
+			self.OL0 = 1.0 - self.Om0 - self.Or0
 			self.Ok0 = 0.0
 		else:
-			self.Ok0 = 1.0 - self.OL0 - self.Om0
+			self.Ok0 = 1.0 - self.OL0 - self.Om0 - self.Or0
 
 		return
 
@@ -445,9 +495,10 @@ class Cosmology(object):
 		
 	def _getHash(self):
 	
-		param_string = "Name_%s_Flat_%s_Om0_%.4f_OL0_%.4f_Ob0_%.4f_H0_%.4f_sigma8_%.4f_ns_%.4f_Tcmb0_%.4f_PL_%s_PLn_%.4f" \
-			% (self.name, str(self.flat), self.Om0, self.OL0, self.Ob0, self.H0, self.sigma8, \
-			self.ns, self.Tcmb0, str(self.power_law), self.power_law_n)
+		param_string = "Name_%s_Flat_%s_relspecies_%s_Om0_%.4f_OL0_%.4f_Ob0_%.4f_H0_%.4f_sigma8_%.4f_ns_%.4f_Tcmb0_%.4f_Neff_%.4f_PL_%s_PLn_%.4f" \
+			% (self.name, str(self.flat), str(self.relspecies), \
+			self.Om0, self.OL0, self.Ob0, self.H0, self.sigma8, self.ns, self.Tcmb0, self.Neff, \
+			str(self.power_law), self.power_law_n)
 
 		hash_new = hashlib.md5(param_string).hexdigest()
 	
@@ -641,11 +692,14 @@ class Cosmology(object):
 		Hz: The Hubble parameter as a function of redshift.
 		"""
 		
-		if self.flat:
-			E = numpy.sqrt(self.Om0 * (1.0 + z)**3 + self.OL0)
-		else:
-			E = numpy.sqrt(self.Om0 * (1.0 + z)**3 + self.OL0 + self.Ok0 * (1.0 + z)**2)
-			
+		ai = (1.0 + z)
+		sum = self.Om0 * ai**3 + self.OL0
+		if not self.flat:
+			sum += self.Ok0 * ai**2
+		if self.relspecies:
+			sum += self.Or0 * ai**4
+		E = numpy.sqrt(sum)
+		
 		return E
 
 	###############################################################################################
@@ -1091,7 +1145,7 @@ class Cosmology(object):
 	# Densities and overdensities
 	###############################################################################################
 	
-	def criticalDensity(self, z):
+	def rho_c(self, z):
 		"""
 		The critical density of the universe at redshift z.
 
@@ -1102,20 +1156,16 @@ class Cosmology(object):
 
 		Returns
 		-------------------------------------------------------------------------------------------
-		density: array_like
+		rho_critical: array_like
 			The critical density in units of physical :math:`M_{\odot} h^2 / kpc^3`; has the same 
 			dimensions as z.
-
-		See also
-		-------------------------------------------------------------------------------------------
-		matterDensity: The matter density of the universe at redshift z in units of :math:`M_{\odot} h^2 / kpc^3`.
 		"""
 			
 		return AST_rho_crit_0_kpc3 * self.Ez(z)**2
 
 	###############################################################################################
 	
-	def matterDensity(self, z):
+	def rho_m(self, z):
 		"""
 		The matter density of the universe at redshift z.
 
@@ -1126,23 +1176,125 @@ class Cosmology(object):
 
 		Returns
 		-------------------------------------------------------------------------------------------
-		density: array_like
-			The critical density in units of physical :math:`M_{\odot} h^2 / kpc^3`; has the same 
+		rho_matter: array_like
+			The matter density in units of physical :math:`M_{\odot} h^2 / kpc^3`; has the same 
 			dimensions as z.
 	
 		See also
 		-------------------------------------------------------------------------------------------
-		criticalDensity: The critical density of the universe at redshift z in units of :math:`M_{\odot} h^2 / kpc^3`.
+		Om: The matter density of the universe, in units of the critical density.
 		"""
 			
 		return AST_rho_crit_0_kpc3 * self.Om0 * (1.0 + z)**3
+
+
+	###############################################################################################
+	
+	def rho_L(self, z):
+		"""
+		The dark energy density of the universe at redshift z.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		z: array_like
+			Redshift; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		rho_Lambda: array_like
+			The dark energy density in units of physical :math:`M_{\odot} h^2 / kpc^3`; has the same 
+			dimensions as z.
+	
+		See also
+		-------------------------------------------------------------------------------------------
+		OL: The dark energy density of the universe, in units of the critical density. 
+		"""
+			
+		return AST_rho_crit_0_kpc3 * self.OL0
+
+	###############################################################################################
+	
+	def rho_gamma(self, z):
+		"""
+		The photon density of the universe at redshift z.
+		
+		If ``relspecies == False``, this function returns 0.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		z: array_like
+			Redshift; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		rho_gamma: array_like
+			The photon density in units of physical :math:`M_{\odot} h^2 / kpc^3`; has the same 
+			dimensions as z.
+	
+		See also
+		-------------------------------------------------------------------------------------------
+		Ogamma: The density of photons in the universe, in units of the critical density.
+		"""
+			
+		return AST_rho_crit_0_kpc3 * self.Ogamma0 * (1.0 + z)**4
+
+	###############################################################################################
+	
+	def rho_nu(self, z):
+		"""
+		The neutrino density of the universe at redshift z.
+
+		If ``relspecies == False``, this function returns 0.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		z: array_like
+			Redshift; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		rho_nu: array_like
+			The neutrino density in units of physical :math:`M_{\odot} h^2 / kpc^3`; has the same 
+			dimensions as z.
+	
+		See also
+		-------------------------------------------------------------------------------------------
+		Onu: The density of neutrinos in the universe, in units of the critical density.
+		"""
+			
+		return AST_rho_crit_0_kpc3 * self.Onu0 * (1.0 + z)**4
+
+	###############################################################################################
+	
+	def rho_r(self, z):
+		"""
+		The density of relativistic species in the universe at redshift z.
+		
+		This density is the sum of the photon and neutrino densities. If ``relspecies == False``, 
+		this function returns 0.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		z: array_like
+			Redshift; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		rho_relativistic: array_like
+			The density of relativistic species in units of physical :math:`M_{\odot} h^2 / kpc^3`; 
+			has the same dimensions as z.
+	
+		See also
+		-------------------------------------------------------------------------------------------
+		Or: The density of relativistic species in the universe, in units of the critical density.
+		"""
+			
+		return AST_rho_crit_0_kpc3 * self.Or0 * (1.0 + z)**4
 
 	###############################################################################################
 
 	def Om(self, z):
 		"""
-		:math:`\Omega_m` at redshift z.
-		
 		The matter density of the universe, in units of the critical density.
 
 		Parameters
@@ -1152,27 +1304,23 @@ class Cosmology(object):
 
 		Returns
 		-------------------------------------------------------------------------------------------
-		Omega: array_like
+		Omega_matter: array_like
 			Has the same dimensions as z.
 
 		See also
 		-------------------------------------------------------------------------------------------
-		OL: The dark energy density of the universe, :math:`\Omega_{\Lambda}`, at redshift z in units 
-			of the critical density`.
-		Ok: The density of curvature in the universe, :math:`\Omega_k`, at redshift z in units of the 
-			critical density`.
+		rho_m: The matter density of the universe at redshift z.
 		"""
-				
+
 		return self.Om0 * (1.0 + z)**3 / (self.Ez(z))**2
 
 	###############################################################################################
 
 	def OL(self, z):
 		"""
-		:math:`\Omega_{\Lambda}` at redshift z.
+		The dark energy density of the universe, in units of the critical density. 
 		
-		The dark energy density of the universe in units of the critical density. In a flat universe, 
-		:math:`\Omega_{\Lambda} = 1 - \Omega_m`.
+		In a flat universe, :math:`\Omega_{\Lambda} = 1 - \Omega_m - \Omega_r`.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -1181,27 +1329,23 @@ class Cosmology(object):
 
 		Returns
 		-------------------------------------------------------------------------------------------
-		Omega: array_like
+		Omega_Lambda: array_like
 			Has the same dimensions as z.
 
 		See also
 		-------------------------------------------------------------------------------------------
-		Om: The matter density of the universe, :math:`\Omega_m`, at redshift z in units of the 
-			critical density`.
-		Ok: The density of curvature in the universe, :math:`\Omega_k`, at redshift z in units of the 
-			critical density`.
+		rho_L: The dark energy density of the universe at redshift z.
 		"""
-					
+
 		return self.OL0 / (self.Ez(z))**2
 
 	###############################################################################################
 
 	def Ok(self, z):
 		"""
-		:math:`\Omega_k` at redshift z.
-
-		The density of curvature in the universe in units of the critical density. In a flat universe, 
-		:math:`\Omega_k = 0`.
+		The curvature density of the universe in units of the critical density. 
+		
+		In a flat universe, :math:`\Omega_k = 0`.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -1210,18 +1354,80 @@ class Cosmology(object):
 
 		Returns
 		-------------------------------------------------------------------------------------------
-		Omega: array_like
+		Omega_curvature: array_like
+			Has the same dimensions as z.
+		"""
+					
+		return self.Ok0 * (1.0 + z)**2 / (self.Ez(z))**2
+
+	###############################################################################################
+
+	def Ogamma(self, z):
+		"""
+		The density of photons in the universe, in units of the critical density.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		z: array_like
+			Redshift; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		Omega_gamma: array_like
 			Has the same dimensions as z.
 
 		See also
 		-------------------------------------------------------------------------------------------
-		Om: The matter density of the universe, :math:`\Omega_m`, at redshift z in units of the 
-			critical density`.
-		OL: The dark energy density of the universe, :math:`\Omega_{\Lambda}`, at redshift z in units 
-			of the critical density`.
+		rho_gamma: The photon density of the universe at redshift z.
 		"""
 					
-		return self.Ok0 * (1.0 + z)**2 / (self.Ez(z))**2
+		return self.Ogamma0 * (1.0 + z)**4 / (self.Ez(z))**2
+
+	###############################################################################################
+
+	def Onu(self, z):
+		"""
+		The density of neutrinos in the universe, in units of the critical density.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		z: array_like
+			Redshift; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		Omega_nu: array_like
+			Has the same dimensions as z.
+
+		See also
+		-------------------------------------------------------------------------------------------
+		rho_nu: The neutrino density of the universe at redshift z.
+		"""
+					
+		return self.Onu0 * (1.0 + z)**4 / (self.Ez(z))**2
+	
+	###############################################################################################
+
+	def Or(self, z):
+		"""
+		The density of relativistic species in the universe, in units of the critical density. 
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		z: array_like
+			Redshift; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		Omega_relativistic: array_like
+			Has the same dimensions as z.
+
+		See also
+		-------------------------------------------------------------------------------------------
+		rho_r: The density of relativistic species in the universe at redshift z.
+		"""
+					
+		return self.Or0 * (1.0 + z)**4 / (self.Ez(z))**2
 
 	###############################################################################################
 	# Structure growth, power spectrum etc.
@@ -1250,7 +1456,7 @@ class Cosmology(object):
 		lagrangianM: The lagrangian mass of a halo of radius R.
 		"""
 		
-		return (3.0 * M / 4.0 / math.pi / self.matterDensity(0.0) / 1E9)**(1.0 / 3.0)
+		return (3.0 * M / 4.0 / math.pi / self.rho_m(0.0) / 1E9)**(1.0 / 3.0)
 	
 	###############################################################################################
 	
@@ -1277,7 +1483,7 @@ class Cosmology(object):
 		lagrangianR: The lagrangian radius of a halo of mass M.
 		"""
 				
-		return 4.0 / 3.0 * math.pi * R**3 * self.matterDensity(0.0) * 1E9
+		return 4.0 / 3.0 * math.pi * R**3 * self.rho_m(0.0) * 1E9
 
 	###############################################################################################
 
@@ -1293,6 +1499,9 @@ class Cosmology(object):
 		(e.g., Percival 2005, Equation 15), but since we almost always care about the growth factor 
 		normalized to z = 0, the normalization does not matter too much (see the 
 		:func:`growthFactor` function).
+		
+		This function switches between integrating at z < 200 and an analytical approximation at 
+		z > 200.
 		
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -1315,7 +1524,28 @@ class Cosmology(object):
 		faster.
 		"""
 				
-		return 5.0 / 2.0 * self.Om0 * self.Ez(z) * self._integral_1pzOverEz3(z)
+		z_arr, is_array = Utilities.getArray(z)
+		D = numpy.zeros((len(z_arr)), numpy.float)
+		mask_analytic = z_arr > 800.0
+		mask_integrate = numpy.logical_not(mask_analytic)
+		
+		# Compute D from integration at low redshift
+		z1 = z_arr[mask_integrate]
+		D[mask_integrate] = 5.0 / 2.0 * self.Om0 * self.Ez(z1) * self._integral_1pzOverEz3(z1)
+				
+		# Compute D analytically at high redshift. If there are no relativistic species, D = a. 
+		# Otherwise, we use an approximation (see, e.g., Equation 5 in Gnedin, Kravtsov & Rudd
+		# 2011).
+		a = 1.0 / (1.0 + z_arr[mask_analytic])
+		if self.relspecies:
+			D[mask_analytic] = a
+		else:
+			D[mask_analytic] = a
+
+		if not is_array:
+			D = D[0]		
+		
+		return D
 
 	###############################################################################################
 
@@ -1332,7 +1562,8 @@ class Cosmology(object):
 		The linear growth factor normalized to z = 0, :math:`D_+(z) / D_+(0)`.
 
 		This function is sped up through interpolation. This process barely degrades its accuracy,
-		but if you wish to evaluate the exact integral, please use the :func:`growthFactorUnnormalized`
+		but if you wish to evaluate the exact integral (or compute the growth factor for very high
+		redshifts, z > 200), please use the :func:`growthFactorUnnormalized`
 		function.
 
 		Parameters
@@ -1701,7 +1932,7 @@ class Cosmology(object):
 		Eisenstein & Hu 1998 (``eh98``). Alternatively, the user can choose their version 
 		without BAO (``eh98smooth``), or a user-submitted file with an arbitrary name. In that case,
 		a file with two columns (k, P(k)) must be placed in the storage directory, and be named
-		``matterpower_<cosmology_name>_<Pk_source>``, e.g. ``matterpower_planck1_camb``.
+		``matterpower_<cosmology_name>_<Pk_source>``, e.g. ``matterpower_planck13_camb``.
 		
 		The Eisenstein & Hu 1998 approximation is accurate to about 1%, and the interpolation 
 		introduces errors significantly smaller than that.
@@ -2003,14 +2234,14 @@ class Cosmology(object):
 				# If the requested radius is outside the range, give a detailed error message.
 				R_req = numpy.min(R)
 				if R_req < self.R_min_sigma:
-					M_min = 4.0 / 3.0 * math.pi * self.R_min_sigma**3 * self.matterDensity(0.0) * 1E9
+					M_min = 4.0 / 3.0 * math.pi * self.R_min_sigma**3 * self.rho_m(0.0) * 1E9
 					msg = "R = %.2e is too small (min. R = %.2e, min. M = %.2e)" \
 						% (R_req, self.R_min_sigma, M_min)
 					raise Exception(msg)
 			
 				R_req = numpy.max(R)
 				if R_req > self.R_max_sigma:
-					M_max = 4.0 / 3.0 * math.pi * self.R_max_sigma**3 * self.matterDensity(0.0) * 1E9
+					M_max = 4.0 / 3.0 * math.pi * self.R_max_sigma**3 * self.rho_m(0.0) * 1E9
 					msg = "R = %.2e is too large (max. R = %.2e, max. M = %.2e)" \
 						% (R_req, self.R_max_sigma, M_max)
 					raise Exception(msg)
@@ -2022,7 +2253,7 @@ class Cosmology(object):
 					ret = 10**ret
 					if z > 1E-5:
 						ret *= self.growthFactor(z)
-		
+
 			else:
 				
 				sigma_ = R

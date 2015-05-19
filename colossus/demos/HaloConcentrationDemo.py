@@ -64,7 +64,7 @@ def computeConcentration():
 
 def computeAllTables():
 	
-	cosmos = ['bolshoi', 'millennium', 'planck1', 'planck1-only', 'WMAP9', 'WMAP9-ML', 'WMAP9-only', \
+	cosmos = ['bolshoi', 'millennium', 'planck13', 'planck13-only', 'WMAP9', 'WMAP9-ML', 'WMAP9-only', \
 			'WMAP7', 'WMAP7-ML', 'WMAP7-only', 'WMAP5', 'WMAP5-ML', 'WMAP5-only']
 	for c in cosmos:
 		computeConcentrationTable(c)
