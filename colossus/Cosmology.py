@@ -388,10 +388,10 @@ class Cosmology(object):
 			#
 			# where sigmaSB = 5.670373E-5 erg/cm^2/s/K^4. Then,
 			#
-			# Omega_gamma = rho_gamma / (Msun/g) * (kpc/cm)^3 * h^2 / AST_rho_crit_0_kpc3
+			# Omega_gamma = rho_gamma / (Msun/g) * (kpc/cm)^3 / h^2 / AST_rho_crit_0_kpc3
 			#
-			# Most of these steps are summarized in one constant.
-			self.Ogamma0 = 4.48131796342E-07 * self.Tcmb0**4 * self.h2
+			# Most of these steps can be summarized in one constant.
+			self.Ogamma0 = 4.48131796342E-07 * self.Tcmb0**4 / self.h2
 			
 			# The energy density in neutrinos is 7/8 (4/11)^(4/3) times the energy density in 
 			# photons, per effective neutrino species.
@@ -399,6 +399,9 @@ class Cosmology(object):
 			
 			# The density of relativistic species is the sum of the photon and neutrino densities.
 			self.Or0 = self.Ogamma0 + self.Onu0
+			
+			# For convenience, compute the epoch of matter-radiation equality
+			self.a_eq = self.Or0 / self.Om0
 		else:
 			self.Ogamma0 = 0.0
 			self.Onu0 = 0.0
@@ -453,6 +456,19 @@ class Cosmology(object):
 		self._resetStorage()
 
 		return
+
+	###############################################################################################
+
+	def __str__(self):
+		
+		s = 'Cosmology "%s", flat = %s, relspecies = %s, \n' \
+			'    Om0 = %.4f, OL0 = %.4f, Ob0 = %.4f, H0 = %.2f, sigma8 = %.4f, ns = %.4f, \n' \
+			'    Tcmb0 = %.4f, Neff = %.4f, PL = %s, PLn = %.4f' \
+			% (self.name, str(self.flat), str(self.relspecies), \
+			self.Om0, self.OL0, self.Ob0, self.H0, self.sigma8, self.ns, self.Tcmb0, self.Neff, \
+			str(self.power_law), self.power_law_n)
+		
+		return s
 
 	###############################################################################################
 
@@ -782,17 +798,6 @@ class Cosmology(object):
 		
 		def integrand(z):
 			return 1.0 / self.Ez(z) / (1.0 + z)
-		
-		return self._integral(integrand, z_min, z_max)
-
-	###############################################################################################
-
-	# The integral over (1 + z) / E(z)^3 enters into the linear growth factor.
-
-	def _integral_1pzOverEz3(self, z_min, z_max = numpy.inf):
-		
-		def integrand(z):
-			return (1.0 + z) / (self.Ez(z))**3
 		
 		return self._integral(integrand, z_min, z_max)
 
@@ -1491,22 +1496,28 @@ class Cosmology(object):
 		"""
 		The linear growth factor, :math:`D_+(z)`.
 		
-		The over- and underdensities in a linearly evolving density field in the universe grow
-		with time as this factor. In the matter-dominated regime, :math:`D_+(z) \propto a`, but when 
-		dark energy begins to dominate, the growth slows down. Here, :math:`D_+(z)` is defined as 
-		in Eisenstein & Hu 99, Equation 8. The normalization is such that the growth factor 
-		approaches :math:`1/(1+z)` at high z. There are other normalizations of this quantity 
-		(e.g., Percival 2005, Equation 15), but since we almost always care about the growth factor 
-		normalized to z = 0, the normalization does not matter too much (see the 
-		:func:`growthFactor` function).
+		The growth factor describes the linear evolution of over- and underdensities in the dark
+		matter density field. There are three regimes: 1) In the matter-radiation regime, we use an 
+		approximate analytical formula (Equation 5 in Gnedin, Kravtsov & Rudd 2011). If relativistic 
+		species are ignored, :math:`D_+(z) \propto a`. 2) In the matter-dominated regime, 
+		:math:`D_+(z) \propto a`. 3) In the matter-dark energy regime, we evaluate :math:`D_+(z)` 
+		through integration as defined in Eisenstein & Hu 99, Equation 8 (see also Heath 1977). 
 		
-		This function switches between integrating at z < 200 and an analytical approximation at 
-		z > 200.
+		At the transition between the integral and analytic approximation regimes, the two 
+		expressions do not quite match up, with differences of the order <1E-3. in order to avoid
+		a discontinuity, we introduce a transition regime where the two quantities are linearly
+		interpolated.
+		
+		The normalization is such that the growth factor approaches :math:`D_+(a) = a` in the 
+		matter-dominated regime. There are other normalizations of the growth factor (e.g., Percival 
+		2005, Equation 15), but since we almost always care about the growth factor normalized to 
+		z = 0, the normalization does not matter too much (see the :func:`growthFactor` function).
 		
 		Parameters
 		-------------------------------------------------------------------------------------------
 		z: array_like
-			Redshift, where :math:`-0.995 < z < 200`; can be a number or a numpy array.
+			Redshift, where :math:`-0.995 < z`; the high end of z is only limited by the validity 
+			of the analytical approximation mentioned above. Can be a number or a numpy array.
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -1519,31 +1530,69 @@ class Cosmology(object):
 
 		Warnings
 		-------------------------------------------------------------------------------------------
-		This function directly evaluates the growth factor by integration. In most cases, the 
-		:func:`growthFactor` function should be used since if uses interpolation and is thus much 
-		faster.
+		This function directly evaluates the growth factor by integration or analytical 
+		approximation. In most cases, the :func:`growthFactor` function should be used since it 
+		interpolates and is thus much faster.
 		"""
-				
+
+		# The growth factor integral uses E(z), but is not designed to take relativistic species
+		# into account. Thus, using the standard E(z) leads to wrong results. Instead, we pretend
+		# that the small radiation content at low z behaves like dark energy which leads to a very
+		# small error but means that the formula converges to a at high z.
+		def Ez_D(z):
+			ai = (1.0 + z)
+			sum = self.Om0 * ai**3 + self.OL0
+			if self.relspecies:
+				sum += self.Or0
+			if not self.flat:
+				sum += self.Ok0 * ai**2
+			E = numpy.sqrt(sum)
+			return E
+
+		# The integrand
+		def integrand(z):
+			return (1.0 + z) / (Ez_D(z))**3
+
+		# Create a transition regime centered around z = 10 in log space
+		z_switch = 10.0
+		trans_width = 2.0
+		zt1 = z_switch * trans_width
+		zt2 = z_switch / trans_width
+		
+		# Split into late (1), early (2) and a transition interval (3)
 		z_arr, is_array = Utilities.getArray(z)
+		a = 1.0 / (1.0 + z_arr)
 		D = numpy.zeros((len(z_arr)), numpy.float)
-		mask_analytic = z_arr > 800.0
-		mask_integrate = numpy.logical_not(mask_analytic)
+		mask1 = z_arr < (zt1)
+		mask2 = z_arr > (zt2)
+		mask3 = mask1 & mask2
 		
 		# Compute D from integration at low redshift
-		z1 = z_arr[mask_integrate]
-		D[mask_integrate] = 5.0 / 2.0 * self.Om0 * self.Ez(z1) * self._integral_1pzOverEz3(z1)
-				
-		# Compute D analytically at high redshift. If there are no relativistic species, D = a. 
-		# Otherwise, we use an approximation (see, e.g., Equation 5 in Gnedin, Kravtsov & Rudd
-		# 2011).
-		a = 1.0 / (1.0 + z_arr[mask_analytic])
+		z1 = z_arr[mask1]
+		D[mask1] = 5.0 / 2.0 * self.Om0 * Ez_D(z1) * self._integral(integrand, z1, numpy.inf)
+		D1 = D[mask3]
+		
+		# Compute D analytically at high redshift.
+		a2 = a[mask2]
 		if self.relspecies:
-			D[mask_analytic] = a
+			x = a2 / self.a_eq
+			term1 = numpy.sqrt(1.0 + x)
+			term2 = 2.0 * term1 + (2.0 / 3.0 + x) * numpy.log((term1 - 1.0) / (term1 + 1.0))
+			D[mask2] = a2 + 2.0 / 3.0 * self.a_eq + self.a_eq / (2.0 * numpy.log(2.0) - 3.0) * term2
 		else:
-			D[mask_analytic] = a
+			D[mask2] = a2
+		D2 = D[mask3]
 
+		# Average in transition regime
+		at1 = numpy.log(1.0 / (zt1 + 1.0))
+		at2 = numpy.log(1.0 / (zt2 + 1.0))
+		dloga = at2 - at1
+		loga = numpy.log(a[mask3])
+		D[mask3] = (D1 * (loga - at1) + D2 * (at2 - loga)) / dloga
+
+		# Reduce array to number if necessary
 		if not is_array:
-			D = D[0]		
+			D = D[0]
 		
 		return D
 
@@ -1561,9 +1610,10 @@ class Cosmology(object):
 		"""
 		The linear growth factor normalized to z = 0, :math:`D_+(z) / D_+(0)`.
 
-		This function is sped up through interpolation. This process barely degrades its accuracy,
-		but if you wish to evaluate the exact integral (or compute the growth factor for very high
-		redshifts, z > 200), please use the :func:`growthFactorUnnormalized`
+		The growth factor describes the linear evolution of over- and underdensities in the dark
+		matter density field. This function is sped up through interpolation which barely degrades 
+		its accuracy, but if you wish to evaluate the exact integral or compute the growth factor 
+		for very high redshifts (z > 200), please use the :func:`growthFactorUnnormalized`
 		function.
 
 		Parameters
