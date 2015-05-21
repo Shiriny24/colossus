@@ -1038,14 +1038,15 @@ class DK14Profile(HaloDensityProfile):
 	def __init__(self, par = None, **kwargs):
 	
 		HaloDensityProfile.__init__(self)
-		
+
+		self.accuracy_mass = 1E-4
+		self.accuracy_radius = 1E-4
+		self.max_outer_prof = 0.001
+
 		if par is not None:
 			self.par = par
 		else:
 			self.deriveParameters(**kwargs)
-
-		self.accuracy_mass = 1E-4
-		self.accuracy_radius = 1E-4
 
 		return
 
@@ -1270,11 +1271,12 @@ class DK14Profile(HaloDensityProfile):
 	###############################################################################################
 
 	# The density of the DK14 profile as a function of radius (in kpc / h) and the profile 
-	# parameters.
+	# parameters. The power-law outer profile is cut off at 1 / max_outer_prof to avoid a spurious
+	# density spike at very small radii if the slope of the power-law (se) is steep.
 	
 	def density(self, r):
 		
-		rho = 0.0 * r
+		rho = r * 0.0
 		par = self.par
 		
 		if par.part in ['inner', 'both']:
@@ -1283,7 +1285,7 @@ class DK14Profile(HaloDensityProfile):
 			rho += inner * fT
 		
 		if par.part in ['outer', 'both']:
-			outer = par.rho_m * (par.be * (r / 5.0 / par.R200m) ** (-par.se) + 1.0)
+			outer = par.rho_m * (1.0 + par.be / (self.max_outer_prof + (r / 5.0 / par.R200m)**par.se))
 			rho += outer
 		
 		return rho
@@ -1295,8 +1297,7 @@ class DK14Profile(HaloDensityProfile):
 	
 	def densityDerivativeLin(self, r):
 		
-		rho = 0.0 * r
-		drho_dr = 0.0 * r
+		drho_dr = r * 0.0
 		par = self.par
 		
 		if par.part in ['inner', 'both']:
@@ -1305,14 +1306,13 @@ class DK14Profile(HaloDensityProfile):
 			fT = (1.0 + (r / par.rt) ** par.beta) ** (-par.gamma / par.beta)
 			d_fT = (-par.gamma / par.beta) * (1.0 + (r / par.rt) ** par.beta) ** (-par.gamma / par.beta - 1.0) * \
 				par.beta / par.rt * (r / par.rt) ** (par.beta - 1.0)
-			rho += inner * fT
 			drho_dr += inner * d_fT + d_inner * fT
 	
 		if par.part in ['outer', 'both']:
-			outer = par.rho_m * (par.be * (r / 5.0 / par.R200m) ** (-par.se) + 1.0)
-			d_outer = par.rho_m * par.be * (-par.se) / 5.0 / par.R200m * (r / 5.0 / par.R200m) ** (-par.se - 1.0)
-			rho += outer
-			drho_dr += d_outer
+			t1 = 1.0 / 5.0 / par.R200m
+			t2 = r * t1
+			drho_dr += -par.rho_m * par.be * par.se * t1 * (self.max_outer_prof + t2**par.se)**-2 \
+				* t2**(par.se - 1.0)
 		
 		return drho_dr
 
