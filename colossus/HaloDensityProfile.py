@@ -30,9 +30,10 @@ for the density profile are implmented:
 ============================ =============================== ========================== =============
 Class                        Explanation                     Paper                      Reference
 ============================ =============================== ========================== =============
+:func:`SplineDensityProfile` A arbitrary density profile     ---                        ---
+:func:`EinastoProfile`       Einasto profile                 Einasto 1965               TrAlm 5, 87
 :func:`NFWProfile`           Navarro-Frenk-White profile     Navarro et al. 1997        ApJ 490, 493
 :func:`DK14Profile`          Diemer & Kravtsov 2014 profile  Diemer & Kravtsov 2014     ApJ 789, 1
-:func:`SplineDensityProfile` A arbitrary density profile     ---                        ---
 ============================ =============================== ========================== =============
 
 Some functions make use of density profiles, but are not necessarily tied to a particular 
@@ -495,6 +496,10 @@ class SplineDensityProfile(HaloDensityProfile):
 	not checked! 
 	"""
 	
+	###############################################################################################
+	# CONSTRUCTOR
+	###############################################################################################
+	
 	def __init__(self, r, rho = None, M = None):
 		
 		HaloDensityProfile.__init__(self)
@@ -539,6 +544,8 @@ class SplineDensityProfile(HaloDensityProfile):
 
 		return
 
+	###############################################################################################
+	# METHODS BOUND TO THE CLASS
 	###############################################################################################
 
 	def density(self, r):
@@ -832,9 +839,6 @@ class NFWProfile(HaloDensityProfile):
 	###############################################################################################
 	# METHODS BOUND TO THE CLASS
 	###############################################################################################
-
-	# The density for an NFW profile with central density rhos (in Msun h^2 / kpc^3) and scale radius 
-	# rs (in kpc / h), as a function of x = r / rs.
 	
 	def density(self, r):
 	
@@ -863,9 +867,6 @@ class NFWProfile(HaloDensityProfile):
 
 	###############################################################################################
 
-	# The enclosed mass for an NFW profile with central density rhos (in Msun h^2 / kpc^3) and scale 
-	# radius rs (in kpc / h), as a function of x = r / rs.
-	
 	def enclosedMass(self, r):
 		
 		x = r / self.rs
@@ -874,8 +875,6 @@ class NFWProfile(HaloDensityProfile):
 		return mass
 	
 	###############################################################################################
-
-	# The surface density (in units of Msun h / kpc^2).
 	
 	def surfaceDensity(self, r):
 	
@@ -949,6 +948,126 @@ class NFWProfile(HaloDensityProfile):
 		M = self.enclosedMass(4.0 * self.rs)
 		
 		return M
+
+###################################################################################################
+# EINASTO PROFILE
+###################################################################################################
+
+class EinastoProfile(HaloDensityProfile):
+	"""
+	The Einasto 1965 density profile.
+
+	The Einasto profile is defined by the density function
+	
+	.. math::
+		\\rho(r) = \\rho_s \\exp \\left( -\\frac{2}{\\alpha} \\left[ \\left( \\frac{r}{r_s} \\right)^{\\alpha} - 1 \\right] \\right)
+
+	or, alternatively, by a logarithmic slope that evolves with radius as 
+	
+	.. math::
+		\\frac{d \\log(\\rho)}{d \\log(r)} = -2 \\left( \\frac{r}{r_s} \\right)^{\\alpha}
+	
+	The constructor accepts either the free parameters (the density at the scale radius, the scale 
+	radius, and alpha), or a spherical overdensity mass and concentration (in this case the mass 
+	definition and redshift also need to be specified). In the latter case, the user can specify 
+	alpha or let the constructor compute it from its tight correlation with peak height 
+	(Gao et al. 2008). In the latter case, a cosmology must be set before instantiating the 
+	EinastoProfile object.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	rhos: float
+		The density at the scale radius in physical :math:`M_{\odot} h^2 / kpc^3`.
+	rs: float
+		The scale radius in physical kpc/h.
+	alpha: float
+		The radial dependence of the profile slope.
+	M: float
+		A spherical overdensity mass in :math:`M_{\odot}/h` corresponding to the mass
+		definition mdef at redshift z. 
+	c: float
+		The concentration, :math:`c = R / r_s`, corresponding to the given halo mass and mass 
+		definition.
+	z: float
+		Redshift
+	mdef: str
+		The mass definition in which M and c are given.		
+	"""
+
+	###############################################################################################
+	# CONSTRUCTOR
+	###############################################################################################
+
+	def __init__(self, rhos = None, rs = None, alpha = None, \
+				M = None, c = None, z = None, mdef = None):
+	
+		HaloDensityProfile.__init__(self)
+
+		# The fundamental way to define an Einasto profile by the density at the scale radius, 
+		# the scale radius, and alpha.
+		if rhos is not None and rs is not None and alpha is not None:
+			
+			self.rhos = rhos
+			self.rs = rs
+			self.alpha = alpha
+			
+		# Alternatively, the user can give a mass and concentration, together with mass definition
+		# and redshift. Passing alpha is now optional since it can also be estimated from the
+		# Gao et al. 2008 relation between alpha and peak height. This relation was calibrated for
+		# nu_vir, so if the given mass definition is not 'vir' we convert the given mass to Mvir
+		# assuming an NFW profile with the given mass and concentration. This leads to a negligible
+		# inconsistency, but solving for the correct alpha iteratively would be much slower.
+		elif M is not None and c is not None and mdef is not None and z is not None:
+			
+			R = Halo.M_to_R(M, z, mdef)
+			self.rs = R / c
+			
+			if alpha is None:
+				if mdef == 'vir':
+					Mvir = M
+				else:
+					Mvir, _, _ = changeMassDefinition(M, c, z, mdef, 'vir')
+				cosmo = Cosmology.getCurrent()
+				nu_vir = cosmo.peakHeight(Mvir, z)
+				alpha = 0.155 + 0.0095 * nu_vir**2
+			
+			self.alpha = alpha
+			self.rhos = 1.0
+			M_unnorm = self.enclosedMass(R)
+			self.rhos = M / M_unnorm
+					
+		else:
+			msg = 'An Einasto profile must be define either using rhos, rs, and alpha, or M, c, mdef, and z.'
+			raise Exception(msg)
+
+		return
+
+	###############################################################################################
+	# METHODS BOUND TO THE CLASS
+	###############################################################################################
+
+	def density(self, r):
+		
+		rho = self.rhos * numpy.exp(-2.0 / self.alpha * ((r / self.rs) ** self.alpha - 1.0))
+		
+		return rho
+
+	###############################################################################################
+	
+	def densityDerivativeLin(self, r):
+
+		rho = self.density(r)
+		drho_dr = rho * (-2.0 / self.rs) * (r / self.rs)**(self.alpha - 1.0)	
+		
+		return drho_dr
+
+	###############################################################################################
+	
+	def densityDerivativeLog(self, r):
+
+		der = -2.0 * (r / self.rs)**self.alpha
+		
+		return der
 
 ###################################################################################################
 # DIEMER & KRAVTSOV 2014 PROFILE
@@ -1035,13 +1154,26 @@ class DK14Profile(HaloDensityProfile):
 		The parameters of the DK14 profile as keyword args. See the deriveParameters function. 
 	"""
 	
+	###############################################################################################
+	# CONSTANTS
+	###############################################################################################
+
+	# This number determines the maximum overdensity that can be contributed by a power-law outer
+	# profile. See the density function for details.
+	max_outer_prof = 0.001
+
+	###############################################################################################
+	# CONSTRUCTOR
+	###############################################################################################
+	
 	def __init__(self, par = None, **kwargs):
 	
 		HaloDensityProfile.__init__(self)
 
+		# The following parameters are not constants, they are temporarily changed by certain 
+		# functions.
 		self.accuracy_mass = 1E-4
 		self.accuracy_radius = 1E-4
-		self.max_outer_prof = 0.001
 
 		if par is not None:
 			self.par = par
@@ -1050,6 +1182,40 @@ class DK14Profile(HaloDensityProfile):
 
 		return
 
+	###############################################################################################
+	# STATIC METHODS
+	###############################################################################################
+
+	# This function returns various calibrations of rt / R200m. Depending on selected, the chosen
+	# beta and gamma are different, and thus rt is rather different. 
+	#
+	# If selected ==  by_nu, we use Equation 6 in DK14. Though this relation was originally 
+	# calibrated for nu = nu_vir, the difference is small (<5%). 
+	#
+	# If selected == by_accretion_rate, there are multiple ways to calibrate the relation: from 
+	# Gamma and z directly, or for the nu-selected samples but fitted like the accretion 
+	# rate-selected samples (i.e., with beta = 6 and gamma = 4).
+
+	@staticmethod
+	def rtOverR200m(selected, nu200m = None, z = None, Gamma = None):
+		
+		if selected == 'by_mass':
+			ratio = 1.9 - 0.18 * nu200m
+		
+		elif selected == 'by_accretion_rate':
+			if (Gamma is not None) and (z is not None):
+				cosmo = Cosmology.getCurrent()
+				ratio =  0.43 * (1.0 + 0.92 * cosmo.Om(z)) * (1.0 + 2.18 * numpy.exp(-Gamma / 1.91))
+			elif nu200m is not None:
+				ratio = 0.79 * (1.0 + 1.63 * numpy.exp(-nu200m / 1.56))
+			else:
+				msg = 'Need either Gamma and z, or nu.'
+				raise Exception(msg)
+
+		return ratio
+
+	###############################################################################################
+	# METHODS BOUND TO THE CLASS
 	###############################################################################################
 
 	def deriveParameters(self, M = None, c = None, z = None, mdef = None, \
@@ -1189,36 +1355,6 @@ class DK14Profile(HaloDensityProfile):
 
 	###############################################################################################
 
-	# This function returns various calibrations of rt / R200m. Depending on selected, the chosen
-	# beta and gamma are different, and thus rt is rather different. 
-	#
-	# If selected ==  by_nu, we use Equation 6 in DK14. Though this relation was originally 
-	# calibrated for nu = nu_vir, the difference is small (<5%). 
-	#
-	# If selected == by_accretion_rate, there are multiple ways to calibrate the relation: from 
-	# Gamma and z directly, or for the nu-selected samples but fitted like the accretion 
-	# rate-selected samples (i.e., with beta = 6 and gamma = 4).
-
-	@staticmethod
-	def rtOverR200m(selected, nu200m = None, z = None, Gamma = None):
-		
-		if selected == 'by_mass':
-			ratio = 1.9 - 0.18 * nu200m
-		
-		elif selected == 'by_accretion_rate':
-			if (Gamma is not None) and (z is not None):
-				cosmo = Cosmology.getCurrent()
-				ratio =  0.43 * (1.0 + 0.92 * cosmo.Om(z)) * (1.0 + 2.18 * numpy.exp(-Gamma / 1.91))
-			elif nu200m is not None:
-				ratio = 0.79 * (1.0 + 1.63 * numpy.exp(-nu200m / 1.56))
-			else:
-				msg = 'Need either Gamma and z, or nu.'
-				raise Exception(msg)
-
-		return ratio
-
-	###############################################################################################
-
 	# Get the parameter values for the DK14 profile that should be fixed, or can be determined from the 
 	# peak height or mass accretion rate. If selected is 'by_mass', only nu must be passed. If selected 
 	# is 'by_accretion_rate', then both z and Gamma must be passed.
@@ -1237,7 +1373,7 @@ class DK14Profile(HaloDensityProfile):
 			msg = "HaloDensityProfile.DK14_getFixedParameters: Unknown sample selection, %s." % (selected)
 			raise Exception(msg)
 		
-		# Gao et al relation between alpha and nu. This function was originally calibrated for 
+		# Gao et al. 2008 relation between alpha and nu. This function was originally calibrated for 
 		# nu = nu_vir, but the difference is very small.
 		alpha = 0.155 + 0.0095 * nu200m**2
 
@@ -1270,9 +1406,8 @@ class DK14Profile(HaloDensityProfile):
 
 	###############################################################################################
 
-	# The density of the DK14 profile as a function of radius (in kpc / h) and the profile 
-	# parameters. The power-law outer profile is cut off at 1 / max_outer_prof to avoid a spurious
-	# density spike at very small radii if the slope of the power-law (se) is steep.
+	# The power-law outer profile is cut off at 1 / max_outer_prof to avoid a spurious density 
+	# spike at very small radii if the slope of the power-law (se) is steep.
 	
 	def density(self, r):
 		
@@ -1291,9 +1426,6 @@ class DK14Profile(HaloDensityProfile):
 		return rho
 
 	###############################################################################################
-
-	# The logarithmic slope of the density of the DK14 profile as a function of radius (in kpc / h) 
-	# and the profile parameters.
 	
 	def densityDerivativeLin(self, r):
 		
@@ -1317,9 +1449,6 @@ class DK14Profile(HaloDensityProfile):
 		return drho_dr
 
 	###############################################################################################
-
-	# The logarithmic slope of the density of the DK14 profile as a function of radius (in kpc / h) 
-	# and the profile parameters.
 	
 	def densityDerivativeLog(self, r):
 		

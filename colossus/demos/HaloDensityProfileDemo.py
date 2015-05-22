@@ -38,22 +38,25 @@ def demonstrateProfiles():
 	c = 5.0
 	cosmo = Cosmology.setCosmology('WMAP9')
 	
-	r = 10**numpy.arange(1.0, 4.5, 0.1)
+	r = 10**numpy.arange(-2.0, 4.5, 0.1)
 	rho_m = cosmo.rho_m(z)
 	
 	prof_dk14 = HaloDensityProfile.DK14Profile(M = M, c = c, z = z, mdef = mdef, be = 1.0, se = 1.5)
 	prof_nfw = HaloDensityProfile.NFWProfile(M = M, c = c, z = z, mdef = mdef)
+	prof_ein = HaloDensityProfile.EinastoProfile(M = M, c = c, z = z, mdef = mdef)
 	rho_dk14 = prof_dk14.density(r)
 	rho_nfw = prof_nfw.density(r)
+	rho_ein = prof_ein.density(r)
 	
 	plt.figure()
 	plt.loglog()
 	plt.xlabel(r'$r (kpc/h)$')
 	plt.ylabel(r'$\rho / \rho_m$')
-	plt.xlim(1E1, 2E4)
-	plt.ylim(1E-1, 1E6)
-	plt.plot(r, rho_nfw / rho_m, '-', color = 'deepskyblue', label = 'NFW')
-	plt.plot(r, rho_dk14 / rho_m, '--', color = 'darkblue', label = 'DK14')
+	plt.xlim(1E-2, 2E4)
+	plt.ylim(1E-1, 1E8)
+	plt.plot(r, rho_nfw / rho_m, '--', color = 'deepskyblue', label = 'NFW')
+	plt.plot(r, rho_dk14 / rho_m, '-', color = 'darkblue', label = 'DK14')
+	plt.plot(r, rho_ein / rho_m, '--', color = 'firebrick', label = 'Einasto')
 	plt.legend()
 	plt.show()
 	
