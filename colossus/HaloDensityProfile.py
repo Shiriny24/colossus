@@ -125,6 +125,7 @@ import scipy.misc
 import scipy.optimize
 import scipy.integrate
 import scipy.interpolate
+import scipy.special
 import abc
 
 import Utilities
@@ -158,6 +159,9 @@ class HaloDensityProfile(object):
 		# can be set much tighter for better performance.
 		self.min_RDelta = 0.001
 		self.max_RDelta = 10000.0
+		
+		# For some functions, such as Vmax, we need an intial guess for a radius.
+		self.r_guess = 100.0
 		
 		return
 	
@@ -361,6 +365,64 @@ class HaloDensityProfile(object):
 	
 	###############################################################################################
 
+	def circularVelocity(self, r):
+		"""
+		The circular velocity, :math:`v_c \\equiv \\sqrt{GM(<r)/r}`.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		vc: float
+			The circular velocity in km / s; has the same dimensions as r.
+
+		See also
+		-------------------------------------------------------------------------------------------
+		Vmax: The maximum circular velocity, and the radius where it occurs.
+		"""		
+	
+		M = self.enclosedMass(r)
+		v = numpy.sqrt(Cosmology.AST_G * M / r)
+		
+		return v
+
+	###############################################################################################
+
+	# This helper function is used for Vmax where we need to minimize -vc.
+
+	def _circularVelocity_negative(self, r):
+		
+		return -self.circularVelocity(r)
+
+	###############################################################################################
+
+	def Vmax(self):
+		"""
+		The maximum circular velocity, and the radius where it occurs.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		vmax: float
+			The maximum circular velocity in km / s.
+		rmax: float
+			The radius where fmax occurs, in physical kpc/h.
+
+		See also
+		-------------------------------------------------------------------------------------------
+		circularVelocity: The circular velocity, :math:`v_c \\equiv \\sqrt{GM(<r)/r}`.
+		"""		
+		
+		res = scipy.optimize.minimize(self._circularVelocity_negative, self.r_guess)
+		rmax = res.x[0]
+		vmax = self.circularVelocity(rmax)
+		
+		return vmax, rmax
+
+	###############################################################################################
+
 	# This equation is 0 when the enclosed density matches the given density_threshold, and is used 
 	# when numerically determining spherical overdensity radii.
 	
@@ -434,8 +496,6 @@ class HaloDensityProfile(object):
 
 	###############################################################################################
 
-	# Return the spherical overdensity mass (in Msun / h) for a given mass definition and redshift.
-
 	def MDelta(self, z, mdef):
 		"""
 		The spherical overdensity mass of a given mass definition.
@@ -506,6 +566,7 @@ class SplineDensityProfile(HaloDensityProfile):
 		
 		self.rmin = numpy.min(r)
 		self.rmax = numpy.max(r)
+		self.r_guess = numpy.sqrt(self.rmin * self.rmax)
 		self.min_RDelta = self.rmin
 		self.max_RDelta = self.rmax
 
@@ -908,6 +969,18 @@ class NFWProfile(HaloDensityProfile):
 
 	###############################################################################################
 	
+	# For the NFW profile, rmax is a constant multiple of the scale radius since vc is maximized
+	# where ln(1+x) = (2x**2 + x) / (1+x)**2
+	
+	def Vmax(self):
+		
+		rmax = 2.16258 * self.rs
+		vmax = self.circularVelocity(rmax)
+		
+		return vmax, rmax
+
+	###############################################################################################
+	
 	# This equation is 0 when the enclosed density matches the given density_threshold. This 
 	# function matches the abstract interface in HaloDensityProfile, but for the NFW profile it is
 	# easier to solve the equation in x (see the _thresholdEquationX() function).
@@ -1001,6 +1074,17 @@ class EinastoProfile(HaloDensityProfile):
 	def __init__(self, rhos = None, rs = None, alpha = None, \
 				M = None, c = None, z = None, mdef = None):
 	
+		# The enclosed mass for the Einasto profile is semi-analytical, in that it cna be expressed
+		# in terms of Gamma functions. We pre-compute some factors to speed up the computation 
+		# later.
+		def setMassTerms():
+
+			self.mass_norm = numpy.pi * self.rhos * self.rs**3 * 2.0**(2.0 - 3.0 / self.alpha) \
+				* self.alpha**(-1.0 + 3.0 / self.alpha) * numpy.exp(2.0 / self.alpha) 
+			self.gamma_3alpha = scipy.special.gamma(3.0 / self.alpha)
+			
+			return
+	
 		HaloDensityProfile.__init__(self)
 
 		# The fundamental way to define an Einasto profile by the density at the scale radius, 
@@ -1033,12 +1117,19 @@ class EinastoProfile(HaloDensityProfile):
 			
 			self.alpha = alpha
 			self.rhos = 1.0
+			setMassTerms()
 			M_unnorm = self.enclosedMass(R)
 			self.rhos = M / M_unnorm
 					
 		else:
 			msg = 'An Einasto profile must be define either using rhos, rs, and alpha, or M, c, mdef, and z.'
 			raise Exception(msg)
+
+		# We need an initial radius to guess Rmax
+		self.r_guess = self.rs
+		
+		# Pre-compute the mass terms now that the parameters have been fixed
+		setMassTerms()
 
 		return
 
@@ -1069,6 +1160,15 @@ class EinastoProfile(HaloDensityProfile):
 		
 		return der
 
+	###############################################################################################
+
+	def enclosedMass(self, r):
+		
+		mass = self.mass_norm * self.gamma_3alpha \
+			* scipy.special.gammainc(3.0 / self.alpha, 2.0 / self.alpha * (r / self.rs)**self.alpha)
+		
+		return mass
+	
 ###################################################################################################
 # DIEMER & KRAVTSOV 2014 PROFILE
 ###################################################################################################
@@ -1179,6 +1279,9 @@ class DK14Profile(HaloDensityProfile):
 			self.par = par
 		else:
 			self.deriveParameters(**kwargs)
+
+		# We need to guess a radius when computing vmax
+		self.r_guess = self.par.rs
 
 		return
 

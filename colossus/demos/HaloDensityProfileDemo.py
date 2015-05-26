@@ -12,6 +12,7 @@
 
 import numpy
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 
 import Cosmology
 import Halo
@@ -28,7 +29,7 @@ def main():
 
 ###################################################################################################
 
-# Compare the Diemer & Kravtsov 2014 and NFW profiles of a massive cluster halo
+# Compare the Diemer & Kravtsov 2014, NFW, and Einasto profiles of a massive cluster halo
 
 def demonstrateProfiles():
 	
@@ -37,26 +38,57 @@ def demonstrateProfiles():
 	z = 0.0
 	c = 5.0
 	cosmo = Cosmology.setCosmology('WMAP9')
+	R = Halo.M_to_R(M, z, mdef)
 	
-	r = 10**numpy.arange(-2.0, 4.5, 0.1)
+	rR_min = 1E-3
+	rR_max = 1E1
+	rR = 10**numpy.arange(numpy.log(rR_min), numpy.log(rR_max), 0.02)
+	r = rR * R
 	rho_m = cosmo.rho_m(z)
 	
+	# Compute profile density and slope
 	prof_dk14 = HaloDensityProfile.DK14Profile(M = M, c = c, z = z, mdef = mdef, be = 1.0, se = 1.5)
 	prof_nfw = HaloDensityProfile.NFWProfile(M = M, c = c, z = z, mdef = mdef)
 	prof_ein = HaloDensityProfile.EinastoProfile(M = M, c = c, z = z, mdef = mdef)
+	
 	rho_dk14 = prof_dk14.density(r)
 	rho_nfw = prof_nfw.density(r)
 	rho_ein = prof_ein.density(r)
 	
-	plt.figure()
+	slope_dk14 = prof_dk14.densityDerivativeLog(r)
+	slope_nfw = prof_nfw.densityDerivativeLog(r)
+	slope_ein = prof_ein.densityDerivativeLog(r)
+	
+	# Plot
+	fig = plt.figure(figsize = (5.5, 10.0))
+	gs = gridspec.GridSpec(2, 1)
+	plt.subplots_adjust(left = 0.2, right = 0.95, top = 0.95, bottom = 0.1, hspace = 0.1)
+	p1 = fig.add_subplot(gs[0])	
+	p2 = fig.add_subplot(gs[1])
+
+	plt.sca(p1)		
 	plt.loglog()
-	plt.xlabel(r'$r (kpc/h)$')
 	plt.ylabel(r'$\rho / \rho_m$')
-	plt.xlim(1E-2, 2E4)
-	plt.ylim(1E-1, 1E8)
-	plt.plot(r, rho_nfw / rho_m, '--', color = 'deepskyblue', label = 'NFW')
-	plt.plot(r, rho_dk14 / rho_m, '-', color = 'darkblue', label = 'DK14')
-	plt.plot(r, rho_ein / rho_m, '--', color = 'firebrick', label = 'Einasto')
+	p1.set_xticklabels([])	
+	plt.xlim(rR_min, rR_max)
+	plt.ylim(1E-1, 5E6)
+	
+	plt.plot(rR, rho_nfw / rho_m, '--', color = 'deepskyblue', label = 'NFW')
+	plt.plot(rR, rho_dk14 / rho_m, '-', color = 'darkblue', label = 'DK14')
+	plt.plot(rR, rho_ein / rho_m, '-.', color = 'firebrick', label = 'Einasto')
+	
+	plt.sca(p2)
+	plt.xscale('log')
+	plt.xlim(rR_min, rR_max)
+	plt.ylim(-4.5, -0.5)
+	plt.xlabel(r'$r / R_{\rm vir}$')
+	plt.ylabel(r'$d \log(\rho) / d \log(r)$')
+
+	plt.plot(rR, slope_nfw, '--', color = 'deepskyblue')
+	plt.plot(rR, slope_dk14, '-', color = 'darkblue')
+	plt.plot(rR, slope_ein, '-.', color = 'firebrick')
+	
+	plt.sca(p1)
 	plt.legend()
 	plt.show()
 	
