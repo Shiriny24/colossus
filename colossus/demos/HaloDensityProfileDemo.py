@@ -33,6 +33,7 @@ def main():
 
 def demonstrateProfiles():
 	
+	# Choose halo parameters
 	M = 1E15
 	mdef = 'vir'
 	z = 0.0
@@ -40,32 +41,30 @@ def demonstrateProfiles():
 	cosmo = Cosmology.setCosmology('WMAP9')
 	R = Halo.M_to_R(M, z, mdef)
 	
+	# Choose a set of radii
 	rR_min = 1E-3
 	rR_max = 1E1
 	rR = 10**numpy.arange(numpy.log(rR_min), numpy.log(rR_max), 0.02)
 	r = rR * R
 	rho_m = cosmo.rho_m(z)
 	
-	# Compute profile density and slope
-	prof_dk14 = HaloDensityProfile.DK14Profile(M = M, c = c, z = z, mdef = mdef, be = 1.0, se = 1.5)
-	prof_nfw = HaloDensityProfile.NFWProfile(M = M, c = c, z = z, mdef = mdef)
-	prof_ein = HaloDensityProfile.EinastoProfile(M = M, c = c, z = z, mdef = mdef)
+	# Initialize three profiles
+	p = [None, None, None]
+	p[0] = HaloDensityProfile.EinastoProfile(M = M, c = c, z = z, mdef = mdef)
+	p[1] = HaloDensityProfile.NFWProfile(M = M, c = c, z = z, mdef = mdef)
+	p[2] = HaloDensityProfile.DK14Profile(M = M, c = c, z = z, mdef = mdef, be = 1.0, se = 1.5)
+	colors = ['darkblue', 'firebrick', 'deepskyblue']
+	ls = ['-.', '--', '-']
+	labels = ['Einasto', 'NFW', 'DK14']
 	
-	rho_dk14 = prof_dk14.density(r)
-	rho_nfw = prof_nfw.density(r)
-	rho_ein = prof_ein.density(r)
-	
-	slope_dk14 = prof_dk14.densityDerivativeLog(r)
-	slope_nfw = prof_nfw.densityDerivativeLog(r)
-	slope_ein = prof_ein.densityDerivativeLog(r)
-	
-	# Plot
+	# Prepare plot
 	fig = plt.figure(figsize = (5.5, 10.0))
 	gs = gridspec.GridSpec(2, 1)
 	plt.subplots_adjust(left = 0.2, right = 0.95, top = 0.95, bottom = 0.1, hspace = 0.1)
 	p1 = fig.add_subplot(gs[0])	
 	p2 = fig.add_subplot(gs[1])
 
+	# Prepare density panel
 	plt.sca(p1)		
 	plt.loglog()
 	plt.ylabel(r'$\rho / \rho_m$')
@@ -73,21 +72,25 @@ def demonstrateProfiles():
 	plt.xlim(rR_min, rR_max)
 	plt.ylim(1E-1, 5E6)
 	
-	plt.plot(rR, rho_nfw / rho_m, '--', color = 'deepskyblue', label = 'NFW')
-	plt.plot(rR, rho_dk14 / rho_m, '-', color = 'darkblue', label = 'DK14')
-	plt.plot(rR, rho_ein / rho_m, '-.', color = 'firebrick', label = 'Einasto')
-	
+	# Plot density
+	for i in range(len(p)):
+		rho = p[i].density(r)
+		plt.plot(rR, rho / rho_m, ls = ls[i], color = colors[i], label = labels[i])
+
+	# Prepare slope panel
 	plt.sca(p2)
 	plt.xscale('log')
 	plt.xlim(rR_min, rR_max)
 	plt.ylim(-4.5, -0.5)
 	plt.xlabel(r'$r / R_{\rm vir}$')
 	plt.ylabel(r'$d \log(\rho) / d \log(r)$')
-
-	plt.plot(rR, slope_nfw, '--', color = 'deepskyblue')
-	plt.plot(rR, slope_dk14, '-', color = 'darkblue')
-	plt.plot(rR, slope_ein, '-.', color = 'firebrick')
 	
+	# Plot slope
+	for i in range(len(p)):
+		slope = p[i].densityDerivativeLog(r)
+		plt.plot(rR, slope, ls = ls[i], color = colors[i], label = labels[i])
+
+	# Finalize plot
 	plt.sca(p1)
 	plt.legend()
 	plt.show()
