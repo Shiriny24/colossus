@@ -1562,6 +1562,35 @@ class DK14Profile(HaloDensityProfile):
 		return der
 
 	###############################################################################################
+	
+	# The surface density of the DK14 profile is a little tricky, since the profile approaches 
+	# rho_m at large radii. Integrating to infinity would then give infinity. Instead, we subtract
+	# the mean density if the outer profile is active. We don't need to check that r < rmax, since 
+	# rmax is infinity for the DK14 profile.
+	
+	def surfaceDensity(self, r, accuracy = 1E-6):
+
+		if self.par.part in ['outer', 'both']:
+			subtract = self.par.rho_m
+		else:
+			subtract = 0.0
+
+		def integrand(r, R):
+			ret = 2.0 * r * (self.density(r) - subtract) / numpy.sqrt(r**2 - R**2)
+			return ret
+
+		r_use, is_array = Utilities.getArray(r)
+		surfaceDensity = 0.0 * r_use
+		for i in range(len(r_use)):	
+			surfaceDensity[i], _ = scipy.integrate.quad(integrand, r_use[i], self.rmax, args = r_use[i], \
+											epsrel = accuracy, limit = 1000)
+			
+		if not is_array:
+			surfaceDensity = surfaceDensity[0]
+
+		return surfaceDensity
+	
+	###############################################################################################
 
 	# Low-level function to compute a spherical overdensity radius given the parameters of a DK14 
 	# profile, the desired overdensity threshold, and an initial guess. A more user-friendly version
