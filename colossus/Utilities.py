@@ -13,6 +13,7 @@ Common routines for Colossus modules.
 import os
 import numpy
 import sys
+import six
 
 ###################################################################################################
 
@@ -72,8 +73,11 @@ def getHomeDir():
 	"""
 	
 	def decodePath(path):
-		return path.decode(sys.getfilesystemencoding())
-	
+		if six.PY2:
+			return path.decode(sys.getfilesystemencoding())
+		else:
+			return path
+
 	# There are basically two options for the operating system, either it's POSIX compatible of 
 	# windows. POSIX includes UNIX, LINUX, Mac OS etc. The following choices were inspired by the 
 	# astropy routine for finding a home directory.
