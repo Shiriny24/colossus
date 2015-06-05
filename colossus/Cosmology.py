@@ -2017,12 +2017,12 @@ class Cosmology(object):
 			# If the requested radius is outside the range, give a detailed error message.
 			k_req = numpy.min(k)
 			if k_req < self.k_Pk[0]:
-				msg = "k = %.2e is too small (min. k = %.2e)" % (k_req, self.k_min_Pk)
+				msg = "k = %.2e is too small (min. k = %.2e)" % (k_req, self.k_Pk[0])
 				raise Exception(msg)
-		
+
 			k_req = numpy.max(k)
 			if k_req > self.k_Pk[-1]:
-				msg = "k = %.2e is too large (max. k = %.2e)" % (k_req, self.k_max_Pk)
+				msg = "k = %.2e is too large (max. k = %.2e)" % (k_req, self.k_Pk[-1])
 				raise Exception(msg)
 
 			if derivative:

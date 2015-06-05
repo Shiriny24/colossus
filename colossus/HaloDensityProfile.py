@@ -2063,8 +2063,11 @@ def Rsp(R, z, mdef, c = None, profile = 'nfw'):
 		M200m = Halo.R_to_M(R200m, z, '200m')
 	else:
 		M = Halo.R_to_M(R, z, mdef)
-		M200m, R200m, _ = changeMassDefinition(M, c, z, mdef, '200m', profile = profile)
-
+		if c is None:
+			M200m, R200m, _ = changeMassDefinitionCModel(M, z, mdef, '200m', profile = profile)
+		else:
+			M200m, R200m, _ = changeMassDefinition(M, c, z, mdef, '200m', profile = profile)
+			
 	cosmo = Cosmology.getCurrent()
 	nu200m = cosmo.peakHeight(M200m, z)
 	Rsp = R200m * RspOverR200m(nu200m = nu200m)
@@ -2107,7 +2110,10 @@ def Msp(M, z, mdef, c = None, profile = 'nfw'):
 	if mdef == '200m':
 		M200m = M
 	else:
-		M200m, _, _ = changeMassDefinition(M, c, z, mdef, '200m', profile = profile)
+		if c is None:
+			M200m, _, _ = changeMassDefinitionCModel(M, z, mdef, '200m', profile = profile)
+		else:
+			M200m, _, _ = changeMassDefinition(M, c, z, mdef, '200m', profile = profile)
 	
 	cosmo = Cosmology.getCurrent()
 	nu200m = cosmo.peakHeight(M200m, z)
