@@ -2746,7 +2746,7 @@ class Cosmology(object):
 		Parameters
 		-------------------------------------------------------------------------------------------
 		R: array_like
-			The radius of the filter in comoving Mpc/h; can be a number or a numpy array.
+			The radius in comoving Mpc/h; can be a number or a numpy array.
 		z: float
 			Redshift
 		derivative: bool
