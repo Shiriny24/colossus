@@ -253,7 +253,7 @@ def concentration(M, mdef, z, \
 		# as a guess around which to look for the solution.
 		Delta_ratio = Halo.densityThreshold(z, mdef) / Halo.densityThreshold(z, mdef_model)
 		M_guess = M_array * Delta_ratio
-		c = numpy.zeros((N), dtype = float)
+		c = numpy.zeros_like(M_array)
 		
 		for i in range(N):
 			

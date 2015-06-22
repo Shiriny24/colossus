@@ -771,7 +771,7 @@ class Cosmology(object):
 		if use_array:
 			if min_is_array and max_is_array and len(z_min) != len(z_max):
 				raise Exception("If both z_min and z_max are arrays, they need to have the same size.")
-			integ = numpy.zeros((len(z_min_use)), numpy.float)
+			integ = numpy.zeros_like(z_min_use)
 			for i in range(len(z_min_use)):
 				integ[i], _ = scipy.integrate.quad(integrand, z_min_use[i], z_max_use[i])
 		else:
@@ -1562,7 +1562,7 @@ class Cosmology(object):
 		# Split into late (1), early (2) and a transition interval (3)
 		z_arr, is_array = Utilities.getArray(z)
 		a = 1.0 / (1.0 + z_arr)
-		D = numpy.zeros((len(z_arr)), numpy.float)
+		D = numpy.zeros_like(z_arr)
 		mask1 = z_arr < (zt1)
 		mask2 = z_arr > (zt2)
 		mask3 = mask1 & mask2

@@ -1777,8 +1777,8 @@ def pseudoEvolve(M_i, c_i, z_i, mdef_i, z_f, mdef_f, profile = 'nfw'):
 	M_i, is_array = Utilities.getArray(M_i)
 	c_i, _ = Utilities.getArray(c_i)
 	N = len(M_i)
-	Rnew = numpy.zeros((N), dtype = float)
-	cnew = numpy.zeros((N), dtype = float)
+	Rnew = numpy.zeros_like(M_i)
+	cnew = numpy.zeros_like(M_i)
 
 	if profile == 'nfw':
 		
