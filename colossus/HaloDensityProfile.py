@@ -127,6 +127,7 @@ import scipy.integrate
 import scipy.interpolate
 import scipy.special
 import abc
+import collections
 
 import Utilities
 import Cosmology
@@ -163,7 +164,56 @@ class HaloDensityProfile(object):
 		# For some functions, such as Vmax, we need an intial guess for a radius.
 		self.r_guess = 100.0
 		
+		# The parameters of the profile are stored in a dictionary
+		self.par = collections.OrderedDict()
+		self.N_par = len(self.par_names)
+		for name in self.par_names:
+			self.par[name] = 0.0
+
 		return
+
+	###############################################################################################
+
+	# Return a numpy array of the parameters instead of the dictionary.
+
+	def getParameterArray(self):
+		
+		return numpy.array(self.par.values())
+	
+	###############################################################################################
+	
+	def setParameterArray(self, pars):
+		
+		for i in range(self.N_par):
+			self.par[self.par_names[i]] = pars[i]
+		
+		return
+	
+	###############################################################################################
+
+	# Return a numpy array of fitting parameters. By default, the parameters used in a fit are the 
+	# same as the fundamental parameters. Derived classes might want to change that, for example 
+	# to fit log(p) instead of p if the value can only be positive. 
+
+	def getFitParameterArray(self):
+		
+		return self.getParameterArray()
+	
+	###############################################################################################
+	
+	def setFitParameterArray(self, pars):
+		
+		return self.setParameterArray(pars)
+
+	###############################################################################################
+
+	# By default, the parameters used in a fit are the same as the fundamental parameters. Derived
+	# classes might want to change that, for example to fit log(p) instead of p if the value can 
+	# only be positive. 
+	
+	#def fittedToFundamentalParameters(self, fitted_pars):
+		
+	#	return
 	
 	###############################################################################################
 
@@ -522,6 +572,63 @@ class HaloDensityProfile(object):
 		
 		return M
 
+	###############################################################################################
+
+	# quantity = 'rho', 'Sigma', 'M'
+
+	def fit(self, r, q, q_err = None, q_cov = None, parameter_mask = None, quantity = 'rho', \
+			merit_func = 'fractional', verbose = False):
+		
+		def diff_function(x, r, q, f):
+			
+			if verbose:
+				print x
+				
+			self.setFitParameterArray(x)
+			q_fit = f(r)
+
+			if merit_func == 'rhor2':
+				diff = (q_fit - q) * r**2
+			elif merit_func == 'fractional':
+				diff = (q_fit - q) / q
+			elif merit_func == 'absolute':
+				diff = (q_fit - q)
+			
+			return diff
+		
+		# Check whether this profile has any parameters that can be optimized. If not, throw an
+		# error.
+		if self.N_par == 0:
+			raise Exception('This profile has no parameters that can be fitted.')
+
+		if quantity == 'rho':
+			f = self.density
+		elif quantity == 'M':
+			f = self.enclosedMass
+		elif quantity == 'Sigma':
+			f = self.surfaceDensity
+		else:
+			msg = 'Unknown quantity, %s.' % (quantity)
+			raise Exception(msg)
+
+		# TODO 
+		# Check whether parameterDerivative is implemented for this particular quantity!
+
+		# TODO implement mask
+		#if parameter_mask is None:
+		#	parameter_mask = numpy.ones((self.N_par), numpy.bool)
+
+		ini_guess = self.getFitParameterArray()
+		args = r, q, f
+		x, dummycov_x, dummy1, dummy2, dummyierr = scipy.optimize.leastsq(diff_function, ini_guess, \
+							Dfun = None, col_deriv = 1, args = args, full_output = 1)
+		#rho_fit = fitFunction(x, fit_type, r, M, R, Mvir, Rvir, rho_m, None, None)
+		#chi2 = diffFunctionTotal(x, fit_type, r, rho_true, M, R, Mvir, Rvir, rho_m, None, None)
+		
+		self.setFitParameterArray(x)
+		
+		return
+
 ###################################################################################################
 # SPLINE DEFINED PROFILE
 ###################################################################################################
@@ -562,6 +669,7 @@ class SplineDensityProfile(HaloDensityProfile):
 	
 	def __init__(self, r, rho = None, M = None):
 		
+		self.par_names = []
 		HaloDensityProfile.__init__(self)
 		
 		self.rmin = numpy.min(r)
@@ -633,7 +741,7 @@ class SplineDensityProfile(HaloDensityProfile):
 	def enclosedMass(self, r):
 
 		return numpy.exp(self.M_spline(numpy.log(r)))
-	
+
 ###################################################################################################
 # NFW PROFILE
 ###################################################################################################
@@ -686,17 +794,18 @@ class NFWProfile(HaloDensityProfile):
 	def __init__(self, rhos = None, rs = None, \
 				M = None, c = None, z = None, mdef = None):
 		
+		self.par_names = ['rhos', 'rs']
 		HaloDensityProfile.__init__(self)
 
 		# The fundamental way to define an NFW profile by the central density and scale radius
 		if rhos is not None and rs is not None:
-			self.rhos = rhos
-			self.rs = rs
-			
+			self.par['rhos'] = rhos
+			self.par['rs'] = rs
+
 		# Alternatively, the user can give a mass and concentration, together with mass definition
 		# and redshift.
 		elif M is not None and c is not None and mdef is not None and z is not None:
-			self.rhos, self.rs = self.fundamentalParameters(M, c, z, mdef)
+			self.par['rhos'], self.par['rs'] = self.fundamentalParameters(M, c, z, mdef)
 		
 		else:
 			msg = 'An NFW profile must be define either using rhos and rs, or M, c, mdef, and z.'
@@ -732,10 +841,10 @@ class NFWProfile(HaloDensityProfile):
 			
 		Returns
 		-------------------------------------------------------------------------------------------
-		rhos: float
+		rhos: array_like
 			The central density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions
 			as M.
-		rs: float
+		rs: array_like
 			The scale radius in physical kpc/h; has the same dimensions as M.
 		"""
 				
@@ -743,6 +852,18 @@ class NFWProfile(HaloDensityProfile):
 		rhos = M / rs**3 / 4.0 / math.pi / cls.mu(c)
 		
 		return rhos, rs
+
+	###############################################################################################
+
+	def getFitParameterArray(self):
+		
+		return numpy.log(self.getParameterArray())
+	
+	###############################################################################################
+	
+	def setFitParameterArray(self, pars):
+		
+		return self.setParameterArray(numpy.exp(pars))
 
 	###############################################################################################
 
@@ -903,8 +1024,8 @@ class NFWProfile(HaloDensityProfile):
 	
 	def density(self, r):
 	
-		x = r / self.rs
-		density = self.rho(self.rhos, x)
+		x = r / self.par['rs']
+		density = self.rho(self.par['rhos'], x)
 		
 		return density
 
@@ -912,8 +1033,8 @@ class NFWProfile(HaloDensityProfile):
 
 	def densityDerivativeLin(self, r):
 
-		x = r / self.rs
-		density_der = -self.rhos / self.rs * (1.0 / x**2 / (1.0 + x)**2 + 2.0 / x / (1.0 + x)**3)
+		x = r / self.par['rs']
+		density_der = -self.par['rhos'] / self.par['rs'] * (1.0 / x**2 / (1.0 + x)**2 + 2.0 / x / (1.0 + x)**3)
 
 		return density_der
 	
@@ -921,7 +1042,7 @@ class NFWProfile(HaloDensityProfile):
 
 	def densityDerivativeLog(self, r):
 
-		x = r / self.rs
+		x = r / self.par['rs']
 		density_der = -(1.0 + 2.0 * x / (1.0 + x))
 
 		return density_der
@@ -930,8 +1051,8 @@ class NFWProfile(HaloDensityProfile):
 
 	def enclosedMass(self, r):
 		
-		x = r / self.rs
-		mass = self.M(self.rhos, self.rs, x)
+		x = r / self.par['rs']
+		mass = self.M(self.par['rhos'], self.par['rs'], x)
 		
 		return mass
 	
@@ -939,7 +1060,7 @@ class NFWProfile(HaloDensityProfile):
 	
 	def surfaceDensity(self, r):
 	
-		x = r / self.rs
+		x = r / self.par['rs']
 		
 		if not Utilities.isArray(x):
 			x_use = numpy.array([x])
@@ -960,7 +1081,7 @@ class NFWProfile(HaloDensityProfile):
 				else:
 					fx = 1.0 - 2.0 / math.sqrt(1.0 - xx2) * math.atanh(math.sqrt((1.0 - xx) / (1.0 + xx)))
 		
-			surfaceDensity[i] = 2.0 * self.rhos * self.rs / (x_use[i]**2 - 1.0) * fx
+			surfaceDensity[i] = 2.0 * self.par['rhos'] * self.par['rs'] / (x_use[i]**2 - 1.0) * fx
 	
 		if not Utilities.isArray(x):
 			surfaceDensity = surfaceDensity[0]
@@ -974,7 +1095,7 @@ class NFWProfile(HaloDensityProfile):
 	
 	def Vmax(self):
 		
-		rmax = 2.16258 * self.rs
+		rmax = 2.16258 * self.par['rs']
 		vmax = self.circularVelocity(rmax)
 		
 		return vmax, rmax
@@ -987,7 +1108,7 @@ class NFWProfile(HaloDensityProfile):
 		
 	def _thresholdEquation(self, r, density_threshold):
 		
-		return self._thresholdEquationX(r / self.rs, self.rhos, density_threshold)
+		return self._thresholdEquationX(r / self.par['rs'], self.par['rhos'], density_threshold)
 
 	###############################################################################################
 
@@ -999,8 +1120,8 @@ class NFWProfile(HaloDensityProfile):
 	def RDelta(self, z, mdef):
 	
 		density_threshold = Halo.densityThreshold(z, mdef)
-		x = self.xDelta(self.rhos, self.rs, density_threshold)
-		R = x * self.rs
+		x = self.xDelta(self.par['rhos'], self.par['rs'], density_threshold)
+		R = x * self.par['rs']
 		
 		return R
 
@@ -1018,7 +1139,7 @@ class NFWProfile(HaloDensityProfile):
 			The mass within 4 scale radii, :math:`M_{<4rs}`, in :math:`M_{\odot} / h`.
 		"""
 		
-		M = self.enclosedMass(4.0 * self.rs)
+		M = self.enclosedMass(4.0 * self.par['rs'])
 		
 		return M
 
@@ -1074,25 +1195,14 @@ class EinastoProfile(HaloDensityProfile):
 	def __init__(self, rhos = None, rs = None, alpha = None, \
 				M = None, c = None, z = None, mdef = None):
 	
-		# The enclosed mass for the Einasto profile is semi-analytical, in that it cna be expressed
-		# in terms of Gamma functions. We pre-compute some factors to speed up the computation 
-		# later.
-		def setMassTerms():
-
-			self.mass_norm = numpy.pi * self.rhos * self.rs**3 * 2.0**(2.0 - 3.0 / self.alpha) \
-				* self.alpha**(-1.0 + 3.0 / self.alpha) * numpy.exp(2.0 / self.alpha) 
-			self.gamma_3alpha = scipy.special.gamma(3.0 / self.alpha)
-			
-			return
-	
+		self.par_names = ['rhos', 'rs', 'alpha']
 		HaloDensityProfile.__init__(self)
 
 		# The fundamental way to define an Einasto profile by the density at the scale radius, 
 		# the scale radius, and alpha.
 		if rhos is not None and rs is not None and alpha is not None:
-			
-			self.rhos = rhos
-			self.rs = rs
+			self.par['rhos'] = rhos
+			self.par['rs'] = rs
 			self.alpha = alpha
 			
 		# Alternatively, the user can give a mass and concentration, together with mass definition
@@ -1102,44 +1212,97 @@ class EinastoProfile(HaloDensityProfile):
 		# assuming an NFW profile with the given mass and concentration. This leads to a negligible
 		# inconsistency, but solving for the correct alpha iteratively would be much slower.
 		elif M is not None and c is not None and mdef is not None and z is not None:
-			
-			R = Halo.M_to_R(M, z, mdef)
-			self.rs = R / c
-			
-			if alpha is None:
-				if mdef == 'vir':
-					Mvir = M
-				else:
-					Mvir, _, _ = changeMassDefinition(M, c, z, mdef, 'vir')
-				cosmo = Cosmology.getCurrent()
-				nu_vir = cosmo.peakHeight(Mvir, z)
-				alpha = 0.155 + 0.0095 * nu_vir**2
-			
-			self.alpha = alpha
-			self.rhos = 1.0
-			setMassTerms()
-			M_unnorm = self.enclosedMass(R)
-			self.rhos = M / M_unnorm
+			self.fundamentalParameters(M, c, z, mdef, alpha)
 					
 		else:
 			msg = 'An Einasto profile must be define either using rhos, rs, and alpha, or M, c, mdef, and z.'
 			raise Exception(msg)
 
 		# We need an initial radius to guess Rmax
-		self.r_guess = self.rs
+		self.r_guess = self.par['rs']
 		
 		# Pre-compute the mass terms now that the parameters have been fixed
-		setMassTerms()
+		self._setMassTerms()
 
 		return
-
+	
 	###############################################################################################
 	# METHODS BOUND TO THE CLASS
 	###############################################################################################
 
+	def fundamentalParameters(self, M, c, z, mdef, alpha = None):
+		"""
+		The fundamental Einasto parameters, :math:`\\rho_s`, :math:`r_s`, and :math:`\\alpha` from 
+		mass and concentration.
+		
+		This routine is called in the constructor of the Einasto profile class (unless 
+		:math:`\\rho_s`, :math:`r_s` and :math:`\\alpha` are passed by the user), and cannot be
+		called without instantiating an EinastoProfile object.
+	
+		Parameters
+		-------------------------------------------------------------------------------------------
+		M: float
+			Spherical overdensity mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
+		c: float
+			The concentration, :math:`c = R / r_s`, corresponding to the given halo mass and mass 
+			definition; must have the same dimensions as M.
+		z: float
+			Redshift
+		mdef: str
+			The mass definition in which M and c are given.
+		alpha: float
+			The radial dependence of the profile slope; can be None in which case it is 
+			approximated.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		rhos: float
+			The density at the scale radius in physical :math:`M_{\odot} h^2 / kpc^3`.
+		rs: float
+			The scale radius in physical kpc/h.
+		alpha: float
+			The radial dependence of the profile slope.
+		"""
+				
+		R = Halo.M_to_R(M, z, mdef)
+		self.par['rs'] = R / c
+		
+		if alpha is None:
+			if mdef == 'vir':
+				Mvir = M
+			else:
+				Mvir, _, _ = changeMassDefinition(M, c, z, mdef, 'vir')
+			cosmo = Cosmology.getCurrent()
+			nu_vir = cosmo.peakHeight(Mvir, z)
+			alpha = 0.155 + 0.0095 * nu_vir**2
+		
+		self.par['alpha'] = alpha
+		self.par['rhos'] = 1.0
+		self._setMassTerms()
+		M_unnorm = self.enclosedMass(R)
+		self.par['rhos'] = M / M_unnorm
+		
+		return
+	
+	###############################################################################################
+
+	# The enclosed mass for the Einasto profile is semi-analytical, in that it cna be expressed
+	# in terms of Gamma functions. We pre-compute some factors to speed up the computation 
+	# later.
+	def _setMassTerms(self):
+
+		self.mass_norm = numpy.pi * self.par['rhos'] * self.par['rs']**3 * 2.0**(2.0 - 3.0 / self.par['alpha']) \
+			* self.par['alpha']**(-1.0 + 3.0 / self.par['alpha']) * numpy.exp(2.0 / self.par['alpha']) 
+		self.gamma_3alpha = scipy.special.gamma(3.0 / self.par['alpha'])
+		
+		return
+	
+	###############################################################################################
+
 	def density(self, r):
 		
-		rho = self.rhos * numpy.exp(-2.0 / self.alpha * ((r / self.rs) ** self.alpha - 1.0))
+		rho = self.par['rhos'] * numpy.exp(-2.0 / self.par['alpha'] * \
+										((r / self.par['rs']) ** self.par['alpha'] - 1.0))
 		
 		return rho
 
@@ -1148,7 +1311,7 @@ class EinastoProfile(HaloDensityProfile):
 	def densityDerivativeLin(self, r):
 
 		rho = self.density(r)
-		drho_dr = rho * (-2.0 / self.rs) * (r / self.rs)**(self.alpha - 1.0)	
+		drho_dr = rho * (-2.0 / self.par['rs']) * (r / self.par['rs'])**(self.par['alpha'] - 1.0)	
 		
 		return drho_dr
 
@@ -1156,7 +1319,7 @@ class EinastoProfile(HaloDensityProfile):
 	
 	def densityDerivativeLog(self, r):
 
-		der = -2.0 * (r / self.rs)**self.alpha
+		der = -2.0 * (r / self.par['rs'])**self.par['alpha']
 		
 		return der
 
@@ -1164,8 +1327,8 @@ class EinastoProfile(HaloDensityProfile):
 
 	def enclosedMass(self, r):
 		
-		mass = self.mass_norm * self.gamma_3alpha \
-			* scipy.special.gammainc(3.0 / self.alpha, 2.0 / self.alpha * (r / self.rs)**self.alpha)
+		mass = self.mass_norm * self.gamma_3alpha * scipy.special.gammainc(3.0 / self.par['alpha'], \
+								2.0 / self.par['alpha'] * (r / self.par['rs'])**self.par['alpha'])
 		
 		return mass
 	
@@ -1268,6 +1431,7 @@ class DK14Profile(HaloDensityProfile):
 	
 	def __init__(self, par = None, **kwargs):
 	
+		self.par_names = []
 		HaloDensityProfile.__init__(self)
 
 		# The following parameters are not constants, they are temporarily changed by certain 
@@ -1278,7 +1442,7 @@ class DK14Profile(HaloDensityProfile):
 		if par is not None:
 			self.par = par
 		else:
-			self.deriveParameters(**kwargs)
+			self.fundamentalParameters(**kwargs)
 
 		# We need to guess a radius when computing vmax
 		self.r_guess = self.par.rs
@@ -1321,7 +1485,7 @@ class DK14Profile(HaloDensityProfile):
 	# METHODS BOUND TO THE CLASS
 	###############################################################################################
 
-	def deriveParameters(self, M = None, c = None, z = None, mdef = None, \
+	def fundamentalParameters(self, M = None, c = None, z = None, mdef = None, \
 			selected = 'by_mass', Gamma = None, part = 'both', be = None, se = None, \
 			acc_warn = 0.01, acc_err = 0.05):
 		"""
@@ -1727,6 +1891,18 @@ class DK14Profile(HaloDensityProfile):
 		_, Msp = self.RMsp(search_range = search_range)
 
 		return Msp
+
+###################################################################################################
+# PROFILE FITTING
+###################################################################################################
+
+# q = 'rho', 'M', 'Sigma'
+
+def fit(r, qtype = 'rho', q = None, initial_prof = None, prof_type = None, merit_func = 'fractional'):
+	
+	
+	
+	return
 
 ###################################################################################################
 # FUNCTIONS THAT CAN REFER TO DIFFERENT FORMS OF THE DENSITY PROFILE
