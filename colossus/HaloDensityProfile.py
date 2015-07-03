@@ -573,7 +573,8 @@ class HaloDensityProfile(object):
 	# Useful function for fitting
 	# This function should generally not be overwritten.
 
-	def _fit_diff_function(self, x, r, q, f, fp, mask, N_par_fit, merit_func, verbose):
+	def _fit_diff_function(self, x, r, q, q_err, q_cov_inv, f, fp, \
+						mask, N_par_fit, merit_func, verbose):
 
 		# This function is evaluated before any derivatives etc. Thus, we set the new set of 
 		# parameters here.		
@@ -585,32 +586,51 @@ class HaloDensityProfile(object):
 			print(x, self.getParameterArray())
 			
 		q_fit = f(r)
+		diff = self._fit_apply_merit_function(q_fit - q, r, q, q_err, q_cov_inv, merit_func)
 
-		if merit_func == 'r2':
-			diff = (q_fit - q) * r**2
-		elif merit_func == 'relative':
-			diff = (q_fit - q) / q
-		elif merit_func == 'absolute':
-			diff = (q_fit - q)
-		
 		return diff
+	
+	###############################################################################################
+
+	# Apply the particular merit function. If the merit function is absolute, this function does 
+	# nothing. 
+
+	def _fit_apply_merit_function(self, q_diff, r, q, q_err, q_cov_inv, merit_func):
+		
+		if merit_func == 'r2':
+			mf = q_diff * r**2
+		elif merit_func == 'relative':
+			mf = q_diff / q
+		elif merit_func == 'absolute':
+			mf = q_diff
+		
+		if q_cov_inv is not None:
+			print q_diff.shape
+			print q_cov_inv.shape
+			t1 = numpy.dot(q_cov_inv, q_diff)
+			print t1.shape
+			t2 = numpy.vdot(q_diff, t1)
+			print t2.shape
+			mf = numpy.sqrt(t2)
+			print mf.shape
+		elif q_err is not None:
+			mf /= q_err
+
+		return mf
 
 	###############################################################################################
 
-	# Evaluate the derivative of the parameters. This function should only be called if fp is not
-	# None, i.e. if the analytical derivative is implemented.
+	# Evaluate the derivative of the parameters, and apply corrections due to the merit function.
+	# This function should only be called if fp is not None, i.e. if the analytical derivative is 
+	# implemented.
 
-	def _fit_param_deriv_highlevel(self, x, r, q, f, fp, mask, N_par_fit, merit_func, verbose):
+	def _fit_param_deriv_highlevel(self, x, r, q, q_err, q_cov_inv, f, fp, \
+								mask, N_par_fit, merit_func, verbose):
 		
 		deriv = fp(self, r, mask, N_par_fit)
 		
-		if merit_func == 'r2':
-			for j in range(N_par_fit):
-				deriv[j] *= r**2
-			
-		elif merit_func == 'relative':
-			for j in range(N_par_fit):
-				deriv[j] /= f(r)
+		for j in range(N_par_fit):
+			deriv[j] = self._fit_apply_merit_function(r, q, deriv[j], q_err, q_cov_inv, merit_func)
 		
 		return deriv
 
@@ -633,9 +653,62 @@ class HaloDensityProfile(object):
 	# merit_func 'relative' is recommended - absolute can lead to funny effects
 	# This function should generally not have to be overwritten by child classes
 
-	def fit(self, r, q, quantity = 'rho', q_err = None, q_cov = None, mask = None, \
-			merit_func = 'absolute', verbose = False):
-				
+	def fit(self, r, q, quantity = 'rho', q_err = None, q_cov = None, \
+			mask = None, merit_func = 'absolute', verbose = False):
+		"""
+		Fit the density, mass, or surface density profile to a given set of data points.
+		
+		This function implements a least-squares for of a density profile to a given set of data
+		points. The parameters of the profile instance serve as an initial guess. The fitted 
+		``quantity`` can either be density, enclosed mass, or surface density (``rho``, ``M``, or
+		``Sigma``). The data points can optionally have error bars. The user can furthermore choose 
+		which profile parameters are varied (through the ``mask`` parameter) and which merit
+		function is minimized.
+		
+		After the fit, the profile instance represents the best-fit profile to the data points and
+		its parameters are the best-fit parameters.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			The radii of the data points, in physical kpc/h.
+		q: array_like
+			The data to fit; can either be density in physical :math:`M_{\odot} h^2 / kpc^3`, 
+			enclosed mass in :math:`M_{\odot} /h`, or surface density in physical 
+			:math:`M_{\odot} h/kpc^2`. Must have the same dimensions as r.
+		quantity: str
+			Indicates which quantity is given in the q input, can be ``rho``, ``M``, or ``Sigma``.
+		q_err: array_like
+			Optional; the uncertainty on the values in q in the same units.
+		q_cov: array_like
+			Optional; the covariance matrix of the elements in q, as a 2-dimensional numpy array. 
+			This array must have dimensions of q**2 and be in units of the square of the units of 
+			q. If q_cov is passed, q_err is ignored since the diagonal elements of q_cov correspond 
+			to q_err**2.
+		mask: array_like
+			Optional; a numpy array of booleans that has the same length as the variables vector
+			of the density profile class. Only variables where ``mask == True`` are varied in the
+			fit, all others are kept constant.
+		merit_func: str
+			The merit function that is minimized. Can be ``absolute`` (the absolute difference 
+			between the data and fit is minimized), ``relative`` (the fractional difference is 
+			minimized), or ``r2`` (the absolute difference is weighted by the square radius).
+		verbose: bool
+			If true, output information about the fitting process.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		q_fit: array_like
+			The fitted profile at the radii of the data points; has the same units as q and the 
+			same dimensions as r.
+		diff: array_like
+			The merit function evaluated for the data points and the best-fit profile; has the same
+			units as q and the same dimensions as r.
+		diff_sum: float
+			The resulting root mean square of the diff array (this is the number that is actually 
+			minimized).
+		"""						
+		
 		# Check whether this profile has any parameters that can be optimized. If not, throw an
 		# error.
 		if self.N_par == 0:
@@ -679,9 +752,15 @@ class HaloDensityProfile(object):
 			if verbose:
 				print(('Could not find analytical derivative function for quantity %s.' % (quantity)))
 	
+		# Invert the covariance matrix, if necessary
+		if q_cov is None:
+			q_cov_inv = None
+		else:
+			q_cov_inv = numpy.linalg.inv(q_cov)
+	
 		# Perform the fit
 		ini_guess = self._fit_get_params()[mask]
-		args = r, q, f, fp, mask, N_par_fit, merit_func, verbose
+		args = r, q, q_err, q_cov_inv, f, fp, mask, N_par_fit, merit_func, verbose
 		x, fit_info, fit_msg, err_code = self._fit(ini_guess, args, deriv_func)
 		xx = self._fit_get_params()
 		xx[mask] = x
@@ -698,9 +777,10 @@ class HaloDensityProfile(object):
 
 		# Get convenient outputs		
 		q_fit = f(r)
-		#chi2 = self._fit_chi2()
+		diff = fit_info['fvec']
+		diff_sum = numpy.sqrt(numpy.sum(diff**2))
 		
-		return q_fit
+		return q_fit, diff, diff_sum
 
 ###################################################################################################
 # SPLINE DEFINED PROFILE
