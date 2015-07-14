@@ -8,17 +8,11 @@
 
 """
 This module implements an Markov Chain Monte-Carlo sampler based on the Goodman & Weare (2010)
-algorithm. It was written by Andrey Kravtsov and adapted for Colossus.
+algorithm. It was written by Andrey Kravtsov and adapted for Colossus by Benedikt Diemer.
 
 ---------------------------------------------------------------------------------------------------
 Basic usage
 ---------------------------------------------------------------------------------------------------
-
-
-
-***************************************************************************************************
-
-***************************************************************************************************
 
 """
 
@@ -33,34 +27,135 @@ import Utilities
 
 ###################################################################################################
 
-def run():
+def run(x_initial, L_func, param_names, args = (), verbose = True, \
+		# Options for the initial walker placement
+		initial_step = 0.1, nwalkers = 100, random_seed = None, \
+		# Options for the MCMC chain
+		convergence_step = 100, converged_GR = 0.01, 
+		# Options for the analysis of the chain
+		percentiles = [68.27, 95.45, 99.73]):
+	"""
+	Wrapper for the lower-level MCMC functions.
+	"""
 	
-	return
+	walkers = initWalkers(x_initial, initial_step = initial_step, nwalkers = nwalkers, \
+					random_seed = random_seed)
+	chain, _ = runChain(walkers, L_func, args = args, convergence_step = convergence_step, \
+					converged_GR = converged_GR, verbose = verbose)
+	mean, median, stddev, p = analyzeChain(chain, param_names, percentiles = percentiles, \
+					verbose = verbose)
+
+	return mean, median, stddev, p
 
 ###################################################################################################
 
-def initWalkers(nparams, x0, step, nwalkers = 100):
+def initWalkers(x_initial, initial_step = 0.1, nwalkers = 100, random_seed = None):
 	"""
-	distribute initial positions of walkers in an isotropic Gaussian around the initial point
+	Create a set of MCMC walkers.
+	
+	This function distributes the initial positions of the walkers in an isotropic Gaussian around 
+	the initial guess provided by the user. The output of this function serves as an input for the
+	:func:`runChain` function.
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	x_initial: array_like
+		A one-dimensional numpy array. The length of this array is the number of parameters 
+		varied in the MCMC run. 
+	initial_step: array_like
+		The width of the Gaussian in parameter i. Can either be a numpy array of the same 
+		length as x_initial, or a number. In the latter case, the number is multiplied with 
+		x_initial, i.e. the same fractional width of the Gaussian is applied in all parameter
+		dimensions.
+	nwalkers: int
+		The number of walkers created. In this implementation, the walkers are split into two 
+		subgroups, meaning their number must be divisible by two.
+	random_seed: int
+		If not None, this random seed is used when generated the walker positions. 
+	
+	Returns
+	-----------------------------------------------------------------------------------------------
+	walkers: array_like
+		A three-dimensional numpy array of dimensions 2, nwalkers/2, nparams. This array can be 
+		passed to the :func:`runChain` function.
 	"""
 	
-	numpy.random.seed(156)
-	
-	# In this implementation the walkers are split into 2 subgroups and thus nwalkers must be 
-	# divisible by 2
 	if nwalkers % 2:
-		raise ValueError("MCMCsample_init: nwalkers must be divisible by 2!")
-	
-	x = numpy.zeros([2, nwalkers / 2, nparams])
-	
-	for i in range(nparams):
-		x[:, :, i] = numpy.reshape(numpy.random.normal(x0[i], step[i], nwalkers), (2, nwalkers / 2))
+		raise ValueError("The number of walkers must be divisible by 2.")
 
-	return x
+	nparams = len(x_initial)
+	walkers = numpy.zeros([2, nwalkers / 2, nparams])
+	
+	if random_seed is not None:
+		numpy.random.seed(random_seed)
+	
+	if Utilities.isArray(initial_step):
+		step_array = initial_step
+	else:
+		step_array = x_initial * initial_step
+		
+	for i in range(nparams):
+		walkers[:, :, i] = numpy.reshape(numpy.random.normal(x_initial[i], step_array[i], nwalkers), \
+										(2, nwalkers / 2))
+
+	return walkers
 
 ###################################################################################################
 
-def runMCMC(L_func, x, nparams, nwalkers = 100, nRval = 100, args = (), converged_GR = 0.01):
+def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 0.01, verbose = True):
+	"""
+	Run an MCMC chain.
+	
+	Run an MCMC chain using the Goodman & Weare (2010) algorithm. 
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	L_func: function
+		The likelihood function which is maximized. This function needs to accept two parameters:
+		a 2-dimensional array with dimensions (N, nparams) where N is an arbitrary number, and the
+		extra arguments given in the args tuple.
+	walkers: array_like	
+		A three-dimensional numpy array with the initial coordinates of the walkers. This array
+		must have dimensions [2, nwalkers/2, nparams], and can be generated with the 
+		:func:`initWalkers` function. 
+	args: tuple
+		The extra arguments for the likelihood function.
+	convergence_step: int
+		Save and output (if verbose) the Gelman-Rubin indicator, autocorrelation time etc. every 
+		convergence_step steps. 
+	converged_GR: float
+		The maximum difference between different chains, according to the Gelman-Rubin criterion.
+		Once the GR indicator is lower than this number in all parameters, the chain is ended.
+	verbose: bool
+		Output information about the progress of the chain.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	chain: array_like
+		A numpy array of dimensions [nsteps, nparams] with the parameters at each step in the 
+		chain. The chain can be analyzed with the :func:`analyzeChain` function.
+	R: array_like
+		A numpy array containing the GR indicator at each step when it was saved.
+	"""
+		
+	if len(walkers.shape) != 3:
+		raise ValueError("The walkers array must be 3-dimensional.")
+	if len(walkers) != 2:
+		raise ValueError("The first dimension of the walkers array must have length 1.")
+	nwalkers = len(walkers[0]) * 2
+	nparams = len(walkers[0][0])
+	
+	if verbose:
+		Utilities.printLine()
+		print(('Running MCMC with the following settings:'))
+		print(('Number of parameters:                 %6d' % (nparams)))
+		print(('Number of walkers:                    %6d' % (nwalkers)))
+		print(('Save conv. indicators every:          %6d' % (convergence_step)))
+		print(('Finish when Gelman-Rubin less than:   %6.4f' % (converged_GR)))
+		Utilities.printLine()
+	
+	# Create a copy since this array will be changed later
+	x = numpy.copy(walkers)
 	
 	# Parameters used to draw random number with the GW10 proposal distribution
 	ap = 2.0
@@ -70,7 +165,6 @@ def runMCMC(L_func, x, nparams, nwalkers = 100, nRval = 100, args = (), converge
 	# initialize some auxiliary arrays and variables 
 	chain = []
 	Rval = []
-	
 	naccept = 0
 	ntry = 0
 	nchain = 0
@@ -89,8 +183,8 @@ def runMCMC(L_func, x, nparams, nwalkers = 100, nRval = 100, args = (), converge
 		Rval.append([])
 	
 	gxo = numpy.zeros((2, nwalkers / 2))
-	gxo[0, :] = L_func(x[0, :, :], args)
-	gxo[1, :] = L_func(x[1, :, :], args)
+	gxo[0, :] = L_func(x[0, :, :], *args)
+	gxo[1, :] = L_func(x[1, :, :], *args)
 	
 	converged = False
 	while not converged:
@@ -114,7 +208,7 @@ def runMCMC(L_func, x, nparams, nwalkers = 100, nRval = 100, args = (), converge
 			# Duplicate zr for nparams
 			zrtile = numpy.transpose(numpy.tile(zr, (nparams, 1))) 
 			xtry  = xcompl + zrtile * (xchunk - xcompl)
-			gxtry = L_func(xtry, args)
+			gxtry = L_func(xtry, *args)
 			gx = gxold 
 			ilow = numpy.where(gx < 1.0E-50)
 			gx[ilow] = 1.0E-50
@@ -148,7 +242,7 @@ def runMCMC(L_func, x, nparams, nwalkers = 100, nRval = 100, args = (), converge
 			mutx[i].append(numpy.sum(x[:, :, i]) / (nwalkers))
 		
 		# Compute Gelman-Rubin indicator for all parameters
-		if nchain >= nwalkers / 2 and nchain % nRval == 0:
+		if nchain % convergence_step == 0 and nchain >= nwalkers / 2 and nchain > 1:
 			
 			# Calculate Gelman & Rubin convergence indicator
 			mwc = mw / (nchain - 1.0)
@@ -164,19 +258,30 @@ def runMCMC(L_func, x, nparams, nwalkers = 100, nRval = 100, args = (), converge
 				# Gelman-Rubin R factor
 				Rgr[i] = (1.0 - 1.0 / nchain + Bgr[i] / Wgr[i] / nchain) * (nwalkers + 1.0) \
 					/ nwalkers - (nchain - 1.0) / (nchain * nwalkers)
-				tacorx = acor.acor(mutx[i])[0]
+				
+				try:
+					tacorx = acor.acor(mutx[i], maxlag = 10)[0]
+				except RuntimeError:
+					#print 'Error in acor'
+					tacorx = 0.0
+				
 				taux[i].append(numpy.max(tacorx))
 				Rval[i].append(Rgr[i] - 1.0)
 			
-			print "nchain=",nchain
-			print "R values for parameters:", Rgr
-			print "tcorr =", numpy.max(tacorx)
+			if verbose:
+				msg = 'Step %6d, autocorr. time %5.1f, GR = [' % (nchain, numpy.max(tacorx))
+				for i in range(len(Rgr)):
+					msg += ' %6.3f' % Rgr[i]
+				msg += ']'
+				print(msg)
 			
 			if numpy.max(numpy.abs(Rgr - 1.0)) < converged_GR:
 				converged = True
 
-	print "MCMC sampler generated ", ntry, " samples using", nwalkers, " walkers"
-	print "with step acceptance ratio of", 1.0 * naccept / ntry
+	if verbose:
+		Utilities.printLine()
+		print(('MCMC generated %d samples using %d walkers, acceptance ratio %.3f.' \
+			% (ntry, nwalkers, 1.0 * naccept / ntry)))
 	
 	# Chop of burn-in period, and thin samples on auto-correlation time following Sokal's (1996) 
 	# recommendations
@@ -194,64 +299,117 @@ def runMCMC(L_func, x, nparams, nwalkers = 100, nRval = 100, args = (), converge
 
 ###################################################################################################
 
-def analyzeChain(chain, param_names, percentiles = [68.27, 95.45, 99.73], do_print = True):
+def analyzeChain(chain, param_names = None, percentiles = [68.27, 95.45, 99.73], verbose = True):
+	"""
+	Analyze an MCMC chain.
 	
-	N_params = len(chain[0])
+	An MCMC chain represents a statistical sample of the likelihood in question. This function 
+	computes more convenient parameters such as the mean, median, and various percentiles for each
+	of the parameters.
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	chain: array_like
+		A numpy array of dimensions [nsteps, nparams] with the parameters at each step in the 
+		chain. The chain is created by the :func:`runChain` function.
+	param_names: array_like
+		Optional; a list of strings which are used when outputting the parameters. 
+	percentiles: array_like
+		A list with percentages which are output. By default, the classical 1, 2, and 3 sigma
+		probabilities are used.
+	verbose: bool
+		Print the results.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	mean: array_like
+		The mean of the chain for each parameter; has length nparams.
+	median: array_like
+		The median of the chain for each parameter; has length nparams.
+	stddev: array_like
+		The standard deviation of the chain for each parameter; has length nparams.
+	p: array_like
+		The lower and upper values of each parameter that contain a certain percentile of the 
+		probability; has dimensions [n_percentages, 2, nparams] where the second dimension contains
+		the lower/upper values. 
+	"""
+
+	nparams = len(chain[0])
 
 	mean = numpy.mean(chain, axis = 0)
 	median = numpy.median(chain, axis = 0)
 	stddev = numpy.std(chain, axis = 0)
 
-	N_perc = len(percentiles)
-	p = numpy.zeros((N_perc, 2, N_params), numpy.float)
-	for i in range(N_perc):
+	nperc = len(percentiles)
+	p = numpy.zeros((nperc, 2, nparams), numpy.float)
+	for i in range(nperc):
 		half_percentile = (100.0 - percentiles[i]) / 2.0
 		p[i, 0, :] = numpy.percentile(chain, half_percentile, axis = 0)
 		p[i, 1, :] = numpy.percentile(chain, 100.0 - half_percentile, axis = 0)
 
-	if do_print:
-		for i in range(N_params):
+	if verbose:
+		for i in range(nparams):
 			
 			Utilities.printLine()
-			print 'Statistics for parameter %d, %s:' % (i + 1, param_names[i])
-			print 'Mean:              %+7.3e' % (mean[i])
-			print 'Median:            %+7.3e' % (median[i])
-			print 'Std. dev.:         %+7.3e' % (stddev[i])
+			msg = 'Statistics for parameter %d'
+			if param_names is not None:
+				msg += ', %s:' % param_names[i]
+			else:
+				msg += ':'
+			print(msg)
+			print(('Mean:              %+7.3e' % (mean[i])))
+			print(('Median:            %+7.3e' % (median[i])))
+			print(('Std. dev.:         %+7.3e' % (stddev[i])))
 			
-			for j in range(N_perc):
-				print '%4.1f%% interval:    %+7.3e .. %+7.3e' % (percentiles[j], p[j, 0, i], p[j, 1, i])
+			for j in range(nperc):
+				print(('%4.1f%% interval:    %+7.3e .. %+7.3e' % (percentiles[j], p[j, 0, i], p[j, 1, i])))
 		Utilities.printLine()
 
 	return mean, median, stddev, p
 
 ###################################################################################################
 
-def plotChain(chain, L_func, param_labels, args = ()):
-
+def plotChain(chain, param_labels):
+	"""
+	Plot a summary of an MCMC chain.
+	
+	This function creates a triangle plot with a 2D histogram for each combination of parameters,
+	and a 1D histogram for each parameter. The plot is not automatically saved or shown, the user
+	can determine how to use the plot after executing this function.
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	chain: array_like
+		A numpy array of dimensions [nsteps, nparams] with the parameters at each step in the 
+		chain. The chain is created by the :func:`runChain` function.
+	param_labels: array_like
+		A list of strings which are used when plotting the parameters. 
+	"""
+	
 	def conf_interval(x, pdf, conf_level):
 		return numpy.sum(pdf[pdf > x]) - conf_level
 
-	n_samples = len(chain)
-	n_params = len(chain[0])
+	nsamples = len(chain)
+	nparams = len(chain[0])
 
 	# Prepare panels
 	margin_lb = 1.0
 	margin_rt = 0.5
 	panel_size = 2.5
-	size = n_params * panel_size + margin_lb + margin_rt
+	size = nparams * panel_size + margin_lb + margin_rt
 	fig = plt.figure(figsize = (size, size))
-	gs = gridspec.GridSpec(n_params, n_params)
+	gs = gridspec.GridSpec(nparams, nparams)
 	margin_lb_frac = margin_lb / size
 	margin_rt_frac = margin_rt / size
 	plt.subplots_adjust(left = margin_lb_frac, bottom = margin_lb_frac, right = 1.0 - margin_rt_frac, \
 					top = 1.0 - margin_rt_frac, hspace = margin_rt_frac, wspace = margin_rt_frac)
-	panels = [[None for dummy in range(n_params)] for dummy in range(n_params)] 
-	for i in range(n_params):
-		for j in range(n_params):
+	panels = [[None for dummy in range(nparams)] for dummy in range(nparams)] 
+	for i in range(nparams):
+		for j in range(nparams):
 			if i >= j:
 				pan = fig.add_subplot(gs[i, j])
 				panels[i][j] = pan
-				if i < n_params - 1:
+				if i < nparams - 1:
 					pan.set_xticklabels([])
 				else:
 					plt.xlabel(param_labels[j])
@@ -263,9 +421,9 @@ def plotChain(chain, L_func, param_labels, args = ()):
 				panels[i][j] = None
 					
 	# Plot 1D histograms
-	nbins = min(50, n_samples / 20.0)
-	minmax = numpy.zeros((n_params, 2), numpy.float)
-	for i in range(n_params):
+	nbins = min(50, nsamples / 20.0)
+	minmax = numpy.zeros((nparams, 2), numpy.float)
+	for i in range(nparams):
 		ci = chain[:, i]
 		plt.sca(panels[i][i])
 		_, bins, _ = plt.hist(ci, bins = nbins)
@@ -277,9 +435,9 @@ def plotChain(chain, L_func, param_labels, args = ()):
 		plt.xlim(minmax[i, 0], minmax[i, 1])
 	
 	# Plot 2D histograms
-	for i in range(n_params):
+	for i in range(nparams):
 		ci = chain[:, i]
-		for j in range(n_params):
+		for j in range(nparams):
 			cj = chain[:, j]
 			if i > j:
 				plt.sca(panels[i][j])
@@ -287,20 +445,6 @@ def plotChain(chain, L_func, param_labels, args = ()):
 				plt.ylim(minmax[i, 0], minmax[i, 1])
 				plt.xlim(minmax[j, 0], minmax[j, 1])
 
-	return
-
-###################################################################################################
-
-def plotGelmanRubin(R):
-
-	plt.figure()
-	plt.yscale('log')
-
-	N_params = len(R)
-	N_samples = len(R[0])
-	for i in range(N_params):
-		plt.plot(numpy.arange(N_samples), R[i, :], '-')
-		
 	return
 
 ###################################################################################################

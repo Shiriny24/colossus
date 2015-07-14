@@ -128,7 +128,6 @@ import scipy.interpolate
 import scipy.special
 import abc
 import collections
-import copy
 
 import Utilities
 import Cosmology
@@ -183,19 +182,64 @@ class HaloDensityProfile(object):
 
 	###############################################################################################
 
-	# Return a numpy array of the parameters instead of the dictionary.
-
-	def getParameterArray(self):
+	def getParameterArray(self, mask = None):
+		"""
+		Returns an array of the profile parameters.
 		
-		return numpy.array(self.par.values())
+		The profile parameters are internally stored in an ordered dictionary. For some 
+		applications (e.g., fitting), a simply array is more appropriate.
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		mask: array_like
+			Optional; must be a numpy array (not a list) of booleans, with the same length as the
+			parameter vector of the profile class (profile.N_par). Only those parameters that 
+			correspond to ``True`` values are returned.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		par: array_like
+			A numpy array with the profile's parameter values.
+		"""
+		
+		par = numpy.array(self.par.values())
+		if mask is not None:
+			par = par[mask]
+			
+		return par
 	
 	###############################################################################################
 	
-	def setParameterArray(self, pars):
+	def setParameterArray(self, pars, mask = None):
+		"""
+		Set the profile parameters from an array.
 		
-		for i in range(self.N_par):
-			self.par[self.par_names[i]] = pars[i]
+		The profile parameters are internally stored in an ordered dictionary. For some 
+		applications (e.g., fitting), setting them directly from an array might be necessary. If 
+		the profile contains values that depend on the parameters, the profile class must overwrite
+		this function and update according to the new parameters.
 		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		pars: array_like
+			The new parameter array.
+		mask: array_like
+			Optional; must be a numpy array (not a list) of booleans, with the same length as the
+			parameter vector of the profile class (profile.N_par). If passed, only those 
+			parameters that correspond to ``True`` values are set (meaning the pars parameter must
+			be shorter than profile.N_par).
+		"""
+		
+		if mask is None:		
+			for i in range(self.N_par):
+				self.par[self.par_names[i]] = pars[i]
+		else:
+			counter = 0
+			for i in range(self.N_par):
+				if mask[i]:
+					self.par[self.par_names[i]] = pars[counter]
+					counter += 1
+					
 		return
 
 	###############################################################################################
@@ -561,15 +605,15 @@ class HaloDensityProfile(object):
 	# same as the fundamental parameters. Derived classes might want to change that, for example 
 	# to fit log(p) instead of p if the value can only be positive. 
 
-	def _fit_get_params(self):
+	def _fit_get_params(self, mask = None):
 		
-		return self.getParameterArray()
+		return self.getParameterArray(mask = mask)
 	
 	###############################################################################################
 	
-	def _fit_set_params(self, pars):
+	def _fit_set_params(self, pars, mask = None):
 		
-		return self.setParameterArray(pars)
+		return self.setParameterArray(pars, mask = mask)
 
 	###############################################################################################
 
@@ -581,9 +625,7 @@ class HaloDensityProfile(object):
 
 		# This function is evaluated before any derivatives etc. Thus, we set the new set of 
 		# parameters here.		
-		xx = self._fit_get_params()
-		xx[mask] = x
-		self._fit_set_params(xx)
+		self._fit_set_params(x, mask = mask)
 
 		if verbose:
 			print(x, self.getParameterArray())
@@ -651,15 +693,14 @@ class HaloDensityProfile(object):
 	# evaluated element-by-element, but the function is expected to handle a vector since this 
 	# could be much faster for a simpler likelihood.
 	
-	def _fit_likelihood(self, x, args):
+	def _fit_likelihood(self, x, r, q, f, covinv, mask):
 
-		r, q, f, covinv = args
 		n_eval = len(x)
 		res = numpy.zeros((n_eval), numpy.float)
 		for i in range(n_eval):
-			self.setParameterArray(x[i])
+			self.setParameterArray(x[i], mask = mask)
 			res[i] = numpy.exp(-0.5 * self._fit_chi2(r, q, f, covinv))
-
+		
 		return res
 
 	###############################################################################################
@@ -698,7 +739,7 @@ class HaloDensityProfile(object):
 		#print q_cov_inv
 			
 		# Run the actual fit
-		ini_guess = self._fit_get_params()[mask]
+		ini_guess = self._fit_get_params(mask = mask)
 		args = r, q, q_err, q_cov_inv, f, fp, mask, N_par_fit, merit_func, verbose
 		x, _, dict, fit_msg, err_code = scipy.optimize.leastsq(self._fit_diff_function, ini_guess, \
 							Dfun = deriv_func, col_deriv = 1, args = args, full_output = 1, \
@@ -714,35 +755,25 @@ class HaloDensityProfile(object):
 			print(msg)
 			print(self.getParameterArray())
 
-		xx = self._fit_get_params()
-		xx[mask] = x
-		self._fit_set_params(xx)
+		self._fit_set_params(mask = mask)
 
 		return x, dict
 
 	###############################################################################################
 
 	def _fit_mcmc(self, r, q, f, covinv, mask, N_par_fit, verbose, \
-				converged_GR, n_walkers, best_fit):
+				converged_GR, nwalkers, best_fit, initial_step, random_seed, convergence_step):
 		
-		# Set average initial position of the walkers	
-		x0 = self.getParameterArray()
-		step = 0.01 * x0
-
-		args = r, q, f, covinv
-		xwalk = MCMC.initWalkers(N_par_fit, x0, step, nwalkers = n_walkers)
-		xi = numpy.reshape(copy.copy(xwalk), (len(xwalk[0]) * 2, len(xwalk[0, 0])))
-		chain, R = MCMC.runMCMC(self._fit_likelihood, xwalk, N_par_fit, nwalkers = n_walkers, nRval = 100, \
-							args = args, converged_GR = converged_GR)
-		xf = numpy.reshape(xwalk, (len(xwalk[0]) * 2, len(xwalk[0, 0])))
-
-		# Find best-fit parameters	
-		mean, median, stddev, p = MCMC.analyzeChain(chain, self.par_names, do_print = False)
-		x = mean
+		x0 = self.getParameterArray(mask = mask)
+		args = r, q, f, covinv, mask
+		walkers = MCMC.initWalkers(x0, initial_step = initial_step, nwalkers = nwalkers, random_seed = random_seed)
+		xi = numpy.reshape(walkers, (len(walkers[0]) * 2, len(walkers[0, 0])))
+		chain, R = MCMC.runChain(self._fit_likelihood, walkers, convergence_step = convergence_step, \
+							args = args, converged_GR = converged_GR, verbose = verbose)
+		mean, median, stddev, p = MCMC.analyzeChain(chain, self.par_names, verbose = verbose)
 
 		dict = {}
 		dict['x_initial'] = xi
-		dict['x_final'] = xf
 		dict['R'] = R
 		dict['chain'] = chain
 		dict['mean'] = mean
@@ -755,9 +786,7 @@ class HaloDensityProfile(object):
 		elif best_fit == 'median':
 			x = median
 
-		xx = self.getParameterArray()
-		xx[mask] = x
-		self.setParameterArray(xx)
+		self.setParameterArray(x, mask = mask)
 		
 		return x, dict
 
@@ -770,9 +799,16 @@ class HaloDensityProfile(object):
 	# 
 	# This function should generally not have to be overwritten by child classes
 
-	def fit(self, r, q, quantity = 'rho', q_err = None, q_cov = None, \
-			mask = None, method = 'mcmc', merit_func = 'absolute', best_fit = 'mean', \
-			verbose = False, converged_GR = 0.01, n_walkers = 200):
+	def fit(self, 
+		# Input data
+		r, q, quantity = 'rho', q_err = None, q_cov = None, \
+		# General fitting options: method, parameters to vary
+		mask = None, method = 'mcmc', verbose = False, \
+		# Options specific to leastsq
+		merit_func = 'absolute', \
+		# Options specific to mcmc
+		best_fit = 'mean', converged_GR = 0.01, nwalkers = 100, initial_step = 0.1, \
+		random_seed = None, convergence_step = 100):
 		"""
 		Fit the density, mass, or surface density profile to a given set of data points.
 		
@@ -806,7 +842,8 @@ class HaloDensityProfile(object):
 		mask: array_like
 			Optional; a numpy array of booleans that has the same length as the variables vector
 			of the density profile class. Only variables where ``mask == True`` are varied in the
-			fit, all others are kept constant.
+			fit, all others are kept constant. Important: this has to be a numpy array rather than
+			a list.
 		merit_func: str
 			The merit function that is minimized. Can be ``absolute`` (the absolute difference 
 			between the data and fit is minimized), ``relative`` (the fractional difference is 
@@ -846,7 +883,7 @@ class HaloDensityProfile(object):
 		if N_par_fit < 1:
 			raise Exception('The mask contains no True elements, meaning there are no parameters to vary.')
 		if verbose:
-			msg = 'Varying %d / %d parameters.' % (N_par_fit, self.N_par)
+			msg = 'Profile fit: Varying %d / %d parameters.' % (N_par_fit, self.N_par)
 			print(msg)
 		
 		# Set the correct function to evaluate during the fitting process
@@ -880,7 +917,7 @@ class HaloDensityProfile(object):
 		elif method == 'mcmc':
 			
 			x, dict = self._fit_mcmc(r, q, f, covinv, mask, N_par_fit, verbose, \
-							converged_GR, n_walkers, best_fit)
+				converged_GR, nwalkers, best_fit, initial_step, random_seed, convergence_step)
 			
 		else:
 			msg = 'Unknown fitting method, %s.' % method
