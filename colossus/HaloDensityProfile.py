@@ -128,11 +128,14 @@ import scipy.interpolate
 import scipy.special
 import abc
 import collections
+import copy
 
 import Utilities
 import Cosmology
 import Halo
 import HaloConcentration
+
+from utils import MCMC
 
 ###################################################################################################
 # ABSTRACT BASE CLASS FOR HALO DENSITY PROFILES
@@ -605,14 +608,12 @@ class HaloDensityProfile(object):
 			mf = q_diff
 		
 		if q_cov_inv is not None:
-			print q_diff.shape
-			print q_cov_inv.shape
-			t1 = numpy.dot(q_cov_inv, q_diff)
-			print t1.shape
-			t2 = numpy.vdot(q_diff, t1)
-			print t2.shape
-			mf = numpy.sqrt(t2)
-			print mf.shape
+			#mf = q_diff * numpy.dot(q_cov_inv, q_diff)
+			#mf = numpy.abs(mf)
+			#mf = numpy.sqrt(mf)
+			
+			mf = numpy.dot(q_cov_inv, q_diff)
+			
 		elif q_err is not None:
 			mf /= q_err
 
@@ -636,25 +637,142 @@ class HaloDensityProfile(object):
 
 	###############################################################################################
 
+	def _fit_chi2(self, r, q, f, covinv):
+
+		q_model = f(r)
+		diff = q_model - q
+		chi2 = numpy.dot(numpy.dot(diff, covinv), diff)
+		
+		return chi2
+
+	###############################################################################################
+	
+	# Evaluate the likelihood for a vector of parameter sets x. In this case, the vector is 
+	# evaluated element-by-element, but the function is expected to handle a vector since this 
+	# could be much faster for a simpler likelihood.
+	
+	def _fit_likelihood(self, x, args):
+
+		r, q, f, covinv = args
+		n_eval = len(x)
+		res = numpy.zeros((n_eval), numpy.float)
+		for i in range(n_eval):
+			self.setParameterArray(x[i])
+			res[i] = numpy.exp(-0.5 * self._fit_chi2(r, q, f, covinv))
+
+		return res
+
+	###############################################################################################
+
 	# The core fitting function. This might need to be overwritten by child classes which is why
 	# it is spit out
 
-	def _fit(self, ini_guess, args, deriv_func):
+	def _fit_leastsq(self, r, q, quantity, f, q_err, q_cov_inv, mask, N_par_fit, \
+					merit_func, verbose):
 		
-		x, _, fit_info, fit_msg, err_code = scipy.optimize.leastsq(self._fit_diff_function, ini_guess, \
+		# If an analytical parameter derivative is implemented for this class, use it.
+		deriv_name = '_fit_param_deriv_%s' % (quantity)
+		if deriv_name in self.__class__.__dict__:
+			fp = self.__class__.__dict__[deriv_name]
+			deriv_func = self._fit_param_deriv_highlevel
+			if verbose:
+				print(('Found analytical derivative function for quantity %s.' % (quantity)))
+		else:
+			fp = None
+			deriv_func = None
+			if verbose:
+				print(('Could not find analytical derivative function for quantity %s.' % (quantity)))
+	
+		# TODO
+		# When the user has passed a covariance matrix, decompose it into eigenvectors...
+	
+		#q_err, q_cov_inv = numpy.linalg.eig(q_cov_inv)
+		#print numpy.diag(q_cov)
+		#diag = 1.0 / numpy.diag(q_cov)
+		#diag = numpy.sort(diag)
+		#q_err = numpy.sort(q_err)
+		#print diag
+		#print q_err
+		#for i in range(len(diag)):
+		#	print '%.3e  %.3e  %.2f' % (diag[i], q_err[i], q_err[i] / diag[i] - 1.0)
+		#print q_cov_inv
+			
+		# Run the actual fit
+		ini_guess = self._fit_get_params()[mask]
+		args = r, q, q_err, q_cov_inv, f, fp, mask, N_par_fit, merit_func, verbose
+		x, _, dict, fit_msg, err_code = scipy.optimize.leastsq(self._fit_diff_function, ini_guess, \
 							Dfun = deriv_func, col_deriv = 1, args = args, full_output = 1, \
 							xtol = 1E-8)
 
-		return x, fit_info, fit_msg, err_code
+		# Check the output
+		if not err_code in [1, 2, 3, 4]:
+			msg = 'Fitting failed, message: %s' % (fit_msg)
+			raise Warning(msg)
+
+		if verbose:
+			msg = 'Found solution in %d steps. Best-fit parameters:' % (dict['nfev'])
+			print(msg)
+			print(self.getParameterArray())
+
+		xx = self._fit_get_params()
+		xx[mask] = x
+		self._fit_set_params(xx)
+
+		return x, dict
+
+	###############################################################################################
+
+	def _fit_mcmc(self, r, q, f, covinv, mask, N_par_fit, verbose, \
+				converged_GR, n_walkers, best_fit):
+		
+		# Set average initial position of the walkers	
+		x0 = self.getParameterArray()
+		step = 0.01 * x0
+
+		args = r, q, f, covinv
+		xwalk = MCMC.initWalkers(N_par_fit, x0, step, nwalkers = n_walkers)
+		xi = numpy.reshape(copy.copy(xwalk), (len(xwalk[0]) * 2, len(xwalk[0, 0])))
+		chain, R = MCMC.runMCMC(self._fit_likelihood, xwalk, N_par_fit, nwalkers = n_walkers, nRval = 100, \
+							args = args, converged_GR = converged_GR)
+		xf = numpy.reshape(xwalk, (len(xwalk[0]) * 2, len(xwalk[0, 0])))
+
+		# Find best-fit parameters	
+		mean, median, stddev, p = MCMC.analyzeChain(chain, self.par_names, do_print = False)
+		x = mean
+
+		dict = {}
+		dict['x_initial'] = xi
+		dict['x_final'] = xf
+		dict['R'] = R
+		dict['chain'] = chain
+		dict['mean'] = mean
+		dict['median'] = median
+		dict['stddev'] = stddev
+		dict['percentiles'] = p
+		
+		if best_fit == 'mean':
+			x = mean
+		elif best_fit == 'median':
+			x = median
+
+		xx = self.getParameterArray()
+		xx[mask] = x
+		self.setParameterArray(xx)
+		
+		return x, dict
 
 	###############################################################################################
 
 	# quantity = 'rho', 'Sigma', 'M'
 	# merit_func 'relative' is recommended - absolute can lead to funny effects
+	# method = 'mcmc' / 'leastsq'
+	# best_fit = 'mean' / 'median'
+	# 
 	# This function should generally not have to be overwritten by child classes
 
 	def fit(self, r, q, quantity = 'rho', q_err = None, q_cov = None, \
-			mask = None, merit_func = 'absolute', verbose = False):
+			mask = None, method = 'mcmc', merit_func = 'absolute', best_fit = 'mean', \
+			verbose = False, converged_GR = 0.01, n_walkers = 200):
 		"""
 		Fit the density, mass, or surface density profile to a given set of data points.
 		
@@ -693,6 +811,9 @@ class HaloDensityProfile(object):
 			The merit function that is minimized. Can be ``absolute`` (the absolute difference 
 			between the data and fit is minimized), ``relative`` (the fractional difference is 
 			minimized), or ``r2`` (the absolute difference is weighted by the square radius).
+		best_fit: str
+			If ``method==mcmc``, this parameter determines whether the ``mean`` or ``median`` 
+			value of the likelihood distribution is used as the output parameter set.
 		verbose: bool
 			If true, output information about the fitting process.
 			
@@ -739,48 +860,38 @@ class HaloDensityProfile(object):
 			msg = 'Unknown quantity, %s.' % (quantity)
 			raise Exception(msg)
 
-		# If an analytical parameter derivative is implemented for this class, use it.
-		deriv_name = '_fit_param_deriv_%s' % (quantity)
-		if deriv_name in self.__class__.__dict__:
-			fp = self.__class__.__dict__[deriv_name]
-			deriv_func = self._fit_param_deriv_highlevel
-			if verbose:
-				print(('Found analytical derivative function for quantity %s.' % (quantity)))
-		else:
-			fp = None
-			deriv_func = None
-			if verbose:
-				print(('Could not find analytical derivative function for quantity %s.' % (quantity)))
-	
 		# Invert the covariance matrix, if necessary
-		if q_cov is None:
-			q_cov_inv = None
+		if q_cov is not None:
+			covinv = numpy.linalg.inv(q_cov)
+		elif q_err is not None:
+			N = len(r)
+			covinv = numpy.zeros((N, N), numpy.float)
+			numpy.fill_diagonal(covinv, 1.0 / q_err**2)
 		else:
-			q_cov_inv = numpy.linalg.inv(q_cov)
-	
+			N = len(r)
+			covinv = numpy.identity((N), numpy.float)
+
 		# Perform the fit
-		ini_guess = self._fit_get_params()[mask]
-		args = r, q, q_err, q_cov_inv, f, fp, mask, N_par_fit, merit_func, verbose
-		x, fit_info, fit_msg, err_code = self._fit(ini_guess, args, deriv_func)
-		xx = self._fit_get_params()
-		xx[mask] = x
-		self._fit_set_params(xx)
-
-		if not err_code in [1, 2, 3, 4]:
-			msg = 'Fitting failed, message: %s' % (fit_msg)
-			raise Warning(msg)
-
-		if verbose:
-			msg = 'Found solution in %d steps. Best-fit parameters:' % (fit_info['nfev'])
-			print(msg)
-			print(self.getParameterArray())
-
-		# Get convenient outputs		
-		q_fit = f(r)
-		diff = fit_info['fvec']
-		diff_sum = numpy.sqrt(numpy.sum(diff**2))
+		if method == 'leastsq':
 		
-		return q_fit, diff, diff_sum
+			x, dict = self._fit_leastsq(r, q, quantity, f, q_err, covinv, \
+														mask, N_par_fit, merit_func, verbose)
+			
+		elif method == 'mcmc':
+			
+			x, dict = self._fit_mcmc(r, q, f, covinv, mask, N_par_fit, verbose, \
+							converged_GR, n_walkers, best_fit)
+			
+		else:
+			msg = 'Unknown fitting method, %s.' % method
+			raise Exception(msg)
+		
+		# Compute a few convenient outputs
+		dict['x'] = x
+		dict['q_fit'] = f(r)
+		dict['chi2'] = self._fit_chi2(r, q, f, covinv)
+				
+		return dict
 
 ###################################################################################################
 # SPLINE DEFINED PROFILE
@@ -1201,32 +1312,37 @@ class NFWProfile(HaloDensityProfile):
 	
 	###############################################################################################
 	
+	# The surface density of an NFW profile can be computed analytically which is much faster than
+	# integration. The formula below is taken from Bartelmann (1996). The case r = rs is solved in 
+	# Lokas & Mamon (2001), but in their notation the density at this radius looks somewhat 
+	# complicated. In the notation used here, Sigma(rs) = 2/3 * rhos * rs.
+	
 	def surfaceDensity(self, r):
 	
-		x = r / self.par['rs']
+		xx = r / self.par['rs']
+		x, is_array = Utilities.getArray(xx)
+		surfaceDensity = numpy.ones_like(x) * self.par['rhos'] * self.par['rs']
 		
-		if not Utilities.isArray(x):
-			x_use = numpy.array([x])
-		else:
-			x_use = x
+		# Solve separately for r < rs, r > rs, r = rs
+		mask_rs = abs(x - 1.0) < 1E-4
+		mask_lt = (x < 1.0) & (numpy.logical_not(mask_rs))
+		mask_gt = (x > 1.0) & (numpy.logical_not(mask_rs))
 		
-		surfaceDensity = 0.0 * x_use
-		for i in range(len(x_use)):
+		surfaceDensity[mask_rs] *= 2.0 / 3.0
+
+		xi = x[mask_lt]		
+		x2 = xi**2
+		x2m1 = x2 - 1.0
+		surfaceDensity[mask_lt] *= 2.0 / x2m1 \
+			* (1.0 - 2.0 / numpy.sqrt(-x2m1) * numpy.arctanh(numpy.sqrt((1.0 - xi) / (xi + 1.0))))
+
+		xi = x[mask_gt]		
+		x2 = xi**2
+		x2m1 = x2 - 1.0
+		surfaceDensity[mask_gt] *= 2.0 / x2m1 \
+			* (1.0 - 2.0 / numpy.sqrt(x2m1) * numpy.arctan(numpy.sqrt((xi - 1.0) / (xi + 1.0))))
 			
-			xx = x_use[i]
-			xx2 = xx**2
-			
-			if abs(xx - 1.0) < 1E-2:
-				fx = 0.0
-			else:
-				if xx > 1.0:
-					fx = 1.0 - 2.0 / math.sqrt(xx2 - 1.0) * math.atan(math.sqrt((xx - 1.0) / (xx + 1.0)))
-				else:
-					fx = 1.0 - 2.0 / math.sqrt(1.0 - xx2) * math.atanh(math.sqrt((1.0 - xx) / (1.0 + xx)))
-		
-			surfaceDensity[i] = 2.0 * self.par['rhos'] * self.par['rs'] / (x_use[i]**2 - 1.0) * fx
-	
-		if not Utilities.isArray(x):
+		if not is_array:
 			surfaceDensity = surfaceDensity[0]
 	
 		return surfaceDensity
