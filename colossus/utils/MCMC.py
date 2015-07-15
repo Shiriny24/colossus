@@ -14,6 +14,29 @@ algorithm. It was written by Andrey Kravtsov and adapted for Colossus by Benedik
 Basic usage
 ---------------------------------------------------------------------------------------------------
 
+Say we want to find the best-fit parameters x of some model. The likelihood for this model to be
+true should take on a form like this::
+
+	def likelihood(x, data, some_other_variables)
+
+Then all we need to do to obtain the best-fit parameters is to make some initial guess for x that
+is stored in the vector x_initial, and run::
+
+	args = data, some_other_variables
+	run(x_initial, likelihood, args = args)
+	
+The :func:`run` function is a simple wrapper around the main stages of the MCMC samples. If, for
+example, we wish to obtain the mean best-fit parameters and plot the output, we can execute the 
+following code::
+
+	args = data, some_other_variables
+	walkers = initWalkers(x_initial)
+	chain_thin, chain_full, _ = runChain(likelihood, walkers, args = args)
+	mean, _, _, _ = analyzeChain(chain_thin, param_names = param_names)
+	plotChain(chain_full, param_names)
+
+There are numerous more advanced parameters that can be adjusted. Please see the documentation of 
+the individual functions below.
 """
 
 import numpy
@@ -21,29 +44,31 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 import matplotlib.gridspec as gridspec
 
-import acor
-
 import Utilities
 
 ###################################################################################################
 
-def run(x_initial, L_func, param_names, args = (), verbose = True, \
+def run(x_initial, L_func, args = (), verbose = True, \
 		# Options for the initial walker placement
 		initial_step = 0.1, nwalkers = 100, random_seed = None, \
 		# Options for the MCMC chain
 		convergence_step = 100, converged_GR = 0.01, 
 		# Options for the analysis of the chain
-		percentiles = [68.27, 95.45, 99.73]):
+		param_names = None, percentiles = [68.27, 95.45, 99.73]):
 	"""
 	Wrapper for the lower-level MCMC functions.
+	
+	This function combines the creation of walkers, running of the chain and analysis functions 
+	into one. Please see the documentation of the individual functions for the meaning of the 
+	input parameters.
 	"""
 	
 	walkers = initWalkers(x_initial, initial_step = initial_step, nwalkers = nwalkers, \
 					random_seed = random_seed)
-	chain, _ = runChain(walkers, L_func, args = args, convergence_step = convergence_step, \
+	chain_thin, _, _ = runChain(L_func, walkers, args = args, convergence_step = convergence_step, \
 					converged_GR = converged_GR, verbose = verbose)
-	mean, median, stddev, p = analyzeChain(chain, param_names, percentiles = percentiles, \
-					verbose = verbose)
+	mean, median, stddev, p = analyzeChain(chain_thin, param_names = param_names,
+					percentiles = percentiles, verbose = verbose)
 
 	return mean, median, stddev, p
 
@@ -131,13 +156,32 @@ def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
-	chain: array_like
-		A numpy array of dimensions [nsteps, nparams] with the parameters at each step in the 
-		chain. The chain can be analyzed with the :func:`analyzeChain` function.
+	chain_thin: array_like
+		A numpy array of dimensions [n_independent_samples, nparams] with the parameters at each 
+		step in the chain. In this thin chain, only every nth step is output, where n is the 
+		auto-correlation time, meaning that the samples in this chain are truly independent. The 
+		chain can be analyzed with the :func:`analyzeChain` function.
+	chain_full: array_like
+		Like the thin chain, but including all steps. Thus, the samples in this chain are not 
+		indepedent from each other. However, the full chain often gives better plotting results.
 	R: array_like
 		A numpy array containing the GR indicator at each step when it was saved.
 	"""
+
+	# ---------------------------------------------------------------------------------------------
+	
+	def autocorrelationTime(x, maxlag = 10):
 		
+		nt = len(x)
+		ft = numpy.fft.fft(x - numpy.mean(x), n = 2 * nt)
+		corr_func = numpy.fft.ifft(ft * numpy.conjugate(ft))[0:nt].real
+		corr_func /= corr_func[0]
+		tau = 1.0 + 2.0 * numpy.sum(corr_func[1:maxlag])
+		
+		return tau
+
+	# ---------------------------------------------------------------------------------------------
+
 	if len(walkers.shape) != 3:
 		raise ValueError("The walkers array must be 3-dimensional.")
 	if len(walkers) != 2:
@@ -249,6 +293,11 @@ def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 
 			swc = sw / (nchain - 1.0) - numpy.power(mwc, 2)
 			
 			for i in range(nparams):
+
+				# Compute and store the autocorrelation time
+				tacorx = autocorrelationTime(mutx[i])
+				taux[i].append(numpy.max(tacorx))
+
 				# Within chain variance
 				Wgr[i] = numpy.sum(swc[:, i]) / nwalkers
 				# Mean of the means over Nwalkers
@@ -258,14 +307,6 @@ def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 
 				# Gelman-Rubin R factor
 				Rgr[i] = (1.0 - 1.0 / nchain + Bgr[i] / Wgr[i] / nchain) * (nwalkers + 1.0) \
 					/ nwalkers - (nchain - 1.0) / (nchain * nwalkers)
-				
-				try:
-					tacorx = acor.acor(mutx[i], maxlag = 10)[0]
-				except RuntimeError:
-					#print 'Error in acor'
-					tacorx = 0.0
-				
-				taux[i].append(numpy.max(tacorx))
 				Rval[i].append(Rgr[i] - 1.0)
 			
 			if verbose:
@@ -278,24 +319,26 @@ def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 
 			if numpy.max(numpy.abs(Rgr - 1.0)) < converged_GR:
 				converged = True
 
-	if verbose:
-		Utilities.printLine()
-		print(('MCMC generated %d samples using %d walkers, acceptance ratio %.3f.' \
-			% (ntry, nwalkers, 1.0 * naccept / ntry)))
-	
 	# Chop of burn-in period, and thin samples on auto-correlation time following Sokal's (1996) 
 	# recommendations
 	nthin = int(tacorx)
 	nburn = int(20 * nwalkers * nthin)
-	#print nburn, nthin
-	
 	chain = numpy.array(chain)
-	#chain = chain[nburn::nthin, :]
-	chain = chain[nburn:, :]
-	
+	chain_full = chain[nburn:, :]
+	chain_thin = chain_full[::nthin, :]
+
 	R = numpy.array(Rval)
-	
-	return chain, R
+
+	if verbose:
+		Utilities.printLine()
+		print(('Acceptance ratio:                        %7.3f' % (1.0 * naccept / ntry)))
+		print(('Total number of samples:                 %7d' % (ntry)))
+		print(('Samples in burn-in:                      %7d' % (nburn)))
+		print(('Samples without burn-in (full chain):    %7d' % (len(chain_full))))
+		print(('Thinning factor (autocorr. time):        %7d' % (nthin)))
+		print(('Independent samples (thin chain):        %7d' % (len(chain_thin))))
+
+	return chain_thin, chain_full, R
 
 ###################################################################################################
 

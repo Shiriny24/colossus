@@ -177,6 +177,13 @@ class HaloDensityProfile(object):
 		self.N_opt = len(self.opt_names)
 		for name in self.opt_names:
 			self.opt[name] = None
+			
+		# Function pointers to various physical quantities. This can be overwritten or extended
+		# by child classes.
+		self.quantities = {}
+		self.quantities['rho'] = self.density
+		self.quantities['M'] = self.enclosedMass
+		self.quantities['Sigma'] = self.surfaceDensity
 
 		return
 
@@ -617,64 +624,31 @@ class HaloDensityProfile(object):
 
 	###############################################################################################
 
-	# Useful function for fitting
-	# This function should generally not be overwritten.
+	# This function is evaluated before any derivatives etc. Thus, we set the new set of 
+	# parameters here. Note that the matrix Q is the matrix that is dot-multiplied with the 
+	# difference vector; this is not the same as the inverse covariance matrix.	
 
-	def _fit_diff_function(self, x, r, q, q_err, q_cov_inv, f, fp, \
-						mask, N_par_fit, merit_func, verbose):
+	def _fit_diff_function(self, x, r, q, f, fder, Q, mask, N_par_fit, verbose):
 
-		# This function is evaluated before any derivatives etc. Thus, we set the new set of 
-		# parameters here.		
-		self._fit_set_params(x, mask = mask)
-
-		if verbose:
-			print(x, self.getParameterArray())
-			
+		self._fit_set_params(x, mask = mask)			
 		q_fit = f(r)
-		diff = self._fit_apply_merit_function(q_fit - q, r, q, q_err, q_cov_inv, merit_func)
-
-		return diff
-	
-	###############################################################################################
-
-	# Apply the particular merit function. If the merit function is absolute, this function does 
-	# nothing. 
-
-	def _fit_apply_merit_function(self, q_diff, r, q, q_err, q_cov_inv, merit_func):
-		
-		if merit_func == 'r2':
-			mf = q_diff * r**2
-		elif merit_func == 'relative':
-			mf = q_diff / q
-		elif merit_func == 'absolute':
-			mf = q_diff
-		
-		if q_cov_inv is not None:
-			#mf = q_diff * numpy.dot(q_cov_inv, q_diff)
-			#mf = numpy.abs(mf)
-			#mf = numpy.sqrt(mf)
-			
-			mf = numpy.dot(q_cov_inv, q_diff)
-			
-		elif q_err is not None:
-			mf /= q_err
+		q_diff = q_fit - q
+		mf = numpy.dot(Q, q_diff)
 
 		return mf
 
 	###############################################################################################
 
-	# Evaluate the derivative of the parameters, and apply corrections due to the merit function.
-	# This function should only be called if fp is not None, i.e. if the analytical derivative is 
-	# implemented.
+	# Evaluate the derivative of the parameters, and multiply with the same matrix as in the diff
+	# function. This function should only be called if fp is not None, i.e. if the analytical 
+	# derivative is implemented.
 
-	def _fit_param_deriv_highlevel(self, x, r, q, q_err, q_cov_inv, f, fp, \
-								mask, N_par_fit, merit_func, verbose):
+	def _fit_param_deriv_highlevel(self, x, r, q, f, fder, Q, mask, N_par_fit, verbose):
 		
-		deriv = fp(self, r, mask, N_par_fit)
-		
+		deriv = fder(self, r, mask, N_par_fit)		
 		for j in range(N_par_fit):
-			deriv[j] = self._fit_apply_merit_function(r, q, deriv[j], q_err, q_cov_inv, merit_func)
-		
+			deriv[j] = numpy.dot(Q, deriv[j])
+			
 		return deriv
 
 	###############################################################################################
@@ -705,77 +679,22 @@ class HaloDensityProfile(object):
 
 	###############################################################################################
 
-	# The core fitting function. This might need to be overwritten by child classes which is why
-	# it is spit out
-
-	def _fit_leastsq(self, r, q, quantity, f, q_err, q_cov_inv, mask, N_par_fit, \
-					merit_func, verbose):
-		
-		# If an analytical parameter derivative is implemented for this class, use it.
-		deriv_name = '_fit_param_deriv_%s' % (quantity)
-		if deriv_name in self.__class__.__dict__:
-			fp = self.__class__.__dict__[deriv_name]
-			deriv_func = self._fit_param_deriv_highlevel
-			if verbose:
-				print(('Found analytical derivative function for quantity %s.' % (quantity)))
-		else:
-			fp = None
-			deriv_func = None
-			if verbose:
-				print(('Could not find analytical derivative function for quantity %s.' % (quantity)))
-	
-		# TODO
-		# When the user has passed a covariance matrix, decompose it into eigenvectors...
-	
-		#q_err, q_cov_inv = numpy.linalg.eig(q_cov_inv)
-		#print numpy.diag(q_cov)
-		#diag = 1.0 / numpy.diag(q_cov)
-		#diag = numpy.sort(diag)
-		#q_err = numpy.sort(q_err)
-		#print diag
-		#print q_err
-		#for i in range(len(diag)):
-		#	print '%.3e  %.3e  %.2f' % (diag[i], q_err[i], q_err[i] / diag[i] - 1.0)
-		#print q_cov_inv
-			
-		# Run the actual fit
-		ini_guess = self._fit_get_params(mask = mask)
-		args = r, q, q_err, q_cov_inv, f, fp, mask, N_par_fit, merit_func, verbose
-		x, _, dict, fit_msg, err_code = scipy.optimize.leastsq(self._fit_diff_function, ini_guess, \
-							Dfun = deriv_func, col_deriv = 1, args = args, full_output = 1, \
-							xtol = 1E-8)
-
-		# Check the output
-		if not err_code in [1, 2, 3, 4]:
-			msg = 'Fitting failed, message: %s' % (fit_msg)
-			raise Warning(msg)
-
-		if verbose:
-			msg = 'Found solution in %d steps. Best-fit parameters:' % (dict['nfev'])
-			print(msg)
-			print(self.getParameterArray())
-
-		self._fit_set_params(mask = mask)
-
-		return x, dict
-
-	###############################################################################################
-
-	def _fit_mcmc(self, r, q, f, covinv, mask, N_par_fit, verbose, \
+	def _fit_method_mcmc(self, r, q, f, covinv, mask, N_par_fit, verbose, \
 				converged_GR, nwalkers, best_fit, initial_step, random_seed, convergence_step):
 		
 		x0 = self.getParameterArray(mask = mask)
 		args = r, q, f, covinv, mask
 		walkers = MCMC.initWalkers(x0, initial_step = initial_step, nwalkers = nwalkers, random_seed = random_seed)
 		xi = numpy.reshape(walkers, (len(walkers[0]) * 2, len(walkers[0, 0])))
-		chain, R = MCMC.runChain(self._fit_likelihood, walkers, convergence_step = convergence_step, \
+		chain_thin, chain_full, R = MCMC.runChain(self._fit_likelihood, walkers, convergence_step = convergence_step, \
 							args = args, converged_GR = converged_GR, verbose = verbose)
-		mean, median, stddev, p = MCMC.analyzeChain(chain, self.par_names, verbose = verbose)
+		mean, median, stddev, p = MCMC.analyzeChain(chain_thin, self.par_names, verbose = verbose)
 
 		dict = {}
 		dict['x_initial'] = xi
+		dict['chain_full'] = chain_full
+		dict['chain_thin'] = chain_thin
 		dict['R'] = R
-		dict['chain'] = chain
 		dict['mean'] = mean
 		dict['median'] = median
 		dict['stddev'] = stddev
@@ -792,35 +711,71 @@ class HaloDensityProfile(object):
 
 	###############################################################################################
 
-	# quantity = 'rho', 'Sigma', 'M'
-	# merit_func 'relative' is recommended - absolute can lead to funny effects
-	# method = 'mcmc' / 'leastsq'
-	# best_fit = 'mean' / 'median'
-	# 
-	# This function should generally not have to be overwritten by child classes
+	def _fit_method_leastsq(self, r, q, f, fder, Q, mask, N_par_fit, verbose):
+		
+		# Prepare arguments
+		if fder is None:
+			deriv_func = None
+		else:
+			deriv_func = self._fit_param_deriv_highlevel	
+		args = r, q, f, fder, Q, mask, N_par_fit, verbose
+
+		# Run the actual fit
+		ini_guess = self._fit_get_params(mask = mask)
+		x_fit, _, dict, fit_msg, err_code = scipy.optimize.leastsq(self._fit_diff_function, ini_guess, \
+							Dfun = deriv_func, col_deriv = 1, args = args, full_output = 1, \
+							xtol = 1E-8)
+
+		# Check the output
+		if not err_code in [1, 2, 3, 4]:
+			msg = 'Fitting failed, message: %s' % (fit_msg)
+			raise Warning(msg)
+
+		# Set the best-fit parameters
+		self._fit_set_params(x_fit, mask = mask)
+		x = self.getParameterArray(mask = mask)
+
+		if verbose:
+			msg = 'Found solution in %d steps. Best-fit parameters:' % (dict['nfev'])
+			print(msg)
+			print(x)
+
+		return x, dict
+
+	###############################################################################################
+
+	# This function represents a general interface for fitting, and should not have to be 
+	# overwritten by child classes.
 
 	def fit(self, 
 		# Input data
 		r, q, quantity = 'rho', q_err = None, q_cov = None, \
 		# General fitting options: method, parameters to vary
-		mask = None, method = 'mcmc', verbose = False, \
-		# Options specific to leastsq
-		merit_func = 'absolute', \
-		# Options specific to mcmc
-		best_fit = 'mean', converged_GR = 0.01, nwalkers = 100, initial_step = 0.1, \
-		random_seed = None, convergence_step = 100):
+		method = 'leastsq', mask = None, verbose = False, \
+		# Options specific to the MCMC initialization
+		initial_step = 0.1, nwalkers = 100, random_seed = None, \
+		# Options specific to running the MCMC chain and its analysis
+		convergence_step = 100, converged_GR = 0.01, best_fit = 'median'):
 		"""
 		Fit the density, mass, or surface density profile to a given set of data points.
 		
-		This function implements a least-squares for of a density profile to a given set of data
-		points. The parameters of the profile instance serve as an initial guess. The fitted 
-		``quantity`` can either be density, enclosed mass, or surface density (``rho``, ``M``, or
-		``Sigma``). The data points can optionally have error bars. The user can furthermore choose 
-		which profile parameters are varied (through the ``mask`` parameter) and which merit
-		function is minimized.
+		This function represents a general interface for finding the best-fit parameters of a 
+		halo density profile given a set of data points. These points can represent a number of
+		different physical quantities: ``quantity`` can either be density, enclosed mass, or 
+		surface density (``rho``, ``M``, or ``Sigma``). The data points q at radii r can optionally 
+		have error bars, and the user can pass a full covariance matrix.
 		
-		After the fit, the profile instance represents the best-fit profile to the data points and
-		its parameters are the best-fit parameters.
+		There are two fundamental methods for performing the fit, a least-squares minimization 
+		(method = leastsq) and a Markov-Chain Monte Carlo (method = mcmc). The MCMC method has some
+		specific options (see below). In either case, the current parameters of the profile instance 
+		serve as an initial guess. Finally, the user can choose to vary only a sub-set of the
+		profile parameters through the ``mask`` parameter.
+		
+		The function returns a dictionary with outputs that depend on which method is chosen. After
+		this function has completed, the profile instance represents the best-fit profile to the 
+		data points (i.e., its parameters are the best-fit parameters). Note that all output 
+		parameters are bundled into one dictionary. The explanations below refer to the entries in
+		this dictionary.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -833,26 +788,48 @@ class HaloDensityProfile(object):
 		quantity: str
 			Indicates which quantity is given in the q input, can be ``rho``, ``M``, or ``Sigma``.
 		q_err: array_like
-			Optional; the uncertainty on the values in q in the same units.
+			Optional; the uncertainty on the values in q in the same units. If ``method==mcmc``, 
+			either q_err or q_cov must be passed. If ``method==leastsq`` and neither q_err nor 
+			q_cov are passed, the absolute different between data points and fit is minimized. In 
+			this case, the returned chi2 is in units of absolute difference, meaning its value 
+			will depend on the units of q.
 		q_cov: array_like
 			Optional; the covariance matrix of the elements in q, as a 2-dimensional numpy array. 
 			This array must have dimensions of q**2 and be in units of the square of the units of 
 			q. If q_cov is passed, q_err is ignored since the diagonal elements of q_cov correspond 
 			to q_err**2.
+		method: str
+			The fitting method; can be ``leastsq`` for a least-squares minimization of ``mcmc``
+			for a Markov-Chain Monte Carlo.
 		mask: array_like
 			Optional; a numpy array of booleans that has the same length as the variables vector
 			of the density profile class. Only variables where ``mask == True`` are varied in the
 			fit, all others are kept constant. Important: this has to be a numpy array rather than
 			a list.
-		merit_func: str
-			The merit function that is minimized. Can be ``absolute`` (the absolute difference 
-			between the data and fit is minimized), ``relative`` (the fractional difference is 
-			minimized), or ``r2`` (the absolute difference is weighted by the square radius).
-		best_fit: str
-			If ``method==mcmc``, this parameter determines whether the ``mean`` or ``median`` 
-			value of the likelihood distribution is used as the output parameter set.
 		verbose: bool
 			If true, output information about the fitting process.
+		initial_step: array_like
+			Only active when ``method==mcmc``. The MCMC samples ("walkers") are initially 
+			distributed in a Gaussian around the initial guess. The width of the Gaussian is given
+			by initial_step, either as an array of length N_par (giving the width of each Gaussian)
+			or as a float number, in which case the width is set to initial_step times the initial
+			value of the parameter.
+		nwalkers: int
+			Only active when ``method==mcmc``. The number of MCMC samplers that are run in parallel.
+		random_seed: int
+			Only active when ``method==mcmc``. If random_seed is not None, it is used to initialize
+			the random number generator. This can be useful for reproducing results.
+		convergence_step: int
+			Only active when ``method==mcmc``. The convergence criteria are computed every
+			convergence_step steps (and output is printed if ``verbose==True``). 
+		converged_GR: float
+			Only active when ``method==mcmc``. The maximum difference between different chains, 
+			according to the Gelman-Rubin criterion. Once the GR indicator is lower than this 
+			number in all parameters, the chain is ended. Setting this number too low leads to
+			very long runtimes, but setting it too high can lead to inaccurate results.
+		best_fit: str
+			Only active when ``method==mcmc``. This parameter determines whether the ``mean`` or 
+			``median`` value of the likelihood distribution is used as the output parameter set.
 			
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -886,38 +863,72 @@ class HaloDensityProfile(object):
 			msg = 'Profile fit: Varying %d / %d parameters.' % (N_par_fit, self.N_par)
 			print(msg)
 		
-		# Set the correct function to evaluate during the fitting process
-		if quantity == 'rho':
-			f = self.density
-		elif quantity == 'M':
-			f = self.enclosedMass
-		elif quantity == 'Sigma':
-			f = self.surfaceDensity
-		else:
-			msg = 'Unknown quantity, %s.' % (quantity)
-			raise Exception(msg)
+		# Set the correct function to evaluate during the fitting process. We could just pass
+		# quantity, but that would mean many evaluations of the dictionary entry.
+		f = self.quantities[quantity]
 
-		# Invert the covariance matrix, if necessary
+		# Compute the inverse covariance matrix covinv. If no covariance has been passed, this 
+		# matrix is diagonal, with covinv_ii = 1/sigma_i^2. If sigma has not been passed either,
+		# the matrix is the identity matrix. 
+		N = len(r)
 		if q_cov is not None:
 			covinv = numpy.linalg.inv(q_cov)
 		elif q_err is not None:
-			N = len(r)
 			covinv = numpy.zeros((N, N), numpy.float)
 			numpy.fill_diagonal(covinv, 1.0 / q_err**2)
 		else:
-			N = len(r)
 			covinv = numpy.identity((N), numpy.float)
 
 		# Perform the fit
-		if method == 'leastsq':
-		
-			x, dict = self._fit_leastsq(r, q, quantity, f, q_err, covinv, \
-														mask, N_par_fit, merit_func, verbose)
+		if method == 'mcmc':
 			
-		elif method == 'mcmc':
+			if q_cov is None and q_err is None:
+				raise Exception('MCMC cannot be run without uncertainty vector or covariance matrix.')
 			
-			x, dict = self._fit_mcmc(r, q, f, covinv, mask, N_par_fit, verbose, \
+			x, dict = self._fit_method_mcmc(r, q, f, covinv, mask, N_par_fit, verbose, \
 				converged_GR, nwalkers, best_fit, initial_step, random_seed, convergence_step)
+			
+		elif method == 'leastsq':
+		
+			# If an analytical parameter derivative is implemented for this class, use it.
+			deriv_name = '_fit_param_deriv_%s' % (quantity)
+			if deriv_name in self.__class__.__dict__:
+				fder = self.__class__.__dict__[deriv_name]
+				if verbose:
+					print(('Found analytical derivative function for quantity %s.' % (quantity)))
+			else:
+				fder = None
+				if verbose:
+					print(('Could not find analytical derivative function for quantity %s.' % (quantity)))
+
+			# If the covariance matrix is given, things get a little complicated because we are not
+			# just minimizing chi2 = C^-1 diff C, but have to return a vector of diffs for each 
+			# data point. Thus, we decompose C^-1 into its eigenvalues and vectors:
+			#
+			# C^-1 = V^T Lambda V
+			#
+			# where V is a matrix of eigenvectors and Lambda is the matrix of eigenvalues. In the 
+			# diff function, we want 
+			#
+			# diff -> V . diff / sigma
+			#
+			# Since Lambda has 1/sigma_i^2 on the diagonals, we create Q = V * root(Lambda) so that
+			# 
+			# diff -> Q . diff.
+			#
+			# If only sigma has been passed, Q has q/sigma_i on the diagonal.
+			
+			if q_cov is not None:
+				Lambda, Q = numpy.linalg.eig(covinv)
+				for i in range(N):
+					Q[:, i] *= numpy.sqrt(Lambda[i])
+			elif q_err is not None:
+				Q = numpy.zeros((N, N), numpy.float)
+				numpy.fill_diagonal(Q, 1.0 / q_err)
+			else:
+				Q = covinv
+				
+			x, dict = self._fit_method_leastsq(r, q, f, fder, Q, mask, N_par_fit, verbose)
 			
 		else:
 			msg = 'Unknown fitting method, %s.' % method
@@ -1443,15 +1454,15 @@ class NFWProfile(HaloDensityProfile):
 
 	# When fitting the NFW profile, use log(rho_c) and log(rs)
 
-	def _fit_get_params(self):
+	def _fit_get_params(self, mask = None):
 		
-		return numpy.log(self.getParameterArray())
+		return numpy.log(self.getParameterArray(mask = mask))
 	
 	###############################################################################################
 	
-	def _fit_set_params(self, pars):
+	def _fit_set_params(self, pars, mask = None):
 		
-		return self.setParameterArray(numpy.exp(pars))
+		return self.setParameterArray(numpy.exp(pars), mask = mask)
 
 	###############################################################################################
 

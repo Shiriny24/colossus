@@ -7,27 +7,32 @@ from utils import MCMC
 
 def main():
 
-	MCMC_test_Gaussian()
+	MCMC_test_Gaussian(plot_output = True)
 
 	return
 
 ###################################################################################################
 
-def MCMC_test_Gaussian():
+# This function demonstrates the use of the MCMC module. If we want to plot the chain, we need to 
+# obtain it from the runChain function. If we only want a basic analysis, such as the mean and 
+# median of the chain, we can use the very simple run() function.
+
+def MCMC_test_Gaussian(plot_output = True):
 
 	n_params = 2
 	param_names = ['x1', 'x2']
-	
-	# Set average initial position of the walkers
 	x_initial = numpy.ones((n_params), numpy.float)
-	walkers = MCMC.initWalkers(x_initial, nwalkers = 200, random_seed = 156)
-	chain, _ = MCMC.runChain(likelihood, walkers)
 	
-	# Analysis and plots
-	MCMC.analyzeChain(chain, param_names = param_names)
-	MCMC.plotChain(chain, param_names)
-	plt.savefig('MCMC_Gaussian.pdf')
-	
+	if plot_output:
+		walkers = MCMC.initWalkers(x_initial, nwalkers = 200, random_seed = 156)
+		chain_thin, chain_full, _ = MCMC.runChain(likelihood, walkers)
+		MCMC.analyzeChain(chain_thin, param_names = param_names)
+		MCMC.plotChain(chain_full, param_names)
+		plt.savefig('MCMC_Gaussian.pdf')
+
+	else:
+		MCMC.run(x_initial, likelihood)	
+		
 	return
 
 ###################################################################################################
