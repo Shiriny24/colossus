@@ -14,29 +14,33 @@ algorithm. It was written by Andrey Kravtsov and adapted for Colossus by Benedik
 Basic usage
 ---------------------------------------------------------------------------------------------------
 
-Say we want to find the best-fit parameters x of some model. The likelihood for this model to be
-true should take on a form like this::
+Say we want to find the best-fit parameters x of some model. The likelihood for this model should 
+take on a form like this::
 
-	def likelihood(x, data, some_other_variables)
+	def likelihood(x, data, some_other_variables):
 
 Then all we need to do to obtain the best-fit parameters is to make some initial guess for x that
 is stored in the vector x_initial, and run::
 
 	args = data, some_other_variables
-	run(x_initial, likelihood, args = args)
+	MCMC.run(x_initial, likelihood, args = args)
 	
 The :func:`run` function is a simple wrapper around the main stages of the MCMC samples. If, for
 example, we wish to obtain the mean best-fit parameters and plot the output, we can execute the 
 following code::
 
 	args = data, some_other_variables
-	walkers = initWalkers(x_initial)
-	chain_thin, chain_full, _ = runChain(likelihood, walkers, args = args)
-	mean, _, _, _ = analyzeChain(chain_thin, param_names = param_names)
-	plotChain(chain_full, param_names)
+	walkers = MCMC.initWalkers(x_initial)
+	chain_thin, chain_full, _ = MCMC.runChain(likelihood, walkers, args = args)
+	mean, _, _, _ = MCMC.analyzeChain(chain_thin, param_names = param_names)
+	MCMC.plotChain(chain_full, param_names)
 
 There are numerous more advanced parameters that can be adjusted. Please see the documentation of 
 the individual functions below.
+
+---------------------------------------------------------------------------------------------------
+Detailed Documentation
+---------------------------------------------------------------------------------------------------
 """
 
 import numpy

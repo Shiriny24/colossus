@@ -1,8 +1,8 @@
 ###################################################################################################
 #
-# ConcentrationDemo.py 		(c) Benedikt Diemer
-#							University of Chicago
-#     				    	bdiemer@oddjob.uchicago.edu
+# HaloDensityProfileDemo.py (c) Benedikt Diemer
+#								University of Chicago
+#     				    		bdiemer@oddjob.uchicago.edu
 #
 ###################################################################################################
 #
@@ -22,7 +22,8 @@ import HaloDensityProfile
 
 def main():
 
-	demonstrateProfiles()
+	#demonstrateProfiles()
+	demonstrateFitting()
 	#demonstrateMassDefinitions()
 
 	return
@@ -93,6 +94,43 @@ def demonstrateProfiles():
 	# Finalize plot
 	plt.sca(p1)
 	plt.legend()
+	plt.show()
+	
+	return
+
+###################################################################################################
+
+def demonstrateFitting():
+
+	# Create a true NFW profile
+	Cosmology.setCosmology('WMAP9')
+	rhos = 1E6
+	rs = 50.0
+	prof = HaloDensityProfile.NFWProfile(rhos = rhos, rs = rs)
+	
+	# Create a fake dataset with some noise
+	r = 10**numpy.arange(0.1, 3.0, 0.3)
+	rho_data = prof.density(r)
+	sigma = 0.25 * rho_data
+	rho_data += numpy.random.normal(0.0, sigma, len(r))
+
+	# Move the profile parameters away from the initial values
+	prof.setParameterArray([prof.par['rhos'] * 0.4, prof.par['rs'] * 3.0])
+	
+	# Fit to the fake data
+	dict = prof.fit(r, rho_data, 'rho', q_err = sigma)	
+	rr = 10**numpy.arange(0.0, 3.0, 0.1)
+	rho_fitted = prof.density(rr)
+	
+	print dict['cov']
+	
+	# Plot
+	plt.figure()
+	plt.loglog()
+	plt.xlabel('r(kpc/h)')
+	plt.ylabel('Density')
+	plt.errorbar(r, rho_data, yerr = sigma, fmt = 'o', ms = 5.0)
+	plt.plot(rr, rho_fitted, '-')
 	plt.show()
 	
 	return

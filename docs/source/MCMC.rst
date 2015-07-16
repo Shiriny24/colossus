@@ -1,6 +1,6 @@
 =====================================
-Utilities
+MCMC
 =====================================
 
-.. automodule:: utils.Utilities
+.. automodule:: utils.MCMC
     :members:

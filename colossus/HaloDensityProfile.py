@@ -71,6 +71,12 @@ By default, the function uses the ``diemer_15`` concentration model (see the doc
 :mod:`HaloConcentration` module).
 
 ***************************************************************************************************
+Profile fitting
+***************************************************************************************************
+
+
+
+***************************************************************************************************
 Alternative mass definitions
 ***************************************************************************************************
 
@@ -721,7 +727,7 @@ class HaloDensityProfile(object):
 
 		# Run the actual fit
 		ini_guess = self._fit_get_params(mask = mask)
-		x_fit, _, dict, fit_msg, err_code = scipy.optimize.leastsq(self._fit_diff_function, ini_guess, \
+		x_fit, cov, dict, fit_msg, err_code = scipy.optimize.leastsq(self._fit_diff_function, ini_guess, \
 							Dfun = deriv_func, col_deriv = 1, args = args, full_output = 1, \
 							xtol = 1E-8)
 
@@ -739,6 +745,8 @@ class HaloDensityProfile(object):
 			print(msg)
 			print(x)
 
+		dict['cov'] = cov
+
 		return x, dict
 
 	###############################################################################################
@@ -748,9 +756,9 @@ class HaloDensityProfile(object):
 
 	def fit(self, 
 		# Input data
-		r, q, quantity = 'rho', q_err = None, q_cov = None, \
+		r, q, quantity, q_err = None, q_cov = None, \
 		# General fitting options: method, parameters to vary
-		method = 'leastsq', mask = None, verbose = False, \
+		method = 'leastsq', mask = None, verbose = True, \
 		# Options specific to the MCMC initialization
 		initial_step = 0.1, nwalkers = 100, random_seed = None, \
 		# Options specific to running the MCMC chain and its analysis
@@ -832,15 +840,54 @@ class HaloDensityProfile(object):
 			
 		Returns
 		-------------------------------------------------------------------------------------------
-		q_fit: array_like
-			The fitted profile at the radii of the data points; has the same units as q and the 
-			same dimensions as r.
-		diff: array_like
-			The merit function evaluated for the data points and the best-fit profile; has the same
-			units as q and the same dimensions as r.
-		diff_sum: float
-			The resulting root mean square of the diff array (this is the number that is actually 
-			minimized).
+		results: dict
+			A dictionary bundling the various fit results. Regardless of the fitting method, the 
+			dictionary always contains the following entries:
+			
+			``x``: array_like
+				The best-fit result vector. If mask is passed, this vector only contains those 
+				variables that were varied in the fit. 
+			``q_fit``: array_like
+				The fitted profile at the radii of the data points; has the same units as q and the 
+				same dimensions as r.
+			``chi2``: float
+				The chi^2 of the best-fit profile. If a covariance matrix was passed, the 
+				covariances are taken into account. If no uncertainty was passed at all, chi2 is
+				in units of absolute difference, meaning its value will depend on the units of q.
+		
+			If ``method==leastsq``, the dictionary additionally contains the following entries:
+			
+			``nfev``: int
+				The number of function calls used in the fit.
+			``cov``: array_like
+				An estimate of the covariance matrix returned by the fit.
+				
+			as well as the other entries returned by scipy.optimize.leastsq. If ``method==mcmc`,
+			the dictionary contains the following entries:
+			
+			``x_initial``: array_like
+				The initial positions of the walkers, in an array of dimensions [nwalkers, nparams].
+			``chain_full``: array_like
+				A numpy array of dimensions [n_independent_samples, nparams] with the parameters 
+				at each step in the chain. In this thin chain, only every nth step is output, 
+				where n is the auto-correlation time, meaning that the samples in this chain are 
+				truly independent.
+			``chain_thin``: array_like
+				Like the thin chain, but including all steps. Thus, the samples in this chain are 
+				not indepedent from each other. However, the full chain often gives better plotting 
+				results.
+			``R``: array_like
+				A numpy array containing the GR indicator at each step when it was saved.
+			``mean``: array_like
+				The mean of the chain for each parameter; has length nparams.
+			``median``: array_like
+				The median of the chain for each parameter; has length nparams.
+			``stddev``: array_like
+				The standard deviation of the chain for each parameter; has length nparams.
+			``percentiles``: array_like
+				The lower and upper values of each parameter that contain a certain percentile of 
+				the probability; has dimensions [n_percentages, 2, nparams] where the second 
+				dimension contains the lower/upper values. 
 		"""						
 		
 		# Check whether this profile has any parameters that can be optimized. If not, throw an
