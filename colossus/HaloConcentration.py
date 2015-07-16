@@ -87,7 +87,7 @@ import scipy.interpolate
 import scipy.optimize
 import warnings
 
-import Utilities
+from utils import Utilities
 import Cosmology
 import Halo
 import HaloDensityProfile

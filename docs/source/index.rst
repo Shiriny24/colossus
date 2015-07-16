@@ -69,6 +69,7 @@ Contents
     Halo
     HaloDensityProfile
     HaloConcentration
+    MCMC
     Utilities
 
 * :ref:`genindex`

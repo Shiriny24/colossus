@@ -129,12 +129,11 @@ import scipy.special
 import abc
 import collections
 
-import Utilities
+from utils import MCMC
+from utils import Utilities
 import Cosmology
 import Halo
 import HaloConcentration
-
-from utils import MCMC
 
 ###################################################################################################
 # ABSTRACT BASE CLASS FOR HALO DENSITY PROFILES

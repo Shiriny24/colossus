@@ -198,7 +198,8 @@ import scipy.special
 import scipy.interpolate
 import hashlib
 import pickle
-import Utilities
+
+from utils import Utilities
 
 ###################################################################################################
 # Useful constants

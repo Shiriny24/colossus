@@ -11,7 +11,8 @@
 ###################################################################################################
 
 import numpy
-import Utilities
+
+from utils import Utilities
 import Cosmology
 import HaloConcentration
 import HaloDensityProfile

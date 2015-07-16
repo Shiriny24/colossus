@@ -170,7 +170,7 @@ def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 
 
 	# ---------------------------------------------------------------------------------------------
 	
-	def autocorrelationTime(x, maxlag = 10):
+	def autocorrelationTime(x, maxlag = 50):
 		
 		nt = len(x)
 		ft = numpy.fft.fft(x - numpy.mean(x), n = 2 * nt)

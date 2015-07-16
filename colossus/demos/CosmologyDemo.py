@@ -12,8 +12,9 @@
 ###################################################################################################
 
 import numpy
-import Utilities
+
 import Cosmology
+from utils import Utilities
 
 ###################################################################################################
 
@@ -23,7 +24,7 @@ def main():
 	# Basic operations: setting, getting and changing the cosmology
 	# ---------------------------------------------------------------------------------------------
 
-	#demonstrateSettingAndGetting()
+	demonstrateSettingAndGetting()
 	#demonstrateAdding()
 	#demonstrateChanging()
 	
