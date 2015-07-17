@@ -369,13 +369,13 @@ def analyzeChain(chain, param_names = None, percentiles = [68.27, 95.45, 99.73],
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
-	mean: array_like
+	x_mean: array_like
 		The mean of the chain for each parameter; has length nparams.
-	median: array_like
+	x_median: array_like
 		The median of the chain for each parameter; has length nparams.
-	stddev: array_like
+	x_stddev: array_like
 		The standard deviation of the chain for each parameter; has length nparams.
-	p: array_like
+	x_percentiles: array_like
 		The lower and upper values of each parameter that contain a certain percentile of the 
 		probability; has dimensions [n_percentages, 2, nparams] where the second dimension contains
 		the lower/upper values. 
@@ -383,16 +383,16 @@ def analyzeChain(chain, param_names = None, percentiles = [68.27, 95.45, 99.73],
 
 	nparams = len(chain[0])
 
-	mean = numpy.mean(chain, axis = 0)
-	median = numpy.median(chain, axis = 0)
-	stddev = numpy.std(chain, axis = 0)
+	x_mean = numpy.mean(chain, axis = 0)
+	x_median = numpy.median(chain, axis = 0)
+	x_stddev = numpy.std(chain, axis = 0)
 
 	nperc = len(percentiles)
-	p = numpy.zeros((nperc, 2, nparams), numpy.float)
+	x_percentiles = numpy.zeros((nperc, 2, nparams), numpy.float)
 	for i in range(nperc):
 		half_percentile = (100.0 - percentiles[i]) / 2.0
-		p[i, 0, :] = numpy.percentile(chain, half_percentile, axis = 0)
-		p[i, 1, :] = numpy.percentile(chain, 100.0 - half_percentile, axis = 0)
+		x_percentiles[i, 0, :] = numpy.percentile(chain, half_percentile, axis = 0)
+		x_percentiles[i, 1, :] = numpy.percentile(chain, 100.0 - half_percentile, axis = 0)
 
 	if verbose:
 		for i in range(nparams):
@@ -404,15 +404,16 @@ def analyzeChain(chain, param_names = None, percentiles = [68.27, 95.45, 99.73],
 			else:
 				msg += ':'
 			print(msg)
-			print(('Mean:              %+7.3e' % (mean[i])))
-			print(('Median:            %+7.3e' % (median[i])))
-			print(('Std. dev.:         %+7.3e' % (stddev[i])))
+			print(('Mean:              %+7.3e' % (x_mean[i])))
+			print(('Median:            %+7.3e' % (x_median[i])))
+			print(('Std. dev.:         %+7.3e' % (x_stddev[i])))
 			
 			for j in range(nperc):
-				print(('%4.1f%% interval:    %+7.3e .. %+7.3e' % (percentiles[j], p[j, 0, i], p[j, 1, i])))
+				print(('%4.1f%% interval:    %+7.3e .. %+7.3e' \
+					% (percentiles[j], x_percentiles[j, 0, i], x_percentiles[j, 1, i])))
 		Utilities.printLine()
 
-	return mean, median, stddev, p
+	return x_mean, x_median, x_stddev, x_percentiles
 
 ###################################################################################################
 

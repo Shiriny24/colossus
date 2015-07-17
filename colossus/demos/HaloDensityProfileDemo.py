@@ -22,8 +22,8 @@ import HaloDensityProfile
 
 def main():
 
-	#demonstrateProfiles()
-	demonstrateFitting()
+	demonstrateProfiles()
+	#demonstrateFitting()
 	#demonstrateMassDefinitions()
 
 	return
@@ -102,7 +102,7 @@ def demonstrateProfiles():
 
 def demonstrateFitting():
 
-	# Create a true NFW profile
+	# Create a "true" NFW profile
 	Cosmology.setCosmology('WMAP9')
 	rhos = 1E6
 	rs = 50.0
@@ -117,12 +117,10 @@ def demonstrateFitting():
 	# Move the profile parameters away from the initial values
 	prof.setParameterArray([prof.par['rhos'] * 0.4, prof.par['rs'] * 3.0])
 	
-	# Fit to the fake data
+	# Fit to the fake data, compute the fitted profile
 	dict = prof.fit(r, rho_data, 'rho', q_err = sigma)	
 	rr = 10**numpy.arange(0.0, 3.0, 0.1)
 	rho_fitted = prof.density(rr)
-	
-	print dict['cov']
 	
 	# Plot
 	plt.figure()

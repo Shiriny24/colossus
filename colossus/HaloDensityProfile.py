@@ -25,7 +25,7 @@ NFW profile::
 See the documentation of the abstract base class :class:`HaloDensityProfile.HaloDensityProfile` 
 for the functionality of the profile objects. For documentation on spherical overdensity mass
 definitions, please see the documentation of the :mod:`Halo` module. The following functional forms
-for the density profile are implmented:
+for the density profile are implemented:
 
 ============================ =============================== ========================== =============
 Class                        Explanation                     Paper                      Reference
@@ -74,7 +74,28 @@ By default, the function uses the ``diemer_15`` concentration model (see the doc
 Profile fitting
 ***************************************************************************************************
 
+Here, fitting refers to finding the parameters of a halo density profile which best describe a
+given set of data points. Each point corresponds to a radius and a particular quantity, such as 
+density, enclosed mass, or surface density. Optionally, the user can pass uncertainties on the 
+data points, or even a full covariance matrix. All fitting should be done using the very general 
+:func:`HaloDensityProfile.fit` routine. For example, let us fit an NFW profile to some density 
+data::
 
+	profile = NFWProfile(M = 1E12, mdef = 'vir', z = 0.0, c = 10.0)
+	profile.fit(r, rho, 'rho')
+	
+Here, r and rho are arrays of radii and densities. Note that the current parameters of the profile 
+instance are used as an initial guess for the fit, and the profile object is set to the best-fit 
+parameters after the fit. Under the hood, the fit function handles multiple different fitting 
+methods. By default, the above fit is performed using a least-squares minimization, but we can also 
+use an MCMC sampler, for example to fit the surface density profile::
+
+	dict = profile.fit(r, Sigma, 'Sigma', method = 'mcmc', q_cov = covariance_matrix)
+	best_fit_params = dict['x_mean']
+	uncertainty = dict['percentiles'][0]
+	
+The :func:`HaloDensityProfile.fit` function accepts many input options, some specific to the 
+fitting method used. Please see the detailed documentation below.
 
 ***************************************************************************************************
 Alternative mass definitions
@@ -613,19 +634,20 @@ class HaloDensityProfile(object):
 	
 	###############################################################################################
 
-	# Return a numpy array of fitting parameters. By default, the parameters used in a fit are the 
-	# same as the fundamental parameters. Derived classes might want to change that, for example 
-	# to fit log(p) instead of p if the value can only be positive. 
+	# Return a numpy array of fitting parameters, given the standard profile parameters. By default, 
+	# the parameters used in a fit are the same as the fundamental parameters. Derived classes 
+	# might want to change that, for example to fit log(p) instead of p if the value can only be 
+	# positive. 
 
-	def _fit_get_params(self, mask = None):
+	def _fit_convertParams(self, p, mask):
 		
-		return self.getParameterArray(mask = mask)
-	
+		return p
+
 	###############################################################################################
 	
-	def _fit_set_params(self, pars, mask = None):
+	def _fit_convertParamsBack(self, p, mask):
 		
-		return self.setParameterArray(pars, mask = mask)
+		return p
 
 	###############################################################################################
 
@@ -635,7 +657,7 @@ class HaloDensityProfile(object):
 
 	def _fit_diff_function(self, x, r, q, f, fder, Q, mask, N_par_fit, verbose):
 
-		self._fit_set_params(x, mask = mask)			
+		self.setParameterArray(self._fit_convertParamsBack(x, mask), mask = mask)
 		q_fit = f(r)
 		q_diff = q_fit - q
 		mf = numpy.dot(Q, q_diff)
@@ -684,6 +706,9 @@ class HaloDensityProfile(object):
 
 	###############################################################################################
 
+	# Note that the MCMC fitter does NOT use the converted fitting parameters, but just the 
+	# parameters themselves. Otherwise, interpreting the chain becomes very complicated.
+
 	def _fit_method_mcmc(self, r, q, f, covinv, mask, N_par_fit, verbose, \
 				converged_GR, nwalkers, best_fit, initial_step, random_seed, convergence_step):
 		
@@ -700,10 +725,10 @@ class HaloDensityProfile(object):
 		dict['chain_full'] = chain_full
 		dict['chain_thin'] = chain_thin
 		dict['R'] = R
-		dict['mean'] = mean
-		dict['median'] = median
-		dict['stddev'] = stddev
-		dict['percentiles'] = p
+		dict['x_mean'] = mean
+		dict['x_median'] = median
+		dict['x_stddev'] = stddev
+		dict['x_percentiles'] = p
 		
 		if best_fit == 'mean':
 			x = mean
@@ -716,7 +741,7 @@ class HaloDensityProfile(object):
 
 	###############################################################################################
 
-	def _fit_method_leastsq(self, r, q, f, fder, Q, mask, N_par_fit, verbose):
+	def _fit_method_leastsq(self, r, q, f, fder, Q, mask, N_par_fit, verbose, tolerance):
 		
 		# Prepare arguments
 		if fder is None:
@@ -726,10 +751,10 @@ class HaloDensityProfile(object):
 		args = r, q, f, fder, Q, mask, N_par_fit, verbose
 
 		# Run the actual fit
-		ini_guess = self._fit_get_params(mask = mask)
+		ini_guess = self._fit_convertParams(self.getParameterArray(mask = mask), mask)
 		x_fit, cov, dict, fit_msg, err_code = scipy.optimize.leastsq(self._fit_diff_function, ini_guess, \
 							Dfun = deriv_func, col_deriv = 1, args = args, full_output = 1, \
-							xtol = 1E-8)
+							xtol = tolerance)
 
 		# Check the output
 		if not err_code in [1, 2, 3, 4]:
@@ -737,16 +762,30 @@ class HaloDensityProfile(object):
 			raise Warning(msg)
 
 		# Set the best-fit parameters
-		self._fit_set_params(x_fit, mask = mask)
-		x = self.getParameterArray(mask = mask)
+		x = self._fit_convertParamsBack(x_fit, mask)
+		self.setParameterArray(x, mask = mask)
 
+		# Derive an estimate of the uncertainty from the covariance matrix. We need to take into 
+		# account that cov refers to the fitting parameters which may not be the same as the 
+		# standard profile parameters.
+		sigma = numpy.sqrt(numpy.diag(cov))
+		err = numpy.zeros((2, N_par_fit), numpy.float)
+		err[0] = self._fit_convertParamsBack(x_fit - sigma, mask)
+		err[1] = self._fit_convertParamsBack(x_fit + sigma, mask)
+		dict['x_err'] = err
+
+		# Print solution
 		if verbose:
 			msg = 'Found solution in %d steps. Best-fit parameters:' % (dict['nfev'])
 			print(msg)
-			print(x)
-
-		dict['cov'] = cov
-
+			counter = 0
+			for i in range(self.N_par):
+				if mask is None or mask[i]:
+					msg = 'Parameter %10s = %7.2e [%7.2e .. %7.2e]' \
+						% (self.par_names[i], x[counter], err[0, counter], err[1, counter])
+					counter += 1
+					print(msg)
+					
 		return x, dict
 
 	###############################################################################################
@@ -759,6 +798,8 @@ class HaloDensityProfile(object):
 		r, q, quantity, q_err = None, q_cov = None, \
 		# General fitting options: method, parameters to vary
 		method = 'leastsq', mask = None, verbose = True, \
+		# Options specific to leastsq
+		tolerance = 1E-5, \
 		# Options specific to the MCMC initialization
 		initial_step = 0.1, nwalkers = 100, random_seed = None, \
 		# Options specific to running the MCMC chain and its analysis
@@ -815,6 +856,9 @@ class HaloDensityProfile(object):
 			a list.
 		verbose: bool
 			If true, output information about the fitting process.
+		tolerance: float
+			Only active when ``method==leastsq``. The accuracy to which the best-fit parameters
+			are found.
 		initial_step: array_like
 			Only active when ``method==mcmc``. The MCMC samples ("walkers") are initially 
 			distributed in a Gaussian around the initial guess. The width of the Gaussian is given
@@ -859,8 +903,12 @@ class HaloDensityProfile(object):
 			
 			``nfev``: int
 				The number of function calls used in the fit.
-			``cov``: array_like
-				An estimate of the covariance matrix returned by the fit.
+			``x_err``: array_like
+				An array of dimensions [2, nparams] which contains an estimate of the lower and 
+				upper uncertainties on the fitted parameters. These uncertainties are computed 
+				from the covariance matrix estimated by the fitter. Please note that this estimate
+				does not exactly correspond to a 68% likelihood. In order to get more statistically
+				meaningful uncertainties, please use the MCMC samples instead of least-squares.
 				
 			as well as the other entries returned by scipy.optimize.leastsq. If ``method==mcmc`,
 			the dictionary contains the following entries:
@@ -878,13 +926,13 @@ class HaloDensityProfile(object):
 				results.
 			``R``: array_like
 				A numpy array containing the GR indicator at each step when it was saved.
-			``mean``: array_like
+			``x_mean``: array_like
 				The mean of the chain for each parameter; has length nparams.
-			``median``: array_like
+			``x_median``: array_like
 				The median of the chain for each parameter; has length nparams.
-			``stddev``: array_like
+			``x_stddev``: array_like
 				The standard deviation of the chain for each parameter; has length nparams.
-			``percentiles``: array_like
+			``x_percentiles``: array_like
 				The lower and upper values of each parameter that contain a certain percentile of 
 				the probability; has dimensions [n_percentages, 2, nparams] where the second 
 				dimension contains the lower/upper values. 
@@ -894,6 +942,9 @@ class HaloDensityProfile(object):
 		# error.
 		if self.N_par == 0:
 			raise Exception('This profile has no parameters that can be fitted.')
+
+		if verbose:
+			Utilities.printLine()
 
 		# Check whether the parameter mask makes sense
 		if mask is None:
@@ -974,7 +1025,7 @@ class HaloDensityProfile(object):
 			else:
 				Q = covinv
 				
-			x, dict = self._fit_method_leastsq(r, q, f, fder, Q, mask, N_par_fit, verbose)
+			x, dict = self._fit_method_leastsq(r, q, f, fder, Q, mask, N_par_fit, verbose, tolerance)
 			
 		else:
 			msg = 'Unknown fitting method, %s.' % method
@@ -984,7 +1035,10 @@ class HaloDensityProfile(object):
 		dict['x'] = x
 		dict['q_fit'] = f(r)
 		dict['chi2'] = self._fit_chi2(r, q, f, covinv)
-				
+		
+		if verbose:
+			Utilities.printLine()
+
 		return dict
 
 ###################################################################################################
@@ -1498,17 +1552,18 @@ class NFWProfile(HaloDensityProfile):
 	
 	###############################################################################################
 
-	# When fitting the NFW profile, use log(rho_c) and log(rs)
+	# When fitting the NFW profile, use log(rho_c) and log(rs); since both parameters are 
+	# converted in the same way, we don't have to worry about the mask
 
-	def _fit_get_params(self, mask = None):
+	def _fit_convertParams(self, p, mask):
 		
-		return numpy.log(self.getParameterArray(mask = mask))
-	
+		return numpy.log(p)
+
 	###############################################################################################
 	
-	def _fit_set_params(self, pars, mask = None):
+	def _fit_convertParamsBack(self, p, mask):
 		
-		return self.setParameterArray(numpy.exp(pars), mask = mask)
+		return numpy.exp(p)
 
 	###############################################################################################
 
