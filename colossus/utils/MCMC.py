@@ -194,7 +194,6 @@ def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 
 	nparams = len(walkers[0][0])
 	
 	if verbose:
-		Utilities.printLine()
 		print(('Running MCMC with the following settings:'))
 		print(('Number of parameters:                 %6d' % (nparams)))
 		print(('Number of walkers:                    %6d' % (nwalkers)))
@@ -411,7 +410,6 @@ def analyzeChain(chain, param_names = None, percentiles = [68.27, 95.45, 99.73],
 			for j in range(nperc):
 				print(('%4.1f%% interval:    %+7.3e .. %+7.3e' \
 					% (percentiles[j], x_percentiles[j, 0, i], x_percentiles[j, 1, i])))
-		Utilities.printLine()
 
 	return x_mean, x_median, x_stddev, x_percentiles
 

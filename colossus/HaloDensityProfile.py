@@ -756,6 +756,11 @@ class HaloDensityProfile(object):
 							Dfun = deriv_func, col_deriv = 1, args = args, full_output = 1, \
 							xtol = tolerance)
 
+		#print x_fit
+		#print fit_msg
+		#print err_code
+		#print cov
+		
 		# Check the output
 		if not err_code in [1, 2, 3, 4]:
 			msg = 'Fitting failed, message: %s' % (fit_msg)
@@ -1747,9 +1752,9 @@ class EinastoProfile(HaloDensityProfile):
 	# We need to overwrite the setParameterArray function because the mass terms need to be 
 	# updated when the user changes the parameters.
 	
-	def setParameterArray(self, pars):
+	def setParameterArray(self, pars, mask = None):
 		
-		HaloDensityProfile.setParameterArray(self, pars)
+		HaloDensityProfile.setParameterArray(self, pars, mask = mask)
 		self._setMassTerms()
 		
 		return
@@ -1793,15 +1798,15 @@ class EinastoProfile(HaloDensityProfile):
 
 	# When fitting the Einasto profile, use log(rhos), log(rs) and log(alpha)
 
-	def _fit_get_params(self):
+	def _fit_convertParams(self, p, mask):
 		
-		return numpy.log(self.getParameterArray())
-	
+		return numpy.log(p)
+
 	###############################################################################################
 	
-	def _fit_set_params(self, pars):
+	def _fit_convertParamsBack(self, p, mask):
 		
-		return self.setParameterArray(numpy.exp(pars))
+		return numpy.exp(p)
 
 	###############################################################################################
 
@@ -2396,20 +2401,23 @@ class DK14Profile(HaloDensityProfile):
 
 	# When fitting the DK14 profile, use a mixture of linear and logarithmic parameters
 
-	def _fit_get_params(self):
+	def _fit_convertParams(self, p, mask):
+
+		p_fit = p
+		log_mask = [self.fit_log_mask[mask]]
+		p_fit[log_mask] = numpy.log(p_fit[log_mask])
 		
-		x = self.getParameterArray()
-		x[self.fit_log_mask] = numpy.log(x[self.fit_log_mask])
-		
-		return x
-		
+		return p_fit
+
 	###############################################################################################
 	
-	def _fit_set_params(self, pars):
+	def _fit_convertParamsBack(self, p, mask):
+
+		p_def = p
+		log_mask = [self.fit_log_mask[mask]]
+		p_def[log_mask] = numpy.exp(p_def[log_mask])
 		
-		pars[self.fit_log_mask] = numpy.exp(pars[self.fit_log_mask])
-	
-		return self.setParameterArray(pars)
+		return p_def
 
 	###############################################################################################
 

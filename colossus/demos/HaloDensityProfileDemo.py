@@ -110,17 +110,22 @@ def demonstrateFitting():
 	
 	# Create a fake dataset with some noise
 	r = 10**numpy.arange(0.1, 3.0, 0.3)
+	rr = 10**numpy.arange(0.0, 3.0, 0.1)
 	rho_data = prof.density(r)
 	sigma = 0.25 * rho_data
+	numpy.random.seed(156)
 	rho_data += numpy.random.normal(0.0, sigma, len(r))
 
 	# Move the profile parameters away from the initial values
 	prof.setParameterArray([prof.par['rhos'] * 0.4, prof.par['rs'] * 3.0])
+
+	# Fit to the fake data using least-squares, compute the fitted profile
+	prof.fit(r, rho_data, 'rho', q_err = sigma, method = 'leastsq')	
+	rho_fit_leastsq = prof.density(rr)
 	
-	# Fit to the fake data, compute the fitted profile
-	dict = prof.fit(r, rho_data, 'rho', q_err = sigma)	
-	rr = 10**numpy.arange(0.0, 3.0, 0.1)
-	rho_fitted = prof.density(rr)
+	# Fit to the fake data using MCMC, compute the fitted profile
+	prof.fit(r, rho_data, 'rho', q_err = sigma, method = 'mcmc', convergence_step = 500)	
+	rho_fit_mcmc = prof.density(rr)
 	
 	# Plot
 	plt.figure()
@@ -128,7 +133,9 @@ def demonstrateFitting():
 	plt.xlabel('r(kpc/h)')
 	plt.ylabel('Density')
 	plt.errorbar(r, rho_data, yerr = sigma, fmt = 'o', ms = 5.0)
-	plt.plot(rr, rho_fitted, '-')
+	plt.plot(rr, rho_fit_leastsq, '-', label = 'leastsq')
+	plt.plot(rr, rho_fit_mcmc, '--', label = 'mcmc')
+	plt.legend()
 	plt.show()
 	
 	return
