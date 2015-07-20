@@ -22,8 +22,8 @@ import HaloDensityProfile
 
 def main():
 
-	demonstrateProfiles()
-	#demonstrateFitting()
+	#demonstrateProfiles()
+	demonstrateFitting()
 	#demonstrateMassDefinitions()
 
 	return

@@ -657,6 +657,8 @@ class HaloDensityProfile(object):
 
 	def _fit_diff_function(self, x, r, q, f, fder, Q, mask, N_par_fit, verbose):
 
+		print 'diff'
+		print x
 		self.setParameterArray(self._fit_convertParamsBack(x, mask), mask = mask)
 		q_fit = f(r)
 		q_diff = q_fit - q
@@ -755,11 +757,6 @@ class HaloDensityProfile(object):
 		x_fit, cov, dict, fit_msg, err_code = scipy.optimize.leastsq(self._fit_diff_function, ini_guess, \
 							Dfun = deriv_func, col_deriv = 1, args = args, full_output = 1, \
 							xtol = tolerance)
-
-		#print x_fit
-		#print fit_msg
-		#print err_code
-		#print cov
 		
 		# Check the output
 		if not err_code in [1, 2, 3, 4]:
@@ -770,13 +767,29 @@ class HaloDensityProfile(object):
 		x = self._fit_convertParamsBack(x_fit, mask)
 		self.setParameterArray(x, mask = mask)
 
-		# Derive an estimate of the uncertainty from the covariance matrix. We need to take into 
-		# account that cov refers to the fitting parameters which may not be the same as the 
-		# standard profile parameters.
-		sigma = numpy.sqrt(numpy.diag(cov))
-		err = numpy.zeros((2, N_par_fit), numpy.float)
-		err[0] = self._fit_convertParamsBack(x_fit - sigma, mask)
-		err[1] = self._fit_convertParamsBack(x_fit + sigma, mask)
+		# The fitter sometimes fails to derive a covariance matrix
+		if cov is not None:
+			
+			# The covariance matrix is in relative units, i.e. needs to be multiplied with the 
+			# residual chi2
+			diff = self._fit_diff_function(x_fit, *args)
+			residual = numpy.sum(diff**2) / (len(r) - N_par_fit)
+			cov *= residual
+
+			# Derive an estimate of the uncertainty from the covariance matrix. We need to take into
+			# account that cov refers to the fitting parameters which may not be the same as the 
+			# standard profile parameters.
+			sigma = numpy.sqrt(numpy.diag(cov))
+			err = numpy.zeros((2, N_par_fit), numpy.float)
+			err[0] = self._fit_convertParamsBack(x_fit - sigma, mask)
+			err[1] = self._fit_convertParamsBack(x_fit + sigma, mask)
+
+		else:
+			
+			msg = 'WARNING: Could not determine uncertainties on fitted parameters. Set all uncertainties to zero.'
+			print(msg)
+			err = numpy.zeros((2, N_par_fit), numpy.float)
+			
 		dict['x_err'] = err
 
 		# Print solution
@@ -903,6 +916,8 @@ class HaloDensityProfile(object):
 				The chi^2 of the best-fit profile. If a covariance matrix was passed, the 
 				covariances are taken into account. If no uncertainty was passed at all, chi2 is
 				in units of absolute difference, meaning its value will depend on the units of q.
+			``chi2_ndof``: float
+				The chi^2 per degree of freedom.
 		
 			If ``method==leastsq``, the dictionary additionally contains the following entries:
 			
@@ -913,7 +928,9 @@ class HaloDensityProfile(object):
 				upper uncertainties on the fitted parameters. These uncertainties are computed 
 				from the covariance matrix estimated by the fitter. Please note that this estimate
 				does not exactly correspond to a 68% likelihood. In order to get more statistically
-				meaningful uncertainties, please use the MCMC samples instead of least-squares.
+				meaningful uncertainties, please use the MCMC samples instead of least-squares. In
+				some cases, the fitter fails to return a covariance matrix, in which case x_err is
+				None.
 				
 			as well as the other entries returned by scipy.optimize.leastsq. If ``method==mcmc`,
 			the dictionary contains the following entries:
@@ -1040,6 +1057,7 @@ class HaloDensityProfile(object):
 		dict['x'] = x
 		dict['q_fit'] = f(r)
 		dict['chi2'] = self._fit_chi2(r, q, f, covinv)
+		dict['chi2_ndof'] = dict['chi2'] / (len(r) - N_par_fit)
 		
 		if verbose:
 			Utilities.printLine()
