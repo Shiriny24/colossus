@@ -2842,7 +2842,6 @@ def setCosmology(cosmo_name, params = None):
 			
 	elif cosmo_name in cosmologies:		
 		param_dict = cosmologies[cosmo_name]
-		print((param_dict))
 		if params is not None:
 			param_dict.update(params)
 			
