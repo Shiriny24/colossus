@@ -63,6 +63,6 @@ License
 
 MIT
 
-Copyright (c) 2014-2015, Benedikt Diemer, University of Chicago
+Copyright (c) 2014-2015, Benedikt Diemer
 
-bdiemer@oddjob.uchicago.edu
+benedikt.diemer@cfa.harvard.edu

@@ -1,0 +1,6 @@
+=====================================
+HaloMassDefinitions
+=====================================
+
+.. automodule:: HaloMassDefinitions
+    :members:

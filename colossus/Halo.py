@@ -1,8 +1,7 @@
 ###################################################################################################
 #
-# Halo.py		 		(c) Benedikt Diemer
-#						University of Chicago
-#     				    bdiemer@oddjob.uchicago.edu
+# Halo.py                   (c) Benedikt Diemer
+#     				    	    benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
 
@@ -57,7 +56,7 @@ Detailed Documentation
 import math
 import numpy
 
-import Cosmology
+from colossus import Cosmology
 
 ###################################################################################################
 # FUNCTIONS RELATED TO SPHERICAL OVERDENSITY MASSES

@@ -1,8 +1,7 @@
 ###################################################################################################
 #
-# Concentration.py 		(c) Benedikt Diemer
-#						University of Chicago
-#     				    bdiemer@oddjob.uchicago.edu
+# Concentration.py          (c) Benedikt Diemer
+#     				    	    benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
 
@@ -42,7 +41,6 @@ functional form:
 .. autosummary::
 	pseudoEvolve
 	changeMassDefinition
-	changeMassDefinitionCModel
 	radiusFromPdf
 
 Pseudo-evolution is the evolution of a spherical overdensity halo radius, mass, and concentration 
@@ -62,13 +60,11 @@ to another::
 	M200m, R200m, c200m = changeMassDefinition(1E12, 10.0, 1.0, 'vir', '200m')
 	
 Here we again assumed a halo with :math:`M_{vir}=10^{12} M_{\odot}/h` and :math:`c_{vir} = 10` 
-at z=1, and converted it to the 200m mass definition. If we do not know the concentration in
-the initial mass definition, we can use a concentration model to estimate it::
+at z=1, and converted it to the 200m mass definition. 
 
-	M200m, R200m, c200m = changeMassDefinitionCModel(1E12, 1.0, 'vir', '200m')
-	
-By default, the function uses the ``diemer_15`` concentration model (see the documentation of the
-:mod:`HaloConcentration` module).
+Often, we do not know the concentration of a halo and wish to estimate it using a concentration-
+mass model. This function is performed by a convenient wrapper for the 
+:func:`changeMassDefinition` function, see :func:`HaloMassDefinitions.changeMassDefinitionCModel`.
 
 ***************************************************************************************************
 Profile fitting
@@ -114,15 +110,8 @@ More, Diemer & Kravtsov 2015. Those include:
   :math:`M_{vir}`, but when the halo stops accreting it approaches a constant. 
 
 :math:`M_{<4r_s}`: can be computed from both NFW and DK14 profiles. :math:`R_{sp}` and 
-:math:`M_{sp}` can only be computed from DK14 profiles. For both mass definitions there are
-converter functions:
-
-.. autosummary::	
-	RspOverR200m
-	MspOverM200m
-	Rsp
-	Msp
-	M4rs
+:math:`M_{sp}` can only be computed from DK14 profiles. Please see the :mod:`HaloMassDefinitions`
+module for convenient converter functions between mass definitions.
 
 ***************************************************************************************************
 Units
@@ -156,17 +145,16 @@ import scipy.special
 import abc
 import collections
 
-from utils import MCMC
-from utils import Utilities
-import Cosmology
-import Halo
-import HaloConcentration
+from colossus.utils import Utilities
+from colossus.utils import MCMC
+from colossus import Cosmology
+from colossus import Halo
 
 ###################################################################################################
 # ABSTRACT BASE CLASS FOR HALO DENSITY PROFILES
 ###################################################################################################
 
-class HaloDensityProfile(object):
+class HaloDensityProfile(metaclass = abc.ABCMeta):
 	"""
 	Abstract base class for a halo density profile in physical units.
 	
@@ -175,8 +163,6 @@ class HaloDensityProfile(object):
 	inheriting this class and overwriting the constructor and density method. In practice there 
 	are often faster implementations for particular forms of the profile.
 	"""
-	
-	__metaclass__ = abc.ABCMeta
 
 	def __init__(self):
 		
@@ -235,7 +221,7 @@ class HaloDensityProfile(object):
 			A numpy array with the profile's parameter values.
 		"""
 		
-		par = numpy.array(self.par.values())
+		par = numpy.array(list(self.par.values()))
 		if mask is not None:
 			par = par[mask]
 			
@@ -657,8 +643,8 @@ class HaloDensityProfile(object):
 
 	def _fit_diff_function(self, x, r, q, f, fder, Q, mask, N_par_fit, verbose):
 
-		print 'diff'
-		print x
+		print('diff')
+		print(x)
 		self.setParameterArray(self._fit_convertParamsBack(x, mask), mask = mask)
 		q_fit = f(r)
 		q_diff = q_fit - q
@@ -899,7 +885,7 @@ class HaloDensityProfile(object):
 		best_fit: str
 			Only active when ``method==mcmc``. This parameter determines whether the ``mean`` or 
 			``median`` value of the likelihood distribution is used as the output parameter set.
-			
+		
 		Returns
 		-------------------------------------------------------------------------------------------
 		results: dict
@@ -932,7 +918,7 @@ class HaloDensityProfile(object):
 				some cases, the fitter fails to return a covariance matrix, in which case x_err is
 				None.
 				
-			as well as the other entries returned by scipy.optimize.leastsq. If ``method==mcmc`,
+			as well as the other entries returned by scipy.optimize.leastsq. If ``method==mcmc``,
 			the dictionary contains the following entries:
 			
 			``x_initial``: array_like
@@ -2009,8 +1995,7 @@ class DK14Profile(HaloDensityProfile):
 		M: float
 			Halo mass in :math:`M_{\odot}/h`.
 		c: float
-			Concentration. If this parameter is None, c is estimated using the model of 
-			Diemer & Kravtsov 2015. 
+			Concentration in the same mass definition as M.
 		z: float
 			Redshift
 		mdef: str
@@ -2080,10 +2065,6 @@ class DK14Profile(HaloDensityProfile):
 		
 		# The user needs to set a cosmology before this function can be called
 		cosmo = Cosmology.getCurrent()
-		
-		# Get concentration if the user hasn't supplied it, compute scale radius
-		if c is None:
-			c = HaloConcentration.concentration(M, mdef, z, statistic = 'median')
 		R_target = Halo.M_to_R(M, z, mdef)
 
 		self.par['rs'] = R_target / c
@@ -2637,273 +2618,7 @@ def changeMassDefinition(M, c, z, mdef_in, mdef_out, profile = 'nfw'):
 
 ###################################################################################################
 
-def changeMassDefinitionCModel(M, z, mdef_in, mdef_out, profile = 'nfw', c_model = 'diemer15'):
-	"""
-	Change the spherical overdensity mass definition, using a model for the concentration.
-	
-	This function is a wrapper for the :func:`changeMassDefinition` function. Instead of forcing 
-	the user to provide concentrations, they are computed from a model indicated by the ``c_model``
-	parameter.
-	
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	M_i: array_like
-		The initial halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
-	z_i: float
-		The initial redshift.
-	mdef_i: str
-		The initial mass definition.
-	mdef_f: str
-		The final mass definition (can be the same as mdef_i, or different).
-	profile: str
-		The functional form of the profile assumed in the computation; can be ``nfw`` or ``dk14``.
-	c_model: str
-		The identifier of a concentration model (see :mod:`HaloConcentration` for valid inputs).
-
-	Returns
-	-----------------------------------------------------------------------------------------------
-	Mnew: array_like
-		The new halo mass in :math:`M_{\odot}/h`; has the same dimensions as M_i.
-	Rnew: array_like
-		The new halo radius in physical kpc/h; has the same dimensions as M_i.
-	cnew: array_like
-		The new concentration (now referring to the new mass definition); has the same dimensions 
-		as M_i.
-		
-	See also
-	-----------------------------------------------------------------------------------------------
-	pseudoEvolve: Evolve the spherical overdensity radius for a fixed profile.
-	changeMassDefinition: Change the spherical overdensity mass definition.
-	"""
-	
-	c = HaloConcentration.concentration(M, mdef_in, z, model = c_model)
-	
-	return pseudoEvolve(M, c, z, mdef_in, z, mdef_out, profile = profile)
-
-###################################################################################################
-
-def M4rs(M, z, mdef, c = None):
-	"""
-	Convert a spherical overdensity mass to :math:`M_{<4rs}`.
-	
-	See the section on mass definitions for the definition of :math:`M_{<4rs}`.
-
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	M: array_like
-		Spherical overdensity halo mass in :math:`M_{\odot} / h`; can be a number or a numpy
-		array.
-	z: float
-		Redshift
-	mdef: str
-		The spherical overdensity mass definition in which M (and optionally c) are given.
-	c: array_like
-		Concentration. If this parameter is not passed, concentration is automatically 
-		computed. Must have the same dimensions as M.
-		
-	Returns
-	-----------------------------------------------------------------------------------------------
-	M4rs: array_like
-		The mass within 4 scale radii, :math:`M_{<4rs}`, in :math:`M_{\odot} / h`; has the 
-		same dimensions as M.
-	"""
-
-	if c is None:
-		c = HaloConcentration.concentration(M, mdef, z)
-	
-	Mfrs = M * NFWProfile.mu(4.0) / NFWProfile.mu(c)
-	
-	return Mfrs
-
-###################################################################################################
-
-def RspOverR200m(nu200m = None, z = None, Gamma = None):
-	"""
-	The ratio :math:`R_{sp} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or
-	the peak height, :math:`\\nu`.
-	
-	This function implements the relations calibrated in More, Diemer & Kravtsov 2015. Either
-	the accretion rate :math:`\\Gamma` and redshift, or the peak height :math:`\\nu`, must not 
-	be ``None``. 
-
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	nu200m: array_like
-		The peak height as computed from :math:`M_{200m}`; can be a number or a numpy array.
-	z: array_like
-		Redshift; can be a number or a numpy array.
-	Gamma: array_like
-		The mass accretion rate, as defined in Diemer & Kravtsov 2014; can be a number or a 
-		numpy array.
-	
-	Returns
-	-----------------------------------------------------------------------------------------------
-	ratio: array_like
-		:math:`R_{sp} / R_{200m}`; has the same dimensions as z, Gamma, or nu, depending
-		on which of those parameters is an array.
-		
-	See also
-	-----------------------------------------------------------------------------------------------
-	MspOverM200m: The ratio :math:`M_{sp} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
-	Rsp: :math:`R_{sp}` as a function of spherical overdensity radius.
-	Msp: :math:`M_{sp}` as a function of spherical overdensity mass.
-	"""
-
-	if (Gamma is not None) and (z is not None):
-		cosmo = Cosmology.getCurrent()
-		ratio =  0.54 * (1 + 0.53 * cosmo.Om(z)) * (1 + 1.36 * numpy.exp(-Gamma / 3.04))
-	elif nu200m is not None:
-		ratio = 0.81 * (1.0 + 0.97 * numpy.exp(-nu200m / 2.44))
-	else:
-		msg = 'Need either Gamma and z, or nu.'
-		raise Exception(msg)
-
-	return ratio
-
-###################################################################################################
-
-def MspOverM200m(nu200m = None, z = None, Gamma = None):
-	"""
-	The ratio :math:`M_{sp} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or
-	the peak height, :math:`\\nu`.
-	
-	This function implements the relations calibrated in More, Diemer & Kravtsov 2015. Either
-	the accretion rate :math:`\\Gamma` and redshift, or the peak height :math:`\\nu`, must not 
-	be ``None``. 
-
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	nu_vir: array_like
-		The peak height as computed from :math:`M_{200m}`; can be a number or a numpy array.
-	z: array_like
-		Redshift; can be a number or a numpy array.
-	Gamma: array_like
-		The mass accretion rate, as defined in Diemer & Kravtsov 2014; can be a number or a 
-		numpy array.
-	
-	Returns
-	-----------------------------------------------------------------------------------------------
-	ratio: array_like
-		:math:`M_{sp} / M_{200m}`; has the same dimensions as z, Gamma, or nu, depending
-		on which of those parameters is an array.
-		
-	See also
-	-----------------------------------------------------------------------------------------------
-	RspOverR200m: The ratio :math:`R_{sp} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
-	Rsp: :math:`R_{sp}` as a function of spherical overdensity radius.
-	Msp: :math:`M_{sp}` as a function of spherical overdensity mass.
-	"""
-	
-	if (Gamma is not None) and (z is not None):
-		cosmo = Cosmology.getCurrent()
-		ratio =  0.59 * (1 + 0.35 * cosmo.Om(z)) * (1 + 0.92 * numpy.exp(-Gamma / 4.54))
-	elif nu200m is not None:
-		ratio = 0.82 * (1.0 + 0.63 * numpy.exp(-nu200m / 3.52))
-	else:
-		msg = 'Need either Gamma and z, or nu.'
-		raise Exception(msg)
-	
-	return ratio
-
-###################################################################################################
-
-def Rsp(R, z, mdef, c = None, profile = 'nfw'):
-	"""
-	:math:`R_{sp}` as a function of spherical overdensity radius.
-	
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	R: array_like
-		Spherical overdensity radius in physical :math:`kpc/h`; can be a number or a numpy array.
-	z: float
-		Redshift
-	mdef: str
-		Mass definition in which R and c are given.
-	c: array_like
-		Halo concentration; must have the same dimensions as R, or be ``None`` in which case the 
-		concentration is computed automatically.
-	profile: str
-		The functional form of the profile assumed in the conversion between mass definitions; 
-		can be ``nfw`` or ``dk14``.
-
-	Returns
-	-----------------------------------------------------------------------------------------------
-	Rsp: array_like
-		:math:`R_{sp}` in physical :math:`kpc/h`; has the same dimensions as R.
-		
-	See also
-	-----------------------------------------------------------------------------------------------
-	RspOverR200m: The ratio :math:`R_{sp} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
-	MspOverM200m: The ratio :math:`M_{sp} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
-	Msp: :math:`M_{sp}` as a function of spherical overdensity mass.
-	"""
-	
-	if mdef == '200m':
-		R200m = R
-		M200m = Halo.R_to_M(R200m, z, '200m')
-	else:
-		M = Halo.R_to_M(R, z, mdef)
-		if c is None:
-			M200m, R200m, _ = changeMassDefinitionCModel(M, z, mdef, '200m', profile = profile)
-		else:
-			M200m, R200m, _ = changeMassDefinition(M, c, z, mdef, '200m', profile = profile)
-			
-	cosmo = Cosmology.getCurrent()
-	nu200m = cosmo.peakHeight(M200m, z)
-	Rsp = R200m * RspOverR200m(nu200m = nu200m)
-	
-	return Rsp
-
-###################################################################################################
-
-def Msp(M, z, mdef, c = None, profile = 'nfw'):
-	"""
-	:math:`M_{sp}` as a function of spherical overdensity mass.
-	
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	M: array_like
-		Spherical overdensity mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
-	z: float
-		Redshift
-	mdef: str
-		Mass definition in which M and c are given.
-	c: array_like
-		Halo concentration; must have the same dimensions as M, or be ``None`` in which case the 
-		concentration is computed automatically.
-	profile: str
-		The functional form of the profile assumed in the conversion between mass definitions; 
-		can be ``nfw`` or ``dk14``.
-
-	Returns
-	-----------------------------------------------------------------------------------------------
-	Msp: array_like
-		:math:`M_{sp}` in :math:`M_{\odot}/h`; has the same dimensions as M.
-		
-	See also
-	-----------------------------------------------------------------------------------------------
-	RspOverR200m: The ratio :math:`R_{sp} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
-	MspOverM200m: The ratio :math:`M_{sp} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
-	Rsp: :math:`R_{sp}` as a function of spherical overdensity radius.
-	"""
-	
-	if mdef == '200m':
-		M200m = M
-	else:
-		if c is None:
-			M200m, _, _ = changeMassDefinitionCModel(M, z, mdef, '200m', profile = profile)
-		else:
-			M200m, _, _ = changeMassDefinition(M, c, z, mdef, '200m', profile = profile)
-	
-	cosmo = Cosmology.getCurrent()
-	nu200m = cosmo.peakHeight(M200m, z)
-	Msp = M200m * MspOverM200m(nu200m = nu200m)
-	
-	return Msp
-
-###################################################################################################
-
-def radiusFromPdf(M, z, mdef, cumulativePdf, c = None, c_model = 'diemer15', \
+def radiusFromPdf(M, c, z, mdef, cumulativePdf, \
 					interpolate = True, min_interpolate_pdf = 0.01):
 	"""
 	Get the radius where the cumulative density distribution of a halo has a certain value, 
@@ -2920,6 +2635,8 @@ def radiusFromPdf(M, z, mdef, cumulativePdf, c = None, c_model = 'diemer15', \
 	-----------------------------------------------------------------------------------------------
 	M: array_like
 		Halo mass in units of :math:`M_{\odot}/h`; can be a number or a numpy array.
+	c: array_like
+		Halo concentration, in the same definition as M; must have the same dimensions as M.
 	z: float
 		Redshift
 	mdef: str
@@ -2927,10 +2644,6 @@ def radiusFromPdf(M, z, mdef, cumulativePdf, c = None, c_model = 'diemer15', \
 	cumulativePdf: array_like
 		The cumulative pdf that we are seeking. If an array, this array needs to have the same 
 		dimensions as the M array.
-	c: array_like
-		If ``c is None``, the ``c_model`` concentration model is used to determine the mean c for each
-		mass. The user can also supply concentrations in an array of the same dimensions as the
-		M array.
 	c_model: str
 		The model used to evaluate concentration if ``c is None``.
 	interpolate: bool
@@ -2967,8 +2680,6 @@ def radiusFromPdf(M, z, mdef, cumulativePdf, c = None, c_model = 'diemer15', \
 	R = Halo.M_to_R(M, z, mdef)
 	N = len(M_array)
 	x = 0.0 * M_array
-	if c is None:
-		c = HaloConcentration.concentration(M, mdef, z, model = c_model)
 	c_array, _ = Utilities.getArray(c)
 	p_array, _ = Utilities.getArray(cumulativePdf)
 	

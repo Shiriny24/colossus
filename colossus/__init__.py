@@ -1,1 +1,1 @@
-__all__ = ['demos', 'utils', 'Cosmology', 'Halo', 'HaloDensityProfile', 'HaloConcentration']
+__all__ = ['demos', 'utils', 'Cosmology', 'Halo', 'HaloDensityProfile', 'HaloConcentration', 'HaloMassDefintions']

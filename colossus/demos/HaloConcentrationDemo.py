@@ -1,8 +1,7 @@
 ###################################################################################################
 #
 # HaloConcentrationDemo.py  (c) Benedikt Diemer
-#							University of Chicago
-#     				    	bdiemer@oddjob.uchicago.edu
+#     				    	    benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
 #
@@ -12,10 +11,10 @@
 
 import numpy
 
-from utils import Utilities
-import Cosmology
-import HaloConcentration
-import HaloDensityProfile
+from colossus.utils import Utilities
+from colossus import Cosmology
+from colossus import HaloConcentration
+from colossus import HaloDensityProfile
 
 ###################################################################################################
 
@@ -121,7 +120,7 @@ def computeConcentrationTable(cosmo_name):
 	# Write block for each redshift
 	for i in range(len(z)):
 
-		print z[i]
+		print(z[i])
 
 		if z[i] > 5.0:
 			nu_min = 1.0

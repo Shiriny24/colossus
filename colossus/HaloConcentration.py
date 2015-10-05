@@ -1,8 +1,7 @@
 ###################################################################################################
 #
-# HaloConcentration.py 	(c) Benedikt Diemer
-#						University of Chicago
-#     				    bdiemer@oddjob.uchicago.edu
+# HaloConcentration.py      (c) Benedikt Diemer
+#     				    	    benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
 
@@ -87,10 +86,10 @@ import scipy.interpolate
 import scipy.optimize
 import warnings
 
-from utils import Utilities
-import Cosmology
-import Halo
-import HaloDensityProfile
+from colossus.utils import Utilities
+from colossus import Cosmology
+from colossus import Halo
+from colossus import HaloDensityProfile
 
 ###################################################################################################
 

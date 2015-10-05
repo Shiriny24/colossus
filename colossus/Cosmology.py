@@ -1,8 +1,7 @@
 ###################################################################################################
 #
-# Cosmology.py 		(c) Benedikt Diemer
-#						University of Chicago
-#     				    bdiemer@oddjob.uchicago.edu
+# Cosmology.py              (c) Benedikt Diemer
+#     				    	    benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
 
@@ -190,6 +189,8 @@ Detailed Documentation
 
 ###################################################################################################
 
+
+
 import os
 import math
 import numpy
@@ -199,7 +200,7 @@ import scipy.interpolate
 import hashlib
 import pickle
 
-from utils import Utilities
+from colossus.utils import Utilities
 
 ###################################################################################################
 # Useful constants
@@ -517,7 +518,7 @@ class Cosmology(object):
 			self.Om0, self.OL0, self.Ob0, self.H0, self.sigma8, self.ns, self.Tcmb0, self.Neff, \
 			str(self.power_law), self.power_law_n)
 
-		hash_new = hashlib.md5(param_string).hexdigest()
+		hash_new = hashlib.md5(param_string.encode()).hexdigest()
 	
 		return hash_new
 	
@@ -2837,12 +2838,13 @@ def setCosmology(cosmo_name, params = None):
 		param_dict['power_law'] = True
 		param_dict['power_law_n'] = n
 		if params is not None:
-			param_dict = dict(param_dict.items() + params.items())
+			param_dict.update(params)
 			
 	elif cosmo_name in cosmologies:		
 		param_dict = cosmologies[cosmo_name]
+		print((param_dict))
 		if params is not None:
-			param_dict = dict(param_dict.items() + params.items())
+			param_dict.update(params)
 			
 	else:
 		if params is not None:

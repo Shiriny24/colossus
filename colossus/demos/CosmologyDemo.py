@@ -1,8 +1,7 @@
 ###################################################################################################
 #
 # CosmologyDemo.py	 		(c) Benedikt Diemer
-#							University of Chicago
-#     				    	bdiemer@oddjob.uchicago.edu
+#     				    	    benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
 #
@@ -13,8 +12,8 @@
 
 import numpy
 
-import Cosmology
-from utils import Utilities
+from colossus import Cosmology
+from colossus.utils import Utilities
 
 ###################################################################################################
 
@@ -71,8 +70,8 @@ def demonstrateSettingAndGetting():
 	printCosmologyName()
 	print("We can also change individual parameters when setting a cosmology.")
 	cosmo = Cosmology.setCosmology('WMAP7', {"interpolation": False})
-	print cosmo.name
-	print cosmo.interpolation
+	print((cosmo.name))
+	print((cosmo.interpolation))
 	print("We should be careful changing cosmological parameters this way, since the name does not match the cosmology any more.")
 
 	return

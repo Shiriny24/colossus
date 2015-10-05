@@ -69,6 +69,7 @@ Contents
     Halo
     HaloDensityProfile
     HaloConcentration
+    HaloMassDefinitions
     MCMC
     Utilities
 

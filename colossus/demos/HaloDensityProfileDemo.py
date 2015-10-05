@@ -1,8 +1,7 @@
 ###################################################################################################
 #
 # HaloDensityProfileDemo.py (c) Benedikt Diemer
-#								University of Chicago
-#     				    		bdiemer@oddjob.uchicago.edu
+#     				    	    benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
 #
@@ -10,20 +9,22 @@
 #
 ###################################################################################################
 
+from __future__ import division
+
 import numpy
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
-import Cosmology
-import Halo
-import HaloDensityProfile
+from colossus import Cosmology
+from colossus import Halo
+from colossus import HaloDensityProfile
 
 ###################################################################################################
 
 def main():
 
-	#demonstrateProfiles()
-	demonstrateFitting()
+	demonstrateProfiles()
+	#demonstrateFitting()
 	#demonstrateMassDefinitions()
 
 	return

@@ -48,7 +48,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 import matplotlib.gridspec as gridspec
 
-import Utilities
+from . import Utilities
 
 ###################################################################################################
 
@@ -274,12 +274,12 @@ def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 
 			x[k, :, :] = xchunk
 			gxo[k, :] = gxold        
 			
-			for i in range(nwalkers / 2):
+			for i in range(nwalkers // 2):
 				chain.append(numpy.array(x[k, i, :]))
 			
-			for i in range(nwalkers / 2):
-				mw[k * nwalkers / 2 + i, :] += x[k, i, :]
-				sw[k * nwalkers / 2 + i, :] += x[k, i, :]**2
+			for i in range(nwalkers // 2):
+				mw[k * nwalkers // 2 + i, :] += x[k, i, :]
+				sw[k * nwalkers // 2 + i, :] += x[k, i, :]**2
 				ntry += 1
 		
 		nchain += 1
