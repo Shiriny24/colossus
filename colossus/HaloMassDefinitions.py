@@ -74,10 +74,10 @@ Detailed Documentation
 
 import numpy
 
-from colossus import Cosmology
-from colossus import Halo
-from colossus import HaloDensityProfile
-from colossus import HaloConcentration
+from . import Cosmology
+from . import Halo
+from . import HaloDensityProfile
+from . import HaloConcentration
 
 ###################################################################################################
 

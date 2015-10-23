@@ -200,7 +200,7 @@ import scipy.interpolate
 import hashlib
 import pickle
 
-from colossus.utils import Utilities
+from .utils import Utilities
 
 ###################################################################################################
 # Useful constants
