@@ -154,7 +154,7 @@ from colossus import Halo
 # ABSTRACT BASE CLASS FOR HALO DENSITY PROFILES
 ###################################################################################################
 
-class HaloDensityProfile(metaclass = abc.ABCMeta):
+class HaloDensityProfile():
 	"""
 	Abstract base class for a halo density profile in physical units.
 	
@@ -163,6 +163,8 @@ class HaloDensityProfile(metaclass = abc.ABCMeta):
 	inheriting this class and overwriting the constructor and density method. In practice there 
 	are often faster implementations for particular forms of the profile.
 	"""
+
+	__metaclass__ = abc.ABCMeta
 
 	def __init__(self):
 		
