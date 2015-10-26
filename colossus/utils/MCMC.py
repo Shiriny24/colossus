@@ -131,7 +131,8 @@ def initWalkers(x_initial, initial_step = 0.1, nwalkers = 100, random_seed = Non
 
 ###################################################################################################
 
-def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 0.01, verbose = True):
+def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 0.01, \
+			verbose = True, output_every_n = 100):
 	"""
 	Run an MCMC chain.
 	
@@ -156,7 +157,10 @@ def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 
 		The maximum difference between different chains, according to the Gelman-Rubin criterion.
 		Once the GR indicator is lower than this number in all parameters, the chain is ended.
 	verbose: bool
-		Output information about the progress of the chain.
+		If False, this function outputs no information.
+	output_every_n: bool
+		Output information about the progress of the chain every n steps. This parameter only has
+		an effect if verbose is True.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -312,7 +316,7 @@ def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 
 					/ nwalkers - (nchain - 1.0) / (nchain * nwalkers)
 				Rval[i].append(Rgr[i] - 1.0)
 			
-			if verbose:
+			if verbose and nchain % output_every_n == 0:
 				msg = 'Step %6d, autocorr. time %5.1f, GR = [' % (nchain, numpy.max(tacorx))
 				for i in range(len(Rgr)):
 					msg += ' %6.3f' % Rgr[i]

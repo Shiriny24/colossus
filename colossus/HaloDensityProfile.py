@@ -645,8 +645,6 @@ class HaloDensityProfile():
 
 	def _fit_diff_function(self, x, r, q, f, fder, Q, mask, N_par_fit, verbose):
 
-		print('diff')
-		print(x)
 		self.setParameterArray(self._fit_convertParamsBack(x, mask), mask = mask)
 		q_fit = f(r)
 		q_diff = q_fit - q
@@ -700,14 +698,15 @@ class HaloDensityProfile():
 	# parameters themselves. Otherwise, interpreting the chain becomes very complicated.
 
 	def _fit_method_mcmc(self, r, q, f, covinv, mask, N_par_fit, verbose, \
-				converged_GR, nwalkers, best_fit, initial_step, random_seed, convergence_step):
+				converged_GR, nwalkers, best_fit, initial_step, random_seed, \
+				convergence_step, output_every_n):
 		
 		x0 = self.getParameterArray(mask = mask)
 		args = r, q, f, covinv, mask
 		walkers = MCMC.initWalkers(x0, initial_step = initial_step, nwalkers = nwalkers, random_seed = random_seed)
 		xi = numpy.reshape(walkers, (len(walkers[0]) * 2, len(walkers[0, 0])))
 		chain_thin, chain_full, R = MCMC.runChain(self._fit_likelihood, walkers, convergence_step = convergence_step, \
-							args = args, converged_GR = converged_GR, verbose = verbose)
+							args = args, converged_GR = converged_GR, verbose = verbose, output_every_n = output_every_n)
 		mean, median, stddev, p = MCMC.analyzeChain(chain_thin, self.par_names, verbose = verbose)
 
 		dict = {}
@@ -809,7 +808,7 @@ class HaloDensityProfile():
 		# Options specific to the MCMC initialization
 		initial_step = 0.1, nwalkers = 100, random_seed = None, \
 		# Options specific to running the MCMC chain and its analysis
-		convergence_step = 100, converged_GR = 0.01, best_fit = 'median'):
+		convergence_step = 100, converged_GR = 0.01, best_fit = 'median', output_every_n = 100):
 		"""
 		Fit the density, mass, or surface density profile to a given set of data points.
 		
@@ -887,6 +886,9 @@ class HaloDensityProfile():
 		best_fit: str
 			Only active when ``method==mcmc``. This parameter determines whether the ``mean`` or 
 			``median`` value of the likelihood distribution is used as the output parameter set.
+		output_every_n: int
+			Only active when ``method==mcmc``. This parameter determines how frequently the MCMC
+			chain outputs information. Only effective if ``verbose == True``.
 		
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -993,7 +995,7 @@ class HaloDensityProfile():
 				raise Exception('MCMC cannot be run without uncertainty vector or covariance matrix.')
 			
 			x, dict = self._fit_method_mcmc(r, q, f, covinv, mask, N_par_fit, verbose, \
-				converged_GR, nwalkers, best_fit, initial_step, random_seed, convergence_step)
+				converged_GR, nwalkers, best_fit, initial_step, random_seed, convergence_step, output_every_n)
 			
 		elif method == 'leastsq':
 		
@@ -1029,6 +1031,7 @@ class HaloDensityProfile():
 				Lambda, Q = numpy.linalg.eig(covinv)
 				for i in range(N):
 					Q[:, i] *= numpy.sqrt(Lambda[i])
+				Q = Q.T
 			elif q_err is not None:
 				Q = numpy.zeros((N, N), numpy.float)
 				numpy.fill_diagonal(Q, 1.0 / q_err)
@@ -1741,7 +1744,7 @@ class EinastoProfile(HaloDensityProfile):
 	
 	###############################################################################################
 
-	# The enclosed mass for the Einasto profile is semi-analytical, in that it cna be expressed
+	# The enclosed mass for the Einasto profile is semi-analytical, in that it can be expressed
 	# in terms of Gamma functions. We pre-compute some factors to speed up the computation 
 	# later.
 	
@@ -1913,7 +1916,7 @@ class DK14Profile(HaloDensityProfile):
 	
 		self.par_names = ['rhos', 'rs', 'rt', 'alpha', 'beta', 'gamma', 'be', 'se', 'R200m', 'rho_m']
 		self.opt_names = ['part', 'selected', 'Gamma', 'outer']
-		self.fit_log_mask = numpy.array([False, False, True, True, True, True, False, False, False, False])
+		self.fit_log_mask = numpy.array([False, False, False, False, True, True, False, False, False, False])
 		HaloDensityProfile.__init__(self)
 		
 		# The following parameters are not constants, they are temporarily changed by certain 
