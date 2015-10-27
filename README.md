@@ -62,5 +62,7 @@ License
 -------
 
 License:       MIT. Copyright (c) 2014-2015
+
 Author:        Benedikt Diemer (benedikt.diemer@cfa.harvard.edu)
+
 Contributors:  Andrey Kravtsov (MCMC)
