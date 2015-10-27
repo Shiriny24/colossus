@@ -86,10 +86,10 @@ import scipy.interpolate
 import scipy.optimize
 import warnings
 
-from .utils import Utilities
-from . import Cosmology
-from . import Halo
-from . import HaloDensityProfile
+from colossus.utils import Utilities
+from colossus import Cosmology
+from colossus import Halo
+from colossus import HaloDensityProfile
 
 ###################################################################################################
 

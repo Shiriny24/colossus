@@ -56,7 +56,7 @@ Detailed Documentation
 import math
 import numpy
 
-from . import Cosmology
+from colossus import Cosmology
 
 ###################################################################################################
 # FUNCTIONS RELATED TO SPHERICAL OVERDENSITY MASSES
