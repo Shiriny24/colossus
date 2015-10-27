@@ -95,7 +95,7 @@ def demonstrateProfiles():
 	# Finalize plot
 	plt.sca(p1)
 	plt.legend()
-	plt.show()
+	plt.savefig('HaloDensityProfileDemo.pdf')
 	
 	return
 
