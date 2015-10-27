@@ -53,7 +53,7 @@ download [[here](http://mercurial.selenic.com/)].
 Citing Colossus
 ---------------
 
-If you use Colossus for a publication, please cite Diemer & Kravtsov 2015 [[ApJ 799, 108](http://adsabs.harvard.edu/abs/2015ApJ...799..108D)]. Many Colossus routines are 
+If you use Colossus for a publication, please cite Diemer & Kravtsov 2015 [[ApJ 799, 108](http://adsabs.harvard.edu/abs/2015ApJ...799..108D)] and/or the [[ASCL entry](http://adsabs.harvard.edu/abs/2015ascl.soft01016D)]. Many Colossus routines are 
 based on other papers that proposed, for example, density profile or concentration-mass models. 
 If you use such routines, please cite the paper(s) mentioned in the function and/or module
 documentation.
@@ -61,8 +61,6 @@ documentation.
 License
 -------
 
-MIT
-
-Copyright (c) 2014-2015, Benedikt Diemer
-
-benedikt.diemer@cfa.harvard.edu
+License:       MIT. Copyright (c) 2014-2015
+Author:        Benedikt Diemer (benedikt.diemer@cfa.harvard.edu)
+Contributors:  Andrey Kravtsov (MCMC)

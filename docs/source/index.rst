@@ -53,7 +53,8 @@ Citing Colossus
 ***************************************************************************************************
 
 If you use Colossus for a publication, please cite Diemer & Kravtsov 2015 
-[`ApJ 799, 108 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_]. Many Colossus routines are 
+[`ApJ 799, 108 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_] and/or the and/or the 
+[`ASCL entry <http://adsabs.harvard.edu/abs/2015ascl.soft01016D>`_]. Many Colossus routines are 
 based on other papers that proposed, for example, density profile or concentration-mass models. 
 If you use such routines, please cite the paper(s) mentioned in the function and/or module
 documentation.
