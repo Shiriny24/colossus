@@ -11,7 +11,7 @@
 
 from __future__ import division
 
-import numpy
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
@@ -46,7 +46,7 @@ def demonstrateProfiles():
 	# Choose a set of radii
 	rR_min = 1E-3
 	rR_max = 1E1
-	rR = 10**numpy.arange(numpy.log(rR_min), numpy.log(rR_max), 0.02)
+	rR = 10**np.arange(np.log(rR_min), np.log(rR_max), 0.02)
 	r = rR * R
 	rho_m = cosmo.rho_m(z)
 	
@@ -110,12 +110,12 @@ def demonstrateFitting():
 	prof = profile.NFWProfile(rhos = rhos, rs = rs)
 	
 	# Create a fake dataset with some noise
-	r = 10**numpy.arange(0.1, 3.0, 0.3)
-	rr = 10**numpy.arange(0.0, 3.0, 0.1)
+	r = 10**np.arange(0.1, 3.0, 0.3)
+	rr = 10**np.arange(0.0, 3.0, 0.1)
 	rho_data = prof.density(r)
 	sigma = 0.25 * rho_data
-	numpy.random.seed(156)
-	rho_data += numpy.random.normal(0.0, sigma, len(r))
+	np.random.seed(156)
+	rho_data += np.random.normal(0.0, sigma, len(r))
 
 	# Move the profile parameters away from the initial values
 	prof.setParameterArray([prof.par['rhos'] * 0.4, prof.par['rs'] * 3.0])

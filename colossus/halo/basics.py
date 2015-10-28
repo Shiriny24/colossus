@@ -44,7 +44,7 @@ Module Reference
 
 ###################################################################################################
 
-import numpy
+import numpy as np
 
 from colossus.cosmology import cosmology
 
@@ -122,7 +122,7 @@ def deltaVir(z):
 	
 	cosmo = cosmology.getCurrent()
 	x = cosmo.Om(z) - 1.0
-	Delta = 18 * numpy.pi**2 + 82.0 * x - 39.0 * x**2
+	Delta = 18 * np.pi**2 + 82.0 * x - 39.0 * x**2
 
 	return Delta
 
@@ -155,7 +155,7 @@ def M_to_R(M, z, mdef):
 	"""
 	
 	rho = densityThreshold(z, mdef)
-	R = (M * 3.0 / 4.0 / numpy.pi / rho)**(1.0 / 3.0)
+	R = (M * 3.0 / 4.0 / np.pi / rho)**(1.0 / 3.0)
 
 	return R
 
@@ -188,7 +188,7 @@ def R_to_M(R, z, mdef):
 	"""
 	
 	rho = densityThreshold(z, mdef)
-	M = 4.0 / 3.0 * numpy.pi * rho * R**3
+	M = 4.0 / 3.0 * np.pi * rho * R**3
 
 	return M
 

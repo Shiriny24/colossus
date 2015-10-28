@@ -10,7 +10,7 @@ Common routines for Colossus modules.
 """
 
 import os
-import numpy
+import numpy as np
 import sys
 import six
 
@@ -179,7 +179,7 @@ def getArray(var):
 	if is_array:
 		var_ret = var
 	else:
-		var_ret = numpy.array([var])
+		var_ret = np.array([var])
 		
 	return var_ret, is_array 
 

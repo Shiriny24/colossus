@@ -81,8 +81,7 @@ Module Reference
 
 ###################################################################################################
 
-import math
-import numpy
+import numpy as np
 import scipy.interpolate
 import scipy.optimize
 import warnings
@@ -234,7 +233,7 @@ def concentration(M, mdef, z, \
 		# Generate a mask if the model doesn't return one
 		if not limited and range_return:
 			if utilities.isArray(c):
-				mask = numpy.ones((len(c)), dtype = bool)
+				mask = np.ones((len(c)), dtype = bool)
 			else:
 				mask = True
 			
@@ -243,7 +242,7 @@ def concentration(M, mdef, z, \
 		# Convert to array
 		M_array, is_array = utilities.getArray(M)
 		N = len(M_array)
-		mask = numpy.ones((N), dtype = bool)
+		mask = np.ones((N), dtype = bool)
 
 		mdef_model = mdefs_model[0]
 		if len(mdefs_model) > 1:
@@ -253,7 +252,7 @@ def concentration(M, mdef, z, \
 		# as a guess around which to look for the solution.
 		Delta_ratio = basics.densityThreshold(z, mdef) / basics.densityThreshold(z, mdef_model)
 		M_guess = M_array * Delta_ratio
-		c = numpy.zeros_like(M_array)
+		c = np.zeros_like(M_array)
 		
 		for i in range(N):
 			
@@ -427,8 +426,8 @@ def _diemer15_k_R(M):
 
 	cosmo = cosmology.getCurrent()
 	rho0 = cosmo.rho_m(0.0)
-	R = (3.0 * M / 4.0 / math.pi / rho0) ** (1.0 / 3.0) / 1000.0
-	k_R = 2.0 * math.pi / R * DIEMER15_KAPPA
+	R = (3.0 * M / 4.0 / np.pi / rho0) ** (1.0 / 3.0) / 1000.0
+	k_R = 2.0 * np.pi / R * DIEMER15_KAPPA
 
 	return k_R
 
@@ -439,7 +438,7 @@ def _diemer15_k_R(M):
 
 def _diemer15_n(k_R):
 
-	if numpy.min(k_R) < 0:
+	if np.min(k_R) < 0:
 		raise Exception("k_R < 0.")
 
 	cosmo = cosmology.getCurrent()
@@ -453,12 +452,12 @@ def _diemer15_n(k_R):
 	else:
 		# We need coverage to compute the local slope at kR, which can be an array. Thus, central
 		# difference derivatives don't make much sense here, and we use a spline instead.
-		k_min = numpy.min(k_R) * 0.9
-		k_max = numpy.max(k_R) * 1.1
-		logk = numpy.arange(numpy.log10(k_min), numpy.log10(k_max), 0.01)
+		k_min = np.min(k_R) * 0.9
+		k_max = np.max(k_R) * 1.1
+		logk = np.arange(np.log10(k_min), np.log10(k_max), 0.01)
 		Pk = cosmo.matterPowerSpectrum(10**logk, Pk_source = 'eh98smooth')
-		interp = scipy.interpolate.InterpolatedUnivariateSpline(logk, numpy.log10(Pk))
-		n = interp(numpy.log10(k_R), nu = 1)
+		interp = scipy.interpolate.InterpolatedUnivariateSpline(logk, np.log10(Pk))
+		n = interp(np.log10(k_R), nu = 1)
 	
 	return n
 
@@ -538,8 +537,8 @@ def modelKlypin15fromNu(M, z, mdef):
 	cosmo = cosmology.getCurrent()
 	nu = cosmo.peakHeight(M, z)
 	sigma = cosmology.AST_delta_collapse / nu
-	a0 = numpy.interp(z, z_bins, a0_bins)
-	b0 = numpy.interp(z, z_bins, b0_bins)
+	a0 = np.interp(z, z_bins, a0_bins)
+	b0 = np.interp(z, z_bins, b0_bins)
 
 	sigma_a0 = sigma / a0
 	c = b0 * (1.0 + 7.37 * sigma_a0**0.75) * (1.0 + 0.14 * sigma_a0**-2.0)
@@ -616,9 +615,9 @@ def modelKlypin15fromM(M, z, mdef):
 		msg = 'Invalid cosmology for Klypin et al 2015 m-based model, %s.' % cosmo.name
 		raise Exception(msg)
 
-	C0 = numpy.interp(z, z_bins, C0_bins)
-	gamma = numpy.interp(z, z_bins, gamma_bins)
-	M0 = numpy.interp(z, z_bins, M0_bins)
+	C0 = np.interp(z, z_bins, C0_bins)
+	gamma = np.interp(z, z_bins, gamma_bins)
+	M0 = np.interp(z, z_bins, M0_bins)
 	M0 *= 1E12
 
 	c = C0 * (M / 1E12)**-gamma * (1.0 + (M / M0)**0.4)
@@ -657,16 +656,16 @@ def modelDutton14(M, z, mdef):
 	"""
 
 	if mdef == '200c':
-		a = 0.520 + (0.905 - 0.520) * numpy.exp(-0.617 * z**1.21)
+		a = 0.520 + (0.905 - 0.520) * np.exp(-0.617 * z**1.21)
 		b = -0.101 + 0.026 * z
 	elif mdef == 'vir':
-		a = 0.537 + (1.025 - 0.537) * numpy.exp(-0.718 * z**1.08)
+		a = 0.537 + (1.025 - 0.537) * np.exp(-0.718 * z**1.08)
 		b = -0.097 + 0.024 * z
 	else:
 		msg = 'Invalid mass definition for Dutton & Maccio 2014 model, %s.' % mdef
 		raise Exception(msg)
 	
-	logc = a + b * numpy.log10(M / 1E12)
+	logc = a + b * np.log10(M / 1E12)
 	c = 10**logc
 
 	mask = (M > 1E10) & (z <= 5.0)
@@ -756,9 +755,9 @@ def modelPrada12(M200c, z):
 	"""
 
 	def cmin(x):
-		return 3.681 + (5.033 - 3.681) * (1.0 / math.pi * math.atan(6.948 * (x - 0.424)) + 0.5)
+		return 3.681 + (5.033 - 3.681) * (1.0 / np.pi * np.atan(6.948 * (x - 0.424)) + 0.5)
 	def smin(x):
-		return 1.047 + (1.646 - 1.047) * (1.0 / math.pi * math.atan(7.386 * (x - 0.526)) + 0.5)
+		return 1.047 + (1.646 - 1.047) * (1.0 / np.pi * np.atan(7.386 * (x - 0.526)) + 0.5)
 
 	cosmo = cosmology.getCurrent()
 	nu = cosmo.peakHeight(M200c, z)
@@ -769,7 +768,7 @@ def modelPrada12(M200c, z):
 	B1 = smin(x) / smin(1.393)
 	temp_sig = 1.686 / nu
 	temp_sigp = temp_sig * B1
-	temp_C = 2.881 * ((temp_sigp / 1.257) ** 1.022 + 1) * numpy.exp(0.06 / temp_sigp ** 2)
+	temp_C = 2.881 * ((temp_sigp / 1.257) ** 1.022 + 1) * np.exp(0.06 / temp_sigp ** 2)
 	c200c = B0 * temp_C
 
 	return c200c
@@ -908,7 +907,7 @@ def modelBullock01(M200c, z):
 	mask = (D_target > Dmin) & (D_target < Dmax)
 
 	N = len(M_array)
-	c200c = numpy.zeros((N), dtype = float)
+	c200c = np.zeros((N), dtype = float)
 	H0 = cosmo.Hz(z)
 	for i in range(N):
 		if mask[i]:

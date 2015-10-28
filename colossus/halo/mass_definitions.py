@@ -71,7 +71,7 @@ Module Reference
 
 ###################################################################################################
 
-import numpy
+import numpy as np
 
 from colossus.cosmology import cosmology
 from colossus.halo import basics
@@ -194,9 +194,9 @@ def RspOverR200m(nu200m = None, z = None, Gamma = None):
 
 	if (Gamma is not None) and (z is not None):
 		cosmo = cosmology.getCurrent()
-		ratio =  0.54 * (1 + 0.53 * cosmo.Om(z)) * (1 + 1.36 * numpy.exp(-Gamma / 3.04))
+		ratio =  0.54 * (1 + 0.53 * cosmo.Om(z)) * (1 + 1.36 * np.exp(-Gamma / 3.04))
 	elif nu200m is not None:
-		ratio = 0.81 * (1.0 + 0.97 * numpy.exp(-nu200m / 2.44))
+		ratio = 0.81 * (1.0 + 0.97 * np.exp(-nu200m / 2.44))
 	else:
 		msg = 'Need either Gamma and z, or nu.'
 		raise Exception(msg)
@@ -239,9 +239,9 @@ def MspOverM200m(nu200m = None, z = None, Gamma = None):
 	
 	if (Gamma is not None) and (z is not None):
 		cosmo = cosmology.getCurrent()
-		ratio =  0.59 * (1 + 0.35 * cosmo.Om(z)) * (1 + 0.92 * numpy.exp(-Gamma / 4.54))
+		ratio =  0.59 * (1 + 0.35 * cosmo.Om(z)) * (1 + 0.92 * np.exp(-Gamma / 4.54))
 	elif nu200m is not None:
-		ratio = 0.82 * (1.0 + 0.63 * numpy.exp(-nu200m / 3.52))
+		ratio = 0.82 * (1.0 + 0.63 * np.exp(-nu200m / 3.52))
 	else:
 		msg = 'Need either Gamma and z, or nu.'
 		raise Exception(msg)

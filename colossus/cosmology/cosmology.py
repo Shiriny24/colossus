@@ -190,8 +190,7 @@ Module Reference
 ###################################################################################################
 
 import os
-import math
-import numpy
+import numpy as np
 import scipy.integrate
 import scipy.special
 import scipy.interpolate
@@ -597,7 +596,7 @@ class Cosmology(object):
 			object_data = self.storage_temp[object_id]
 
 		elif self.storage and os.path.exists(self.cache_dir + object_id):
-			object_data = numpy.loadtxt(self.cache_dir + object_id, usecols = (0, 1), \
+			object_data = np.loadtxt(self.cache_dir + object_id, usecols = (0, 1), \
 									skiprows = 0, unpack = True)
 			self.storage_temp[object_id] = object_data
 			
@@ -621,7 +620,7 @@ class Cosmology(object):
 					object_raw = self.storage_pers[object_name]
 		
 				elif self.storage and os.path.exists(self.cache_dir + object_name):
-					object_raw = numpy.loadtxt(self.cache_dir + object_name, usecols = (0, 1), \
+					object_raw = np.loadtxt(self.cache_dir + object_name, usecols = (0, 1), \
 									skiprows = 0, unpack = True)
 
 				if object_raw is None:
@@ -671,7 +670,7 @@ class Cosmology(object):
 				# If the user has chosen text output, write a text file.
 				if self.text_output:
 					filename_text =  self.cache_dir + object_name
-					numpy.savetxt(filename_text, numpy.transpose(object_data), fmt = "%.8e")
+					np.savetxt(filename_text, np.transpose(object_data), fmt = "%.8e")
 			
 				# Store in file. We do not wish to save the entire storage dictionary, as there might be
 				# user-defined objects in it.
@@ -714,7 +713,7 @@ class Cosmology(object):
 			sum += self.Ok0 * ai**2
 		if self.relspecies:
 			sum += self.Or0 * ai**4
-		E = numpy.sqrt(sum)
+		E = np.sqrt(sum)
 		
 		return E
 
@@ -759,19 +758,19 @@ class Cosmology(object):
 		use_array = min_is_array or max_is_array
 		
 		if use_array and not min_is_array:
-			z_min_use = numpy.array([z_min] * len(z_max))
+			z_min_use = np.array([z_min] * len(z_max))
 		else:
 			z_min_use = z_min
 		
 		if use_array and not max_is_array:
-			z_max_use = numpy.array([z_max] * len(z_min))
+			z_max_use = np.array([z_max] * len(z_min))
 		else:
 			z_max_use = z_max
 		
 		if use_array:
 			if min_is_array and max_is_array and len(z_min) != len(z_max):
 				raise Exception("If both z_min and z_max are arrays, they need to have the same size.")
-			integ = numpy.zeros_like(z_min_use)
+			integ = np.zeros_like(z_min_use)
 			for i in range(len(z_min_use)):
 				integ[i], _ = scipy.integrate.quad(integrand, z_min_use[i], z_max_use[i])
 		else:
@@ -783,7 +782,7 @@ class Cosmology(object):
 
 	# The integral over 1 / E(z) enters into the comoving distance.
 
-	def _integral_oneOverEz(self, z_min, z_max = numpy.inf):
+	def _integral_oneOverEz(self, z_min, z_max = np.inf):
 		
 		def integrand(z):
 			return 1.0 / self.Ez(z)
@@ -794,7 +793,7 @@ class Cosmology(object):
 
 	# The integral over 1 / E(z) / (1 + z) enters into the age of the universe.
 
-	def _integral_oneOverEz1pz(self, z_min, z_max = numpy.inf):
+	def _integral_oneOverEz1pz(self, z_min, z_max = np.inf):
 		
 		def integrand(z):
 			return 1.0 / self.Ez(z) / (1.0 + z)
@@ -815,15 +814,15 @@ class Cosmology(object):
 				print("Computing lookup table in z.")
 			
 			if future:
-				log_min = numpy.log10(1.0 + self.z_min_compute)
+				log_min = np.log10(1.0 + self.z_min_compute)
 			else:
 				log_min = 0.0
-			log_max = numpy.log10(1.0 + self.z_max_compute)
+			log_max = np.log10(1.0 + self.z_max_compute)
 			bin_width = (log_max - log_min) / self.z_Nbins
-			z_table = 10**numpy.arange(log_min, log_max + bin_width, bin_width) - 1.0
+			z_table = 10**np.arange(log_min, log_max + bin_width, bin_width) - 1.0
 			x_table = func(z_table)
 			
-			self._storeObject(table_name, numpy.array([z_table, x_table]))
+			self._storeObject(table_name, np.array([z_table, x_table]))
 			if self.print_info:
 				print("Lookup table completed.")
 			interpolator = self._getStoredObject(table_name, interpolator = True, inverse = inverse)
@@ -847,25 +846,25 @@ class Cosmology(object):
 				min_ = interpolator.get_knots()[0]
 				max_ = interpolator.get_knots()[-1]
 				
-				if numpy.min(z) < min_:
+				if np.min(z) < min_:
 					msg = "f = %.3f outside range (min. f is %.3f)." \
-						% (numpy.min(z), min_)
+						% (np.min(z), min_)
 					raise Exception(msg)
 					
-				if numpy.max(z) > max_:
+				if np.max(z) > max_:
 					msg = "f = %.3f outside range (max. f is %.3f)." \
-						% (numpy.max(z), max_)
+						% (np.max(z), max_)
 					raise Exception(msg)
 				
 			else:
-				if numpy.min(z) < self.z_min:
+				if np.min(z) < self.z_min:
 					msg = "z = %.2f outside range (min. z is %.2f)." \
-						% (numpy.min(z), self.z_min)
+						% (np.min(z), self.z_min)
 					raise Exception(msg)
 					
-				if numpy.max(z) > self.z_max:
+				if np.max(z) > self.z_max:
 					msg = "z = %.2f outside range (max. z is %.2f)." \
-						% (numpy.max(z), self.z_max)
+						% (np.max(z), self.z_max)
 					raise Exception(msg)
 				
 			ret = interpolator(z, nu = derivative)				
@@ -954,7 +953,7 @@ class Cosmology(object):
 
 	def _ageExact(self, z):
 		
-		t = self.hubbleTime() * self._integral_oneOverEz1pz(z, numpy.inf)
+		t = self.hubbleTime() * self._integral_oneOverEz1pz(z, np.inf)
 		
 		return t
 	
@@ -1122,7 +1121,7 @@ class Cosmology(object):
 			The distance modulus in magnitudes; has the same dimensions as z.
 		"""
 		
-		mu = 5.0 * numpy.log10(self.luminosityDistance(z) / self.h * 1E5)
+		mu = 5.0 * np.log10(self.luminosityDistance(z) / self.h * 1E5)
 		
 		return mu
 
@@ -1142,7 +1141,7 @@ class Cosmology(object):
 			The sound horizon at recombination in Mpc.
 		"""
 				
-		s = 44.5 * numpy.log(9.83 / self.Omh2) / numpy.sqrt(1.0 + 10.0 * self.Ombh2**0.75)
+		s = 44.5 * np.log(9.83 / self.Omh2) / np.sqrt(1.0 + 10.0 * self.Ombh2**0.75)
 		
 		return s
 
@@ -1461,7 +1460,7 @@ class Cosmology(object):
 		lagrangianM: The lagrangian mass of a halo of radius R.
 		"""
 		
-		return (3.0 * M / 4.0 / math.pi / self.rho_m(0.0) / 1E9)**(1.0 / 3.0)
+		return (3.0 * M / 4.0 / np.pi / self.rho_m(0.0) / 1E9)**(1.0 / 3.0)
 	
 	###############################################################################################
 	
@@ -1488,7 +1487,7 @@ class Cosmology(object):
 		lagrangianR: The lagrangian radius of a halo of mass M.
 		"""
 				
-		return 4.0 / 3.0 * math.pi * R**3 * self.rho_m(0.0) * 1E9
+		return 4.0 / 3.0 * np.pi * R**3 * self.rho_m(0.0) * 1E9
 
 	###############################################################################################
 
@@ -1546,7 +1545,7 @@ class Cosmology(object):
 				sum += self.Or0
 			if not self.flat:
 				sum += self.Ok0 * ai**2
-			E = numpy.sqrt(sum)
+			E = np.sqrt(sum)
 			return E
 
 		# The integrand
@@ -1562,32 +1561,32 @@ class Cosmology(object):
 		# Split into late (1), early (2) and a transition interval (3)
 		z_arr, is_array = utilities.getArray(z)
 		a = 1.0 / (1.0 + z_arr)
-		D = numpy.zeros_like(z_arr)
+		D = np.zeros_like(z_arr)
 		mask1 = z_arr < (zt1)
 		mask2 = z_arr > (zt2)
 		mask3 = mask1 & mask2
 		
 		# Compute D from integration at low redshift
 		z1 = z_arr[mask1]
-		D[mask1] = 5.0 / 2.0 * self.Om0 * Ez_D(z1) * self._integral(integrand, z1, numpy.inf)
+		D[mask1] = 5.0 / 2.0 * self.Om0 * Ez_D(z1) * self._integral(integrand, z1, np.inf)
 		D1 = D[mask3]
 		
 		# Compute D analytically at high redshift.
 		a2 = a[mask2]
 		if self.relspecies:
 			x = a2 / self.a_eq
-			term1 = numpy.sqrt(1.0 + x)
-			term2 = 2.0 * term1 + (2.0 / 3.0 + x) * numpy.log((term1 - 1.0) / (term1 + 1.0))
-			D[mask2] = a2 + 2.0 / 3.0 * self.a_eq + self.a_eq / (2.0 * numpy.log(2.0) - 3.0) * term2
+			term1 = np.sqrt(1.0 + x)
+			term2 = 2.0 * term1 + (2.0 / 3.0 + x) * np.log((term1 - 1.0) / (term1 + 1.0))
+			D[mask2] = a2 + 2.0 / 3.0 * self.a_eq + self.a_eq / (2.0 * np.log(2.0) - 3.0) * term2
 		else:
 			D[mask2] = a2
 		D2 = D[mask3]
 
 		# Average in transition regime
-		at1 = numpy.log(1.0 / (zt1 + 1.0))
-		at2 = numpy.log(1.0 / (zt2 + 1.0))
+		at1 = np.log(1.0 / (zt1 + 1.0))
+		at2 = np.log(1.0 / (zt2 + 1.0))
 		dloga = at2 - at1
-		loga = numpy.log(a[mask3])
+		loga = np.log(a[mask3])
 		D[mask3] = (D1 * (loga - at1) + D2 * (at2 - loga)) / dloga
 
 		# Reduce array to number if necessary
@@ -1736,8 +1735,8 @@ class Cosmology(object):
 		Req = 31.5 * omb * h * h / (theta2p7 * theta2p7 * theta2p7 * theta2p7) / (zeq / 1e3)
 	
 		# Equation 6
-		s = 2.0 / 3.0 / keq * numpy.sqrt(6.0 / Req) * numpy.log((numpy.sqrt(1.0 + Rd) + \
-			numpy.sqrt(Rd + Req)) / (1.0 + numpy.sqrt(Req)))
+		s = 2.0 / 3.0 / keq * np.sqrt(6.0 / Req) * np.log((np.sqrt(1.0 + Rd) + \
+			np.sqrt(Rd + Req)) / (1.0 + np.sqrt(Req)))
 	
 		# Equation 7
 		ksilk = 1.6 * pow(omb * h * h, 0.52) * pow(om0 * h * h, 0.73) \
@@ -1758,8 +1757,8 @@ class Cosmology(object):
 	
 		# Equation 15
 		y = (1.0 + zeq) / (1.0 + zd)
-		Gy = y * (-6.0 * numpy.sqrt(1.0 + y) + (2.0 + 3.0 * y) \
-			* numpy.log((numpy.sqrt(1.0 + y) + 1.0) / (numpy.sqrt(1.0 + y) - 1.0)))
+		Gy = y * (-6.0 * np.sqrt(1.0 + y) + (2.0 + 3.0 * y) \
+			* np.log((np.sqrt(1.0 + y) + 1.0) / (np.sqrt(1.0 + y) - 1.0)))
 	
 		# Equation 14
 		ab = 2.07 * keq * s * pow(1.0 + Rd, -3.0 / 4.0) * Gy
@@ -1773,17 +1772,17 @@ class Cosmology(object):
 		C = 14.2 / ac + 386.0 / (1.0 + 69.9 * pow(q, 1.08))
 	
 		# Equation 19
-		T0t = numpy.log(numpy.e + 1.8 * bc * q) / (numpy.log(numpy.e + 1.8 * bc * q) + C * q * q)
+		T0t = np.log(np.e + 1.8 * bc * q) / (np.log(np.e + 1.8 * bc * q) + C * q * q)
 	
 		# Equation 17
 		C1bc = 14.2 + 386.0 / (1.0 + 69.9 * pow(q, 1.08))
-		T0t1bc = numpy.log(numpy.e + 1.8 * bc * q) / (numpy.log(numpy.e + 1.8 * bc * q) + C1bc * q * q)
+		T0t1bc = np.log(np.e + 1.8 * bc * q) / (np.log(np.e + 1.8 * bc * q) + C1bc * q * q)
 		Tc = f * T0t1bc + (1.0 - f) * T0t
 	
 		# Get baryon part of transfer function
 	
 		# Equation 24
-		bb = 0.5 + omb / om0 + (3.0 - 2.0 * omb / om0) * numpy.sqrt((17.2 * om0 * h * h) \
+		bb = 0.5 + omb / om0 + (3.0 - 2.0 * omb / om0) * np.sqrt((17.2 * om0 * h * h) \
 			* (17.2 * om0 * h * h) + 1.0)
 	
 		# Equation 23
@@ -1794,10 +1793,10 @@ class Cosmology(object):
 	
 		# Equation 21
 		C11 = 14.2 + 386.0 / (1.0 + 69.9 * pow(q, 1.08))
-		T0t11 = numpy.log(numpy.e + 1.8 * q) / (numpy.log(numpy.e + 1.8 * q) + C11 * q * q)
+		T0t11 = np.log(np.e + 1.8 * q) / (np.log(np.e + 1.8 * q) + C11 * q * q)
 		Tb = (T0t11 / (1.0 + (kh * s / 5.2) * (kh * s / 5.2)) + ab / (1.0 + (bb / kh / s) * \
-			(bb / kh / s) * (bb / kh / s)) * numpy.exp(-pow(kh / ksilk, 1.4))) \
-			* numpy.sin(kh * st) / (kh * st)
+			(bb / kh / s) * (bb / kh / s)) * np.exp(-pow(kh / ksilk, 1.4))) \
+			* np.sin(kh * st) / (kh * st)
 	
 		# Total transfer function
 		Tk = omb / om0 * Tb + omc / om0 * Tc
@@ -1838,11 +1837,11 @@ class Cosmology(object):
 		kh = k * h
 	
 		# Equation 26
-		s = 44.5 * numpy.log(9.83 / om0 / h / h) / numpy.sqrt(1.0 + 10.0 * pow(omb * h * h, 0.75))
+		s = 44.5 * np.log(9.83 / om0 / h / h) / np.sqrt(1.0 + 10.0 * pow(omb * h * h, 0.75))
 	
 		# Equation 31
-		alphaGamma = 1.0 - 0.328 * numpy.log(431.0 * om0 * h * h) * omb / om0 \
-				+ 0.38 * numpy.log(22.3 * om0 * h * h) * (omb / om0) * (omb / om0)
+		alphaGamma = 1.0 - 0.328 * np.log(431.0 * om0 * h * h) * omb / om0 \
+				+ 0.38 * np.log(22.3 * om0 * h * h) * (omb / om0) * (omb / om0)
 	
 		# Equation 30
 		Gamma = om0 * h * (alphaGamma + (1.0 - alphaGamma) / (1.0 + pow(0.43 * kh * s, 4.0)))
@@ -1852,7 +1851,7 @@ class Cosmology(object):
 	
 		# Equation 29
 		C0 = 14.2 + 731.0 / (1.0 + 62.5 * q)
-		L0 = numpy.log(2.0 * numpy.exp(1.0) + 1.8 * q)
+		L0 = np.log(2.0 * np.exp(1.0) + 1.8 * q)
 		Tk = L0 / (L0 + C0 * q * q)
 	
 		return Tk	
@@ -1884,14 +1883,14 @@ class Cosmology(object):
 			if table is None:
 				msg = "Could not load data table, %s." % (table_name)
 				raise Exception(msg)
-			if numpy.max(k) > numpy.max(table[0]):
-				msg = "k (%.2e) is larger than max. k (%.2e)." % (numpy.max(k), numpy.max(table[0]))
+			if np.max(k) > np.max(table[0]):
+				msg = "k (%.2e) is larger than max. k (%.2e)." % (np.max(k), np.max(table[0]))
 				raise Exception(msg)
-			if numpy.min(k) < numpy.min(table[0]):
-				msg = "k (%.2e) is smaller than min. k (%.2e)." % (numpy.min(k), numpy.min(table[0]))
+			if np.min(k) < np.min(table[0]):
+				msg = "k (%.2e) is smaller than min. k (%.2e)." % (np.min(k), np.min(table[0]))
 				raise Exception(msg)
 
-			Pk = numpy.interp(k, table[0], table[1])
+			Pk = np.interp(k, table[0], table[1])
 		
 		# This is a little tricky. We need to store the normalization factor somewhere, even if 
 		# interpolation = False; otherwise, we get into an infinite loop of computing sigma8, P(k), 
@@ -1946,24 +1945,24 @@ class Cosmology(object):
 		if interpolator is None:
 			if self.print_info:
 				print("Cosmology.matterPowerSpectrum: Computing lookup table.")				
-			data_k = numpy.zeros((numpy.sum(self.k_Pk_Nbins) + 1), numpy.float)
+			data_k = np.zeros((np.sum(self.k_Pk_Nbins) + 1), np.float)
 			n_regions = len(self.k_Pk_Nbins)
 			k_computed = 0
 			for i in range(n_regions):
-				log_min = numpy.log10(self.k_Pk[i])
-				log_max = numpy.log10(self.k_Pk[i + 1])
+				log_min = np.log10(self.k_Pk[i])
+				log_max = np.log10(self.k_Pk[i + 1])
 				log_range = log_max - log_min
 				bin_width = log_range / self.k_Pk_Nbins[i]
 				if i == n_regions - 1:
 					data_k[k_computed:k_computed + self.k_Pk_Nbins[i] + 1] = \
-						10**numpy.arange(log_min, log_max + bin_width, bin_width)
+						10**np.arange(log_min, log_max + bin_width, bin_width)
 				else:
 					data_k[k_computed:k_computed + self.k_Pk_Nbins[i]] = \
-						10**numpy.arange(log_min, log_max, bin_width)
+						10**np.arange(log_min, log_max, bin_width)
 				k_computed += self.k_Pk_Nbins[i]
 			
 			data_Pk = self._matterPowerSpectrumExact(data_k, Pk_source = Pk_source, ignore_norm = False)
-			table_ = numpy.array([numpy.log10(data_k), numpy.log10(data_Pk)])
+			table_ = np.array([np.log10(data_k), np.log10(data_Pk)])
 			self._storeObject(table_name, table_)
 			if self.print_info:
 				print("Cosmology.matterPowerSpectrum: Lookup table completed.")	
@@ -2015,20 +2014,20 @@ class Cosmology(object):
 			interpolator = self._matterPowerSpectrumInterpolator(Pk_source)
 			
 			# If the requested radius is outside the range, give a detailed error message.
-			k_req = numpy.min(k)
+			k_req = np.min(k)
 			if k_req < self.k_Pk[0]:
 				msg = "k = %.2e is too small (min. k = %.2e)" % (k_req, self.k_Pk[0])
 				raise Exception(msg)
 
-			k_req = numpy.max(k)
+			k_req = np.max(k)
 			if k_req > self.k_Pk[-1]:
 				msg = "k = %.2e is too large (max. k = %.2e)" % (k_req, self.k_Pk[-1])
 				raise Exception(msg)
 
 			if derivative:
-				Pk = interpolator(numpy.log10(k), nu = 1)
+				Pk = interpolator(np.log10(k), nu = 1)
 			else:
-				Pk = interpolator(numpy.log10(k))
+				Pk = interpolator(np.log10(k))
 				Pk = 10**Pk
 			
 		else:
@@ -2084,10 +2083,10 @@ class Cosmology(object):
 				if x < 1E-3:
 					ret = 1.0
 				else:
-					ret = 3.0 / x**3 * (numpy.sin(x) - x * numpy.cos(x))
+					ret = 3.0 / x**3 * (np.sin(x) - x * np.cos(x))
 				
 		elif filt == 'gaussian':
-			ret = numpy.exp(-x**2)
+			ret = np.exp(-x**2)
 		
 		else:
 			msg = "Invalid filter, %s." % (filt)
@@ -2102,13 +2101,13 @@ class Cosmology(object):
 		# -----------------------------------------------------------------------------------------
 		def logIntegrand(lnk, Pk_interpolator, test = False):
 			
-			k = numpy.exp(lnk)
+			k = np.exp(lnk)
 			W = self.filterFunction(filt, k, R, no_oscillation = test)
 			
 			if exact_Pk or (not self.interpolation):
 				Pk = self._matterPowerSpectrumExact(k, Pk_source = Pk_source, ignore_norm = ignore_norm)
 			else:
-				Pk = 10**Pk_interpolator(numpy.log10(k))
+				Pk = 10**Pk_interpolator(np.log10(k))
 			
 			# One factor of k is due to the integration in log-k space
 			ret = Pk * W**2 * k**3
@@ -2135,7 +2134,7 @@ class Cosmology(object):
 				msg = "n + 2j must be > -3 for the variance to converge in a power-law cosmology."
 				raise Exception(msg)
 			sigma2 = R**(-3 - n) / (8.0**(-3 - n) / self.sigma8**2)
-			sigma = numpy.sqrt(sigma2)
+			sigma = np.sqrt(sigma2)
 			
 		else:
 			
@@ -2152,12 +2151,12 @@ class Cosmology(object):
 			test_k_min, test_k_max = self._matterPowerSpectrumLimits(Pk_source)
 			test_k_min = max(test_k_min * 1.0001, 1E-7)
 			test_k_max = min(test_k_max * 0.9999, 1E15)
-			test_k = numpy.arange(numpy.log(test_k_min), numpy.log(test_k_max), 2.0)
+			test_k = np.arange(np.log(test_k_min), np.log(test_k_max), 2.0)
 			n_test = len(test_k)
 			test_k_integrand = test_k * 0.0
 			for i in range(n_test):
 				test_k_integrand[i] = logIntegrand(test_k[i], Pk_interpolator)
-			integrand_max = numpy.max(test_k_integrand)
+			integrand_max = np.max(test_k_integrand)
 			
 			min_index = 0
 			while test_k_integrand[min_index] < integrand_max * test_integrand_min:
@@ -2177,9 +2176,9 @@ class Cosmology(object):
 			args = Pk_interpolator
 			sigma2, _ = scipy.integrate.quad(logIntegrand, test_k[min_index], test_k[max_index], \
 						args = args, epsabs = 0.0, epsrel = self.accuracy_sigma, limit = 100)
-			sigma = numpy.sqrt(sigma2 / 2.0 / math.pi**2)
+			sigma = np.sqrt(sigma2 / 2.0 / np.pi**2)
 		
-		if numpy.isnan(sigma):
+		if np.isnan(sigma):
 			msg = "Result is nan (cosmology %s, filter %s, R %.2e, j %d." % (self.name, filt, R, j)
 			raise Exception(msg)
 			
@@ -2203,17 +2202,17 @@ class Cosmology(object):
 		if interpolator is None:
 			if self.print_info:
 				print("Cosmology.sigma: Computing lookup table.")
-			max_log = numpy.log10(self.R_max_sigma)
-			log_range = max_log - numpy.log10(self.R_min_sigma)
-			max_loglog = numpy.log10(log_range + 1.0)
+			max_log = np.log10(self.R_max_sigma)
+			log_range = max_log - np.log10(self.R_min_sigma)
+			max_loglog = np.log10(log_range + 1.0)
 			loglog_width = max_loglog / self.R_Nbins_sigma
-			R_loglog = numpy.arange(0.0, max_loglog + loglog_width, loglog_width)
+			R_loglog = np.arange(0.0, max_loglog + loglog_width, loglog_width)
 			log_R = max_log - 10**R_loglog[::-1] + 1.0
 			data_R = 10**log_R
 			data_sigma = data_R * 0.0
 			for i in range(len(data_R)):
 				data_sigma[i] = self._sigmaExact(data_R[i], j = j, filt = filt, Pk_source = Pk_source)
-			table_ = numpy.array([numpy.log10(data_R), numpy.log10(data_sigma)])
+			table_ = np.array([np.log10(data_R), np.log10(data_sigma)])
 			self._storeObject(table_name, table_)
 			if self.print_info:
 				print("Cosmology.sigma: Lookup table completed.")
@@ -2282,24 +2281,24 @@ class Cosmology(object):
 			if not inverse:
 	
 				# If the requested radius is outside the range, give a detailed error message.
-				R_req = numpy.min(R)
+				R_req = np.min(R)
 				if R_req < self.R_min_sigma:
-					M_min = 4.0 / 3.0 * math.pi * self.R_min_sigma**3 * self.rho_m(0.0) * 1E9
+					M_min = 4.0 / 3.0 * np.pi * self.R_min_sigma**3 * self.rho_m(0.0) * 1E9
 					msg = "R = %.2e is too small (min. R = %.2e, min. M = %.2e)" \
 						% (R_req, self.R_min_sigma, M_min)
 					raise Exception(msg)
 			
-				R_req = numpy.max(R)
+				R_req = np.max(R)
 				if R_req > self.R_max_sigma:
-					M_max = 4.0 / 3.0 * math.pi * self.R_max_sigma**3 * self.rho_m(0.0) * 1E9
+					M_max = 4.0 / 3.0 * np.pi * self.R_max_sigma**3 * self.rho_m(0.0) * 1E9
 					msg = "R = %.2e is too large (max. R = %.2e, max. M = %.2e)" \
 						% (R_req, self.R_max_sigma, M_max)
 					raise Exception(msg)
 	
 				if derivative:
-					ret = interpolator(numpy.log10(R), nu = 1)
+					ret = interpolator(np.log10(R), nu = 1)
 				else:
-					ret = interpolator(numpy.log10(R))
+					ret = interpolator(np.log10(R))
 					ret = 10**ret
 					if z > 1E-5:
 						ret *= self.growthFactor(z)
@@ -2317,27 +2316,27 @@ class Cosmology(object):
 				sigma_max = self._getStoredObject('sigma_max')
 				if sigma_min is None or sigma_min is None:
 					knots = interpolator.get_knots()
-					sigma_min = 10**numpy.min(knots)
-					sigma_max = 10**numpy.max(knots)
+					sigma_min = 10**np.min(knots)
+					sigma_max = 10**np.max(knots)
 					self._storeObject('sigma_min', sigma_min, persistent = False)
 					self._storeObject('sigma_max', sigma_max, persistent = False)
 				
 				# If the requested sigma is outside the range, give a detailed error message.
-				sigma_req = numpy.max(sigma_)
+				sigma_req = np.max(sigma_)
 				if sigma_req > sigma_max:
 					msg = "sigma = %.2e is too large (max. sigma = %.2e)" % (sigma_req, sigma_max)
 					raise Exception(msg)
 					
-				sigma_req = numpy.min(sigma_)
+				sigma_req = np.min(sigma_)
 				if sigma_req < sigma_min:
 					msg = "sigma = %.2e is too small (min. sigma = %.2e)" % (sigma_req, sigma_min)
 					raise Exception(msg)
 				
 				# Interpolate to get R(sigma)
 				if derivative: 
-					ret = interpolator(numpy.log10(sigma_), nu = 1)					
+					ret = interpolator(np.log10(sigma_), nu = 1)					
 				else:
-					ret = interpolator(numpy.log10(sigma_))
+					ret = interpolator(np.log10(sigma_))
 					ret = 10**ret
 
 		else:
@@ -2484,13 +2483,13 @@ class Cosmology(object):
 		
 		def curvature_fx(x):
 	
-			f1 = math.sqrt(5.0 / 2.0) * x
+			f1 = np.sqrt(5.0 / 2.0) * x
 			t1 = scipy.special.erf(f1) + scipy.special.erf(f1 / 2.0)
 	
-			b0 = math.sqrt(2.0 / 5.0 / math.pi)
+			b0 = np.sqrt(2.0 / 5.0 / np.pi)
 			b1 = 31.0 * x ** 2 / 4.0 + 8.0 / 5.0
 			b2 = x ** 2 / 2.0 - 8.0 / 5.0
-			t2 = b0 * (b1 * math.exp(-5.0 * x ** 2 / 8.0) + b2 * math.exp(-5.0 * x ** 2 / 2.0))
+			t2 = b0 * (b1 * np.exp(-5.0 * x ** 2 / 8.0) + b2 * np.exp(-5.0 * x ** 2 / 2.0))
 	
 			res = (x ** 3 - 3.0 * x) * t1 / 2.0 + t2
 	
@@ -2507,7 +2506,7 @@ class Cosmology(object):
 			xstar = gamma * nu
 			g2 = 1.0 - gamma ** 2
 			exponent = -(x - xstar) ** 2 / (2.0 * g2)
-			res = norm * fx * math.exp(exponent) / math.sqrt(2.0 * math.pi * g2)
+			res = norm * fx * np.exp(exponent) / np.sqrt(2.0 * np.pi * g2)
 	
 			return res
 	
@@ -2517,8 +2516,8 @@ class Cosmology(object):
 			return curvature_Npk(x, nu, gamma) * x
 	
 		args = nu, gamma
-		norm, _ = scipy.integrate.quad(curvature_Npk, 0.0, numpy.infty, args, epsrel = 1E-10)
-		integ, _ = scipy.integrate.quad(curvature_Npk_x, 0.0, numpy.infty, args, epsrel = 1E-10)
+		norm, _ = scipy.integrate.quad(curvature_Npk, 0.0, np.infty, args, epsrel = 1E-10)
+		integ, _ = scipy.integrate.quad(curvature_Npk_x, 0.0, np.infty, args, epsrel = 1E-10)
 		xav = integ / norm
 	
 		return xav
@@ -2549,8 +2548,8 @@ class Cosmology(object):
 		# Compute theta according to Equation 6.14 in BBKS
 		g = gamma
 		gn = g * nu
-		theta1 = 3.0 * (1.0 - g ** 2) + (1.216 - 0.9 * g ** 4) * numpy.exp(-g * gn * gn / 8.0)
-		theta2 = numpy.sqrt(3.0 * (1.0 - g ** 2) + 0.45 + (gn / 2.0) ** 2) + gn / 2.0
+		theta1 = 3.0 * (1.0 - g ** 2) + (1.216 - 0.9 * g ** 4) * np.exp(-g * gn * gn / 8.0)
+		theta2 = np.sqrt(3.0 * (1.0 - g ** 2) + 0.45 + (gn / 2.0) ** 2) + gn / 2.0
 		theta = theta1 / theta2
 	
 		# Equation 6.13 in BBKS
@@ -2658,11 +2657,11 @@ class Cosmology(object):
 		def integrand(k, R, Pk_source, Pk_interpolator):
 			
 			if self.interpolation:
-				Pk = 10**Pk_interpolator(numpy.log10(k))
+				Pk = 10**Pk_interpolator(np.log10(k))
 			else:
 				Pk = self.matterPowerSpectrumExact(k, Pk_source)
 
-			ret = Pk * k / R * numpy.exp(-(k * R * f_cut)**2)
+			ret = Pk * k / R * np.exp(-(k * R * f_cut)**2)
 			
 			return ret
 
@@ -2679,9 +2678,9 @@ class Cosmology(object):
 		args = R, Pk_source, Pk_interpolator
 		xi, _ = scipy.integrate.quad(integrand, k_min, k_max, args = args, epsabs = 0.0, \
 					epsrel = self.accuracy_xi, limit = 100, weight = 'sin', wvar = R)
-		xi /= 2.0 * math.pi**2
+		xi /= 2.0 * np.pi**2
 
-		if numpy.isnan(xi):
+		if np.isnan(xi):
 			msg = 'Result is nan (cosmology %s, R %.2e).' % (self.name, R)
 			raise Exception(msg)
 
@@ -2702,26 +2701,26 @@ class Cosmology(object):
 			if self.print_info:
 				print("correlationFunction: Computing lookup table. This may take a few minutes, please do not interrupt.")
 			
-			data_R = numpy.zeros((numpy.sum(self.R_xi_Nbins) + 1), numpy.float)
+			data_R = np.zeros((np.sum(self.R_xi_Nbins) + 1), np.float)
 			n_regions = len(self.R_xi_Nbins)
 			k_computed = 0
 			for i in range(n_regions):
-				log_min = numpy.log10(self.R_xi[i])
-				log_max = numpy.log10(self.R_xi[i + 1])
+				log_min = np.log10(self.R_xi[i])
+				log_max = np.log10(self.R_xi[i + 1])
 				log_range = log_max - log_min
 				bin_width = log_range / self.R_xi_Nbins[i]
 				if i == n_regions - 1:
 					data_R[k_computed:k_computed + self.R_xi_Nbins[i] + 1] = \
-						10**numpy.arange(log_min, log_max + bin_width, bin_width)
+						10**np.arange(log_min, log_max + bin_width, bin_width)
 				else:
 					data_R[k_computed:k_computed + self.R_xi_Nbins[i]] = \
-						10**numpy.arange(log_min, log_max, bin_width)
+						10**np.arange(log_min, log_max, bin_width)
 				k_computed += self.R_xi_Nbins[i]
 			
 			data_xi = data_R * 0.0
 			for i in range(len(data_R)):
 				data_xi[i] = self._correlationFunctionExact(data_R[i], Pk_source = Pk_source)
-			table_ = numpy.array([data_R, data_xi])
+			table_ = np.array([data_R, data_xi])
 			self._storeObject(table_name, table_)
 			if self.print_info:
 				print("correlationFunction: Lookup table completed.")
@@ -2770,12 +2769,12 @@ class Cosmology(object):
 			interpolator = self._correlationFunctionInterpolator(Pk_source)
 				
 			# If the requested radius is outside the range, give a detailed error message.
-			R_req = numpy.min(R)
+			R_req = np.min(R)
 			if R_req < self.R_xi[0]:
 				msg = 'R = %.2e is too small (min. R = %.2e)' % (R_req, self.R_xi[0])
 				raise Exception(msg)
 		
-			R_req = numpy.max(R)
+			R_req = np.max(R)
 			if R_req > self.R_xi[-1]:
 				msg = 'R = %.2e is too large (max. R = %.2e)' % (R_req, self.R_xi[-1])
 				raise Exception(msg)

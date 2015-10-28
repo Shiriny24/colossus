@@ -42,7 +42,7 @@ Module Reference
 ---------------------------------------------------------------------------------------------------
 """
 
-import numpy
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 import matplotlib.gridspec as gridspec
@@ -112,10 +112,10 @@ def initWalkers(x_initial, initial_step = 0.1, nwalkers = 100, random_seed = Non
 		raise ValueError("The number of walkers must be divisible by 2.")
 
 	nparams = len(x_initial)
-	walkers = numpy.zeros([2, nwalkers / 2, nparams])
+	walkers = np.zeros([2, nwalkers / 2, nparams])
 	
 	if random_seed is not None:
-		numpy.random.seed(random_seed)
+		np.random.seed(random_seed)
 	
 	if utilities.isArray(initial_step):
 		step_array = initial_step
@@ -123,7 +123,7 @@ def initWalkers(x_initial, initial_step = 0.1, nwalkers = 100, random_seed = Non
 		step_array = x_initial * initial_step
 		
 	for i in range(nparams):
-		walkers[:, :, i] = numpy.reshape(numpy.random.normal(x_initial[i], step_array[i], nwalkers), \
+		walkers[:, :, i] = np.reshape(np.random.normal(x_initial[i], step_array[i], nwalkers), \
 										(2, nwalkers / 2))
 
 	return walkers
@@ -180,10 +180,10 @@ def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 
 	def autocorrelationTime(x, maxlag = 50):
 		
 		nt = len(x)
-		ft = numpy.fft.fft(x - numpy.mean(x), n = 2 * nt)
-		corr_func = numpy.fft.ifft(ft * numpy.conjugate(ft))[0:nt].real
+		ft = np.fft.fft(x - np.mean(x), n = 2 * nt)
+		corr_func = np.fft.ifft(ft * np.conjugate(ft))[0:nt].real
 		corr_func /= corr_func[0]
-		tau = 1.0 + 2.0 * numpy.sum(corr_func[1:maxlag])
+		tau = 1.0 + 2.0 * np.sum(corr_func[1:maxlag])
 		
 		return tau
 
@@ -205,7 +205,7 @@ def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 
 		utilities.printLine()
 	
 	# Create a copy since this array will be changed later
-	x = numpy.copy(walkers)
+	x = np.copy(walkers)
 	
 	# Parameters used to draw random number with the GW10 proposal distribution
 	ap = 2.0
@@ -218,12 +218,12 @@ def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 
 	naccept = 0
 	ntry = 0
 	nchain = 0
-	mw = numpy.zeros((nwalkers, nparams))
-	sw = numpy.zeros((nwalkers, nparams))
-	m = numpy.zeros(nparams)
-	Wgr = numpy.zeros(nparams)
-	Bgr = numpy.zeros(nparams)
-	Rgr = numpy.zeros(nparams)
+	mw = np.zeros((nwalkers, nparams))
+	sw = np.zeros((nwalkers, nparams))
+	m = np.zeros(nparams)
+	Wgr = np.zeros(nparams)
+	Bgr = np.zeros(nparams)
+	Rgr = np.zeros(nparams)
 	
 	mutx = []
 	taux = []
@@ -232,7 +232,7 @@ def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 
 		taux.append([])
 		Rval.append([])
 	
-	gxo = numpy.zeros((2, nwalkers / 2))
+	gxo = np.zeros((2, nwalkers / 2))
 	gxo[0, :] = L_func(x[0, :, :], *args)
 	gxo[1, :] = L_func(x[1, :, :], *args)
 	
@@ -246,31 +246,31 @@ def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 
 			
 			# Vectorized inner loop of walkers stretch move in the Goodman & Weare sampling algorithm
 			xchunk = x[k, :, :]
-			jcompl = numpy.random.randint(0, nwalkers / 2, nwalkers / 2)
+			jcompl = np.random.randint(0, nwalkers / 2, nwalkers / 2)
 			xcompl = x[kd, jcompl, :]
 			gxold  = gxo[k, :]
 			
 			# The next few steps implement Goodman & Weare sampling algorithm
-			zf = numpy.random.rand(nwalkers / 2)   
+			zf = np.random.rand(nwalkers / 2)   
 			zf = zf * afact
 			zr = (1.0 + zf) * (1.0 + zf) * api
 			
 			# Duplicate zr for nparams
-			zrtile = numpy.transpose(numpy.tile(zr, (nparams, 1))) 
+			zrtile = np.transpose(np.tile(zr, (nparams, 1))) 
 			xtry  = xcompl + zrtile * (xchunk - xcompl)
 			gxtry = L_func(xtry, *args)
 			gx = gxold 
-			ilow = numpy.where(gx < 1.0E-50)
+			ilow = np.where(gx < 1.0E-50)
 			gx[ilow] = 1.0E-50
 
 			# Guard against underflow in regions of very low p
 			gr = gxtry / gx
-			iacc = numpy.where(gr > 1.0)
+			iacc = np.where(gr > 1.0)
 			xchunk[iacc] = xtry[iacc]
 			gxold[iacc] = gxtry[iacc]
-			aprob = numpy.power(zr, nparams - 1) * gxtry / gx
-			u = numpy.random.uniform(0.0, 1.0, numpy.shape(xchunk)[0])        
-			iprob = numpy.where(aprob > u)
+			aprob = np.power(zr, nparams - 1) * gxtry / gx
+			u = np.random.uniform(0.0, 1.0, np.shape(xchunk)[0])        
+			iprob = np.where(aprob > u)
 			xchunk[iprob] = xtry[iprob]
 			gxold[iprob] = gxtry[iprob]
 			naccept += len(iprob[0])
@@ -278,7 +278,7 @@ def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 
 			gxo[k, :] = gxold        
 			
 			for i in range(nwalkers // 2):
-				chain.append(numpy.array(x[k, i, :]))
+				chain.append(np.array(x[k, i, :]))
 			
 			for i in range(nwalkers // 2):
 				mw[k * nwalkers // 2 + i, :] += x[k, i, :]
@@ -289,51 +289,51 @@ def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 
 		
 		# Compute means for the auto-correlation time estimate
 		for i in range(nparams):
-			mutx[i].append(numpy.sum(x[:, :, i]) / (nwalkers))
+			mutx[i].append(np.sum(x[:, :, i]) / (nwalkers))
 		
 		# Compute Gelman-Rubin indicator for all parameters
 		if nchain % convergence_step == 0 and nchain >= nwalkers / 2 and nchain > 1:
 			
 			# Calculate Gelman & Rubin convergence indicator
 			mwc = mw / (nchain - 1.0)
-			swc = sw / (nchain - 1.0) - numpy.power(mwc, 2)
+			swc = sw / (nchain - 1.0) - np.power(mwc, 2)
 			
 			for i in range(nparams):
 
 				# Compute and store the autocorrelation time
 				tacorx = autocorrelationTime(mutx[i])
-				taux[i].append(numpy.max(tacorx))
+				taux[i].append(np.max(tacorx))
 
 				# Within chain variance
-				Wgr[i] = numpy.sum(swc[:, i]) / nwalkers
+				Wgr[i] = np.sum(swc[:, i]) / nwalkers
 				# Mean of the means over Nwalkers
-				m[i] = numpy.sum(mwc[:, i]) / nwalkers
+				m[i] = np.sum(mwc[:, i]) / nwalkers
 				# Between chain variance
-				Bgr[i] = nchain * numpy.sum(numpy.power(mwc[:, i] - m[i], 2)) / (nwalkers - 1.0)
+				Bgr[i] = nchain * np.sum(np.power(mwc[:, i] - m[i], 2)) / (nwalkers - 1.0)
 				# Gelman-Rubin R factor
 				Rgr[i] = (1.0 - 1.0 / nchain + Bgr[i] / Wgr[i] / nchain) * (nwalkers + 1.0) \
 					/ nwalkers - (nchain - 1.0) / (nchain * nwalkers)
 				Rval[i].append(Rgr[i] - 1.0)
 			
 			if verbose and nchain % output_every_n == 0:
-				msg = 'Step %6d, autocorr. time %5.1f, GR = [' % (nchain, numpy.max(tacorx))
+				msg = 'Step %6d, autocorr. time %5.1f, GR = [' % (nchain, np.max(tacorx))
 				for i in range(len(Rgr)):
 					msg += ' %6.3f' % Rgr[i]
 				msg += ']'
 				print(msg)
 			
-			if numpy.max(numpy.abs(Rgr - 1.0)) < converged_GR:
+			if np.max(np.abs(Rgr - 1.0)) < converged_GR:
 				converged = True
 
 	# Chop of burn-in period, and thin samples on auto-correlation time following Sokal's (1996) 
 	# recommendations
 	nthin = int(tacorx)
 	nburn = int(20 * nwalkers * nthin)
-	chain = numpy.array(chain)
+	chain = np.array(chain)
 	chain_full = chain[nburn:, :]
 	chain_thin = chain_full[::nthin, :]
 
-	R = numpy.array(Rval)
+	R = np.array(Rval)
 
 	if verbose:
 		utilities.printLine()
@@ -385,16 +385,16 @@ def analyzeChain(chain, param_names = None, percentiles = [68.27, 95.45, 99.73],
 
 	nparams = len(chain[0])
 
-	x_mean = numpy.mean(chain, axis = 0)
-	x_median = numpy.median(chain, axis = 0)
-	x_stddev = numpy.std(chain, axis = 0)
+	x_mean = np.mean(chain, axis = 0)
+	x_median = np.median(chain, axis = 0)
+	x_stddev = np.std(chain, axis = 0)
 
 	nperc = len(percentiles)
-	x_percentiles = numpy.zeros((nperc, 2, nparams), numpy.float)
+	x_percentiles = np.zeros((nperc, 2, nparams), np.float)
 	for i in range(nperc):
 		half_percentile = (100.0 - percentiles[i]) / 2.0
-		x_percentiles[i, 0, :] = numpy.percentile(chain, half_percentile, axis = 0)
-		x_percentiles[i, 1, :] = numpy.percentile(chain, 100.0 - half_percentile, axis = 0)
+		x_percentiles[i, 0, :] = np.percentile(chain, half_percentile, axis = 0)
+		x_percentiles[i, 1, :] = np.percentile(chain, 100.0 - half_percentile, axis = 0)
 
 	if verbose:
 		for i in range(nparams):
@@ -468,7 +468,7 @@ def plotChain(chain, param_labels):
 					
 	# Plot 1D histograms
 	nbins = min(50, nsamples / 20.0)
-	minmax = numpy.zeros((nparams, 2), numpy.float)
+	minmax = np.zeros((nparams, 2), np.float)
 	for i in range(nparams):
 		ci = chain[:, i]
 		plt.sca(panels[i][i])

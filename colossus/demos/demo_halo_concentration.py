@@ -9,7 +9,7 @@
 #
 ###################################################################################################
 
-import numpy
+import numpy as np
 
 from colossus.utils import utilities
 from colossus.cosmology import cosmology
@@ -33,7 +33,7 @@ def main():
 
 def computeConcentration():
 	
-	M = numpy.array([1E9, 1E12, 1E15])
+	M = np.array([1E9, 1E12, 1E15])
 
 	print("First, set a cosmology")
 	cosmo = cosmology.setCosmology('WMAP9')
@@ -41,7 +41,7 @@ def computeConcentration():
 	
 	utilities.printLine()
 	print("Now compute concentrations for M200c:")
-	c = concentration.diemer15_c200c_M(M, 0.0, statistic = 'median')
+	c = concentration.modelDiemer15fromM(M, 0.0, statistic = 'median')
 	for i in range(len(M)):
 		print(("M200c = %.2e, c200c = %5.2f" % (M[i], c[i])))
 
@@ -125,11 +125,11 @@ def computeConcentrationTable(cosmo_name):
 		if z[i] > 5.0:
 			nu_min = 1.0
 			
-		log_M_min = numpy.log10(cosmo.massFromPeakHeight(nu_min, z[i]))
-		log_M_max = numpy.log10(cosmo.massFromPeakHeight(nu_max, z[i]))
+		log_M_min = np.log10(cosmo.massFromPeakHeight(nu_min, z[i]))
+		log_M_max = np.log10(cosmo.massFromPeakHeight(nu_max, z[i]))
 		bin_width_logM = (log_M_max - log_M_min) / float(n_M_bins - 1)
 		
-		M200c = 10**numpy.arange(log_M_min, log_M_max + bin_width_logM, bin_width_logM)
+		M200c = 10**np.arange(log_M_min, log_M_max + bin_width_logM, bin_width_logM)
 		M200c = M200c[:n_M_bins]	
 		nu200c = cosmo.peakHeight(M200c, z[i])
 		c200c_median = concentration.diemer15_c200c_nu(nu200c, z[i], statistic = 'median')

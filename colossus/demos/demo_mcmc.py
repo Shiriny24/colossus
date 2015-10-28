@@ -5,7 +5,7 @@
 #
 ###################################################################################################
 
-import numpy
+import numpy as np
 import matplotlib.pyplot as plt
 
 from colossus.utils import mcmc
@@ -28,7 +28,7 @@ def testMCMC(plot_output = True):
 
 	n_params = 2
 	param_names = ['x1', 'x2']
-	x_initial = numpy.ones((n_params), numpy.float)
+	x_initial = np.ones((n_params), np.float)
 	
 	if plot_output:
 		walkers = mcmc.initWalkers(x_initial, nwalkers = 200, random_seed = 156)
@@ -53,8 +53,8 @@ def likelihood(x):
 	sig2 = 2.0
 	r = 0.95
 	r2 = r * r
-	res = numpy.exp(-0.5 * ((x[:, 0] / sig1)**2 + (x[:, 1] / sig2)**2 - 2.0 * r * x[:, 0] * x[:, 1] \
-				/ (sig1 * sig2)) / (1.0 - r2)) / (2 * numpy.pi * sig1 * sig2) / numpy.sqrt(1.0 - r2)
+	res = np.exp(-0.5 * ((x[:, 0] / sig1)**2 + (x[:, 1] / sig2)**2 - 2.0 * r * x[:, 0] * x[:, 1] \
+				/ (sig1 * sig2)) / (1.0 - r2)) / (2 * np.pi * sig1 * sig2) / np.sqrt(1.0 - r2)
 	
 	return res
 

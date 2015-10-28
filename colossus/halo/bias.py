@@ -20,7 +20,7 @@ Module Reference
 
 ###################################################################################################
 
-import numpy
+import numpy as np
 
 from colossus.cosmology import cosmology
 from colossus.halo import basics
@@ -60,13 +60,13 @@ def haloBiasFromNu(nu, z, mdef):
 	
 	cosmo = cosmology.getCurrent()
 	Delta = basics.densityThreshold(z, mdef) / cosmo.rho_m(z)
-	y = numpy.log10(Delta)
+	y = np.log10(Delta)
 
-	A = 1.0 + 0.24 * y * numpy.exp(-1.0 * (4.0 / y)**4)
+	A = 1.0 + 0.24 * y * np.exp(-1.0 * (4.0 / y)**4)
 	a = 0.44 * y - 0.88
 	B = 0.183
 	b = 1.5
-	C = 0.019 + 0.107 * y + 0.19 * numpy.exp(-1.0 * (4.0 / y)**4)
+	C = 0.019 + 0.107 * y + 0.19 * np.exp(-1.0 * (4.0 / y)**4)
 	c = 2.4
 
 	bias = 1.0 - A * nu**a / (nu**a + cosmology.AST_delta_collapse**a) + B * nu**b + C * nu**c

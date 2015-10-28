@@ -10,7 +10,7 @@
 #
 ###################################################################################################
 
-import numpy
+import numpy as np
 
 from colossus.utils import utilities
 from colossus.cosmology import cosmology
@@ -126,7 +126,7 @@ def demonstrateChanging():
 def compute():
 	
 	cosmo = cosmology.setCosmology('WMAP9')
-	z = numpy.array([0.0, 1.0, 10.0])
+	z = np.array([0.0, 1.0, 10.0])
 	
 	print("All cosmology functions can be called with numbers or numpy arrays:")
 	print(("z                 = " + str(z)))
@@ -148,7 +148,7 @@ def computeAdvanced():
 
 	cosmo = cosmology.setCosmology('WMAP9')
 	z = 0.0
-	M = numpy.array([1E9, 1E12, 1E15])
+	M = np.array([1E9, 1E12, 1E15])
 	
 	print("We are now executing a function that needs sigma(R).")
 	utilities.printLine()

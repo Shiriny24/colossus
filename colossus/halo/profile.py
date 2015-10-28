@@ -135,8 +135,7 @@ Module Reference
 
 ###################################################################################################
 
-import math
-import numpy
+import numpy as np
 import scipy.misc
 import scipy.optimize
 import scipy.integrate
@@ -171,7 +170,7 @@ class HaloDensityProfile():
 		# The radial limits within which the profile is valid. These can be used as integration
 		# limits for surface density, for example.
 		self.rmin = 0.0
-		self.rmax = numpy.inf
+		self.rmax = np.inf
 		
 		# The radial limits within which we search for spherical overdensity radii. These limits 
 		# can be set much tighter for better performance.
@@ -224,7 +223,7 @@ class HaloDensityProfile():
 			A numpy array with the profile's parameter values.
 		"""
 		
-		par = numpy.array(list(self.par.values()))
+		par = np.array(list(self.par.values()))
 		if mask is not None:
 			par = par[mask]
 			
@@ -340,12 +339,12 @@ class HaloDensityProfile():
 		"""
 				
 		def logRho(logr):
-			return numpy.log(self.density(numpy.exp(logr)))
+			return np.log(self.density(np.exp(logr)))
 
 		r_use, is_array = utilities.getArray(r)
 		density_der = 0.0 * r_use
 		for i in range(len(r_use)):	
-			density_der[i] = scipy.misc.derivative(logRho, numpy.log(r_use[i]), dx = 0.0001, n = 1, order = 3)
+			density_der[i] = scipy.misc.derivative(logRho, np.log(r_use[i]), dx = 0.0001, n = 1, order = 3)
 		if not is_array:
 			density_der = density_der[0]
 
@@ -371,7 +370,7 @@ class HaloDensityProfile():
 		"""		
 
 		def integrand(r):
-			return self.density(r) * 4.0 * numpy.pi * r**2
+			return self.density(r) * 4.0 * np.pi * r**2
 
 		r_use, is_array = utilities.getArray(r)
 		M = 0.0 * r_use
@@ -444,7 +443,7 @@ class HaloDensityProfile():
 		"""		
 		
 		def integrand(r, R):
-			ret = 2.0 * r * self.density(r) / numpy.sqrt(r**2 - R**2)
+			ret = 2.0 * r * self.density(r) / np.sqrt(r**2 - R**2)
 			return ret
 
 		r_use, is_array = utilities.getArray(r)
@@ -484,7 +483,7 @@ class HaloDensityProfile():
 		"""		
 	
 		M = self.enclosedMass(r)
-		v = numpy.sqrt(cosmology.AST_G * M / r)
+		v = np.sqrt(cosmology.AST_G * M / r)
 		
 		return v
 
@@ -527,7 +526,7 @@ class HaloDensityProfile():
 	
 	def _thresholdEquation(self, r, density_threshold):
 		
-		diff = self.enclosedMass(r) / 4.0 / math.pi * 3.0 / r**3 - density_threshold
+		diff = self.enclosedMass(r) / 4.0 / np.pi * 3.0 / r**3 - density_threshold
 		
 		return diff
 
@@ -655,7 +654,7 @@ class HaloDensityProfile():
 		self.setParameterArray(self._fitConvertParamsBack(x.copy(), mask), mask = mask)
 		q_fit = f(r)
 		q_diff = q_fit - q
-		mf = numpy.dot(Q, q_diff)
+		mf = np.dot(Q, q_diff)
 		#print('mf')
 		#print(mf)
 		
@@ -671,7 +670,7 @@ class HaloDensityProfile():
 		
 		deriv = fder(self, r, mask, N_par_fit)		
 		for j in range(N_par_fit):
-			deriv[j] = numpy.dot(Q, deriv[j])
+			deriv[j] = np.dot(Q, deriv[j])
 		#print(deriv)
 		#print(Q)
 		#exit()
@@ -684,7 +683,7 @@ class HaloDensityProfile():
 
 		q_model = f(r)
 		diff = q_model - q
-		chi2 = numpy.dot(numpy.dot(diff, covinv), diff)
+		chi2 = np.dot(np.dot(diff, covinv), diff)
 		
 		return chi2
 
@@ -697,10 +696,10 @@ class HaloDensityProfile():
 	def _fitLikelihood(self, x, r, q, f, covinv, mask):
 
 		n_eval = len(x)
-		res = numpy.zeros((n_eval), numpy.float)
+		res = np.zeros((n_eval), np.float)
 		for i in range(n_eval):
 			self.setParameterArray(x[i], mask = mask)
-			res[i] = numpy.exp(-0.5 * self._fitChi2(r, q, f, covinv))
+			res[i] = np.exp(-0.5 * self._fitChi2(r, q, f, covinv))
 		
 		return res
 
@@ -716,7 +715,7 @@ class HaloDensityProfile():
 		x0 = self.getParameterArray(mask = mask)
 		args = r, q, f, covinv, mask
 		walkers = mcmc.initWalkers(x0, initial_step = initial_step, nwalkers = nwalkers, random_seed = random_seed)
-		xi = numpy.reshape(walkers, (len(walkers[0]) * 2, len(walkers[0, 0])))
+		xi = np.reshape(walkers, (len(walkers[0]) * 2, len(walkers[0, 0])))
 		chain_thin, chain_full, R = mcmc.runChain(self._fitLikelihood, walkers, convergence_step = convergence_step, \
 							args = args, converged_GR = converged_GR, verbose = verbose, output_every_n = output_every_n)
 		mean, median, stddev, p = mcmc.analyzeChain(chain_thin, self.par_names, verbose = verbose)
@@ -772,14 +771,14 @@ class HaloDensityProfile():
 			# The covariance matrix is in relative units, i.e. needs to be multiplied with the 
 			# residual chi2
 			diff = self._fitDiffFunction(x_fit, *args)
-			residual = numpy.sum(diff**2) / (len(r) - N_par_fit)
+			residual = np.sum(diff**2) / (len(r) - N_par_fit)
 			cov *= residual
 
 			# Derive an estimate of the uncertainty from the covariance matrix. We need to take into
 			# account that cov refers to the fitting parameters which may not be the same as the 
 			# standard profile parameters.
-			sigma = numpy.sqrt(numpy.diag(cov))
-			err = numpy.zeros((2, N_par_fit), numpy.float)
+			sigma = np.sqrt(np.diag(cov))
+			err = np.zeros((2, N_par_fit), np.float)
 			err[0] = self._fitConvertParamsBack(x_fit - sigma, mask)
 			err[1] = self._fitConvertParamsBack(x_fit + sigma, mask)
 
@@ -787,7 +786,7 @@ class HaloDensityProfile():
 			
 			msg = 'WARNING: Could not determine uncertainties on fitted parameters. Set all uncertainties to zero.'
 			print(msg)
-			err = numpy.zeros((2, N_par_fit), numpy.float)
+			err = np.zeros((2, N_par_fit), np.float)
 			
 		dict['x_err'] = err
 
@@ -972,12 +971,12 @@ class HaloDensityProfile():
 
 		# Check whether the parameter mask makes sense
 		if mask is None:
-			mask = numpy.ones((self.N_par), numpy.bool)
+			mask = np.ones((self.N_par), np.bool)
 		else:
 			if len(mask) != self.N_par:
 				msg = 'Mask has %d elements, expected %d.' % (len(mask), self.N_par)
 				raise Exception(msg)
-		N_par_fit = numpy.count_nonzero(mask)
+		N_par_fit = np.count_nonzero(mask)
 		if N_par_fit < 1:
 			raise Exception('The mask contains no True elements, meaning there are no parameters to vary.')
 		if verbose:
@@ -993,12 +992,12 @@ class HaloDensityProfile():
 		# the matrix is the identity matrix. 
 		N = len(r)
 		if q_cov is not None:
-			covinv = numpy.linalg.inv(q_cov)
+			covinv = np.linalg.inv(q_cov)
 		elif q_err is not None:
-			covinv = numpy.zeros((N, N), numpy.float)
-			numpy.fill_diagonal(covinv, 1.0 / q_err**2)
+			covinv = np.zeros((N, N), np.float)
+			np.fill_diagonal(covinv, 1.0 / q_err**2)
 		else:
-			covinv = numpy.identity((N), numpy.float)
+			covinv = np.identity((N), np.float)
 
 		# Perform the fit
 		if method == 'mcmc':
@@ -1040,13 +1039,13 @@ class HaloDensityProfile():
 			# If only sigma has been passed, Q has q/sigma_i on the diagonal.
 			
 			if q_cov is not None:
-				Lambda, Q = numpy.linalg.eig(covinv)
+				Lambda, Q = np.linalg.eig(covinv)
 				for i in range(N):
-					Q[:, i] *= numpy.sqrt(Lambda[i])
+					Q[:, i] *= np.sqrt(Lambda[i])
 				Q = Q.T
 			elif q_err is not None:
-				Q = numpy.zeros((N, N), numpy.float)
-				numpy.fill_diagonal(Q, 1.0 / q_err)
+				Q = np.zeros((N, N), np.float)
+				np.fill_diagonal(Q, 1.0 / q_err)
 			else:
 				Q = covinv
 				
@@ -1111,9 +1110,9 @@ class SplineDensityProfile(HaloDensityProfile):
 		self.opt_names = []
 		HaloDensityProfile.__init__(self)
 		
-		self.rmin = numpy.min(r)
-		self.rmax = numpy.max(r)
-		self.r_guess = numpy.sqrt(self.rmin * self.rmax)
+		self.rmin = np.min(r)
+		self.rmax = np.max(r)
+		self.r_guess = np.sqrt(self.rmin * self.rmax)
 		self.min_RDelta = self.rmin
 		self.max_RDelta = self.rmax
 
@@ -1123,31 +1122,31 @@ class SplineDensityProfile(HaloDensityProfile):
 		
 		self.rho_spline = None
 		self.M_spline = None
-		logr = numpy.log(r)
+		logr = np.log(r)
 		
 		if M is not None:
-			logM = numpy.log(M)
+			logM = np.log(M)
 			self.M_spline = scipy.interpolate.InterpolatedUnivariateSpline(logr, logM)
 
 		if rho is not None:
-			logrho = numpy.log(rho)
+			logrho = np.log(rho)
 			self.rho_spline = scipy.interpolate.InterpolatedUnivariateSpline(logr, logrho)
 
 		# Construct M(r) from density. For some reason, the spline integrator fails on the 
 		# innermost bin, and the quad integrator fails on the outermost bin. 
 		if self.M_spline is None:
-			integrand = 4.0 * numpy.pi * r**2 * rho
+			integrand = 4.0 * np.pi * r**2 * rho
 			integrand_spline = scipy.interpolate.InterpolatedUnivariateSpline(r, integrand)
 			logM = 0.0 * r
 			for i in range(len(logM) - 1):
 				logM[i], _ = scipy.integrate.quad(integrand_spline, 0.0, r[i])
 			logM[-1] = integrand_spline.integral(0.0, r[-1])
-			logM = numpy.log(logM)
+			logM = np.log(logM)
 			self.M_spline = scipy.interpolate.InterpolatedUnivariateSpline(logr, logM)
 
 		if self.rho_spline is None:
-			deriv = self.M_spline(numpy.log(r), nu = 1) * M / r
-			logrho = numpy.log(deriv / 4.0 / numpy.pi / r**2)
+			deriv = self.M_spline(np.log(r), nu = 1) * M / r
+			logrho = np.log(deriv / 4.0 / np.pi / r**2)
 			self.rho_spline = scipy.interpolate.InterpolatedUnivariateSpline(logr, logrho)
 
 		return
@@ -1158,13 +1157,13 @@ class SplineDensityProfile(HaloDensityProfile):
 
 	def density(self, r):
 		
-		return numpy.exp(self.rho_spline(numpy.log(r)))
+		return np.exp(self.rho_spline(np.log(r)))
 
 	###############################################################################################
 	
 	def densityDerivativeLin(self, r):
 
-		log_deriv = self.rho_spline(numpy.log(r), nu = 1)
+		log_deriv = self.rho_spline(np.log(r), nu = 1)
 		deriv = log_deriv * self.density(r) / r
 		
 		return deriv
@@ -1173,13 +1172,13 @@ class SplineDensityProfile(HaloDensityProfile):
 
 	def densityDerivativeLog(self, r):
 	
-		return self.rho_spline(numpy.log(r), nu = 1)
+		return self.rho_spline(np.log(r), nu = 1)
 	
 	###############################################################################################
 
 	def enclosedMass(self, r):
 
-		return numpy.exp(self.M_spline(numpy.log(r)))
+		return np.exp(self.M_spline(np.log(r)))
 
 ###################################################################################################
 # NFW PROFILE
@@ -1289,7 +1288,7 @@ class NFWProfile(HaloDensityProfile):
 		"""
 				
 		rs = basics.M_to_R(M, z, mdef) / c
-		rhos = M / rs**3 / 4.0 / math.pi / cls.mu(c)
+		rhos = M / rs**3 / 4.0 / np.pi / cls.mu(c)
 		
 		return rhos, rs
 
@@ -1349,7 +1348,7 @@ class NFWProfile(HaloDensityProfile):
 		HaloDensityProfile.enclosedMass: The mass enclosed within radius r.
 		"""
 		
-		return numpy.log(1.0 + x) - x / (1.0 + x)
+		return np.log(1.0 + x) - x / (1.0 + x)
 	
 	###############################################################################################
 
@@ -1382,7 +1381,7 @@ class NFWProfile(HaloDensityProfile):
 		HaloDensityProfile.enclosedMass: The mass enclosed within radius r.
 		"""
 		
-		return 4.0 * math.pi * rs**3 * rhos * cls.mu(x)
+		return 4.0 * np.pi * rs**3 * rhos * cls.mu(x)
 
 	###############################################################################################
 
@@ -1495,12 +1494,12 @@ class NFWProfile(HaloDensityProfile):
 	
 		xx = r / self.par['rs']
 		x, is_array = utilities.getArray(xx)
-		surfaceDensity = numpy.ones_like(x) * self.par['rhos'] * self.par['rs']
+		surfaceDensity = np.ones_like(x) * self.par['rhos'] * self.par['rs']
 		
 		# Solve separately for r < rs, r > rs, r = rs
 		mask_rs = abs(x - 1.0) < 1E-4
-		mask_lt = (x < 1.0) & (numpy.logical_not(mask_rs))
-		mask_gt = (x > 1.0) & (numpy.logical_not(mask_rs))
+		mask_lt = (x < 1.0) & (np.logical_not(mask_rs))
+		mask_gt = (x > 1.0) & (np.logical_not(mask_rs))
 		
 		surfaceDensity[mask_rs] *= 2.0 / 3.0
 
@@ -1508,13 +1507,13 @@ class NFWProfile(HaloDensityProfile):
 		x2 = xi**2
 		x2m1 = x2 - 1.0
 		surfaceDensity[mask_lt] *= 2.0 / x2m1 \
-			* (1.0 - 2.0 / numpy.sqrt(-x2m1) * numpy.arctanh(numpy.sqrt((1.0 - xi) / (xi + 1.0))))
+			* (1.0 - 2.0 / np.sqrt(-x2m1) * np.arctanh(np.sqrt((1.0 - xi) / (xi + 1.0))))
 
 		xi = x[mask_gt]		
 		x2 = xi**2
 		x2m1 = x2 - 1.0
 		surfaceDensity[mask_gt] *= 2.0 / x2m1 \
-			* (1.0 - 2.0 / numpy.sqrt(x2m1) * numpy.arctan(numpy.sqrt((xi - 1.0) / (xi + 1.0))))
+			* (1.0 - 2.0 / np.sqrt(x2m1) * np.arctan(np.sqrt((xi - 1.0) / (xi + 1.0))))
 			
 		if not is_array:
 			surfaceDensity = surfaceDensity[0]
@@ -1583,13 +1582,13 @@ class NFWProfile(HaloDensityProfile):
 
 	def _fitConvertParams(self, p, mask):
 		
-		return numpy.log(p)
+		return np.log(p)
 
 	###############################################################################################
 	
 	def _fitConvertParamsBack(self, p, mask):
 		
-		return numpy.exp(p)
+		return np.exp(p)
 
 	###############################################################################################
 
@@ -1598,7 +1597,7 @@ class NFWProfile(HaloDensityProfile):
 	def _fitParamDeriv_rho(self, r, mask, N_par_fit):
 
 		x = self.getParameterArray()
-		deriv = numpy.zeros((N_par_fit, len(r)), numpy.float)
+		deriv = np.zeros((N_par_fit, len(r)), np.float)
 		rrs = r / x[1]
 		rho_r = x[0] / rrs / (1.0 + rrs) ** 2
 
@@ -1762,8 +1761,8 @@ class EinastoProfile(HaloDensityProfile):
 	
 	def _setMassTerms(self):
 
-		self.mass_norm = numpy.pi * self.par['rhos'] * self.par['rs']**3 * 2.0**(2.0 - 3.0 / self.par['alpha']) \
-			* self.par['alpha']**(-1.0 + 3.0 / self.par['alpha']) * numpy.exp(2.0 / self.par['alpha']) 
+		self.mass_norm = np.pi * self.par['rhos'] * self.par['rs']**3 * 2.0**(2.0 - 3.0 / self.par['alpha']) \
+			* self.par['alpha']**(-1.0 + 3.0 / self.par['alpha']) * np.exp(2.0 / self.par['alpha']) 
 		self.gamma_3alpha = scipy.special.gamma(3.0 / self.par['alpha'])
 		
 		return
@@ -1784,7 +1783,7 @@ class EinastoProfile(HaloDensityProfile):
 
 	def density(self, r):
 		
-		rho = self.par['rhos'] * numpy.exp(-2.0 / self.par['alpha'] * \
+		rho = self.par['rhos'] * np.exp(-2.0 / self.par['alpha'] * \
 										((r / self.par['rs'])**self.par['alpha'] - 1.0))
 		
 		return rho
@@ -1821,13 +1820,13 @@ class EinastoProfile(HaloDensityProfile):
 
 	def _fitConvertParams(self, p, mask):
 		
-		return numpy.log(p)
+		return np.log(p)
 
 	###############################################################################################
 	
 	def _fitConvertParamsBack(self, p, mask):
 		
-		return numpy.exp(p)
+		return np.exp(p)
 
 	###############################################################################################
 
@@ -1836,7 +1835,7 @@ class EinastoProfile(HaloDensityProfile):
 	def _fitParamDeriv_rho(self, r, mask, N_par_fit):
 
 		x = self.getParameterArray()
-		deriv = numpy.zeros((N_par_fit, len(r)), numpy.float)
+		deriv = np.zeros((N_par_fit, len(r)), np.float)
 		rrs = r / x[1]
 		rho_r = self.density(r)
 		
@@ -1848,7 +1847,7 @@ class EinastoProfile(HaloDensityProfile):
 			deriv[counter] = 2.0 * rho_r * rrs**(x[2])
 			counter += 1
 		if mask[2]:
-			deriv[counter] = rho_r * 2.0 / x[2] * rrs**x[2] * (1.0 - rrs**(-x[2]) - x[2] * numpy.log(rrs))
+			deriv[counter] = rho_r * 2.0 / x[2] * rrs**x[2] * (1.0 - rrs**(-x[2]) - x[2] * np.log(rrs))
 			counter += 1
 
 		return deriv
@@ -1928,8 +1927,8 @@ class DK14Profile(HaloDensityProfile):
 	
 		self.par_names = ['rhos', 'rs', 'rt', 'alpha', 'beta', 'gamma', 'be', 'se', 'R200m', 'rho_m']
 		self.opt_names = ['part', 'selected', 'Gamma', 'outer']
-		#self.fit_log_mask = numpy.array([True, True, True, True, True, True, False, False, False, False])
-		self.fit_log_mask = numpy.array([False, False, False, False, False, False, False, False, False, False])
+		#self.fit_log_mask = np.array([True, True, True, True, True, True, False, False, False, False])
+		self.fit_log_mask = np.array([False, False, False, False, False, False, False, False, False, False])
 		HaloDensityProfile.__init__(self)
 		
 		# The following parameters are not constants, they are temporarily changed by certain 
@@ -1985,9 +1984,9 @@ class DK14Profile(HaloDensityProfile):
 		elif selected == 'by_accretion_rate':
 			if (Gamma is not None) and (z is not None):
 				cosmo = cosmology.getCurrent()
-				ratio =  0.43 * (1.0 + 0.92 * cosmo.Om(z)) * (1.0 + 2.18 * numpy.exp(-Gamma / 1.91))
+				ratio =  0.43 * (1.0 + 0.92 * cosmo.Om(z)) * (1.0 + 2.18 * np.exp(-Gamma / 1.91))
 			elif nu200m is not None:
-				ratio = 0.79 * (1.0 + 1.63 * numpy.exp(-nu200m / 1.56))
+				ratio = 0.79 * (1.0 + 1.63 * np.exp(-nu200m / 1.56))
 			else:
 				msg = 'Need either Gamma and z, or nu.'
 				raise Exception(msg)
@@ -2195,7 +2194,7 @@ class DK14Profile(HaloDensityProfile):
 		gamma = self.par['gamma']
 		
 		if self.opt['part'] in ['inner', 'both']:
-			inner = rhos * numpy.exp(-2.0 / alpha * ((r / rs) ** alpha - 1.0))
+			inner = rhos * np.exp(-2.0 / alpha * ((r / rs) ** alpha - 1.0))
 			fT = (1.0 + (r / rt) ** beta) ** (-gamma / beta)
 			rho += inner * fT
 		
@@ -2231,7 +2230,7 @@ class DK14Profile(HaloDensityProfile):
 		gamma = self.par['gamma']
 				
 		if self.opt['part'] in ['inner', 'both']:
-			inner = rhos * numpy.exp(-2.0 / alpha * ((r / rs) ** alpha - 1.0))
+			inner = rhos * np.exp(-2.0 / alpha * ((r / rs) ** alpha - 1.0))
 			d_inner = inner * (-2.0 / rs) * (r / rs)**(alpha - 1.0)	
 			fT = (1.0 + (r / rt) ** beta) ** (-gamma / beta)
 			d_fT = (-gamma / beta) * (1.0 + (r / rt) ** beta) ** (-gamma / beta - 1.0) * \
@@ -2275,7 +2274,7 @@ class DK14Profile(HaloDensityProfile):
 			subtract = 0.0
 
 		def integrand(r, R):
-			ret = 2.0 * r * (self.density(r) - subtract) / numpy.sqrt(r**2 - R**2)
+			ret = 2.0 * r * (self.density(r) - subtract) / np.sqrt(r**2 - R**2)
 			return ret
 
 		r_use, is_array = utilities.getArray(r)
@@ -2435,7 +2434,7 @@ class DK14Profile(HaloDensityProfile):
 
 		p_fit = p
 		log_mask = [self.fit_log_mask[mask]]
-		p_fit[log_mask] = numpy.log(p_fit[log_mask])
+		p_fit[log_mask] = np.log(p_fit[log_mask])
 		
 		return p_fit
 
@@ -2445,7 +2444,7 @@ class DK14Profile(HaloDensityProfile):
 		
 		p_def = p.copy()
 		log_mask = [self.fit_log_mask[mask]]
-		p_def[log_mask] = numpy.exp(p_def[log_mask])
+		p_def[log_mask] = np.exp(p_def[log_mask])
 		
 		return p_def
 
@@ -2456,7 +2455,7 @@ class DK14Profile(HaloDensityProfile):
 	def _fitParamDeriv_rho(self, r, mask, N_par_fit):
 
 		x = self.getParameterArray()
-		deriv = numpy.zeros((N_par_fit, len(r)), numpy.float)
+		deriv = np.zeros((N_par_fit, len(r)), np.float)
 		rho_r = self.density(r)
 		counter = 0
 		
@@ -2490,16 +2489,16 @@ class DK14Profile(HaloDensityProfile):
 			counter += 1
 		# alpha
 		if mask[3]:
-			deriv[counter] = rho_r * 2.0 / alpha ** 2 * rrs ** alpha * (1.0 - rrs ** (-alpha) - alpha * numpy.log(rrs))
+			deriv[counter] = rho_r * 2.0 / alpha ** 2 * rrs ** alpha * (1.0 - rrs ** (-alpha) - alpha * np.log(rrs))
 			counter += 1
 		# beta
 		if mask[4]:
-			deriv[counter] = rho_r * (gamma * numpy.log(term1) / beta ** 2 - gamma * \
-										rrt ** beta * numpy.log(rrt) / beta / term1)
+			deriv[counter] = rho_r * (gamma * np.log(term1) / beta ** 2 - gamma * \
+										rrt ** beta * np.log(rrt) / beta / term1)
 			counter += 1
 		# gamma
 		if mask[5]:
-			deriv[counter] = -rho_r * numpy.log(term1) / beta
+			deriv[counter] = -rho_r * np.log(term1) / beta
 			counter += 1
 		# be
 		if mask[6]:
@@ -2507,7 +2506,7 @@ class DK14Profile(HaloDensityProfile):
 			counter += 1
 		# se
 		if mask[7]:
-			deriv[counter] = -outer * numpy.log(rro)
+			deriv[counter] = -outer * np.log(rro)
 			counter += 1
 
 		# Correct for log parameters
@@ -2571,8 +2570,8 @@ def pseudoEvolve(M_i, c_i, z_i, mdef_i, z_f, mdef_f, profile = 'nfw'):
 	M_i, is_array = utilities.getArray(M_i)
 	c_i, _ = utilities.getArray(c_i)
 	N = len(M_i)
-	Rnew = numpy.zeros_like(M_i)
-	cnew = numpy.zeros_like(M_i)
+	Rnew = np.zeros_like(M_i)
+	cnew = np.zeros_like(M_i)
 
 	if profile == 'nfw':
 		
@@ -2720,19 +2719,19 @@ def radiusFromPdf(M, c, z, mdef, cumulativePdf, \
 
 		# Create an interpolator on a regular grid in c-p space.
 		bin_width_c = 0.1
-		c_min = numpy.min(c_array) * 0.99
-		c_max = numpy.max(c_array) * 1.01
-		c_bins = numpy.arange(c_min, c_max + bin_width_c, bin_width_c)
+		c_min = np.min(c_array) * 0.99
+		c_max = np.max(c_array) * 1.01
+		c_bins = np.arange(c_min, c_max + bin_width_c, bin_width_c)
 		
-		p_bins0 = numpy.arange(0.0, 0.01, 0.001)
-		p_bins1 = numpy.arange(0.01, 0.1, 0.01)
-		p_bins2 = numpy.arange(0.1, 1.1, 0.1)
-		p_bins = numpy.concatenate((p_bins0, p_bins1, p_bins2))
+		p_bins0 = np.arange(0.0, 0.01, 0.001)
+		p_bins1 = np.arange(0.01, 0.1, 0.01)
+		p_bins2 = np.arange(0.1, 1.1, 0.1)
+		p_bins = np.concatenate((p_bins0, p_bins1, p_bins2))
 		
 		N_c = len(c_bins)
 		N_p = len(p_bins)
 
-		x_ = numpy.zeros((N_c, N_p), dtype = float)
+		x_ = np.zeros((N_c, N_p), dtype = float)
 		for i in range(N_c):			
 			for j in range(N_p):
 				p = p_bins[j]
