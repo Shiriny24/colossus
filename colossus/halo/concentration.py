@@ -165,55 +165,55 @@ def concentration(M, mdef, z, \
 	# Distinguish between models
 	if model == 'diemer15':
 		mdefs_model = ['200c']
-		func = diemer15_c200c_M
+		func = modelDiemer15fromM
 		args = (z, statistic)
 		limited = False
 		
 	elif model == 'klypin15_nu':
 		mdefs_model = ['200c', 'vir']
-		func = klypin15_nu_c
+		func = modelKlypin15fromNu
 		args = (z,)
 		limited = True
 
 	elif model == 'klypin15_m':
 		mdefs_model = ['200c', 'vir']
-		func = klypin15_m_c
+		func = modelKlypin15fromM
 		args = (z,)
 		limited = True
 
 	elif model == 'dutton14':
 		mdefs_model = ['200c', 'vir']
-		func = dutton14_c
+		func = modelDutton14
 		args = (z,)
 		limited = True
 
 	elif model == 'bhattacharya13':
 		mdefs_model = ['200c', 'vir', '200m']
-		func = bhattacharya13_c
+		func = modelBhattacharya13
 		args = (z,)
 		limited = True
 
 	elif model == 'prada12':
 		mdefs_model = ['200c']
-		func = prada12_c200c
+		func = modelPrada12
 		args = (z,)
 		limited = False
 
 	elif model == 'klypin11':
 		mdefs_model = ['vir']
-		func = klypin11_cvir
+		func = modelKlypin11
 		args = (z,)
 		limited = True
 		
 	elif model == 'duffy08':
 		mdefs_model = ['200c', 'vir', '200m']
-		func = duffy08_c
+		func = modelDuffy08
 		args = (z,)
 		limited = True
 	
 	elif model == 'bullock01':
 		mdefs_model = ['200c']
-		func = bullock01_c200c
+		func = modelBullock01
 		args = (z,)
 		limited = True
 	
@@ -301,25 +301,25 @@ def concentration(M, mdef, z, \
 # DIEMER & KRAVTSOV 2014 MODEL
 ###################################################################################################
 
-diemer15_kappa = 0.69
+DIEMER15_KAPPA = 0.69
 
-diemer15_median_phi_0 = 6.58
-diemer15_median_phi_1 = 1.37
-diemer15_median_eta_0 = 6.82
-diemer15_median_eta_1 = 1.42
-diemer15_median_alpha = 1.12
-diemer15_median_beta = 1.69
+DIEMER15_MEDIAN_PHI_0 = 6.58
+DIEMER15_MEDIAN_PHI_1 = 1.37
+DIEMER15_MEDIAN_ETA_0 = 6.82
+DIEMER15_MEDIAN_ETA_1 = 1.42
+DIEMER15_MEDIAN_ALPHA = 1.12
+DIEMER15_MEDIAN_BETA = 1.69
 
-diemer15_mean_phi_0 = 7.14
-diemer15_mean_phi_1 = 1.60
-diemer15_mean_eta_0 = 4.10
-diemer15_mean_eta_1 = 0.75
-diemer15_mean_alpha = 1.40
-diemer15_mean_beta = 0.67
+DIEMER15_MEAN_PHI_0 = 7.14
+DIEMER15_MEAN_PHI_1 = 1.60
+DIEMER15_MEAN_ETA_0 = 4.10
+DIEMER15_MEAN_ETA_1 = 0.75
+DIEMER15_MEAN_ALPHA = 1.40
+DIEMER15_MEAN_BETA = 0.67
 
 ###################################################################################################
 
-def diemer15_c200c_M(M200c, z, statistic = 'median'):
+def modelDiemer15fromM(M200c, z, statistic = 'median'):
 	"""
 	The Diemer & Kravtsov 2014 model for concentration, as a function of mass :math:`M_{200c}` and 
 	redhsift. A cosmology must be set before executing this function (see the documentation of the 
@@ -341,7 +341,7 @@ def diemer15_c200c_M(M200c, z, statistic = 'median'):
 	
 	See also
 	-----------------------------------------------------------------------------------------------
-	diemer15_c200c_nu: The same function, but with peak height as input.
+	modelDiemer15fromNu: The same function, but with peak height as input.
 	"""
 	
 	cosmo = cosmology.getCurrent()
@@ -349,16 +349,16 @@ def diemer15_c200c_M(M200c, z, statistic = 'median'):
 	if cosmo.power_law:
 		n = cosmo.power_law_n * M200c / M200c
 	else:
-		n = diemer15_compute_n_M(M200c)
+		n = _diemer15_n_fromM(M200c)
 	
 	nu = cosmo.peakHeight(M200c, z)
-	c200c = diemer15_c200c_n(nu, n, statistic)
+	c200c = _diemer15(nu, n, statistic)
 
 	return c200c
 
 ###################################################################################################
 
-def diemer15_c200c_nu(nu200c, z, statistic = 'median'):
+def modelDiemer15fromNu(nu200c, z, statistic = 'median'):
 	"""
 	The Diemer & Kravtsov 2014 model for concentration, as a function of peak height 
 	:math:`\\nu_{200c}` and redhsift. A cosmology must be set before executing this function (see 
@@ -381,7 +381,7 @@ def diemer15_c200c_nu(nu200c, z, statistic = 'median'):
 	
 	See also
 	-----------------------------------------------------------------------------------------------
-	diemer15_c200c_M: The same function, but with mass as input.
+	modelDiemer15fromM: The same function, but with mass as input.
 	"""
 
 	cosmo = cosmology.getCurrent()
@@ -389,9 +389,9 @@ def diemer15_c200c_nu(nu200c, z, statistic = 'median'):
 	if cosmo.power_law:
 		n = cosmo.power_law_n * nu200c / nu200c
 	else:
-		n = diemer15_compute_n_nu(nu200c, z)
+		n = _diemer15_n_fromnu(nu200c, z)
 	
-	ret = diemer15_c200c_n(nu200c, n, statistic)
+	ret = _diemer15(nu200c, n, statistic)
 
 	return ret
 
@@ -400,18 +400,18 @@ def diemer15_c200c_nu(nu200c, z, statistic = 'median'):
 # The universal prediction of the Diemer & Kravtsov 2014 model for a given peak height, power 
 # spectrum slope, and statistic.
 
-def diemer15_c200c_n(nu, n, statistic = 'median'):
+def _diemer15(nu, n, statistic = 'median'):
 
 	if statistic == 'median':
-		floor = diemer15_median_phi_0 + n * diemer15_median_phi_1
-		nu0 = diemer15_median_eta_0 + n * diemer15_median_eta_1
-		alpha = diemer15_median_alpha
-		beta = diemer15_median_beta
+		floor = DIEMER15_MEDIAN_PHI_0 + n * DIEMER15_MEDIAN_PHI_1
+		nu0 = DIEMER15_MEDIAN_ETA_0 + n * DIEMER15_MEDIAN_ETA_1
+		alpha = DIEMER15_MEDIAN_ALPHA
+		beta = DIEMER15_MEDIAN_BETA
 	elif statistic == 'mean':
-		floor = diemer15_mean_phi_0 + n * diemer15_mean_phi_1
-		nu0 = diemer15_mean_eta_0 + n * diemer15_mean_eta_1
-		alpha = diemer15_mean_alpha
-		beta = diemer15_mean_beta
+		floor = DIEMER15_MEAN_PHI_0 + n * DIEMER15_MEAN_PHI_1
+		nu0 = DIEMER15_MEAN_ETA_0 + n * DIEMER15_MEAN_ETA_1
+		alpha = DIEMER15_MEAN_ALPHA
+		beta = DIEMER15_MEAN_BETA
 	else:
 		raise Exception("Unknown statistic.")
 	
@@ -423,12 +423,12 @@ def diemer15_c200c_n(nu, n, statistic = 'median'):
 
 # Compute the characteristic wavenumber for a particular halo mass.
 
-def diemer15_wavenumber_k_R(M):
+def _diemer15_k_R(M):
 
 	cosmo = cosmology.getCurrent()
 	rho0 = cosmo.rho_m(0.0)
 	R = (3.0 * M / 4.0 / math.pi / rho0) ** (1.0 / 3.0) / 1000.0
-	k_R = 2.0 * math.pi / R * diemer15_kappa
+	k_R = 2.0 * math.pi / R * DIEMER15_KAPPA
 
 	return k_R
 
@@ -437,7 +437,7 @@ def diemer15_wavenumber_k_R(M):
 # Get the slope n = d log(P) / d log(k) at a scale k_R and a redshift z. The slope is computed from
 # the Eisenstein & Hu 1998 approximation to the power spectrum (without BAO).
 
-def diemer15_compute_n(k_R):
+def _diemer15_n(k_R):
 
 	if numpy.min(k_R) < 0:
 		raise Exception("k_R < 0.")
@@ -466,10 +466,10 @@ def diemer15_compute_n(k_R):
 
 # Wrapper for the function above which accepts M instead of k.
 
-def diemer15_compute_n_M(M):
+def _diemer15_n_fromM(M):
 
-	k_R = diemer15_wavenumber_k_R(M)
-	n = diemer15_compute_n(k_R)
+	k_R = _diemer15_k_R(M)
+	n = _diemer15_n(k_R)
 	
 	return n
 
@@ -477,11 +477,11 @@ def diemer15_compute_n_M(M):
 
 # Wrapper for the function above which accepts nu instead of M.
 
-def diemer15_compute_n_nu(nu, z):
+def _diemer15_n_fromnu(nu, z):
 
 	cosmo = cosmology.getCurrent()
 	M = cosmo.massFromPeakHeight(nu, z)
-	n = diemer15_compute_n_M(M)
+	n = _diemer15_n_fromM(M)
 	
 	return n
 
@@ -489,7 +489,7 @@ def diemer15_compute_n_nu(nu, z):
 # KLYPIN ET AL 2015 MODELS
 ###################################################################################################
 
-def klypin15_nu_c(M, z, mdef):
+def modelKlypin15fromNu(M, z, mdef):
 	"""
 	The peak height-based fits of Klypin et al. 2015.
 	
@@ -520,7 +520,7 @@ def klypin15_nu_c(M, z, mdef):
 	
 	See also
 	-----------------------------------------------------------------------------------------------
-	klypin15_m_c: An alternative fitting function suggested in the same paper.
+	modelKlypin15fromM: An alternative fitting function suggested in the same paper.
 	"""
 
 	if mdef == '200c':
@@ -550,7 +550,7 @@ def klypin15_nu_c(M, z, mdef):
 
 ###################################################################################################
 
-def klypin15_m_c(M, z, mdef):
+def modelKlypin15fromM(M, z, mdef):
 	"""
 	The mass-based fits of Klypin et al. 2015.
 	
@@ -582,7 +582,7 @@ def klypin15_m_c(M, z, mdef):
 	
 	See also
 	-----------------------------------------------------------------------------------------------
-	klypin15_nu_c: An alternative fitting function suggested in the same paper.
+	modelKlypin15fromNu: An alternative fitting function suggested in the same paper.
 	"""
 	if not mdef in ['200c', 'vir']:
 		msg = 'Invalid mass definition for Klypin et al 2015 m-based model, %s.' % mdef
@@ -631,7 +631,7 @@ def klypin15_m_c(M, z, mdef):
 # DUTTON & MACCIO 2014 MODEL
 ###################################################################################################
 
-def dutton14_c(M, z, mdef):
+def modelDutton14(M, z, mdef):
 	"""
 	The power-law fits of Dutton & Maccio 2014, MNRAS 441, 3359. This model was calibrated for the 
 	``planck13`` cosmology.
@@ -677,7 +677,7 @@ def dutton14_c(M, z, mdef):
 # BHATTACHARYA ET AL 2013 MODEL
 ###################################################################################################
 
-def bhattacharya13_c(M, z, mdef):
+def modelBhattacharya13(M, z, mdef):
 	"""
 	The fits of Bhattacharya et al. 2013, ApJ 766, 32. This model was calibrated for a WMAP7 
 	cosmology.
@@ -733,7 +733,7 @@ def bhattacharya13_c(M, z, mdef):
 # PRADA ET AL 2012 MODEL
 ###################################################################################################
 
-def prada12_c200c(M200c, z):
+def modelPrada12(M200c, z):
 	"""
 	The model of Prada et al. 2012, MNRAS 423, 3018. 
 	
@@ -778,7 +778,7 @@ def prada12_c200c(M200c, z):
 # KLYPIN ET AL 2011 MODEL
 ###################################################################################################
 
-def klypin11_cvir(Mvir, z):
+def modelKlypin11(Mvir, z):
 	"""
 	The power-law fit of Klypin et al. 2011, ApJ 740, 102.
 	
@@ -815,7 +815,7 @@ def klypin11_cvir(Mvir, z):
 # DUFFY ET AL 2008 MODEL
 ###################################################################################################
 
-def duffy08_c(M, z, mdef):
+def modelDuffy08(M, z, mdef):
 	"""
 	The power-law fits of Duffy et al. 2008, MNRAS 390, L64. This model was calibrated for a WMAP5
 	cosmology.
@@ -865,7 +865,7 @@ def duffy08_c(M, z, mdef):
 # BULLOCK ET AL 2001 / MACCIO ET AL 2008 MODEL
 ###################################################################################################
 
-def bullock01_c200c(M200c, z):
+def modelBullock01(M200c, z):
 	"""
 	The model of Bullock et al. 2001, MNRAS 321, 559, in the improved version of Maccio et al. 2008,
 	MNRAS 391, 1940.

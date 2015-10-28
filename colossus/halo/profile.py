@@ -492,7 +492,7 @@ class HaloDensityProfile():
 
 	# This helper function is used for Vmax where we need to minimize -vc.
 
-	def _circularVelocity_negative(self, r):
+	def _circularVelocityNegative(self, r):
 		
 		return -self.circularVelocity(r)
 
@@ -514,7 +514,7 @@ class HaloDensityProfile():
 		circularVelocity: The circular velocity, :math:`v_c \\equiv \\sqrt{GM(<r)/r}`.
 		"""		
 		
-		res = scipy.optimize.minimize(self._circularVelocity_negative, self.r_guess)
+		res = scipy.optimize.minimize(self._circularVelocityNegative, self.r_guess)
 		rmax = res.x[0]
 		vmax = self.circularVelocity(rmax)
 		
@@ -628,31 +628,31 @@ class HaloDensityProfile():
 	# might want to change that, for example to fit log(p) instead of p if the value can only be 
 	# positive. 
 	#
-	# The p array passed to _fit_convertParams and _fit_convertParamsBack is a copy, meaning these
+	# The p array passed to _fitConvertParams and _fitConvertParamsBack is a copy, meaning these
 	# functions are allowed to manipulate it. 
 
-	def _fit_convertParams(self, p, mask):
+	def _fitConvertParams(self, p, mask):
 		
 		return p
 
 	###############################################################################################
 	
-	def _fit_convertParamsBack(self, p, mask):
+	def _fitConvertParamsBack(self, p, mask):
 		
 		return p
 
 	###############################################################################################
 
 	# This function is evaluated before any derivatives etc. Thus, we set the new set of 
-	# parameters here. For this purpose, we pass a copy of x so that the _fit_convertParamsBack 
+	# parameters here. For this purpose, we pass a copy of x so that the _fitConvertParamsBack 
 	# does not manipulate the actual parameter vector x.
 	#
 	# Note that the matrix Q is the matrix that is dot-multiplied with the difference vector; this 
 	# is not the same as the inverse covariance matrix.	
 
-	def _fit_diff_function(self, x, r, q, f, fder, Q, mask, N_par_fit, verbose):
+	def _fitDiffFunction(self, x, r, q, f, fder, Q, mask, N_par_fit, verbose):
 
-		self.setParameterArray(self._fit_convertParamsBack(x.copy(), mask), mask = mask)
+		self.setParameterArray(self._fitConvertParamsBack(x.copy(), mask), mask = mask)
 		q_fit = f(r)
 		q_diff = q_fit - q
 		mf = numpy.dot(Q, q_diff)
@@ -667,7 +667,7 @@ class HaloDensityProfile():
 	# function. This function should only be called if fp is not None, i.e. if the analytical 
 	# derivative is implemented.
 
-	def _fit_param_deriv_highlevel(self, x, r, q, f, fder, Q, mask, N_par_fit, verbose):
+	def _fitParamDerivHighlevel(self, x, r, q, f, fder, Q, mask, N_par_fit, verbose):
 		
 		deriv = fder(self, r, mask, N_par_fit)		
 		for j in range(N_par_fit):
@@ -680,7 +680,7 @@ class HaloDensityProfile():
 
 	###############################################################################################
 
-	def _fit_chi2(self, r, q, f, covinv):
+	def _fitChi2(self, r, q, f, covinv):
 
 		q_model = f(r)
 		diff = q_model - q
@@ -694,13 +694,13 @@ class HaloDensityProfile():
 	# evaluated element-by-element, but the function is expected to handle a vector since this 
 	# could be much faster for a simpler likelihood.
 	
-	def _fit_likelihood(self, x, r, q, f, covinv, mask):
+	def _fitLikelihood(self, x, r, q, f, covinv, mask):
 
 		n_eval = len(x)
 		res = numpy.zeros((n_eval), numpy.float)
 		for i in range(n_eval):
 			self.setParameterArray(x[i], mask = mask)
-			res[i] = numpy.exp(-0.5 * self._fit_chi2(r, q, f, covinv))
+			res[i] = numpy.exp(-0.5 * self._fitChi2(r, q, f, covinv))
 		
 		return res
 
@@ -709,7 +709,7 @@ class HaloDensityProfile():
 	# Note that the MCMC fitter does NOT use the converted fitting parameters, but just the 
 	# parameters themselves. Otherwise, interpreting the chain becomes very complicated.
 
-	def _fit_method_mcmc(self, r, q, f, covinv, mask, N_par_fit, verbose, \
+	def _fitMethodMCMC(self, r, q, f, covinv, mask, N_par_fit, verbose, \
 				converged_GR, nwalkers, best_fit, initial_step, random_seed, \
 				convergence_step, output_every_n):
 		
@@ -717,7 +717,7 @@ class HaloDensityProfile():
 		args = r, q, f, covinv, mask
 		walkers = mcmc.initWalkers(x0, initial_step = initial_step, nwalkers = nwalkers, random_seed = random_seed)
 		xi = numpy.reshape(walkers, (len(walkers[0]) * 2, len(walkers[0, 0])))
-		chain_thin, chain_full, R = mcmc.runChain(self._fit_likelihood, walkers, convergence_step = convergence_step, \
+		chain_thin, chain_full, R = mcmc.runChain(self._fitLikelihood, walkers, convergence_step = convergence_step, \
 							args = args, converged_GR = converged_GR, verbose = verbose, output_every_n = output_every_n)
 		mean, median, stddev, p = mcmc.analyzeChain(chain_thin, self.par_names, verbose = verbose)
 
@@ -742,18 +742,18 @@ class HaloDensityProfile():
 
 	###############################################################################################
 
-	def _fit_method_leastsq(self, r, q, f, fder, Q, mask, N_par_fit, verbose, tolerance):
+	def _fitMethodLeastsq(self, r, q, f, fder, Q, mask, N_par_fit, verbose, tolerance):
 		
 		# Prepare arguments
 		if fder is None:
 			deriv_func = None
 		else:
-			deriv_func = self._fit_param_deriv_highlevel	
+			deriv_func = self._fitParamDerivHighlevel	
 		args = r, q, f, fder, Q, mask, N_par_fit, verbose
 
 		# Run the actual fit
-		ini_guess = self._fit_convertParams(self.getParameterArray(mask = mask), mask)
-		x_fit, cov, dict, fit_msg, err_code = scipy.optimize.leastsq(self._fit_diff_function, ini_guess, \
+		ini_guess = self._fitConvertParams(self.getParameterArray(mask = mask), mask)
+		x_fit, cov, dict, fit_msg, err_code = scipy.optimize.leastsq(self._fitDiffFunction, ini_guess, \
 							Dfun = deriv_func, col_deriv = 1, args = args, full_output = 1, \
 							xtol = tolerance)
 		
@@ -763,7 +763,7 @@ class HaloDensityProfile():
 			raise Warning(msg)
 
 		# Set the best-fit parameters
-		x = self._fit_convertParamsBack(x_fit, mask)
+		x = self._fitConvertParamsBack(x_fit, mask)
 		self.setParameterArray(x, mask = mask)
 
 		# The fitter sometimes fails to derive a covariance matrix
@@ -771,7 +771,7 @@ class HaloDensityProfile():
 			
 			# The covariance matrix is in relative units, i.e. needs to be multiplied with the 
 			# residual chi2
-			diff = self._fit_diff_function(x_fit, *args)
+			diff = self._fitDiffFunction(x_fit, *args)
 			residual = numpy.sum(diff**2) / (len(r) - N_par_fit)
 			cov *= residual
 
@@ -780,8 +780,8 @@ class HaloDensityProfile():
 			# standard profile parameters.
 			sigma = numpy.sqrt(numpy.diag(cov))
 			err = numpy.zeros((2, N_par_fit), numpy.float)
-			err[0] = self._fit_convertParamsBack(x_fit - sigma, mask)
-			err[1] = self._fit_convertParamsBack(x_fit + sigma, mask)
+			err[0] = self._fitConvertParamsBack(x_fit - sigma, mask)
+			err[1] = self._fitConvertParamsBack(x_fit + sigma, mask)
 
 		else:
 			
@@ -1006,13 +1006,13 @@ class HaloDensityProfile():
 			if q_cov is None and q_err is None:
 				raise Exception('MCMC cannot be run without uncertainty vector or covariance matrix.')
 			
-			x, dict = self._fit_method_mcmc(r, q, f, covinv, mask, N_par_fit, verbose, \
+			x, dict = self._fitMethodMCMC(r, q, f, covinv, mask, N_par_fit, verbose, \
 				converged_GR, nwalkers, best_fit, initial_step, random_seed, convergence_step, output_every_n)
 			
 		elif method == 'leastsq':
 		
 			# If an analytical parameter derivative is implemented for this class, use it.
-			deriv_name = '_fit_param_deriv_%s' % (quantity)
+			deriv_name = '_fitParamDeriv_%s' % (quantity)
 			if deriv_name in self.__class__.__dict__:
 				fder = self.__class__.__dict__[deriv_name]
 				if verbose:
@@ -1050,7 +1050,7 @@ class HaloDensityProfile():
 			else:
 				Q = covinv
 				
-			x, dict = self._fit_method_leastsq(r, q, f, fder, Q, mask, N_par_fit, verbose, tolerance)
+			x, dict = self._fitMethodLeastsq(r, q, f, fder, Q, mask, N_par_fit, verbose, tolerance)
 			
 		else:
 			msg = 'Unknown fitting method, %s.' % method
@@ -1059,7 +1059,7 @@ class HaloDensityProfile():
 		# Compute a few convenient outputs
 		dict['x'] = x
 		dict['q_fit'] = f(r)
-		dict['chi2'] = self._fit_chi2(r, q, f, covinv)
+		dict['chi2'] = self._fitChi2(r, q, f, covinv)
 		dict['chi2_ndof'] = dict['chi2'] / (len(r) - N_par_fit)
 		
 		if verbose:
@@ -1157,7 +1157,7 @@ class SplineDensityProfile(HaloDensityProfile):
 	###############################################################################################
 
 	def density(self, r):
-
+		
 		return numpy.exp(self.rho_spline(numpy.log(r)))
 
 	###############################################################################################
@@ -1223,8 +1223,8 @@ class NFWProfile(HaloDensityProfile):
 	###############################################################################################
 
 	# See the xDelta function for the meaning of these constants
-	xdelta_guess_factors = [5.0, 10.0, 20.0, 100.0, 10000.0]
-	xdelta_n_guess_factors = len(xdelta_guess_factors)
+	XDELTA_GUESS_FACTORS = [5.0, 10.0, 20.0, 100.0, 10000.0]
+	XDELTA_N_GUESS_FACTORS = len(XDELTA_GUESS_FACTORS)
 
 	###############################################################################################
 	# CONSTRUCTOR
@@ -1412,7 +1412,7 @@ class NFWProfile(HaloDensityProfile):
 		density_threshold: float
 			The desired enclosed density threshold in physical :math:`M_{\odot} h^2 / kpc^3`. This 
 			number can be generated from a mass definition and redshift using the 
-			:func:`basics.densityThreshold` function. 
+			:func:`halo.basics.densityThreshold` function. 
 		
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -1432,10 +1432,10 @@ class NFWProfile(HaloDensityProfile):
 		args = rhos, density_threshold
 		x = None
 		i = 0
-		while x is None and i < cls.xdelta_n_guess_factors:
+		while x is None and i < cls.XDELTA_N_GUESS_FACTORS:
 			try:
-				xmin = x_guess / cls.xdelta_guess_factors[i]
-				xmax = x_guess * cls.xdelta_guess_factors[i]
+				xmin = x_guess / cls.XDELTA_GUESS_FACTORS[i]
+				xmax = x_guess * cls.XDELTA_GUESS_FACTORS[i]
 				x = scipy.optimize.brentq(cls._thresholdEquationX, xmin, xmax, args)
 			except Exception:
 				i += 1
@@ -1581,13 +1581,13 @@ class NFWProfile(HaloDensityProfile):
 	# When fitting the NFW profile, use log(rho_c) and log(rs); since both parameters are 
 	# converted in the same way, we don't have to worry about the mask
 
-	def _fit_convertParams(self, p, mask):
+	def _fitConvertParams(self, p, mask):
 		
 		return numpy.log(p)
 
 	###############################################################################################
 	
-	def _fit_convertParamsBack(self, p, mask):
+	def _fitConvertParamsBack(self, p, mask):
 		
 		return numpy.exp(p)
 
@@ -1595,7 +1595,7 @@ class NFWProfile(HaloDensityProfile):
 
 	# Return and array of d rho / d ln(rhos) and d rho / d ln(rs)
 	
-	def _fit_param_deriv_rho(self, r, mask, N_par_fit):
+	def _fitParamDeriv_rho(self, r, mask, N_par_fit):
 
 		x = self.getParameterArray()
 		deriv = numpy.zeros((N_par_fit, len(r)), numpy.float)
@@ -1819,13 +1819,13 @@ class EinastoProfile(HaloDensityProfile):
 
 	# When fitting the Einasto profile, use log(rhos), log(rs) and log(alpha)
 
-	def _fit_convertParams(self, p, mask):
+	def _fitConvertParams(self, p, mask):
 		
 		return numpy.log(p)
 
 	###############################################################################################
 	
-	def _fit_convertParamsBack(self, p, mask):
+	def _fitConvertParamsBack(self, p, mask):
 		
 		return numpy.exp(p)
 
@@ -1833,7 +1833,7 @@ class EinastoProfile(HaloDensityProfile):
 
 	# Return and array of d rho / d ln(rhos) and d rho / d ln(rs)
 	
-	def _fit_param_deriv_rho(self, r, mask, N_par_fit):
+	def _fitParamDeriv_rho(self, r, mask, N_par_fit):
 
 		x = self.getParameterArray()
 		deriv = numpy.zeros((N_par_fit, len(r)), numpy.float)
@@ -2431,7 +2431,7 @@ class DK14Profile(HaloDensityProfile):
 
 	# When fitting the DK14 profile, use a mixture of linear and logarithmic parameters
 
-	def _fit_convertParams(self, p, mask):
+	def _fitConvertParams(self, p, mask):
 
 		p_fit = p
 		log_mask = [self.fit_log_mask[mask]]
@@ -2441,7 +2441,7 @@ class DK14Profile(HaloDensityProfile):
 
 	###############################################################################################
 	
-	def _fit_convertParamsBack(self, p, mask):
+	def _fitConvertParamsBack(self, p, mask):
 		
 		p_def = p.copy()
 		log_mask = [self.fit_log_mask[mask]]
@@ -2453,7 +2453,7 @@ class DK14Profile(HaloDensityProfile):
 
 	# Return and array of d rho / d ln(rhos) and d rho / d ln(rs)
 	
-	def _fit_param_deriv_rho(self, r, mask, N_par_fit):
+	def _fitParamDeriv_rho(self, r, mask, N_par_fit):
 
 		x = self.getParameterArray()
 		deriv = numpy.zeros((N_par_fit, len(r)), numpy.float)
@@ -2644,7 +2644,7 @@ def changeMassDefinition(M, c, z, mdef_in, mdef_out, profile = 'nfw'):
 	See also
 	-----------------------------------------------------------------------------------------------
 	pseudoEvolve: Evolve the spherical overdensity radius for a fixed profile.
-	changeMassDefinitionCModel: Change the spherical overdensity mass definition, using a model for the concentration.
+	halo.mass_definitions.changeMassDefinitionCModel: Change the spherical overdensity mass definition, using a model for the concentration.
 	"""
 	
 	return pseudoEvolve(M, c, z, mdef_in, z, mdef_out, profile = profile)
