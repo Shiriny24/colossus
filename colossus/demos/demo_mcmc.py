@@ -1,6 +1,6 @@
 ###################################################################################################
 #
-# MCMCDemo.py               (c) Benedikt Diemer
+# demo_mcmc.py              (c) Benedikt Diemer
 #     				    	    benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
@@ -8,13 +8,13 @@
 import numpy
 import matplotlib.pyplot as plt
 
-from colossus.utils import MCMC
+from colossus.utils import mcmc
 
 ###################################################################################################
 
 def main():
 
-	MCMC_test_Gaussian(plot_output = True)
+	testMCMC(plot_output = True)
 
 	return
 
@@ -24,21 +24,21 @@ def main():
 # obtain it from the runChain function. If we only want a basic analysis, such as the mean and 
 # median of the chain, we can use the very simple run() function.
 
-def MCMC_test_Gaussian(plot_output = True):
+def testMCMC(plot_output = True):
 
 	n_params = 2
 	param_names = ['x1', 'x2']
 	x_initial = numpy.ones((n_params), numpy.float)
 	
 	if plot_output:
-		walkers = MCMC.initWalkers(x_initial, nwalkers = 200, random_seed = 156)
-		chain_thin, chain_full, _ = MCMC.runChain(likelihood, walkers)
-		MCMC.analyzeChain(chain_thin, param_names = param_names)
-		MCMC.plotChain(chain_full, param_names)
+		walkers = mcmc.initWalkers(x_initial, nwalkers = 200, random_seed = 156)
+		chain_thin, chain_full, _ = mcmc.runChain(likelihood, walkers)
+		mcmc.analyzeChain(chain_thin, param_names = param_names)
+		mcmc.plotChain(chain_full, param_names)
 		plt.savefig('MCMC_Gaussian.pdf')
 
 	else:
-		MCMC.run(x_initial, likelihood)	
+		mcmc.run(x_initial, likelihood)	
 		
 	return
 

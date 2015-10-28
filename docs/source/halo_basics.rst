@@ -1,6 +1,6 @@
 =====================================
-HaloConcentration
+Basics
 =====================================
 
-.. automodule:: HaloConcentration
+.. automodule:: halo.basics
     :members:

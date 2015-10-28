@@ -1,14 +1,14 @@
 ###################################################################################################
 #
-# Halo.py                   (c) Benedikt Diemer
+# basics.py                 (c) Benedikt Diemer
 #     				    	    benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
 
 """
-This module implements basic aspects of dark matter halos, such as spherical overdensity masses
-and halo bias. For functions that rely on a particular form of the halo density profile, please 
-see the :mod:`HaloDensityProfile` module.
+This module implements basic aspects of dark matter halos, such as spherical overdensity masses. 
+For functions that rely on a particular form of the halo density profile, please see the 
+:mod:`halo.profile` module.
 
 ---------------------------------------------------------------------------------------------------
 Spherical overdensity masses
@@ -38,25 +38,15 @@ Virial     'vir'      vir                  An overdensity that varies with redsh
 ========== ========== ==================== ================================================================
 
 ---------------------------------------------------------------------------------------------------
-Halo bias
----------------------------------------------------------------------------------------------------
-
-.. autosummary:: 
-    haloBiasFromNu
-    haloBias
-	twoHaloTerm
-    
----------------------------------------------------------------------------------------------------
-Detailed Documentation
+Module Reference
 ---------------------------------------------------------------------------------------------------
 """
 
 ###################################################################################################
 
-import math
 import numpy
 
-from colossus import Cosmology
+from colossus.cosmology import cosmology
 
 ###################################################################################################
 # FUNCTIONS RELATED TO SPHERICAL OVERDENSITY MASSES
@@ -83,8 +73,8 @@ def densityThreshold(z, mdef):
 	deltaVir: The virial overdensity in units of the critical density.
 	"""
 	
-	cosmo = Cosmology.getCurrent()
-	rho_crit = Cosmology.AST_rho_crit_0_kpc3 * cosmo.Ez(z)**2
+	cosmo = cosmology.getCurrent()
+	rho_crit = cosmology.AST_rho_crit_0_kpc3 * cosmo.Ez(z)**2
 
 	if mdef[len(mdef) - 1] == 'c':
 		delta = int(mdef[:-1])
@@ -92,7 +82,7 @@ def densityThreshold(z, mdef):
 
 	elif mdef[len(mdef) - 1] == 'm':
 		delta = int(mdef[:-1])
-		rho_m = Cosmology.AST_rho_crit_0_kpc3 * cosmo.Om0 * (1.0 + z)**3
+		rho_m = cosmology.AST_rho_crit_0_kpc3 * cosmo.Om0 * (1.0 + z)**3
 		rho_treshold = delta * rho_m
 
 	elif mdef == 'vir':
@@ -130,9 +120,9 @@ def deltaVir(z):
 	densityThreshold: The threshold density for a given mass definition.
 	"""
 	
-	cosmo = Cosmology.getCurrent()
+	cosmo = cosmology.getCurrent()
 	x = cosmo.Om(z) - 1.0
-	Delta = 18 * math.pi**2 + 82.0 * x - 39.0 * x**2
+	Delta = 18 * numpy.pi**2 + 82.0 * x - 39.0 * x**2
 
 	return Delta
 
@@ -165,7 +155,7 @@ def M_to_R(M, z, mdef):
 	"""
 	
 	rho = densityThreshold(z, mdef)
-	R = (M * 3.0 / 4.0 / math.pi / rho)**(1.0 / 3.0)
+	R = (M * 3.0 / 4.0 / numpy.pi / rho)**(1.0 / 3.0)
 
 	return R
 
@@ -198,125 +188,8 @@ def R_to_M(R, z, mdef):
 	"""
 	
 	rho = densityThreshold(z, mdef)
-	M = 4.0 / 3.0 * math.pi * rho * R**3
+	M = 4.0 / 3.0 * numpy.pi * rho * R**3
 
 	return M
-
-###################################################################################################
-# HALO BIAS
-###################################################################################################
-
-def haloBiasFromNu(nu, z, mdef):
-	"""
-	The halo bias at a given peak height. 
-
-	The halo bias, using the approximation of Tinker et al. 2010, ApJ 724, 878. The mass definition,
-	mdef, must correspond to the mass that was used to evaluate the peak height. Note that the 
-	Tinker bias function is universal in redshift at fixed peak height, but only for mass 
-	definitions defined wrt the mean density of the universe. For other definitions, :math:`\\Delta_m`
-	evolves with redshift, leading to an evolving bias at fixed peak height. 
-	
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	nu: array_like
-		Peak height; can be a number or a numpy array.
-	z: array_like
-		Redshift; can be a number or a numpy array.
-	mdef: str
-		The mass definition
-		
-	Returns
-	-----------------------------------------------------------------------------------------------
-	bias: array_like
-		Halo bias; has the same dimensions as nu or z.
-
-	See also
-	-----------------------------------------------------------------------------------------------
-	haloBias: The halo bias at a given mass. 
-	"""
-	
-	cosmo = Cosmology.getCurrent()
-	Delta = densityThreshold(z, mdef) / cosmo.rho_m(z)
-	y = numpy.log10(Delta)
-
-	A = 1.0 + 0.24 * y * numpy.exp(-1.0 * (4.0 / y)**4)
-	a = 0.44 * y - 0.88
-	B = 0.183
-	b = 1.5
-	C = 0.019 + 0.107 * y + 0.19 * numpy.exp(-1.0 * (4.0 / y)**4)
-	c = 2.4
-
-	bias = 1.0 - A * nu**a / (nu**a + Cosmology.AST_delta_collapse**a) + B * nu**b + C * nu**c
-
-	return bias
-
-###################################################################################################
-
-def haloBias(M, z, mdef):
-	"""
-	The halo bias at a given mass. 
-
-	This function is a wrapper around haloBiasFromNu.
-	
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	M: array_like
-		Halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
-	z: array_like
-		Redshift; can be a number or a numpy array.
-	mdef: str
-		The mass definition
-
-	Returns
-	-----------------------------------------------------------------------------------------------
-	bias: array_like
-		Halo bias; has the same dimensions as M or z.
-
-	See also
-	-----------------------------------------------------------------------------------------------
-	haloBiasFromNu: The halo bias at a given peak height. 
-	"""
-		
-	cosmo = Cosmology.getCurrent()
-	nu = cosmo.peakHeight(M, z)
-	b = haloBiasFromNu(nu, z, mdef)
-	
-	return b
-
-###################################################################################################
-
-def twoHaloTerm(r, M, z, mdef):
-	"""
-	The 2-halo term as a function of radius and halo mass. 
-
-	The 2-halo term in the halo-matter correlation function describes the excess density around 
-	halos due to the proximity of other halos. This contribution can be approximated as the matter-
-	matter correlation function times a linear bias which depends on the peak height of the halo.
-	
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	r: array_like
-		Halocentric radius in physical kpc/h; can be a number or a numpy array.
-	M: float
-		Halo mass in :math:`M_{\odot}/h`
-	z: float
-		Redshift
-	mdef: str
-		The mass definition
-
-	Returns
-	-----------------------------------------------------------------------------------------------
-	rho_2h: array_like
-		The density due to the 2-halo term in physical :math:`M_{\odot}h^2/kpc^3`; has the same 
-		dimensions as r.
-	"""	
-	
-	cosmo = Cosmology.getCurrent()
-	b = haloBias(M, z, mdef)
-	r_comoving_Mpc = r / 1000.0 * (1.0 + z)
-	xi = cosmo.correlationFunction(r_comoving_Mpc)
-	rho_2h = cosmo.rho_m(z) * (1.0 + b * xi)
-	
-	return rho_2h
 
 ###################################################################################################

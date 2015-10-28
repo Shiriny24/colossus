@@ -1,6 +1,6 @@
 =====================================
-HaloMassDefinitions
+Density Profiles
 =====================================
 
-.. automodule:: HaloMassDefinitions
+.. automodule:: halo.profile
     :members:

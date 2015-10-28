@@ -1,20 +1,20 @@
 ###################################################################################################
 #
-# HaloConcentrationDemo.py  (c) Benedikt Diemer
-#     				    	    benedikt.diemer@cfa.harvard.edu
+# demo_halo_concentration.py (c) Benedikt Diemer
+#     				    	     benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
 #
-# Sample code demonstrating the usage of the HaloConcentration.py module. 
+# Sample code demonstrating the usage of the concentration.py module. 
 #
 ###################################################################################################
 
 import numpy
 
-from colossus.utils import Utilities
-from colossus import Cosmology
-from colossus import HaloConcentration
-from colossus import HaloDensityProfile
+from colossus.utils import utilities
+from colossus.cosmology import cosmology
+from colossus.halo import concentration
+from colossus.halo import profile
 
 ###################################################################################################
 
@@ -36,22 +36,22 @@ def computeConcentration():
 	M = numpy.array([1E9, 1E12, 1E15])
 
 	print("First, set a cosmology")
-	cosmo = Cosmology.setCosmology('WMAP9')
-	print(("Cosmology is %s" % cosmo.name))
+	cosmo = cosmology.setCosmology('WMAP9')
+	print(("cosmology is %s" % cosmo.name))
 	
-	Utilities.printLine()
+	utilities.printLine()
 	print("Now compute concentrations for M200c:")
-	c = HaloConcentration.diemer15_c200c_M(M, 0.0, statistic = 'median')
+	c = concentration.diemer15_c200c_M(M, 0.0, statistic = 'median')
 	for i in range(len(M)):
 		print(("M200c = %.2e, c200c = %5.2f" % (M[i], c[i])))
 
-	Utilities.printLine()
+	utilities.printLine()
 	print("Now compute concentrations for another mass definition, Mvir:")
-	c = HaloConcentration.concentration(M, 'vir', 0.0, model = 'diemer15', statistic = 'median')
+	c = concentration.concentration(M, 'vir', 0.0, model = 'diemer15', statistic = 'median')
 	for i in range(len(M)):
 		print(("Mvir = %.2e, cvir = %5.2f" % (M[i], c[i])))
 
-	Utilities.printLine()
+	utilities.printLine()
 	print("We note that the prediction for mass definitions other than c200c is not as accurate")
 	print("due to differences between the real density profiles and the NFW approximation that")
 	print("is used for the conversion. See Appendix C of Diemer & Kravtsov 2014b for details.")
@@ -79,7 +79,7 @@ def computeAllTables():
 
 def computeConcentrationTable(cosmo_name):
 	
-	cosmo = Cosmology.setCosmology(cosmo_name)
+	cosmo = cosmology.setCosmology(cosmo_name)
 	mdefs = ['2500c', '500c', 'vir', '200m']
 	nu_min = 0.3
 	nu_max = 5.5
@@ -94,7 +94,7 @@ def computeConcentrationTable(cosmo_name):
 	f.write(line)
 	line = '#\n'
 	f.write(line)
-	line = '# Cosmology: ' + str(Cosmology.cosmologies[cosmo_name]) + '\n'
+	line = '# cosmology: ' + str(cosmology.cosmologies[cosmo_name]) + '\n'
 	f.write(line)
 	line = '#\n'
 	f.write(line)
@@ -132,13 +132,13 @@ def computeConcentrationTable(cosmo_name):
 		M200c = 10**numpy.arange(log_M_min, log_M_max + bin_width_logM, bin_width_logM)
 		M200c = M200c[:n_M_bins]	
 		nu200c = cosmo.peakHeight(M200c, z[i])
-		c200c_median = HaloConcentration.diemer15_c200c_nu(nu200c, z[i], statistic = 'median')
-		c200c_mean = HaloConcentration.diemer15_c200c_nu(nu200c, z[i], statistic = 'mean')
+		c200c_median = concentration.diemer15_c200c_nu(nu200c, z[i], statistic = 'median')
+		c200c_mean = concentration.diemer15_c200c_nu(nu200c, z[i], statistic = 'mean')
 			
 		for j in range(len(M200c)):
 			line = '%5.2f  %5.3f  %8.2e  %5.2f  %5.2f' % (z[i], nu200c[j], M200c[j], c200c_median[j], c200c_mean[j])
-			prof_median = HaloDensityProfile.NFWProfile(M = M200c[j], c = c200c_median[j], z = z[i], mdef = '200c')
-			prof_mean = HaloDensityProfile.NFWProfile(M = M200c[j], c = c200c_mean[j], z = z[i], mdef = '200c')			
+			prof_median = profile.NFWProfile(M = M200c[j], c = c200c_median[j], z = z[i], mdef = '200c')
+			prof_mean = profile.NFWProfile(M = M200c[j], c = c200c_mean[j], z = z[i], mdef = '200c')			
 			for k in range(len(mdefs)):
 				R_delta_median, M_delta_median = prof_median.RMDelta(z[i], mdefs[k])
 				R_delta_mean, M_delta_mean = prof_mean.RMDelta(z[i], mdefs[k])

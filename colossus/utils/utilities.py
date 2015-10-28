@@ -1,8 +1,7 @@
 ###################################################################################################
 #
-# Utilities.py 		        (c) Benedikt Diemer
-#							University of Chicago
-#     				    	bdiemer@oddjob.uchicago.edu
+# utilities.py 	        (c) Benedikt Diemer
+#     				    	benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
 

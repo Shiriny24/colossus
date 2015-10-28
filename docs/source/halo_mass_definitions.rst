@@ -1,6 +1,6 @@
 =====================================
-Halo
+Mass Definitions
 =====================================
 
-.. automodule:: Halo
+.. automodule:: halo.mass_definitions
     :members:

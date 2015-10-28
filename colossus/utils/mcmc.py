@@ -1,8 +1,7 @@
 ###################################################################################################
 #
-# MCMC.py 			(c) Andrey Kravtsov, Benedikt Diemer
-#						University of Chicago
-#     				    bdiemer@oddjob.uchicago.edu
+# mcmc.py 	        (c) Andrey Kravtsov, Benedikt Diemer
+#     				    benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
 
@@ -39,7 +38,7 @@ There are numerous more advanced parameters that can be adjusted. Please see the
 the individual functions below.
 
 ---------------------------------------------------------------------------------------------------
-Detailed Documentation
+Module Reference
 ---------------------------------------------------------------------------------------------------
 """
 
@@ -48,7 +47,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 import matplotlib.gridspec as gridspec
 
-from . import Utilities
+from colossus.utils import utilities
 
 ###################################################################################################
 
@@ -118,7 +117,7 @@ def initWalkers(x_initial, initial_step = 0.1, nwalkers = 100, random_seed = Non
 	if random_seed is not None:
 		numpy.random.seed(random_seed)
 	
-	if Utilities.isArray(initial_step):
+	if utilities.isArray(initial_step):
 		step_array = initial_step
 	else:
 		step_array = x_initial * initial_step
@@ -203,7 +202,7 @@ def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 
 		print(('Number of walkers:                    %6d' % (nwalkers)))
 		print(('Save conv. indicators every:          %6d' % (convergence_step)))
 		print(('Finish when Gelman-Rubin less than:   %6.4f' % (converged_GR)))
-		Utilities.printLine()
+		utilities.printLine()
 	
 	# Create a copy since this array will be changed later
 	x = numpy.copy(walkers)
@@ -337,7 +336,7 @@ def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 
 	R = numpy.array(Rval)
 
 	if verbose:
-		Utilities.printLine()
+		utilities.printLine()
 		print(('Acceptance ratio:                        %7.3f' % (1.0 * naccept / ntry)))
 		print(('Total number of samples:                 %7d' % (ntry)))
 		print(('Samples in burn-in:                      %7d' % (nburn)))
@@ -400,7 +399,7 @@ def analyzeChain(chain, param_names = None, percentiles = [68.27, 95.45, 99.73],
 	if verbose:
 		for i in range(nparams):
 			
-			Utilities.printLine()
+			utilities.printLine()
 			msg = 'Statistics for parameter %d'
 			if param_names is not None:
 				msg += ', %s:' % param_names[i]
@@ -435,9 +434,6 @@ def plotChain(chain, param_labels):
 	param_labels: array_like
 		A list of strings which are used when plotting the parameters. 
 	"""
-	
-	def conf_interval(x, pdf, conf_level):
-		return numpy.sum(pdf[pdf > x]) - conf_level
 
 	nsamples = len(chain)
 	nparams = len(chain[0])

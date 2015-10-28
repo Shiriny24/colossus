@@ -1,6 +1,6 @@
 ###################################################################################################
 #
-# HaloConcentration.py      (c) Benedikt Diemer
+# concentration.py          (c) Benedikt Diemer
 #     				    	    benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
@@ -24,11 +24,12 @@ most models are only valid over a certain range of masses, redshifts, and cosmol
 Furthermore, each model was only calibrated for one of a few particular mass definitions, such as 
 :math:`c_{200c}`, :math:`c_{vir}`, or :math:`c_{200m}`. The :func:`concentration` function 
 automatically converts these definitions to the definition chosen by the user. For documentation 
-on spherical overdensity mass definitions, please see the documentation of the :mod:`Halo` module.
+on spherical overdensity mass definitions, please see the documentation of the :mod:`halo.basics` 
+module.
 
-***************************************************************************************************
+---------------------------------------------------------------------------------------------------
 Concentration models
-***************************************************************************************************
+---------------------------------------------------------------------------------------------------
 
 The following models are supported in this module, and their ID can be passed as the ``model`` 
 parameter to the :func:`concentration` function. Alternatively, the user 
@@ -49,9 +50,9 @@ duffy08        200c, vir, 200m  1E11 < M < 1E15    0 < z < 2   WMAP5           D
 bullock01	   200c             Almost any         Any         Any             Bullock et al. 2001        MNRAS 321, 559
 ============== ================ ================== =========== =============== ========================== =================
 
-***************************************************************************************************
+---------------------------------------------------------------------------------------------------
 Conversion between mass definitions
-***************************************************************************************************
+---------------------------------------------------------------------------------------------------
 	
 If the user requests a mass definition that is not one of the native definitions of the c-M model,
 the mass and concentration are converted, necessarily assuming a particular form of the density
@@ -71,10 +72,10 @@ Performance optimization
 Some models, including the diemer15 model, use certain cosmological quantities, such as 
 :math:`\sigma(R)`, that can be computationally intensive. If you wish to compute concentration for 
 many different cosmologies (for example, in an MCMC chain), please consult the documentation of the 
-``interpolation`` switch in the Cosmology module.
+``interpolation`` switch in the cosmology module.
 
 ---------------------------------------------------------------------------------------------------
-Detailed Documentation
+Module Reference
 --------------------------------------------------------------------------------------------------- 
 """
 
@@ -86,10 +87,10 @@ import scipy.interpolate
 import scipy.optimize
 import warnings
 
-from colossus.utils import Utilities
-from colossus import Cosmology
-from colossus import Halo
-from colossus import HaloDensityProfile
+from colossus.utils import utilities
+from colossus.cosmology import cosmology
+from colossus.halo import basics
+from colossus.halo import profile
 
 ###################################################################################################
 
@@ -99,7 +100,7 @@ def concentration(M, mdef, z, \
 	"""
 	Concentration as a function of halo mass and redshift, for different concentration models, 
 	statistics, and conversion profiles. For some models, a cosmology must be set (see the 
-	documentation of the Cosmology module).
+	documentation of the cosmology module).
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -157,7 +158,7 @@ def concentration(M, mdef, z, \
 	# corresponding mass in the user's mass definition is M_desired.
 	def eq(MDelta, M_desired, mdef_model, func, limited, args):
 		cDelta, _ = evaluateC(func, MDelta, limited, args)
-		Mnew, _, _ = HaloDensityProfile.changeMassDefinition(MDelta, cDelta, z, mdef_model, mdef,\
+		Mnew, _, _ = profile.changeMassDefinition(MDelta, cDelta, z, mdef_model, mdef,\
 												profile = 'nfw')
 		return Mnew - M_desired
 
@@ -232,7 +233,7 @@ def concentration(M, mdef, z, \
 		
 		# Generate a mask if the model doesn't return one
 		if not limited and range_return:
-			if Utilities.isArray(c):
+			if utilities.isArray(c):
 				mask = numpy.ones((len(c)), dtype = bool)
 			else:
 				mask = True
@@ -240,7 +241,7 @@ def concentration(M, mdef, z, \
 	else:
 		
 		# Convert to array
-		M_array, is_array = Utilities.getArray(M)
+		M_array, is_array = utilities.getArray(M)
 		N = len(M_array)
 		mask = numpy.ones((N), dtype = bool)
 
@@ -250,7 +251,7 @@ def concentration(M, mdef, z, \
 
 		# To a good approximation, the relation M2 / M1 = Delta1 / Delta2. We use this mass
 		# as a guess around which to look for the solution.
-		Delta_ratio = Halo.densityThreshold(z, mdef) / Halo.densityThreshold(z, mdef_model)
+		Delta_ratio = basics.densityThreshold(z, mdef) / basics.densityThreshold(z, mdef_model)
 		M_guess = M_array * Delta_ratio
 		c = numpy.zeros_like(M_array)
 		
@@ -275,7 +276,7 @@ def concentration(M, mdef, z, \
 				mask[i] = False
 				
 			cDelta, mask_element = evaluateC(func, MDelta, limited, args)
-			_, _, c[i] = HaloDensityProfile.changeMassDefinition(MDelta, cDelta, z, mdef_model, \
+			_, _, c[i] = profile.changeMassDefinition(MDelta, cDelta, z, mdef_model, \
 									mdef, profile = conversion_profile)
 			if limited:
 				mask[i] = mask_element
@@ -287,7 +288,7 @@ def concentration(M, mdef, z, \
 
 	# Spit out warning if the range was violated
 	if range_warning and not range_return and limited:
-		mask_array, _ = Utilities.getArray(mask)
+		mask_array, _ = utilities.getArray(mask)
 		if False in mask_array:
 			warnings.warn('Some masses or redshifts are outside the validity of the concentration model.')
 	
@@ -322,7 +323,7 @@ def diemer15_c200c_M(M200c, z, statistic = 'median'):
 	"""
 	The Diemer & Kravtsov 2014 model for concentration, as a function of mass :math:`M_{200c}` and 
 	redhsift. A cosmology must be set before executing this function (see the documentation of the 
-	Cosmology module).
+	cosmology module).
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -343,7 +344,7 @@ def diemer15_c200c_M(M200c, z, statistic = 'median'):
 	diemer15_c200c_nu: The same function, but with peak height as input.
 	"""
 	
-	cosmo = Cosmology.getCurrent()
+	cosmo = cosmology.getCurrent()
 	
 	if cosmo.power_law:
 		n = cosmo.power_law_n * M200c / M200c
@@ -361,7 +362,7 @@ def diemer15_c200c_nu(nu200c, z, statistic = 'median'):
 	"""
 	The Diemer & Kravtsov 2014 model for concentration, as a function of peak height 
 	:math:`\\nu_{200c}` and redhsift. A cosmology must be set before executing this function (see 
-	the documentation of the Cosmology module).
+	the documentation of the cosmology module).
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -383,7 +384,7 @@ def diemer15_c200c_nu(nu200c, z, statistic = 'median'):
 	diemer15_c200c_M: The same function, but with mass as input.
 	"""
 
-	cosmo = Cosmology.getCurrent()
+	cosmo = cosmology.getCurrent()
 	
 	if cosmo.power_law:
 		n = cosmo.power_law_n * nu200c / nu200c
@@ -424,7 +425,7 @@ def diemer15_c200c_n(nu, n, statistic = 'median'):
 
 def diemer15_wavenumber_k_R(M):
 
-	cosmo = Cosmology.getCurrent()
+	cosmo = cosmology.getCurrent()
 	rho0 = cosmo.rho_m(0.0)
 	R = (3.0 * M / 4.0 / math.pi / rho0) ** (1.0 / 3.0) / 1000.0
 	k_R = 2.0 * math.pi / R * diemer15_kappa
@@ -441,9 +442,9 @@ def diemer15_compute_n(k_R):
 	if numpy.min(k_R) < 0:
 		raise Exception("k_R < 0.")
 
-	cosmo = Cosmology.getCurrent()
+	cosmo = cosmology.getCurrent()
 	
-	# The way we compute the slope depends on the settings in the Cosmology module. If interpolation
+	# The way we compute the slope depends on the settings in the cosmology module. If interpolation
 	# tables are used, we can compute the slope directly from the spline interpolation which is
 	# very fast. If not, we need to compute the slope manually.
 	if cosmo.interpolation:
@@ -478,7 +479,7 @@ def diemer15_compute_n_M(M):
 
 def diemer15_compute_n_nu(nu, z):
 
-	cosmo = Cosmology.getCurrent()
+	cosmo = cosmology.getCurrent()
 	M = cosmo.massFromPeakHeight(nu, z)
 	n = diemer15_compute_n_M(M)
 	
@@ -534,9 +535,9 @@ def klypin15_nu_c(M, z, mdef):
 		msg = 'Invalid mass definition for Klypin et al 2015 peak height-based model, %s.' % mdef
 		raise Exception(msg)
 
-	cosmo = Cosmology.getCurrent()
+	cosmo = cosmology.getCurrent()
 	nu = cosmo.peakHeight(M, z)
-	sigma = Cosmology.AST_delta_collapse / nu
+	sigma = cosmology.AST_delta_collapse / nu
 	a0 = numpy.interp(z, z_bins, a0_bins)
 	b0 = numpy.interp(z, z_bins, b0_bins)
 
@@ -587,7 +588,7 @@ def klypin15_m_c(M, z, mdef):
 		msg = 'Invalid mass definition for Klypin et al 2015 m-based model, %s.' % mdef
 		raise Exception(msg)
 
-	cosmo = Cosmology.getCurrent()
+	cosmo = cosmology.getCurrent()
 
 	if cosmo.name == 'planck13':
 		z_bins = [0.0, 0.35, 0.5, 1.0, 1.44, 2.15, 2.5, 2.9, 4.1, 5.4]
@@ -701,7 +702,7 @@ def bhattacharya13_c(M, z, mdef):
 		be reliable.
 	"""
 
-	cosmo = Cosmology.getCurrent()
+	cosmo = cosmology.getCurrent()
 	D = cosmo.growthFactor(z)
 	
 	# Note that peak height in the B13 paper is defined wrt. the mass definition in question, so 
@@ -759,7 +760,7 @@ def prada12_c200c(M200c, z):
 	def smin(x):
 		return 1.047 + (1.646 - 1.047) * (1.0 / math.pi * math.atan(7.386 * (x - 0.526)) + 0.5)
 
-	cosmo = Cosmology.getCurrent()
+	cosmo = cosmology.getCurrent()
 	nu = cosmo.peakHeight(M200c, z)
 
 	a = 1.0 / (1.0 + z)
@@ -895,14 +896,14 @@ def bullock01_c200c(M200c, z):
 
 	# Get an inverse interpolator to determine D+ from z. This is an advanced use of the internal
 	# table system of the cosmology class.
-	cosmo = Cosmology.getCurrent()
+	cosmo = cosmology.getCurrent()
 	interp = cosmo._zInterpolator('growthfactor', cosmo._growthFactorExact, inverse = True, future = True)
 	Dmin = interp.get_knots()[0]
 	Dmax = interp.get_knots()[-1]
 
 	# The math works out such that we are looking for the redshift where the growth factor is
 	# equal to the peak height of a halo with mass F * M.
-	M_array, is_array = Utilities.getArray(M200c)
+	M_array, is_array = utilities.getArray(M200c)
 	D_target = cosmo.peakHeight(F * M_array, 0.0)
 	mask = (D_target > Dmin) & (D_target < Dmax)
 

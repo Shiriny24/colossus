@@ -1,6 +1,6 @@
 =====================================
-Cosmology
+General Utilities
 =====================================
 
-.. automodule:: Cosmology
+.. automodule:: utils.utilities
     :members:

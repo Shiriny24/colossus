@@ -1,6 +1,6 @@
 =====================================
-HaloDensityProfile
+MCMC
 =====================================
 
-.. automodule:: HaloDensityProfile
+.. automodule:: utils.mcmc
     :members:

@@ -1,31 +1,30 @@
 ###################################################################################################
 #
-# Concentration.py          (c) Benedikt Diemer
+# mass_definitions.py       (c) Benedikt Diemer
 #     				    	    benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
 
-
 """
 This module represents a collection of utilities related to halo mass definitions. 
 
-***************************************************************************************************
+---------------------------------------------------------------------------------------------------
 Changing mass definitions assuming a concentration
-***************************************************************************************************
+---------------------------------------------------------------------------------------------------
 
-The :func:`HaloDensityProfile.changeMassDefinition` function needs to know the concentration of a 
+The :func:`halo.profile.changeMassDefinition` function needs to know the concentration of a 
 halo. For convenience, the following function uses a concentration model to estimate the 
 concentration::
 
 	M200m, R200m, c200m = changeMassDefinitionCModel(1E12, 1.0, 'vir', '200m')
 	
 By default, the function uses the ``diemer_15`` concentration model (see the documentation of the
-:mod:`HaloConcentration` module). This function is not included in the :mod:`HaloDensityProfile`
+:mod:`halo.concentration` module). This function is not included in the :mod:`halo.profile`
 module because it uses concentration models.
 
-***************************************************************************************************
+---------------------------------------------------------------------------------------------------
 Alternative mass definitions
-***************************************************************************************************
+---------------------------------------------------------------------------------------------------
 
 Two alternative mass definitions (as in, not spherical overdensity masses) are described in 
 More, Diemer & Kravtsov 2015. Those include:
@@ -50,9 +49,9 @@ converter functions:
 	Msp
 	M4rs
 
-***************************************************************************************************
+---------------------------------------------------------------------------------------------------
 Units
-***************************************************************************************************
+---------------------------------------------------------------------------------------------------
 
 Unless otherwise noted, all functions in this module use the following units:
 
@@ -66,7 +65,7 @@ Surface density  Physical :math:`M_{\odot} h / kpc^2`
 ================ =======================================
 
 ---------------------------------------------------------------------------------------------------
-Detailed Documentation
+Module Reference
 ---------------------------------------------------------------------------------------------------
 """
 
@@ -74,10 +73,10 @@ Detailed Documentation
 
 import numpy
 
-from colossus import Cosmology
-from colossus import Halo
-from colossus import HaloDensityProfile
-from colossus import HaloConcentration
+from colossus.cosmology import cosmology
+from colossus.halo import basics
+from colossus.halo import profile
+from colossus.halo import concentration
 
 ###################################################################################################
 
@@ -102,7 +101,7 @@ def changeMassDefinitionCModel(M, z, mdef_in, mdef_out, profile = 'nfw', c_model
 	profile: str
 		The functional form of the profile assumed in the computation; can be ``nfw`` or ``dk14``.
 	c_model: str
-		The identifier of a concentration model (see :mod:`HaloConcentration` for valid inputs).
+		The identifier of a concentration model (see :mod:`concentration` for valid inputs).
 
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -120,9 +119,9 @@ def changeMassDefinitionCModel(M, z, mdef_in, mdef_out, profile = 'nfw', c_model
 	changeMassDefinition: Change the spherical overdensity mass definition.
 	"""
 	
-	c = HaloConcentration.concentration(M, mdef_in, z, model = c_model)
+	c = concentration.concentration(M, mdef_in, z, model = c_model)
 	
-	return HaloDensityProfile.pseudoEvolve(M, c, z, mdef_in, z, mdef_out, profile = profile)
+	return profile.pseudoEvolve(M, c, z, mdef_in, z, mdef_out, profile = profile)
 
 ###################################################################################################
 
@@ -153,9 +152,9 @@ def M4rs(M, z, mdef, c = None):
 	"""
 
 	if c is None:
-		c = HaloConcentration.concentration(M, mdef, z)
+		c = concentration.concentration(M, mdef, z)
 	
-	Mfrs = M * HaloDensityProfile.NFWProfile.mu(4.0) / HaloDensityProfile.NFWProfile.mu(c)
+	Mfrs = M * profile.NFWProfile.mu(4.0) / profile.NFWProfile.mu(c)
 	
 	return Mfrs
 
@@ -194,7 +193,7 @@ def RspOverR200m(nu200m = None, z = None, Gamma = None):
 	"""
 
 	if (Gamma is not None) and (z is not None):
-		cosmo = Cosmology.getCurrent()
+		cosmo = cosmology.getCurrent()
 		ratio =  0.54 * (1 + 0.53 * cosmo.Om(z)) * (1 + 1.36 * numpy.exp(-Gamma / 3.04))
 	elif nu200m is not None:
 		ratio = 0.81 * (1.0 + 0.97 * numpy.exp(-nu200m / 2.44))
@@ -239,7 +238,7 @@ def MspOverM200m(nu200m = None, z = None, Gamma = None):
 	"""
 	
 	if (Gamma is not None) and (z is not None):
-		cosmo = Cosmology.getCurrent()
+		cosmo = cosmology.getCurrent()
 		ratio =  0.59 * (1 + 0.35 * cosmo.Om(z)) * (1 + 0.92 * numpy.exp(-Gamma / 4.54))
 	elif nu200m is not None:
 		ratio = 0.82 * (1.0 + 0.63 * numpy.exp(-nu200m / 3.52))
@@ -284,15 +283,15 @@ def Rsp(R, z, mdef, c = None, profile = 'nfw'):
 	
 	if mdef == '200m':
 		R200m = R
-		M200m = Halo.R_to_M(R200m, z, '200m')
+		M200m = basics.R_to_M(R200m, z, '200m')
 	else:
-		M = Halo.R_to_M(R, z, mdef)
+		M = basics.R_to_M(R, z, mdef)
 		if c is None:
 			M200m, R200m, _ = changeMassDefinitionCModel(M, z, mdef, '200m', profile = profile)
 		else:
-			M200m, R200m, _ = HaloDensityProfile.changeMassDefinition(M, c, z, mdef, '200m', profile = profile)
+			M200m, R200m, _ = profile.changeMassDefinition(M, c, z, mdef, '200m', profile = profile)
 			
-	cosmo = Cosmology.getCurrent()
+	cosmo = cosmology.getCurrent()
 	nu200m = cosmo.peakHeight(M200m, z)
 	Rsp = R200m * RspOverR200m(nu200m = nu200m)
 	
@@ -337,9 +336,9 @@ def Msp(M, z, mdef, c = None, profile = 'nfw'):
 		if c is None:
 			M200m, _, _ = changeMassDefinitionCModel(M, z, mdef, '200m', profile = profile)
 		else:
-			M200m, _, _ = HaloDensityProfile.changeMassDefinition(M, c, z, mdef, '200m', profile = profile)
+			M200m, _, _ = profile.changeMassDefinition(M, c, z, mdef, '200m', profile = profile)
 	
-	cosmo = Cosmology.getCurrent()
+	cosmo = cosmology.getCurrent()
 	nu200m = cosmo.peakHeight(M200m, z)
 	Msp = M200m * MspOverM200m(nu200m = nu200m)
 	

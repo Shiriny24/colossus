@@ -1,6 +1,6 @@
 =====================================
-MCMC
+Cosmology
 =====================================
 
-.. automodule:: utils.MCMC
+.. automodule:: cosmology.cosmology
     :members:

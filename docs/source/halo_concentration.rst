@@ -1,6 +1,6 @@
 =====================================
-Utilities
+Concentration
 =====================================
 
-.. automodule:: utils.Utilities
+.. automodule:: halo.concentration
     :members:

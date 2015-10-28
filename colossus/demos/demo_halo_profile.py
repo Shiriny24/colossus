@@ -1,11 +1,11 @@
 ###################################################################################################
 #
-# HaloDensityProfileDemo.py (c) Benedikt Diemer
+# demo_halo_profile.py      (c) Benedikt Diemer
 #     				    	    benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
 #
-# Sample code demonstrating the usage of the HaloDensityProfile.py module. 
+# Sample code demonstrating the usage of the halo.profile.py module. 
 #
 ###################################################################################################
 
@@ -15,9 +15,9 @@ import numpy
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
-from colossus import Cosmology
-from colossus import Halo
-from colossus import HaloDensityProfile
+from colossus.cosmology import cosmology
+from colossus.halo import basics
+from colossus.halo import profile
 
 ###################################################################################################
 
@@ -40,8 +40,8 @@ def demonstrateProfiles():
 	mdef = 'vir'
 	z = 0.0
 	c = 5.0
-	cosmo = Cosmology.setCosmology('WMAP9')
-	R = Halo.M_to_R(M, z, mdef)
+	cosmo = cosmology.setCosmology('WMAP9')
+	R = basics.M_to_R(M, z, mdef)
 	
 	# Choose a set of radii
 	rR_min = 1E-3
@@ -52,9 +52,9 @@ def demonstrateProfiles():
 	
 	# Initialize three profiles
 	p = [None, None, None]
-	p[0] = HaloDensityProfile.EinastoProfile(M = M, c = c, z = z, mdef = mdef)
-	p[1] = HaloDensityProfile.NFWProfile(M = M, c = c, z = z, mdef = mdef)
-	p[2] = HaloDensityProfile.DK14Profile(M = M, c = c, z = z, mdef = mdef, be = 1.0, se = 1.5)
+	p[0] = profile.EinastoProfile(M = M, c = c, z = z, mdef = mdef)
+	p[1] = profile.NFWProfile(M = M, c = c, z = z, mdef = mdef)
+	p[2] = profile.DK14Profile(M = M, c = c, z = z, mdef = mdef, be = 1.0, se = 1.5)
 	colors = ['darkblue', 'firebrick', 'deepskyblue']
 	ls = ['-.', '--', '-']
 	labels = ['Einasto', 'NFW', 'DK14']
@@ -104,10 +104,10 @@ def demonstrateProfiles():
 def demonstrateFitting():
 
 	# Create a "true" NFW profile
-	Cosmology.setCosmology('WMAP9')
+	cosmology.setCosmology('WMAP9')
 	rhos = 1E6
 	rs = 50.0
-	prof = HaloDensityProfile.NFWProfile(rhos = rhos, rs = rs)
+	prof = profile.NFWProfile(rhos = rhos, rs = rs)
 	
 	# Create a fake dataset with some noise
 	r = 10**numpy.arange(0.1, 3.0, 0.3)
@@ -150,16 +150,16 @@ def demonstrateMassDefinitions():
 	Mvir = 1E12
 	cvir = 10.0
 	z = 0.0
-	Cosmology.setCosmology('WMAP9')
+	cosmology.setCosmology('WMAP9')
 
-	Rvir = Halo.M_to_R(Mvir, z, 'vir')
+	Rvir = basics.M_to_R(Mvir, z, 'vir')
 
 	print(("We start with the following halo, defined using the virial mass definition:"))	
 	print(("Mvir:   %.2e Msun / h" % Mvir))
 	print(("Rvir:   %.2e kpc / h" % Rvir))
 	print(("cvir:   %.2f" % cvir))
 	
-	M200c, R200c, c200c = HaloDensityProfile.changeMassDefinition(Mvir, cvir, z, 'vir', '200c')
+	M200c, R200c, c200c = profile.changeMassDefinition(Mvir, cvir, z, 'vir', '200c')
 	
 	print(("Now, let's convert the halo data to the 200c mass definition, assuming an NFW profile:"))	
 	print(("M200c:  %.2e Msun / h" % M200c))

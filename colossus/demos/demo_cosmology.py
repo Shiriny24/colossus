@@ -1,19 +1,19 @@
 ###################################################################################################
 #
-# CosmologyDemo.py	 		(c) Benedikt Diemer
+# demo_cosmology.py         (c) Benedikt Diemer
 #     				    	    benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
 #
-# Sample code demonstrating the usage of the Cosmology.py module. Uncomment the functions listed
-# in main() to explore various aspects of the Cosmology module.
+# Sample code demonstrating the usage of the cosmology.py module. Uncomment the functions listed
+# in main() to explore various aspects of the cosmology module.
 #
 ###################################################################################################
 
 import numpy
 
-from colossus import Cosmology
-from colossus.utils import Utilities
+from colossus.utils import utilities
+from colossus.cosmology import cosmology
 
 ###################################################################################################
 
@@ -46,7 +46,7 @@ def main():
 
 def printCosmologyName():
 	
-	cosmo = Cosmology.getCurrent()
+	cosmo = cosmology.getCurrent()
 	print((cosmo.name))
 	
 	return
@@ -56,20 +56,20 @@ def printCosmologyName():
 def demonstrateSettingAndGetting():
 	
 	print("Let's set a cosmology and print it's name.")
-	cosmo = Cosmology.setCosmology('WMAP9')
+	cosmo = cosmology.setCosmology('WMAP9')
 	print((cosmo.name))
-	Utilities.printLine()
+	utilities.printLine()
 	print("Now we do the same but in a function, using the global cosmology variable.")
 	printCosmologyName()
-	Utilities.printLine()
+	utilities.printLine()
 	print("Now let's temporarily switch cosmology without destroying the cosmology objects.")
 	old_cosmo = cosmo
-	cosmo = Cosmology.setCosmology('planck13')
+	cosmo = cosmology.setCosmology('planck13')
 	printCosmologyName()
-	Cosmology.setCurrent(old_cosmo)
-	printCosmologyName()
+	cosmology.setCurrent(old_cosmo)
+	print((cosmology.getCurrent().name))
 	print("We can also change individual parameters when setting a cosmology.")
-	cosmo = Cosmology.setCosmology('WMAP7', {"interpolation": False})
+	cosmo = cosmology.setCosmology('WMAP7', {"interpolation": False})
 	print((cosmo.name))
 	print((cosmo.interpolation))
 	print("We should be careful changing cosmological parameters this way, since the name does not match the cosmology any more.")
@@ -80,7 +80,7 @@ def demonstrateSettingAndGetting():
 
 def setMyCosmo():
 	
-	cosmo = Cosmology.setCosmology('my_cosmo')
+	cosmo = cosmology.setCosmology('my_cosmo')
 	
 	return cosmo
 
@@ -91,11 +91,11 @@ def demonstrateAdding():
 	my_cosmo = {'flat': True, 'H0': 72.0, 'Om0': 0.25, 'Ob0': 0.043, 'sigma8': 0.8, 'ns': 0.97}
 	
 	print("Let's set a non-standard cosmology")
-	cosmo = Cosmology.setCosmology('my_cosmo', my_cosmo)
+	cosmo = cosmology.setCosmology('my_cosmo', my_cosmo)
 	print(("We are now in " + cosmo.name + ", H0 = %.1f" % (cosmo.H0)))
-	Utilities.printLine()
+	utilities.printLine()
 	print("We can also add this cosmology to the library of cosmologies, which allos us to set it from any function.")
-	Cosmology.addCosmology('my_cosmo', my_cosmo)
+	cosmology.addcosmology('my_cosmo', my_cosmo)
 	cosmo = setMyCosmo()
 	print(("We are once again in " + cosmo.name + ", H0 = %.1f" % (cosmo.H0)))
 	
@@ -105,19 +105,19 @@ def demonstrateAdding():
 
 def demonstrateChanging():
 	
-	cosmo = Cosmology.setCosmology('planck13')
+	cosmo = cosmology.setCosmology('planck13')
 	print(("We are in the " + cosmo.name + " cosmology"))
 	print(("Omega_m = %.2f, Omega_L = %.2f" % (cosmo.Om0, cosmo.OL0)))
-	Utilities.printLine()
-	print("Let's do something bad and change a parameter without telling the Cosmology class...")
+	utilities.printLine()
+	print("Let's do something bad and change a parameter without telling the cosmology class...")
 	cosmo.Om0 = 0.27
 	print("Now the universe is not flat any more:")
 	print(("Omega_m = %.2f, Omega_L = %.2f" % (cosmo.Om0, cosmo.OL0)))
-	Utilities.printLine()
-	print("Now let's do it correctly and call checkForChangedCosmology():")
-	cosmo.checkForChangedCosmology()
+	utilities.printLine()
+	print("Now let's do it correctly and call checkForChangedcosmology():")
+	cosmo.checkForChangedcosmology()
 	print(("Omega_m = %.2f, Omega_L = %.2f" % (cosmo.Om0, cosmo.OL0)))
-	print("It is OK to change parameters at any time, but you MUST call checkForChangedCosmology() immediately afterwards!")
+	print("It is OK to change parameters at any time, but you MUST call checkForChangedcosmology() immediately afterwards!")
 	
 	return
 
@@ -125,18 +125,18 @@ def demonstrateChanging():
 
 def compute():
 	
-	cosmo = Cosmology.setCosmology('WMAP9')
+	cosmo = cosmology.setCosmology('WMAP9')
 	z = numpy.array([0.0, 1.0, 10.0])
 	
 	print("All cosmology functions can be called with numbers or numpy arrays:")
 	print(("z                 = " + str(z)))
-	Utilities.printLine()
+	utilities.printLine()
 	print("Times are output in Gyr, for example:")
 	print(("Age               = " + str(cosmo.age(z))))
-	Utilities.printLine()
+	utilities.printLine()
 	print("Distances are output in Mpc/h, for example:")
 	print(("Comoving distance = " + str(cosmo.comovingDistance(z_max = z))))
-	Utilities.printLine()
+	utilities.printLine()
 	print("Densities are output in astronomical units, Msun h^2 / kpc^3, for example:")
 	print(("Critical density  = " + str(cosmo.rho_c(z))))
 
@@ -146,18 +146,18 @@ def compute():
 
 def computeAdvanced():
 
-	cosmo = Cosmology.setCosmology('WMAP9')
+	cosmo = cosmology.setCosmology('WMAP9')
 	z = 0.0
 	M = numpy.array([1E9, 1E12, 1E15])
 	
 	print("We are now executing a function that needs sigma(R).")
-	Utilities.printLine()
+	utilities.printLine()
 	nu = cosmo.peakHeight(M, z)
 	print(("Peak height = " + str(nu)))
-	Utilities.printLine()
+	utilities.printLine()
 	print("Now, a lookup table for sigma(R) should be stored in a binary file in the Data/ directory.")
 	print("If you call this function again, it should execute faster!")
-	Utilities.printLine()
+	utilities.printLine()
 	print("If we want to turn this behavior off, set 'storage = False'.")
 	print("If we do not want to use any lookup tables at all, set 'interpolation = False'.")
 	print("This setting is almost never recommended, though.")

@@ -1,6 +1,6 @@
 ###################################################################################################
 #
-# Cosmology.py              (c) Benedikt Diemer
+# cosmology.py              (c) Benedikt Diemer
 #     				    	    benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
@@ -83,9 +83,9 @@ Summary of getter and setter functions
 	setCurrent
 	getCurrent
 
-***************************************************************************************************
+---------------------------------------------------------------------------------------------------
 Standard cosmologies
-***************************************************************************************************
+---------------------------------------------------------------------------------------------------
 
 ============== ===================== =========== =======================================
 ID             Paper                 Location    Explanation
@@ -115,9 +115,9 @@ powerlaw       --                    --          Default settings for power-law 
 Those cosmologies that refer to particular simulations (such as bolshoi and millennium) are set 
 to ignore relativistic species, i.e. photons and neutrinos.
 
-***************************************************************************************************
+---------------------------------------------------------------------------------------------------
 Units
-***************************************************************************************************
+---------------------------------------------------------------------------------------------------
 
 Unless otherwise noted, all functions in this module use the following units:
 
@@ -135,11 +135,11 @@ Note that densities use physical kpc/h whereas all other lengths are expressed i
 The kpc/h units for density make them compatible with the HaloDensityProfile module, where all 
 lengths are expressed in physical kpc/h.
 
-***************************************************************************************************
+---------------------------------------------------------------------------------------------------
 Derivatives and Inverses
-***************************************************************************************************
+---------------------------------------------------------------------------------------------------
 
-Almost all cosmology functions that are interpolated (e.g., :func:`Cosmology.age()`, 
+Almost all cosmology functions that are interpolated (e.g., :func:`Cosmology.age`, 
 :func:`Cosmology.luminosityDistance()` or :func:`Cosmology.sigma()`) can be evaluated as an nth 
 derivative. Please note that some functions are interpolated in log space, resulting in a logarithmic
 derivative, while others are interpolated and differentiated in linear space. Please see the 
@@ -183,13 +183,11 @@ interpolation is accurate to better than 0.2% unless specifically noted in the f
 documentation, meaning that it is very rarely necessary to use the exact routines. 
 
 ---------------------------------------------------------------------------------------------------
-Detailed Documentation
+Module Reference
 ---------------------------------------------------------------------------------------------------
 """
 
 ###################################################################################################
-
-
 
 import os
 import math
@@ -200,7 +198,7 @@ import scipy.interpolate
 import hashlib
 import pickle
 
-from colossus.utils import Utilities
+from colossus.utils import utilities
 
 ###################################################################################################
 # Useful constants
@@ -451,7 +449,7 @@ class Cosmology(object):
 		# Some functions permanently store lookup tables for faster execution. For this purpose,
 		# we compute and save the storage path. 
 		if self.storage:
-			self.cache_dir = Utilities.getCacheDir(module = 'cosmology')
+			self.cache_dir = utilities.getCacheDir(module = 'cosmology')
 		
 		# Note that the storage is active even if interpolation == False or storage == False, 
 		# since fields can still be stored non-persistently (without writing to file).
@@ -756,8 +754,8 @@ class Cosmology(object):
 	
 	def _integral(self, integrand, z_min, z_max):
 
-		min_is_array = Utilities.isArray(z_min)
-		max_is_array = Utilities.isArray(z_max)
+		min_is_array = utilities.isArray(z_min)
+		max_is_array = utilities.isArray(z_max)
 		use_array = min_is_array or max_is_array
 		
 		if use_array and not min_is_array:
@@ -1562,7 +1560,7 @@ class Cosmology(object):
 		zt2 = z_switch / trans_width
 		
 		# Split into late (1), early (2) and a transition interval (3)
-		z_arr, is_array = Utilities.getArray(z)
+		z_arr, is_array = utilities.getArray(z)
 		a = 1.0 / (1.0 + z_arr)
 		D = numpy.zeros_like(z_arr)
 		mask1 = z_arr < (zt1)
@@ -2038,7 +2036,7 @@ class Cosmology(object):
 			if derivative > 0:
 				raise Exception("Derivative can only be evaluated if interpolation == True.")
 
-			if Utilities.isArray(k):
+			if utilities.isArray(k):
 				Pk = k * 0.0
 				for i in range(len(k)):
 					Pk[i] = self._matterPowerSpectrumExact(k[i], Pk_source = Pk_source, ignore_norm = False)
@@ -2349,7 +2347,7 @@ class Cosmology(object):
 			if derivative:
 				raise Exception('Derivative of sigma cannot be evaluated if interpolation == False.')
 
-			if Utilities.isArray(R):
+			if utilities.isArray(R):
 				ret = R * 0.0
 				for i in range(len(R)):
 					ret[i] = self._sigmaExact(R[i], j = j, filt = filt, Pk_source = Pk_source)
@@ -2794,7 +2792,7 @@ class Cosmology(object):
 			if derivative:
 				raise Exception('Derivative of xi cannot be evaluated if interpolation == False.')
 
-			if Utilities.isArray(R):
+			if utilities.isArray(R):
 				ret = R * 0.0
 				for i in range(len(R)):
 					ret[i] = self.correlationFunctionExact(R[i], Pk_source = Pk_source)
