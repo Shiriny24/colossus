@@ -2508,7 +2508,7 @@ class Cosmology(object):
 		
 		def curvature_Npk(x, nu, gamma):
 	
-			#norm = math.exp(-nu**2 / 2.0) / (2 * math.pi)**2 / Rstar**3
+			#norm = np.exp(-nu**2 / 2.0) / (2 * np.pi)**2 / Rstar**3
 			norm = 1.0
 			fx = curvature_fx(x)
 			xstar = gamma * nu
