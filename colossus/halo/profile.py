@@ -446,6 +446,11 @@ class HaloDensityProfile():
 			ret = 2.0 * r * self.density(r) / np.sqrt(r**2 - R**2)
 			return ret
 
+		if np.max(r) >= self.rmax:
+			msg = 'Cannot compute surface density at a radius (%.2e) greater than rmax (%.2e).' \
+				% (np.max(r), self.rmax)
+			raise Exception(msg)
+
 		r_use, is_array = utilities.getArray(r)
 		surfaceDensity = 0.0 * r_use
 		for i in range(len(r_use)):	
@@ -2266,22 +2271,26 @@ class DK14Profile(HaloDensityProfile):
 	
 	def surfaceDensity(self, r, accuracy = 1E-6):
 
+		if np.max(r) >= self.rmax:
+			msg = 'Cannot compute surface density at a radius (%.2e) greater than rmax (%.2e).' \
+				% (np.max(r), self.rmax)
+			raise Exception(msg)
+		
 		if self.opt['part'] in ['outer', 'both'] and self.opt['outer'] in ['mean', 'pl+mean']:
-			#msg = 'When evaluating surface density, cannot include mean in outer profile.'
-			#raise Warning(msg)
 			subtract = self.par['rho_m']
 		else:
 			subtract = 0.0
 
-		def integrand(r, R):
-			ret = 2.0 * r * (self.density(r) - subtract) / np.sqrt(r**2 - R**2)
+		def integrand(r, R2):
+			ret = r * (self.density(r) - subtract) / np.sqrt(r**2 - R2)
 			return ret
 
 		r_use, is_array = utilities.getArray(r)
 		surfaceDensity = 0.0 * r_use
 		for i in range(len(r_use)):	
-			surfaceDensity[i], _ = scipy.integrate.quad(integrand, r_use[i], self.rmax, args = r_use[i],
-											epsrel = accuracy, limit = 1000)
+			surfaceDensity[i], _ = scipy.integrate.quad(integrand, r_use[i], self.rmax, 
+										args = (r_use[i]**2), epsrel = accuracy, limit = 1000)
+			surfaceDensity[i] *= 2.0
 			
 		if not is_array:
 			surfaceDensity = surfaceDensity[0]
