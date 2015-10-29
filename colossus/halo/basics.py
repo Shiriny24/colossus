@@ -76,11 +76,11 @@ def densityThreshold(z, mdef):
 	cosmo = cosmology.getCurrent()
 	rho_crit = cosmology.AST_rho_crit_0_kpc3 * cosmo.Ez(z)**2
 
-	if mdef[len(mdef) - 1] == 'c':
+	if mdef[-1] == 'c':
 		delta = int(mdef[:-1])
 		rho_treshold = rho_crit * delta
 
-	elif mdef[len(mdef) - 1] == 'm':
+	elif mdef[-1] == 'm':
 		delta = int(mdef[:-1])
 		rho_m = cosmology.AST_rho_crit_0_kpc3 * cosmo.Om0 * (1.0 + z)**3
 		rho_treshold = delta * rho_m

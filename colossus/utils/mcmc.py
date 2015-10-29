@@ -51,9 +51,9 @@ from colossus.utils import utilities
 
 ###################################################################################################
 
-def run(x_initial, L_func, args = (), verbose = True, \
+def run(x_initial, L_func, args = (), verbose = True,
 		# Options for the initial walker placement
-		initial_step = 0.1, nwalkers = 100, random_seed = None, \
+		initial_step = 0.1, nwalkers = 100, random_seed = None,
 		# Options for the MCMC chain
 		convergence_step = 100, converged_GR = 0.01, 
 		# Options for the analysis of the chain
@@ -66,9 +66,9 @@ def run(x_initial, L_func, args = (), verbose = True, \
 	input parameters.
 	"""
 	
-	walkers = initWalkers(x_initial, initial_step = initial_step, nwalkers = nwalkers, \
+	walkers = initWalkers(x_initial, initial_step = initial_step, nwalkers = nwalkers,
 					random_seed = random_seed)
-	chain_thin, _, _ = runChain(L_func, walkers, args = args, convergence_step = convergence_step, \
+	chain_thin, _, _ = runChain(L_func, walkers, args = args, convergence_step = convergence_step,
 					converged_GR = converged_GR, verbose = verbose)
 	mean, median, stddev, p = analyzeChain(chain_thin, param_names = param_names,
 					percentiles = percentiles, verbose = verbose)
@@ -123,14 +123,14 @@ def initWalkers(x_initial, initial_step = 0.1, nwalkers = 100, random_seed = Non
 		step_array = x_initial * initial_step
 		
 	for i in range(nparams):
-		walkers[:, :, i] = np.reshape(np.random.normal(x_initial[i], step_array[i], nwalkers), \
+		walkers[:, :, i] = np.reshape(np.random.normal(x_initial[i], step_array[i], nwalkers),
 										(2, nwalkers / 2))
 
 	return walkers
 
 ###################################################################################################
 
-def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 0.01, \
+def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 0.01,
 			verbose = True, output_every_n = 100):
 	"""
 	Run an MCMC chain.
@@ -447,7 +447,7 @@ def plotChain(chain, param_labels):
 	gs = gridspec.GridSpec(nparams, nparams)
 	margin_lb_frac = margin_lb / size
 	margin_rt_frac = margin_rt / size
-	plt.subplots_adjust(left = margin_lb_frac, bottom = margin_lb_frac, right = 1.0 - margin_rt_frac, \
+	plt.subplots_adjust(left = margin_lb_frac, bottom = margin_lb_frac, right = 1.0 - margin_rt_frac,
 					top = 1.0 - margin_rt_frac, hspace = margin_rt_frac, wspace = margin_rt_frac)
 	panels = [[None for dummy in range(nparams)] for dummy in range(nparams)] 
 	for i in range(nparams):

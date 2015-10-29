@@ -454,7 +454,7 @@ class HaloDensityProfile():
 				msg = 'Cannot compute surface density for radius %.2e since rmax is %.2e.' % (r_use[i], self.rmax)
 				raise Exception(msg)
 			
-			surfaceDensity[i], _ = scipy.integrate.quad(integrand, r_use[i], self.rmax, args = r_use[i], \
+			surfaceDensity[i], _ = scipy.integrate.quad(integrand, r_use[i], self.rmax, args = r_use[i],
 											epsrel = accuracy, limit = 1000)
 		if not is_array:
 			surfaceDensity = surfaceDensity[0]
@@ -708,15 +708,15 @@ class HaloDensityProfile():
 	# Note that the MCMC fitter does NOT use the converted fitting parameters, but just the 
 	# parameters themselves. Otherwise, interpreting the chain becomes very complicated.
 
-	def _fitMethodMCMC(self, r, q, f, covinv, mask, N_par_fit, verbose, \
-				converged_GR, nwalkers, best_fit, initial_step, random_seed, \
+	def _fitMethodMCMC(self, r, q, f, covinv, mask, N_par_fit, verbose,
+				converged_GR, nwalkers, best_fit, initial_step, random_seed,
 				convergence_step, output_every_n):
 		
 		x0 = self.getParameterArray(mask = mask)
 		args = r, q, f, covinv, mask
 		walkers = mcmc.initWalkers(x0, initial_step = initial_step, nwalkers = nwalkers, random_seed = random_seed)
 		xi = np.reshape(walkers, (len(walkers[0]) * 2, len(walkers[0, 0])))
-		chain_thin, chain_full, R = mcmc.runChain(self._fitLikelihood, walkers, convergence_step = convergence_step, \
+		chain_thin, chain_full, R = mcmc.runChain(self._fitLikelihood, walkers, convergence_step = convergence_step,
 							args = args, converged_GR = converged_GR, verbose = verbose, output_every_n = output_every_n)
 		mean, median, stddev, p = mcmc.analyzeChain(chain_thin, self.par_names, verbose = verbose)
 
@@ -752,8 +752,8 @@ class HaloDensityProfile():
 
 		# Run the actual fit
 		ini_guess = self._fitConvertParams(self.getParameterArray(mask = mask), mask)
-		x_fit, cov, dict, fit_msg, err_code = scipy.optimize.leastsq(self._fitDiffFunction, ini_guess, \
-							Dfun = deriv_func, col_deriv = 1, args = args, full_output = 1, \
+		x_fit, cov, dict, fit_msg, err_code = scipy.optimize.leastsq(self._fitDiffFunction, ini_guess,
+							Dfun = deriv_func, col_deriv = 1, args = args, full_output = 1,
 							xtol = tolerance)
 		
 		# Check the output
@@ -811,13 +811,13 @@ class HaloDensityProfile():
 
 	def fit(self, 
 		# Input data
-		r, q, quantity, q_err = None, q_cov = None, \
+		r, q, quantity, q_err = None, q_cov = None,
 		# General fitting options: method, parameters to vary
-		method = 'leastsq', mask = None, verbose = True, \
+		method = 'leastsq', mask = None, verbose = True,
 		# Options specific to leastsq
-		tolerance = 1E-5, \
+		tolerance = 1E-5,
 		# Options specific to the MCMC initialization
-		initial_step = 0.1, nwalkers = 100, random_seed = None, \
+		initial_step = 0.1, nwalkers = 100, random_seed = None,
 		# Options specific to running the MCMC chain and its analysis
 		convergence_step = 100, converged_GR = 0.01, best_fit = 'median', output_every_n = 100):
 		"""
@@ -1005,7 +1005,7 @@ class HaloDensityProfile():
 			if q_cov is None and q_err is None:
 				raise Exception('MCMC cannot be run without uncertainty vector or covariance matrix.')
 			
-			x, dict = self._fitMethodMCMC(r, q, f, covinv, mask, N_par_fit, verbose, \
+			x, dict = self._fitMethodMCMC(r, q, f, covinv, mask, N_par_fit, verbose,
 				converged_GR, nwalkers, best_fit, initial_step, random_seed, convergence_step, output_every_n)
 			
 		elif method == 'leastsq':
@@ -1229,7 +1229,7 @@ class NFWProfile(HaloDensityProfile):
 	# CONSTRUCTOR
 	###############################################################################################
 
-	def __init__(self, rhos = None, rs = None, \
+	def __init__(self, rhos = None, rs = None,
 				M = None, c = None, z = None, mdef = None):
 		
 		self.par_names = ['rhos', 'rs']
@@ -1660,7 +1660,7 @@ class EinastoProfile(HaloDensityProfile):
 	# CONSTRUCTOR
 	###############################################################################################
 
-	def __init__(self, rhos = None, rs = None, alpha = None, \
+	def __init__(self, rhos = None, rs = None, alpha = None,
 				M = None, c = None, z = None, mdef = None):
 	
 		self.par_names = ['rhos', 'rs', 'alpha']
@@ -1809,7 +1809,7 @@ class EinastoProfile(HaloDensityProfile):
 
 	def enclosedMass(self, r):
 		
-		mass = self.mass_norm * self.gamma_3alpha * scipy.special.gammainc(3.0 / self.par['alpha'], \
+		mass = self.mass_norm * self.gamma_3alpha * scipy.special.gammainc(3.0 / self.par['alpha'],
 								2.0 / self.par['alpha'] * (r / self.par['rs'])**self.par['alpha'])
 		
 		return mass
@@ -1921,8 +1921,8 @@ class DK14Profile(HaloDensityProfile):
 	# CONSTRUCTOR
 	###############################################################################################
 	
-	def __init__(self, rhos = None, rs = None, rt = None, alpha = None, beta = None, gamma = None, be = None, se = None, R200m = None, rho_m = None, \
-				M = None, c = None, z = None, mdef = None, \
+	def __init__(self, rhos = None, rs = None, rt = None, alpha = None, beta = None, gamma = None, be = None, se = None, R200m = None, rho_m = None,
+				M = None, c = None, z = None, mdef = None,
 				selected = 'by_mass', Gamma = None, part = 'both', outer = 'pl+mean'):
 	
 		self.par_names = ['rhos', 'rs', 'rt', 'alpha', 'beta', 'gamma', 'be', 'se', 'R200m', 'rho_m']
@@ -1953,7 +1953,7 @@ class DK14Profile(HaloDensityProfile):
 			self.par['R200m'] = R200m
 			self.par['rho_m'] = rho_m
 		else:
-			self.fundamentalParameters(M, c, z, mdef, be, se, \
+			self.fundamentalParameters(M, c, z, mdef, be, se,
 						part = part, selected = selected, Gamma = Gamma, outer = outer)
 
 		# We need to guess a radius when computing vmax
@@ -1997,8 +1997,8 @@ class DK14Profile(HaloDensityProfile):
 	# METHODS BOUND TO THE CLASS
 	###############################################################################################
 
-	def fundamentalParameters(self, M, c, z, mdef, be, se, \
-			part = 'both', selected = 'by_mass', Gamma = None, outer = 'pl+mean', \
+	def fundamentalParameters(self, M, c, z, mdef, be, se,
+			part = 'both', selected = 'by_mass', Gamma = None, outer = 'pl+mean',
 			acc_warn = 0.01, acc_err = 0.05):
 		"""
 		Get the native DK14 parameters given a halo mass, and possibly concentration.
@@ -2110,7 +2110,7 @@ class DK14Profile(HaloDensityProfile):
 			# Iterate to find an M200m for which the desired mass is correct
 			rho_target = basics.densityThreshold(z, mdef)
 			args = par2, Gamma, rho_target, R_target
-			self.par['R200m'] = scipy.optimize.brentq(radius_diff, R200m_guess / 1.3, R200m_guess * 1.3, \
+			self.par['R200m'] = scipy.optimize.brentq(radius_diff, R200m_guess / 1.3, R200m_guess * 1.3,
 								args = args, xtol = RTOL)
 
 			# Check the accuracy of the result; M should be very close to MDelta now
@@ -2280,7 +2280,7 @@ class DK14Profile(HaloDensityProfile):
 		r_use, is_array = utilities.getArray(r)
 		surfaceDensity = 0.0 * r_use
 		for i in range(len(r_use)):	
-			surfaceDensity[i], _ = scipy.integrate.quad(integrand, r_use[i], self.rmax, args = r_use[i], \
+			surfaceDensity[i], _ = scipy.integrate.quad(integrand, r_use[i], self.rmax, args = r_use[i],
 											epsrel = accuracy, limit = 1000)
 			
 		if not is_array:
@@ -2296,7 +2296,7 @@ class DK14Profile(HaloDensityProfile):
 	
 	def _RDeltaLowlevel(self, R_guess, density_threshold, guess_tolerance = 5.0):
 			
-		R = scipy.optimize.brentq(self._thresholdEquation, R_guess / guess_tolerance, \
+		R = scipy.optimize.brentq(self._thresholdEquation, R_guess / guess_tolerance,
 				R_guess * guess_tolerance, args = density_threshold, xtol = self.accuracy_radius)
 		
 		return R
@@ -2585,7 +2585,7 @@ def pseudoEvolve(M_i, c_i, z_i, mdef_i, z_f, mdef_f, profile = 'nfw'):
 	elif profile == 'dk14':
 		
 		for i in range(N):
-			prof = DK14Profile(M = M_i[i], mdef = mdef_i, z = z_i, c = c_i[i], \
+			prof = DK14Profile(M = M_i[i], mdef = mdef_i, z = z_i, c = c_i[i],
 							selected = 'by_mass', part = 'inner')
 			if mdef_f == '200m':
 				Rnew[i] = prof.self.par['R200m']
@@ -2650,7 +2650,7 @@ def changeMassDefinition(M, c, z, mdef_in, mdef_out, profile = 'nfw'):
 
 ###################################################################################################
 
-def radiusFromPdf(M, c, z, mdef, cumulativePdf, \
+def radiusFromPdf(M, c, z, mdef, cumulativePdf,
 					interpolate = True, min_interpolate_pdf = 0.01):
 	"""
 	Get the radius where the cumulative density distribution of a halo has a certain value, 

@@ -118,7 +118,7 @@ html_theme = 'bizstyle'
 # further.  For a list of options available for each theme, see the
 # documentation.
 if html_theme == 'scipy':
-	html_theme_options = {"edit_link": False, "sidebar": 'right', 'navigation_links': True, \
+	html_theme_options = {"edit_link": False, "sidebar": 'right', 'navigation_links': True,
 	'rootlinks': [("https://bitbucket.org/bdiemer/colossus", "BitBucket Repository")]}
 elif html_theme == 'cloud':
 	html_theme_options = {'rightsidebar': True, 'max_width': '13in'}

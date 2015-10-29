@@ -137,7 +137,7 @@ def twoHaloTerm(r, M, z, mdef):
 	cosmo = cosmology.getCurrent()
 	b = haloBias(M, z, mdef)
 	r_comoving_Mpc = r / 1000.0 * (1.0 + z)
-	xi = cosmo.correlationFunction(r_comoving_Mpc)
+	xi = cosmo.correlationFunction(r_comoving_Mpc, z)
 	rho_2h = cosmo.rho_m(z) * (1.0 + b * xi)
 	
 	return rho_2h

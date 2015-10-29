@@ -329,11 +329,11 @@ class Cosmology(object):
 		after use. 
 	"""
 	
-	def __init__(self, name = None, \
-		Om0 = None, OL0 = None, Ob0 = None, H0 = None, sigma8 = None, ns = None, \
-		flat = True, relspecies = True, Tcmb0 = 2.7255, Neff = 3.046, \
-		power_law = False, power_law_n = 0.0, \
-		print_info = False, print_warnings = True, \
+	def __init__(self, name = None,
+		Om0 = None, OL0 = None, Ob0 = None, H0 = None, sigma8 = None, ns = None,
+		flat = True, relspecies = True, Tcmb0 = 2.7255, Neff = 3.046,
+		power_law = False, power_law_n = 0.0,
+		print_info = False, print_warnings = True,
 		interpolation = True, storage = True, text_output = False):
 		
 		if name is None:
@@ -463,8 +463,8 @@ class Cosmology(object):
 		s = 'Cosmology "%s", flat = %s, relspecies = %s, \n' \
 			'    Om0 = %.4f, OL0 = %.4f, Ob0 = %.4f, H0 = %.2f, sigma8 = %.4f, ns = %.4f, \n' \
 			'    Tcmb0 = %.4f, Neff = %.4f, PL = %s, PLn = %.4f' \
-			% (self.name, str(self.flat), str(self.relspecies), \
-			self.Om0, self.OL0, self.Ob0, self.H0, self.sigma8, self.ns, self.Tcmb0, self.Neff, \
+			% (self.name, str(self.flat), str(self.relspecies),
+			self.Om0, self.OL0, self.Ob0, self.H0, self.sigma8, self.ns, self.Tcmb0, self.Neff,
 			str(self.power_law), self.power_law_n)
 		
 		return s
@@ -511,8 +511,8 @@ class Cosmology(object):
 	def _getHash(self):
 	
 		param_string = "Name_%s_Flat_%s_relspecies_%s_Om0_%.4f_OL0_%.4f_Ob0_%.4f_H0_%.4f_sigma8_%.4f_ns_%.4f_Tcmb0_%.4f_Neff_%.4f_PL_%s_PLn_%.4f" \
-			% (self.name, str(self.flat), str(self.relspecies), \
-			self.Om0, self.OL0, self.Ob0, self.H0, self.sigma8, self.ns, self.Tcmb0, self.Neff, \
+			% (self.name, str(self.flat), str(self.relspecies),
+			self.Om0, self.OL0, self.Ob0, self.H0, self.sigma8, self.ns, self.Tcmb0, self.Neff,
 			str(self.power_law), self.power_law_n)
 
 		hash_new = hashlib.md5(param_string.encode()).hexdigest()
@@ -596,7 +596,7 @@ class Cosmology(object):
 			object_data = self.storage_temp[object_id]
 
 		elif self.storage and os.path.exists(self.cache_dir + object_id):
-			object_data = np.loadtxt(self.cache_dir + object_id, usecols = (0, 1), \
+			object_data = np.loadtxt(self.cache_dir + object_id, usecols = (0, 1),
 									skiprows = 0, unpack = True)
 			self.storage_temp[object_id] = object_data
 			
@@ -620,7 +620,7 @@ class Cosmology(object):
 					object_raw = self.storage_pers[object_name]
 		
 				elif self.storage and os.path.exists(self.cache_dir + object_name):
-					object_raw = np.loadtxt(self.cache_dir + object_name, usecols = (0, 1), \
+					object_raw = np.loadtxt(self.cache_dir + object_name, usecols = (0, 1),
 									skiprows = 0, unpack = True)
 
 				if object_raw is None:
@@ -638,10 +638,10 @@ class Cosmology(object):
 						if object_raw[1][-1] < object_raw[1][0]:
 							object_raw = object_raw[:,::-1]
 						
-						object_data = scipy.interpolate.InterpolatedUnivariateSpline(object_raw[1], \
+						object_data = scipy.interpolate.InterpolatedUnivariateSpline(object_raw[1],
 																					object_raw[0])
 					else:
-						object_data = scipy.interpolate.InterpolatedUnivariateSpline(object_raw[0], \
+						object_data = scipy.interpolate.InterpolatedUnivariateSpline(object_raw[0],
 																					object_raw[1])
 					self.storage_temp[object_id] = object_data
 						
@@ -944,7 +944,7 @@ class Cosmology(object):
 		age: The age of the universe at redshift z.
 		"""
 		
-		t = self._zFunction('lookbacktime', self._lookbackTimeExact, z, derivative = derivative, \
+		t = self._zFunction('lookbacktime', self._lookbackTimeExact, z, derivative = derivative,
 						inverse = inverse)
 		
 		return t
@@ -1058,7 +1058,7 @@ class Cosmology(object):
 		angularDiameterDistance: The angular diameter distance to redshift z.
 		"""
 		
-		d = self._zFunction('luminositydist', self._luminosityDistanceExact, z, \
+		d = self._zFunction('luminositydist', self._luminosityDistanceExact, z,
 						future = False, derivative = derivative, inverse = inverse)
 		
 		return d
@@ -1097,7 +1097,7 @@ class Cosmology(object):
 		luminosityDistance: The luminosity distance to redshift z.
 		"""
 
-		d = self._zFunction('angdiamdist', self._angularDiameterDistanceExact, z, \
+		d = self._zFunction('angdiamdist', self._angularDiameterDistanceExact, z,
 						future = False, derivative = derivative, inverse = inverse)
 		
 		return d
@@ -1634,7 +1634,7 @@ class Cosmology(object):
 		growthFactorUnnormalized: The linear growth factor, :math:`D_+(z)`.
 		"""
 
-		D = self._zFunction('growthfactor', self._growthFactorExact, z, derivative = derivative, \
+		D = self._zFunction('growthfactor', self._growthFactorExact, z, derivative = derivative,
 						inverse = inverse)
 
 		return D
@@ -1707,53 +1707,59 @@ class Cosmology(object):
 		-------------------------------------------------------------------------------------------
 		transferFunctionEH98Smooth: The transfer function according to Eisenstein & Hu 1998, without the BAO features.
 		"""
-					
+
+		# This version of the function is based on Matt Becker's CosmoCalc code.
+
 		# Define shorter expressions
 		omb = self.Ob0
 		om0 = self.Om0
 		omc = om0 - omb
+		ombom0 = omb / om0
 		h = self.h
+		h2 = h**2
+		om0h2 = om0 * h2
+		ombh2 = omb * h2
 		theta2p7 = self.Tcmb0 / 2.7
+		theta2p72 = theta2p7**2
+		theta2p74 = theta2p72**2
 		
 		# Convert kh from h/Mpc to 1/Mpc
 		kh = k * h
 	
 		# Equation 2
-		zeq = 2.50e4 * om0 * h * h / (theta2p7 * theta2p7 * theta2p7 * theta2p7)
+		zeq = 2.50e4 * om0h2 / theta2p74
 	
 		# Equation 3
-		keq = 7.46e-2 * om0 * h * h / (theta2p7 * theta2p7)
+		keq = 7.46e-2 * om0h2 / theta2p72
 	
 		# Equation 4
-		b1d = 0.313 * pow(om0 * h * h, -0.419) * (1.0 + 0.607 * pow(om0 * h * h, 0.674))
-		b2d = 0.238 * pow(om0 * h * h, 0.223)
-		zd = 1291.0 * pow(om0 * h * h, 0.251) / (1.0 + 0.659 * pow(om0 * h * h, 0.828)) \
-			* (1.0 + b1d * pow(omb * h * h, b2d))
+		b1d = 0.313 * om0h2**-0.419 * (1.0 + 0.607 * om0h2**0.674)
+		b2d = 0.238 * om0h2**0.223
+		zd = 1291.0 * om0h2**0.251 / (1.0 + 0.659 * om0h2**0.828) * (1.0 + b1d * ombh2**b2d)
 	
 		# Equation 5
-		Rd = 31.5 * omb * h * h / (theta2p7 * theta2p7 * theta2p7 * theta2p7) / ((zd) / 1e3)
-		Req = 31.5 * omb * h * h / (theta2p7 * theta2p7 * theta2p7 * theta2p7) / (zeq / 1e3)
+		Rd = 31.5 * ombh2 / theta2p74 / (zd / 1e3)
+		Req = 31.5 * ombh2 / theta2p74 / (zeq / 1e3)
 	
 		# Equation 6
 		s = 2.0 / 3.0 / keq * np.sqrt(6.0 / Req) * np.log((np.sqrt(1.0 + Rd) + \
 			np.sqrt(Rd + Req)) / (1.0 + np.sqrt(Req)))
 	
 		# Equation 7
-		ksilk = 1.6 * pow(omb * h * h, 0.52) * pow(om0 * h * h, 0.73) \
-			* (1.0 + pow(10.4 * om0 * h * h, -0.95))
+		ksilk = 1.6 * ombh2**0.52 * om0h2**0.73 * (1.0 + (10.4 * om0h2)**-0.95)
 	
 		# Equation 10
 		q = kh / 13.41 / keq
 	
 		# Equation 11
-		a1 = pow(46.9 * om0 * h * h, 0.670) * (1.0 + pow(32.1 * om0 * h * h, -0.532))
-		a2 = pow(12.0 * om0 * h * h, 0.424) * (1.0 + pow(45.0 * om0 * h * h, -0.582))
-		ac = pow(a1, -1.0 * omb / om0) * pow(a2, -1.0 * (omb / om0) * (omb / om0) * (omb / om0))
+		a1 = (46.9 * om0h2)**0.670 * (1.0 + (32.1 * om0h2)**-0.532)
+		a2 = (12.0 * om0h2)**0.424 * (1.0 + (45.0 * om0h2)**-0.582)
+		ac = a1**(-ombom0) * a2**(-ombom0**3)
 	
 		# Equation 12
-		b1 = 0.944 / (1.0 + pow(458.0 * om0 * h * h, -0.708))
-		b2 = pow(0.395 * om0 * h * h, -0.0266)
-		bc = 1.0 / (1.0 + b1 * (pow(omc / om0, b2) - 1.0))
+		b1 = 0.944 / (1.0 + (458.0 * om0h2)**-0.708)
+		b2 = (0.395 * om0h2)**-0.0266
+		bc = 1.0 / (1.0 + b1 * ((omc / om0)**b2 - 1.0))
 	
 		# Equation 15
 		y = (1.0 + zeq) / (1.0 + zd)
@@ -1761,45 +1767,43 @@ class Cosmology(object):
 			* np.log((np.sqrt(1.0 + y) + 1.0) / (np.sqrt(1.0 + y) - 1.0)))
 	
 		# Equation 14
-		ab = 2.07 * keq * s * pow(1.0 + Rd, -3.0 / 4.0) * Gy
+		ab = 2.07 * keq * s * (1.0 + Rd)**(-3.0 / 4.0) * Gy
 	
 		# Get CDM part of transfer function
 	
 		# Equation 18
-		f = 1.0 / (1.0 + (kh * s / 5.4) * (kh * s / 5.4) * (kh * s / 5.4) * (kh * s / 5.4))
+		f = 1.0 / (1.0 + (kh * s / 5.4)**4)
 	
 		# Equation 20
-		C = 14.2 / ac + 386.0 / (1.0 + 69.9 * pow(q, 1.08))
+		C = 14.2 / ac + 386.0 / (1.0 + 69.9 * q**1.08)
 	
 		# Equation 19
 		T0t = np.log(np.e + 1.8 * bc * q) / (np.log(np.e + 1.8 * bc * q) + C * q * q)
 	
 		# Equation 17
-		C1bc = 14.2 + 386.0 / (1.0 + 69.9 * pow(q, 1.08))
+		C1bc = 14.2 + 386.0 / (1.0 + 69.9 * q**1.08)
 		T0t1bc = np.log(np.e + 1.8 * bc * q) / (np.log(np.e + 1.8 * bc * q) + C1bc * q * q)
 		Tc = f * T0t1bc + (1.0 - f) * T0t
 	
 		# Get baryon part of transfer function
 	
 		# Equation 24
-		bb = 0.5 + omb / om0 + (3.0 - 2.0 * omb / om0) * np.sqrt((17.2 * om0 * h * h) \
-			* (17.2 * om0 * h * h) + 1.0)
+		bb = 0.5 + ombom0 + (3.0 - 2.0 * ombom0) * np.sqrt((17.2 * om0h2) * (17.2 * om0h2) + 1.0)
 	
 		# Equation 23
-		bnode = 8.41 * pow(om0 * h * h, 0.435)
+		bnode = 8.41 * om0h2**0.435
 	
 		# Equation 22
-		st = s / pow(1.0 + (bnode / kh / s) * (bnode / kh / s) * (bnode / kh / s), 1.0 / 3.0)
+		st = s / (1.0 + (bnode / kh / s) * (bnode / kh / s) * (bnode / kh / s))**(1.0 / 3.0)
 	
 		# Equation 21
-		C11 = 14.2 + 386.0 / (1.0 + 69.9 * pow(q, 1.08))
+		C11 = 14.2 + 386.0 / (1.0 + 69.9 * q**1.08)
 		T0t11 = np.log(np.e + 1.8 * q) / (np.log(np.e + 1.8 * q) + C11 * q * q)
-		Tb = (T0t11 / (1.0 + (kh * s / 5.2) * (kh * s / 5.2)) + ab / (1.0 + (bb / kh / s) * \
-			(bb / kh / s) * (bb / kh / s)) * np.exp(-pow(kh / ksilk, 1.4))) \
+		Tb = (T0t11 / (1.0 + (kh * s / 5.2)**2) + ab / (1.0 + (bb / kh / s)**3) * np.exp(-(kh / ksilk)**1.4)) \
 			* np.sin(kh * st) / (kh * st)
 	
 		# Total transfer function
-		Tk = omb / om0 * Tb + omc / om0 * Tc
+		Tk = ombom0 * Tb + omc / om0 * Tc
 	
 		return Tk
 
@@ -1828,23 +1832,27 @@ class Cosmology(object):
 		-------------------------------------------------------------------------------------------
 		transferFunctionEH98: The transfer function according to Eisenstein & Hu 1998.
 		"""
+		
 		omb = self.Ob0
 		om0 = self.Om0
+		ombom0 = omb / om0
 		h = self.h
+		h2 = h**2
+		om0h2 = om0 * h2
+		ombh2 = omb * h2
 		theta2p7 = self.Tcmb0 / 2.7
 
 		# Convert kh from hMpc^-1 to Mpc^-1
 		kh = k * h
 	
 		# Equation 26
-		s = 44.5 * np.log(9.83 / om0 / h / h) / np.sqrt(1.0 + 10.0 * pow(omb * h * h, 0.75))
+		s = 44.5 * np.log(9.83 / om0h2) / np.sqrt(1.0 + 10.0 * ombh2**0.75)
 	
 		# Equation 31
-		alphaGamma = 1.0 - 0.328 * np.log(431.0 * om0 * h * h) * omb / om0 \
-				+ 0.38 * np.log(22.3 * om0 * h * h) * (omb / om0) * (omb / om0)
+		alphaGamma = 1.0 - 0.328 * np.log(431.0 * om0h2) * ombom0 + 0.38 * np.log(22.3 * om0h2) * ombom0**2
 	
 		# Equation 30
-		Gamma = om0 * h * (alphaGamma + (1.0 - alphaGamma) / (1.0 + pow(0.43 * kh * s, 4.0)))
+		Gamma = om0 * h * (alphaGamma + (1.0 - alphaGamma) / (1.0 + (0.43 * kh * s)**4))
 	
 		# Equation 28
 		q = k * theta2p7 * theta2p7 / Gamma
@@ -1899,7 +1907,7 @@ class Cosmology(object):
 			norm_name = 'Pk_norm_%s_%s' % (self.name, Pk_source)
 			norm = self._getStoredObject(norm_name)
 			if norm is None:
-				sigma_8Mpc = self._sigmaExact(8.0, filt = 'tophat', Pk_source = Pk_source, \
+				sigma_8Mpc = self._sigmaExact(8.0, filt = 'tophat', Pk_source = Pk_source,
 											exact_Pk = True, ignore_norm = True)
 				norm = (self.sigma8 / sigma_8Mpc)**2
 				self._storeObject(norm_name, norm, persistent = False)
@@ -2174,7 +2182,7 @@ class Cosmology(object):
 					raise Exception(msg)
 	
 			args = Pk_interpolator
-			sigma2, _ = scipy.integrate.quad(logIntegrand, test_k[min_index], test_k[max_index], \
+			sigma2, _ = scipy.integrate.quad(logIntegrand, test_k[min_index], test_k[max_index],
 						args = args, epsabs = 0.0, epsrel = self.accuracy_sigma, limit = 100)
 			sigma = np.sqrt(sigma2 / 2.0 / np.pi**2)
 		
@@ -2223,7 +2231,7 @@ class Cosmology(object):
 
 	###############################################################################################
 	
-	def sigma(self, R, j = 0, z = 0.0, inverse = False, derivative = False, Pk_source = 'eh98', filt = 'tophat'):
+	def sigma(self, R, z, j = 0, inverse = False, derivative = False, Pk_source = 'eh98', filt = 'tophat'):
 		"""
 		The rms variance of the linear density field on a scale R, :math:`\\sigma(R)`.
 		
@@ -2247,11 +2255,11 @@ class Cosmology(object):
 		R: array_like
 			The radius of the filter in comoving Mpc/h, where :math:`10^{-12} < R < 10^3`; can be 
 			a number or a numpy array.
+		z: float
+			Redshift; for z > 0, :math:`\sigma(R)` is multiplied by the linear growth factor.
 		j: integer
 			The order of the integral. j = 0 corresponds to the variance, j = 1 to the same integral 
 			with an extra :math:`k^2` term etc; see Bardeen et al. 1986 for mathematical details.
-		z: float
-			Redshift; for z > 0, :math:`\sigma(R)` is multiplied by the linear growth factor.
 		filt: str
 			Either ``tophat`` or ``gaussian``. Higher moments (j > 0) can only be computed for the 
 			gaussian filter.
@@ -2392,7 +2400,7 @@ class Cosmology(object):
 		"""
 				
 		R = self.lagrangianR(M)
-		sigma = self.sigma(R, z = z, filt = filt, Pk_source = Pk_source)
+		sigma = self.sigma(R, z, filt = filt, Pk_source = Pk_source)
 		nu = self.collapseOverdensity(deltac_const, sigma) / sigma
 
 		return nu
@@ -2432,7 +2440,7 @@ class Cosmology(object):
 		"""
 		
 		sigma = self.collapseOverdensity(deltac_const = deltac_const) / nu
-		R = self.sigma(sigma, z = z, filt = filt, Pk_source = Pk_source, inverse = True)
+		R = self.sigma(sigma, z, filt = filt, Pk_source = Pk_source, inverse = True)
 		M = self.lagrangianM(R)
 		
 		return M
@@ -2577,7 +2585,7 @@ class Cosmology(object):
 	
 	###############################################################################################
 	
-	def peakCurvature(self, M, z, filt = 'gaussian', Pk_source = 'eh98', \
+	def peakCurvature(self, M, z, filt = 'gaussian', Pk_source = 'eh98',
 					deltac_const = True, exact = False):
 		"""
 		The average curvature of peaks for a halo mass M.
@@ -2637,9 +2645,9 @@ class Cosmology(object):
 		"""
 
 		R = self.lagrangianR(M)
-		sigma0 = self.sigma(R, j = 0, z = z, filt = filt, Pk_source = Pk_source)
-		sigma1 = self.sigma(R, j = 1, z = z, filt = filt, Pk_source = Pk_source)
-		sigma2 = self.sigma(R, j = 2, z = z, filt = filt, Pk_source = Pk_source)
+		sigma0 = self.sigma(R, z, j = 0, filt = filt, Pk_source = Pk_source)
+		sigma1 = self.sigma(R, z, j = 1, filt = filt, Pk_source = Pk_source)
+		sigma2 = self.sigma(R, z, j = 2, filt = filt, Pk_source = Pk_source)
 	
 		if exact:
 			return self._peakCurvatureExactFromSigma(sigma0, sigma1, sigma2, deltac_const = deltac_const)
@@ -2676,7 +2684,7 @@ class Cosmology(object):
 		k_min = 1E-6 / R
 		k_max = 10.0 / f_cut / R
 		args = R, Pk_source, Pk_interpolator
-		xi, _ = scipy.integrate.quad(integrand, k_min, k_max, args = args, epsabs = 0.0, \
+		xi, _ = scipy.integrate.quad(integrand, k_min, k_max, args = args, epsabs = 0.0,
 					epsrel = self.accuracy_xi, limit = 100, weight = 'sin', wvar = R)
 		xi /= 2.0 * np.pi**2
 
@@ -2730,7 +2738,7 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	def correlationFunction(self, R, z = 0.0, derivative = False, Pk_source = 'eh98'):
+	def correlationFunction(self, R, z, derivative = False, Pk_source = 'eh98'):
 		"""
 		The linear matter-matter correlation function at radius R.
 		

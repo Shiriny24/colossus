@@ -93,8 +93,8 @@ from colossus.halo import profile
 
 ###################################################################################################
 
-def concentration(M, mdef, z, \
-				model = 'diemer15', statistic = 'median', conversion_profile = 'nfw', \
+def concentration(M, mdef, z,
+				model = 'diemer15', statistic = 'median', conversion_profile = 'nfw',
 				range_return = False, range_warning = True):
 	"""
 	Concentration as a function of halo mass and redshift, for different concentration models, 
@@ -275,7 +275,7 @@ def concentration(M, mdef, z, \
 				mask[i] = False
 				
 			cDelta, mask_element = evaluateC(func, MDelta, limited, args)
-			_, _, c[i] = profile.changeMassDefinition(MDelta, cDelta, z, mdef_model, \
+			_, _, c[i] = profile.changeMassDefinition(MDelta, cDelta, z, mdef_model,
 									mdef, profile = conversion_profile)
 			if limited:
 				mask[i] = mask_element
