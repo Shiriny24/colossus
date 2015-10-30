@@ -87,6 +87,7 @@ import scipy.optimize
 import warnings
 
 from colossus.utils import utilities
+from colossus.utils import constants
 from colossus.cosmology import cosmology
 from colossus.halo import basics
 from colossus.halo import profile
@@ -536,7 +537,7 @@ def modelKlypin15fromNu(M, z, mdef):
 
 	cosmo = cosmology.getCurrent()
 	nu = cosmo.peakHeight(M, z)
-	sigma = cosmology.AST_delta_collapse / nu
+	sigma = constants.DELTA_COLLAPSE / nu
 	a0 = np.interp(z, z_bins, a0_bins)
 	b0 = np.interp(z, z_bins, b0_bins)
 
@@ -755,9 +756,9 @@ def modelPrada12(M200c, z):
 	"""
 
 	def cmin(x):
-		return 3.681 + (5.033 - 3.681) * (1.0 / np.pi * np.atan(6.948 * (x - 0.424)) + 0.5)
+		return 3.681 + (5.033 - 3.681) * (1.0 / np.pi * np.arctan(6.948 * (x - 0.424)) + 0.5)
 	def smin(x):
-		return 1.047 + (1.646 - 1.047) * (1.0 / np.pi * np.atan(7.386 * (x - 0.526)) + 0.5)
+		return 1.047 + (1.646 - 1.047) * (1.0 / np.pi * np.arctan(7.386 * (x - 0.526)) + 0.5)
 
 	cosmo = cosmology.getCurrent()
 	nu = cosmo.peakHeight(M200c, z)

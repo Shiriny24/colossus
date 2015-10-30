@@ -145,6 +145,7 @@ import abc
 import collections
 
 from colossus.utils import utilities
+from colossus.utils import constants
 from colossus.utils import mcmc
 from colossus.cosmology import cosmology
 from colossus.halo import basics
@@ -488,7 +489,7 @@ class HaloDensityProfile():
 		"""		
 	
 		M = self.enclosedMass(r)
-		v = np.sqrt(cosmology.AST_G * M / r)
+		v = np.sqrt(constants.G * M / r)
 		
 		return v
 

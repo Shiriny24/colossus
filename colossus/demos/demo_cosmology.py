@@ -95,7 +95,7 @@ def demonstrateAdding():
 	print(("We are now in " + cosmo.name + ", H0 = %.1f" % (cosmo.H0)))
 	utilities.printLine()
 	print("We can also add this cosmology to the library of cosmologies, which allos us to set it from any function.")
-	cosmology.addcosmology('my_cosmo', my_cosmo)
+	cosmology.addCosmology('my_cosmo', my_cosmo)
 	cosmo = setMyCosmo()
 	print(("We are once again in " + cosmo.name + ", H0 = %.1f" % (cosmo.H0)))
 	

@@ -198,31 +198,7 @@ import hashlib
 import pickle
 
 from colossus.utils import utilities
-
-###################################################################################################
-# Useful constants
-###################################################################################################
-
-AST_pc  = 3.08568025E18
-"""A parsec in centimeters."""
-AST_kpc = 3.08568025E21
-"""A kiloparsec in centimeters."""
-AST_Mpc = 3.08568025E24 
-"""A megaparsec in centimeters."""
-AST_year = 31556926.0
-"""A year in seconds."""
-AST_Msun = 1.98892E33
-"""A solar mass, :math:`M_{\odot}`, in grams."""
-AST_c = 2.99792458E10
-"""The speed of light in cm/s."""
-AST_G = 4.30172E-6
-"""The gravitational constant G in :math:`kpc \ km^2 / M_{\odot} / s^2`."""
-AST_rho_crit_0_kpc3 = 2.774848e+02
-"""The critical density of the universe at z = 0 in units of :math:`M_{\odot} h^2 / kpc^3`."""
-AST_rho_crit_0_Mpc3 = 2.774848e+11
-"""The critical density of the universe at z = 0 in units of :math:`M_{\odot} h^2 / Mpc^3`."""
-AST_delta_collapse = 1.686
-"""The threshold overdensity for halo collapse according to the top-hat collapse model."""
+from colossus.utils import constants
 
 ###################################################################################################
 # Global variables for cosmology object and pre-set cosmologies
@@ -387,7 +363,7 @@ class Cosmology(object):
 			#
 			# where sigmaSB = 5.670373E-5 erg/cm^2/s/K^4. Then,
 			#
-			# Omega_gamma = rho_gamma / (Msun/g) * (kpc/cm)^3 / h^2 / AST_rho_crit_0_kpc3
+			# Omega_gamma = rho_gamma / (Msun/g) * (kpc/cm)^3 / h^2 / constants.RHO_CRIT_0_KPC3
 			#
 			# Most of these steps can be summarized in one constant.
 			self.Ogamma0 = 4.48131796342E-07 * self.Tcmb0**4 / self.h2
@@ -902,7 +878,7 @@ class Cosmology(object):
 		age: The age of the universe at redshift z.
 		"""
 		
-		tH = 1E-16 * AST_Mpc / AST_year / self.h / self.Ez(z)
+		tH = 1E-16 * constants.MPC / constants.YEAR / self.h / self.Ez(z)
 		
 		return tH
 	
@@ -1020,7 +996,7 @@ class Cosmology(object):
 		angularDiameterDistance: The angular diameter distance to redshift z.
 		"""
 		
-		d = self._integral_oneOverEz(z_min = z_min, z_max = z_max) * AST_c * 1E-7
+		d = self._integral_oneOverEz(z_min = z_min, z_max = z_max) * constants.C * 1E-7
 		
 		return d
 
@@ -1165,7 +1141,7 @@ class Cosmology(object):
 			dimensions as z.
 		"""
 			
-		return AST_rho_crit_0_kpc3 * self.Ez(z)**2
+		return constants.RHO_CRIT_0_KPC3 * self.Ez(z)**2
 
 	###############################################################################################
 	
@@ -1189,7 +1165,7 @@ class Cosmology(object):
 		Om: The matter density of the universe, in units of the critical density.
 		"""
 			
-		return AST_rho_crit_0_kpc3 * self.Om0 * (1.0 + z)**3
+		return constants.RHO_CRIT_0_KPC3 * self.Om0 * (1.0 + z)**3
 
 
 	###############################################################################################
@@ -1214,7 +1190,7 @@ class Cosmology(object):
 		OL: The dark energy density of the universe, in units of the critical density. 
 		"""
 			
-		return AST_rho_crit_0_kpc3 * self.OL0
+		return constants.RHO_CRIT_0_KPC3 * self.OL0
 
 	###############################################################################################
 	
@@ -1240,7 +1216,7 @@ class Cosmology(object):
 		Ogamma: The density of photons in the universe, in units of the critical density.
 		"""
 			
-		return AST_rho_crit_0_kpc3 * self.Ogamma0 * (1.0 + z)**4
+		return constants.RHO_CRIT_0_KPC3 * self.Ogamma0 * (1.0 + z)**4
 
 	###############################################################################################
 	
@@ -1266,7 +1242,7 @@ class Cosmology(object):
 		Onu: The density of neutrinos in the universe, in units of the critical density.
 		"""
 			
-		return AST_rho_crit_0_kpc3 * self.Onu0 * (1.0 + z)**4
+		return constants.RHO_CRIT_0_KPC3 * self.Onu0 * (1.0 + z)**4
 
 	###############################################################################################
 	
@@ -1293,7 +1269,7 @@ class Cosmology(object):
 		Or: The density of relativistic species in the universe, in units of the critical density.
 		"""
 			
-		return AST_rho_crit_0_kpc3 * self.Or0 * (1.0 + z)**4
+		return constants.RHO_CRIT_0_KPC3 * self.Or0 * (1.0 + z)**4
 
 	###############################################################################################
 
@@ -1669,9 +1645,9 @@ class Cosmology(object):
 		"""
 				
 		if deltac_const:
-			delta_c = AST_delta_collapse
+			delta_c = constants.DELTA_COLLAPSE
 		else:
-			delta_c = AST_delta_collapse * (1.0 + 0.47 * (sigma / AST_delta_collapse)**1.23)
+			delta_c = constants.DELTA_COLLAPSE * (1.0 + 0.47 * (sigma / constants.DELTA_COLLAPSE)**1.23)
 		
 		return delta_c
 	

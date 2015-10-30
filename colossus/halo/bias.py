@@ -22,6 +22,7 @@ Module Reference
 
 import numpy as np
 
+from colossus.utils import constants
 from colossus.cosmology import cosmology
 from colossus.halo import basics
 
@@ -69,7 +70,7 @@ def haloBiasFromNu(nu, z, mdef):
 	C = 0.019 + 0.107 * y + 0.19 * np.exp(-1.0 * (4.0 / y)**4)
 	c = 2.4
 
-	bias = 1.0 - A * nu**a / (nu**a + cosmology.AST_delta_collapse**a) + B * nu**b + C * nu**c
+	bias = 1.0 - A * nu**a / (nu**a + constants.DELTA_COLLAPSE**a) + B * nu**b + C * nu**c
 
 	return bias
 

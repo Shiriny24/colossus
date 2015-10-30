@@ -132,8 +132,8 @@ def computeConcentrationTable(cosmo_name):
 		M200c = 10**np.arange(log_M_min, log_M_max + bin_width_logM, bin_width_logM)
 		M200c = M200c[:n_M_bins]	
 		nu200c = cosmo.peakHeight(M200c, z[i])
-		c200c_median = concentration.diemer15_c200c_nu(nu200c, z[i], statistic = 'median')
-		c200c_mean = concentration.diemer15_c200c_nu(nu200c, z[i], statistic = 'mean')
+		c200c_median = concentration.modelDiemer15fromNu(nu200c, z[i], statistic = 'median')
+		c200c_mean = concentration.modelDiemer15fromNu(nu200c, z[i], statistic = 'mean')
 			
 		for j in range(len(M200c)):
 			line = '%5.2f  %5.3f  %8.2e  %5.2f  %5.2f' % (z[i], nu200c[j], M200c[j], c200c_median[j], c200c_mean[j])
