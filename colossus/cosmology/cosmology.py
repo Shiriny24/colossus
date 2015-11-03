@@ -197,6 +197,7 @@ import scipy.interpolate
 import hashlib
 import pickle
 
+from colossus.utils import defaults
 from colossus.utils import utilities
 from colossus.utils import constants
 
@@ -307,7 +308,8 @@ class Cosmology(object):
 	
 	def __init__(self, name = None,
 		Om0 = None, OL0 = None, Ob0 = None, H0 = None, sigma8 = None, ns = None,
-		flat = True, relspecies = True, Tcmb0 = 2.7255, Neff = 3.046,
+		flat = True, relspecies = True, 
+		Tcmb0 = defaults.COSMOLOGY_TCMB0, Neff = defaults.COSMOLOGY_NEFF,
 		power_law = False, power_law_n = 0.0,
 		print_info = False, print_warnings = True,
 		interpolation = True, storage = True, text_output = False):
@@ -683,12 +685,12 @@ class Cosmology(object):
 		Hz: The Hubble parameter as a function of redshift.
 		"""
 		
-		ai = (1.0 + z)
-		sum = self.Om0 * ai**3 + self.OL0
+		zp1 = (1.0 + z)
+		sum = self.Om0 * zp1**3 + self.OL0
 		if not self.flat:
-			sum += self.Ok0 * ai**2
+			sum += self.Ok0 * zp1**2
 		if self.relspecies:
-			sum += self.Or0 * ai**4
+			sum += self.Or0 * zp1**4
 		E = np.sqrt(sum)
 		
 		return E
@@ -857,7 +859,7 @@ class Cosmology(object):
 	# Times & distances
 	###############################################################################################
 	
-	def hubbleTime(self, z = 0.0):
+	def hubbleTime(self, z):
 		"""
 		The Hubble time, :math:`1/H(z)`.
 
@@ -886,7 +888,7 @@ class Cosmology(object):
 
 	def _lookbackTimeExact(self, z):
 		
-		t = self.hubbleTime() * self._integral_oneOverEz1pz(0.0, z)
+		t = self.hubbleTime(0.0) * self._integral_oneOverEz1pz(0.0, z)
 
 		return t
 
@@ -929,13 +931,13 @@ class Cosmology(object):
 
 	def _ageExact(self, z):
 		
-		t = self.hubbleTime() * self._integral_oneOverEz1pz(z, np.inf)
+		t = self.hubbleTime(0.0) * self._integral_oneOverEz1pz(z, np.inf)
 		
 		return t
 	
 	###############################################################################################
 	
-	def age(self, z = 0.0, derivative = 0, inverse = False):
+	def age(self, z, derivative = 0, inverse = False):
 		"""
 		The age of the universe at redshift z.
 
@@ -1170,20 +1172,17 @@ class Cosmology(object):
 
 	###############################################################################################
 	
-	def rho_L(self, z):
+	def rho_L(self):
 		"""
 		The dark energy density of the universe at redshift z.
-
-		Parameters
-		-------------------------------------------------------------------------------------------
-		z: array_like
-			Redshift; can be a number or a numpy array.
+		
+		In this module, dark energy is assumed to be a cosmological constant, meaning the density
+		of dark energy does not depend on redshift.
 
 		Returns
 		-------------------------------------------------------------------------------------------
-		rho_Lambda: array_like
-			The dark energy density in units of physical :math:`M_{\odot} h^2 / kpc^3`; has the same 
-			dimensions as z.
+		rho_Lambda: float
+			The dark energy density in units of physical :math:`M_{\odot} h^2 / kpc^3`.
 	
 		See also
 		-------------------------------------------------------------------------------------------
@@ -2815,14 +2814,14 @@ def setCosmology(cosmo_name, params = None):
 	
 	if 'powerlaw_' in cosmo_name:
 		n = float(cosmo_name.split('_')[1])
-		param_dict = cosmologies['powerlaw']
+		param_dict = cosmologies['powerlaw'].copy()
 		param_dict['power_law'] = True
 		param_dict['power_law_n'] = n
 		if params is not None:
 			param_dict.update(params)
 			
 	elif cosmo_name in cosmologies:		
-		param_dict = cosmologies[cosmo_name]
+		param_dict = cosmologies[cosmo_name].copy()
 		if params is not None:
 			param_dict.update(params)
 			
