@@ -2459,14 +2459,17 @@ class DK14Profile(HaloDensityProfile):
 		return p_def
 
 	###############################################################################################
-
-	# Return and array of d rho / d ln(rhos) and d rho / d ln(rs)
 	
 	def _fitParamDeriv_rho(self, r, mask, N_par_fit):
 
 		x = self.getParameterArray()
 		deriv = np.zeros((N_par_fit, len(r)), np.float)
-		rho_r = self.density(r)
+		
+		temp_part = self.opt['part']
+		self.opt['part'] = 'inner'
+		rho_inner = self.density(r)
+		self.opt['part'] = temp_part
+		
 		counter = 0
 		
 		rhos = x[0]
@@ -2482,41 +2485,42 @@ class DK14Profile(HaloDensityProfile):
 		rrs = r / rs
 		rrt = r / rt
 		rro = r / ro
-		term1 = 1.0 + rrt ** beta
-		outer = x[9] * be * rro**-se
+		term1 = 1.0 + rrt**beta
+		#rho_outer = x[9] * be * rro**-se
+		rho_outer = x[9] * be / (self.max_outer_prof + (r / ro)**se)
 		
 		# rho_s
 		if mask[0]:
-			deriv[counter] = rho_r / rhos
+			deriv[counter] = rho_inner / rhos
 			counter += 1
 		# rs
 		if mask[1]:
-			deriv[counter] = rho_r / rs * rrs**alpha * 2.0
+			deriv[counter] = rho_inner / rs * rrs**alpha * 2.0
 			counter += 1
 		# rt
 		if mask[2]:
-			deriv[counter] = rho_r * gamma / rt / term1 * rrt ** beta
+			deriv[counter] = rho_inner * gamma / rt / term1 * rrt**beta
 			counter += 1
 		# alpha
 		if mask[3]:
-			deriv[counter] = rho_r * 2.0 / alpha ** 2 * rrs ** alpha * (1.0 - rrs ** (-alpha) - alpha * np.log(rrs))
+			deriv[counter] = rho_inner * 2.0 / alpha**2 * rrs**alpha * (1.0 - rrs**(-alpha) - alpha * np.log(rrs))
 			counter += 1
 		# beta
 		if mask[4]:
-			deriv[counter] = rho_r * (gamma * np.log(term1) / beta ** 2 - gamma * \
-										rrt ** beta * np.log(rrt) / beta / term1)
+			deriv[counter] = rho_inner * (gamma * np.log(term1) / beta**2 - gamma * \
+										rrt**beta * np.log(rrt) / beta / term1)
 			counter += 1
 		# gamma
 		if mask[5]:
-			deriv[counter] = -rho_r * np.log(term1) / beta
+			deriv[counter] = -rho_inner * np.log(term1) / beta
 			counter += 1
 		# be
 		if mask[6]:
-			deriv[counter] = outer / be
+			deriv[counter] = rho_outer / be
 			counter += 1
 		# se
 		if mask[7]:
-			deriv[counter] = -outer * np.log(rro)
+			deriv[counter] = -rho_outer * np.log(rro)
 			counter += 1
 
 		# Correct for log parameters
@@ -2526,9 +2530,7 @@ class DK14Profile(HaloDensityProfile):
 				deriv[counter] *= x[i]
 			if mask[i]:
 				counter += 1
-
-		#print(deriv)
-
+		
 		return deriv
 	
 ###################################################################################################
