@@ -18,6 +18,8 @@ from colossus.cosmology import cosmology
 
 TEST_N_DIGITS = 10
 TEST_Z = numpy.array([0.0, 1.283, 20.0])
+TEST_M = 3E12
+TEST_R = 1.245
 
 ###################################################################################################
 # UNIT TEST CLASS
@@ -75,10 +77,8 @@ class CosmologyTestCase(test_colossus.ColosssusTestCase):
 	# Basic cosmology calculations
 	###############################################################################################
 	
-	# TODO this test should fail for non-relativistic cosmo
 	def test_Ez(self):
 		correct = [1.0, 2.090250729474342, 53.657658359973375]
-		#self.cosmo.relspecies = False
 		self._testRedshiftArray(self.cosmo.Ez, correct)
 		
 	def test_Hz(self):
@@ -170,6 +170,16 @@ class CosmologyTestCase(test_colossus.ColosssusTestCase):
 	def test_Or(self):
 		correct = [9.1167732803476445e-05, 0.00056684984646836417, 0.0061582157723710767]
 		self._testRedshiftArray(self.cosmo.Or, correct)
+
+	###############################################################################################
+	# Structure growth, power spectrum etc.
+	###############################################################################################
+
+	def test_lagrangianR(self):
+		self.assertAlmostEqual(self.cosmo.lagrangianR(TEST_M), 2.0292015228231484, places = TEST_N_DIGITS)
+
+	def test_lagrangianM(self):
+		self.assertAlmostEqual(self.cosmo.lagrangianM(TEST_R), 692873211113.4847, places = TEST_N_DIGITS)
 
 	###############################################################################################
 	# Interpolation, derivatives, and inverses
