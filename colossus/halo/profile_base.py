@@ -1143,6 +1143,17 @@ class OuterTermPowerLaw(OuterTerm):
 		drho_dr = -rho_m * norm * slope * t1 * (1.0 / max_rho + t2**slope)**-2 * t2**(slope - 1.0)
 
 		return drho_dr
+
+	###############################################################################################
+	
+	# TODO correct this function; must include max_rho
+	def changePivot(self, new_pivot):
+		
+		norm, slope, r_pivot, _, _ = self._getParameters()
+		
+		self.par[self.term_par_names[0]] = norm * (r_pivot / new_pivot)**slope
+
+		return
 	
 ###################################################################################################
 # ABSTRACT BASE CLASS FOR HALO DENSITY PROFILES WITH A DESCRIPTION OF THE 2-HALO TERM
