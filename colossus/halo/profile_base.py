@@ -985,20 +985,23 @@ class OuterTerm():
 				(len(opt_array), len(opt_names))
 			raise Exception(msg)
 
-		self.par_names = par_names
-		self.opt_names = opt_names
+		self.term_par_names = par_names
+		self.term_opt_names = opt_names
 
 		# The parameters of the profile are stored in a dictionary
 		self.term_par = collections.OrderedDict()
-		self.N_par = len(self.par_names)
+		self.N_par = len(self.term_par_names)
 		for i in range(self.N_par):
-			self.term_par[self.par_names[i]] = par_array[i]
+			self.term_par[self.term_par_names[i]] = par_array[i]
 
 		# Additionally to the numerical parameters, there can be options
 		self.term_opt = collections.OrderedDict()
-		self.N_opt = len(self.opt_names)
+		self.N_opt = len(self.term_opt_names)
 		for i in range(self.N_opt):
-			self.term_opt[self.opt_names[i]] = opt_array[i]
+			self.term_opt[self.term_opt_names[i]] = opt_array[i]
+		
+		# Some other settings
+		self.include_in_surface_density = True
 		
 		return
 
@@ -1051,6 +1054,10 @@ class OuterTermRhoMean(OuterTerm):
 		cosmo = cosmology.getCurrent()
 		self.rho_m = cosmo.rho_m(z)
 		
+		# This term should not be included when computing the surface density, as it leads to 
+		# a diverging integral.
+		self.include_in_surface_density = False
+		
 		return
 
 	###############################################################################################
@@ -1099,7 +1106,7 @@ class OuterTermPowerLaw(OuterTerm):
 
 	def _getParameters(self):
 
-		r_pivot_id = self.opt[self.opt_names[0]]
+		r_pivot_id = self.opt[self.term_opt_names[0]]
 		if r_pivot_id in self.par:
 			r_pivot = self.par[r_pivot_id]
 		elif r_pivot_id in self.opt:
@@ -1108,11 +1115,11 @@ class OuterTermPowerLaw(OuterTerm):
 			msg = 'Could not find the parameter or option %s.' % (r_pivot_id)
 			raise Exception(msg)
 
-		norm = self.par[self.par_names[0]]
-		slope = self.par[self.par_names[1]]
-		r_pivot *= self.opt[self.opt_names[1]]
-		max_rho = self.opt[self.opt_names[2]]
-		z = self.opt[self.opt_names[3]]
+		norm = self.par[self.term_par_names[0]]
+		slope = self.par[self.term_par_names[1]]
+		r_pivot *= self.opt[self.term_opt_names[1]]
+		max_rho = self.opt[self.term_opt_names[2]]
+		z = self.opt[self.term_opt_names[3]]
 		rho_m = cosmology.getCurrent().rho_m(z)
 		
 		return norm, slope, r_pivot, max_rho, rho_m
@@ -1122,7 +1129,7 @@ class OuterTermPowerLaw(OuterTerm):
 	def _density(self, r):
 		
 		norm, slope, r_pivot, max_rho, rho_m = self._getParameters()
-		rho = rho_m * norm * (1.0 / max_rho + r / r_pivot)**-slope
+		rho = rho_m * norm / (1.0 / max_rho + (r / r_pivot)**slope)
 
 		return rho
 
@@ -1163,13 +1170,24 @@ class HaloDensityProfileWithOuter(HaloDensityProfile):
 		
 		# Now we also add any parameters for the 2-halo term(s)
 		self.N_outer = len(self.outer_terms)
+		
 		for i in range(self.N_outer):
+
+			# Update the par/opt and par/opt-names dictionaries
 			self.par.update(self.outer_terms[i].term_par)
 			self.opt.update(self.outer_terms[i].term_opt)
+		
+			self.par_names.extend(self.outer_terms[i].term_par_names)
+			self.opt_names.extend(self.outer_terms[i].term_opt_names)
 			
 			# Set pointers to the par and opt dictionaries of the profile class that owns the terms
 			self.outer_terms[i].par = self.par
 			self.outer_terms[i].opt = self.opt
+		
+		# We need to update the par and opt counters since the super constructor did not know 
+		# about the parameters for the outer terms
+		self.N_par = len(self.par)
+		self.N_opt = len(self.opt)
 		
 		return
 
@@ -1232,6 +1250,16 @@ class HaloDensityProfileWithOuter(HaloDensityProfile):
 
 	###############################################################################################
 	
+	def densityDerivativeLog(self, r):
+		
+		drho_dr = self.densityDerivativeLin(r)
+		rho = self.density(r)
+		der = drho_dr * r / rho
+
+		return der
+
+	###############################################################################################
+	
 	def enclosedMass(self, r, accuracy = 1E-6):
 
 		return self._enclosedMass(r, accuracy, self.density)
@@ -1247,7 +1275,7 @@ class HaloDensityProfileWithOuter(HaloDensityProfile):
 	def enclosedMassOuter(self, r, accuracy = 1E-6):
 
 		return self._enclosedMass(r, accuracy, self.densityOuter)
-
+	
 	###############################################################################################
 
 	# Find a number by which the inner profile needs to be multiplied in order to give a particular
@@ -1261,4 +1289,46 @@ class HaloDensityProfileWithOuter(HaloDensityProfile):
 		
 		return norm
 	
+	###############################################################################################
+	
+	# The surface density of the outer profile can be tricky, since some outer terms lead to a 
+	# diverging integral. Thus, constant terms such as rho_m need to be ignored in this function.
+	
+	def surfaceDensity(self, r, accuracy = 1E-6):
+
+		density_functions = []
+
+		def integrand(r, R2):
+			
+			rho = 0.0
+			for i in range(len(density_functions)):
+				rho += density_functions[i](r)
+			ret = r * rho / np.sqrt(r**2 - R2)
+			
+			return ret
+
+		if np.max(r) >= self.rmax:
+			msg = 'Cannot compute surface density at a radius (%.2e) greater than rmax (%.2e).' \
+				% (np.max(r), self.rmax)
+			raise Exception(msg)
+
+		# Create a list of functions to evaluate so we don't need to make this decision at every
+		# evaluation
+		density_functions.append(self.densityInner)
+		for i in range(self.N_outer):
+			if self.outer_terms[i].include_in_surface_density:
+				density_functions.append(self.outer_terms[i].density)
+
+		r_use, is_array = utilities.getArray(r)
+		surfaceDensity = 0.0 * r_use
+		for i in range(len(r_use)):
+			surfaceDensity[i], _ = scipy.integrate.quad(integrand, r_use[i], self.rmax, 
+										args = (r_use[i]**2), epsrel = accuracy, limit = 1000)
+			surfaceDensity[i] *= 2.0
+
+		if not is_array:
+			surfaceDensity = surfaceDensity[0]
+
+		return surfaceDensity
+
 ###################################################################################################

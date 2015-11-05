@@ -54,8 +54,7 @@ def demonstrateProfiles():
 	p = [None, None, None]
 	p[0] = profile.EinastoProfile(M = M, c = c, z = z, mdef = mdef)
 	p[1] = profile.NFWProfile(M = M, c = c, z = z, mdef = mdef)
-	p[2] = profile.DK14Profile(M = M, c = c, z = z, mdef = mdef, outer_terms = [])
-	print(p[2].par)
+	p[2] = profile.DK14Profile(M = M, c = c, z = z, mdef = mdef)
 	colors = ['darkblue', 'firebrick', 'deepskyblue']
 	ls = ['-.', '--', '-']
 	labels = ['Einasto', 'NFW', 'DK14']

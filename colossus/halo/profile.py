@@ -1048,8 +1048,10 @@ class DK14Profile(profile_base.HaloDensityProfileWithOuter):
 		# Set the fundamental variables par_names and opt_names
 		self.par_names = ['rhos', 'rs', 'rt', 'alpha', 'beta', 'gamma']
 		self.opt_names = ['selected_by', 'Gamma', 'R200m']
+		
+		# TODO the length of fit_log_mask depends on 
 		#self.fit_log_mask = np.array([True, True, True, True, True, True])
-		self.fit_log_mask = np.array([False, False, False, False, False, False])
+		self.fit_log_mask = np.array([False, False, False, False, False, False, False, False])
 
 		# Set outer terms
 		self.outer_terms = []
@@ -1126,7 +1128,7 @@ class DK14Profile(profile_base.HaloDensityProfileWithOuter):
 		else:
 			msg = "Unknown sample selection, %s." % (selected_by)
 			raise Exception(msg)
-
+		
 		return ratio
 
 	###############################################################################################
@@ -1245,7 +1247,7 @@ class DK14Profile(profile_base.HaloDensityProfileWithOuter):
 	def densityInner(self, r):
 		
 		inner = self.par['rhos'] * np.exp(-2.0 / self.par['alpha'] * ((r / self.par['rs'])**self.par['alpha'] - 1.0))
-		fT = (1.0 + (r / self.par['rt'])**self.par['beta'])**(-self.par['gamma'] / self.par['gamma'])
+		fT = (1.0 + (r / self.par['rt'])**self.par['beta'])**(-self.par['gamma'] / self.par['beta'])
 		rho_1h = inner * fT
 
 		return rho_1h
@@ -1273,51 +1275,6 @@ class DK14Profile(profile_base.HaloDensityProfileWithOuter):
 		return drho_dr
 
 	###############################################################################################
-	
-	def densityDerivativeLog(self, r):
-		
-		drho_dr = self.densityDerivativeLin(r)
-		rho = self.density(r)
-		der = drho_dr * r / rho
-		
-		return der
-
-	###############################################################################################
-	
-	# The surface density of the DK14 profile is a little tricky, since the profile approaches 
-	# rho_m at large radii. Integrating to infinity would then give infinity. Instead, we subtract
-	# the mean density if the outer profile is active. We don't need to check that r < rmax, since 
-	# rmax is infinity for the DK14 profile.
-	
-	def surfaceDensity(self, r, accuracy = 1E-6):
-
-		if np.max(r) >= self.rmax:
-			msg = 'Cannot compute surface density at a radius (%.2e) greater than rmax (%.2e).' \
-				% (np.max(r), self.rmax)
-			raise Exception(msg)
-		
-		if self.opt['part'] in ['outer', 'both'] and self.opt['outer'] in ['mean', 'pl+mean']:
-			subtract = self.par['rho_m']
-		else:
-			subtract = 0.0
-
-		def integrand(r, R2):
-			ret = r * (self.density(r) - subtract) / np.sqrt(r**2 - R2)
-			return ret
-
-		r_use, is_array = utilities.getArray(r)
-		surfaceDensity = 0.0 * r_use
-		for i in range(len(r_use)):	
-			surfaceDensity[i], _ = scipy.integrate.quad(integrand, r_use[i], self.rmax, 
-										args = (r_use[i]**2), epsrel = accuracy, limit = 1000)
-			surfaceDensity[i] *= 2.0
-			
-		if not is_array:
-			surfaceDensity = surfaceDensity[0]
-
-		return surfaceDensity
-	
-	###############################################################################################
 
 	# Low-level function to compute a spherical overdensity radius given the parameters of a DK14 
 	# profile, the desired overdensity threshold, and an initial guess. A more user-friendly version
@@ -1338,8 +1295,8 @@ class DK14Profile(profile_base.HaloDensityProfileWithOuter):
 	
 	def RDelta(self, z, mdef):
 	
-		M200m = basics.R_to_M(self.par['R200m'], z, mdef)
-		_, R_guess, _ = changeMassDefinition(M200m, self.par['R200m'] / self.par['rs'], z, '200m', mdef)
+		M200m = basics.R_to_M(self.opt['R200m'], z, mdef)
+		_, R_guess, _ = changeMassDefinition(M200m, self.opt['R200m'] / self.par['rs'], z, '200m', mdef)
 		density_threshold = basics.densityThreshold(z, mdef)
 		R = self._RDeltaLowlevel(R_guess, density_threshold)
 	
@@ -1389,7 +1346,7 @@ class DK14Profile(profile_base.HaloDensityProfileWithOuter):
 		Msp: The mass enclosed within :math:`R_{sp}`, :math:`M_{sp}`.
 		"""
 		
-		R200m = self.par['R200m']
+		R200m = self.opt['R200m']
 		rc = scipy.optimize.fminbound(self.densityDerivativeLog, R200m / search_range, R200m * search_range)
 
 		return rc
@@ -1483,12 +1440,8 @@ class DK14Profile(profile_base.HaloDensityProfileWithOuter):
 
 		x = self.getParameterArray()
 		deriv = np.zeros((N_par_fit, len(r)), np.float)
-		
-		temp_part = self.opt['part']
-		self.opt['part'] = 'inner'
-		rho_inner = self.density(r)
-		self.opt['part'] = temp_part
-		
+		rho_inner = self.densityInner(r)
+
 		counter = 0
 		
 		rhos = x[0]
@@ -1619,7 +1572,7 @@ def pseudoEvolve(M_i, c_i, z_i, mdef_i, z_f, mdef_f, profile = 'nfw'):
 			prof = DK14Profile(M = M_i[i], mdef = mdef_i, z = z_i, c = c_i[i],
 							selected = 'by_mass', part = 'inner')
 			if mdef_f == '200m':
-				Rnew[i] = prof.self.par['R200m']
+				Rnew[i] = prof.self.opt['R200m']
 			else:
 				Rnew[i] = prof.RDelta(z_f, mdef_f)
 			cnew[i] = Rnew[i] / prof.rs
