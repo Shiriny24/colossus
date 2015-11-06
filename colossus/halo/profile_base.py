@@ -28,6 +28,7 @@ from colossus.utils import constants
 from colossus.utils import mcmc
 from colossus.cosmology import cosmology
 from colossus.halo import basics
+from colossus.halo import bias
 
 ###################################################################################################
 # ABSTRACT BASE CLASS FOR HALO DENSITY PROFILES
@@ -963,7 +964,7 @@ class HaloDensityProfile():
 		return dict
 
 ###################################################################################################
-# ABSTRACT BASE CLASS FOR 2-HALO TERMS
+# ABSTRACT BASE CLASS FOR OUTER PROFILE TERMS
 ###################################################################################################
 
 # The parameter and option names in this class are up to the user. This enables two kinds of 
@@ -1038,7 +1039,7 @@ class OuterTerm():
 		return density_der
 		
 ###################################################################################################
-# 2-HALO TERM: MEAN DENSITY
+# OUTER TERM: MEAN DENSITY
 ###################################################################################################
 
 class OuterTermRhoMean(OuterTerm):
@@ -1067,7 +1068,7 @@ class OuterTermRhoMean(OuterTerm):
 		return np.ones((len(r)), np.float) * self.rho_m
 
 ###################################################################################################
-# 2-HALO TERM: POWER LAW
+# OUTER TERM: POWER LAW
 ###################################################################################################
 
 # This class implements a power-law outer profile with a free normalization and slope, but a fixed
@@ -1154,6 +1155,98 @@ class OuterTermPowerLaw(OuterTerm):
 		self.par[self.term_par_names[0]] = norm * (r_pivot / new_pivot)**slope
 
 		return
+
+###################################################################################################
+# OUTER TERM: 2-HALO TERM BASED ON THE MATTER-MATTER CORRELATION FUNCTION, TIMES POWER LAW
+###################################################################################################
+
+class OuterTermXiMatterPowerLaw(OuterTerm):
+	
+	def __init__(self, norm, slope, pivot, pivot_factor, max_rho, z,
+				norm_name = 'norm', slope_name = 'slope', 
+				pivot_name = 'pivot', pivot_factor_name = 'pivot_factor', 
+				max_rho_name = 'pl_max_rho', z_name = 'z'):
+
+		if norm is None:
+			raise Exception('Normalization of power law cannot be None.')
+		if slope is None:
+			raise Exception('Slope of power law cannot be None.')
+		if pivot is None:
+			raise Exception('Pivot of power law cannot be None.')
+		if pivot_factor is None:
+			raise Exception('Pivot factor of power law cannot be None.')
+		if max_rho is None:
+			raise Exception('Maximum of power law cannot be None.')
+		if z is None:
+			raise Exception('Redshift of power law cannot be None.')
+		
+		OuterTerm.__init__(self, [norm, slope], [pivot, pivot_factor, max_rho, z],
+						[norm_name, slope_name], [pivot_name, pivot_factor_name, max_rho_name, z_name])
+
+		return
+
+	###############################################################################################
+
+	def _getParameters(self):
+
+		r_pivot_id = self.opt[self.term_opt_names[0]]
+		if r_pivot_id in self.par:
+			r_pivot = self.par[r_pivot_id]
+		elif r_pivot_id in self.opt:
+			r_pivot = self.opt[r_pivot_id]
+		else:
+			msg = 'Could not find the parameter or option %s.' % (r_pivot_id)
+			raise Exception(msg)
+
+		norm = self.par[self.term_par_names[0]]
+		slope = self.par[self.term_par_names[1]]
+		r_pivot *= self.opt[self.term_opt_names[1]]
+		max_rho = self.opt[self.term_opt_names[2]]
+		z = self.opt[self.term_opt_names[3]]
+		rho_m = cosmology.getCurrent().rho_m(z)
+		
+		return norm, slope, r_pivot, max_rho, z, rho_m
+
+	###############################################################################################
+
+	# TODO don't use special knowledge about DK14 profile
+	def _density(self, r):
+		
+		r_array, is_array = utilities.getArray(r)
+
+		norm, slope, r_pivot, max_rho, z, rho_m = self._getParameters()
+		
+		cosmo = cosmology.getCurrent()
+		r_Mpc = r_array / 1000.0
+		mask = (r_Mpc > cosmo.R_xi[0]) & (r_Mpc < cosmo.R_xi[-1])
+
+		rho = np.ones((len(r)), np.float) * norm * rho_m / max_rho
+		
+		#print(mask)
+		if np.count_nonzero(mask) > 0:
+			xi_mm = cosmo.correlationFunction(r_Mpc[mask], z)
+	
+			M200m = basics.R_to_M(self.owner.opt['R200m'], z, '200m')
+			#M200m = self.owner.MDelta(z, '200m')
+			b = bias.haloBias(M200m, z, '200m')
+			
+			rho[mask] = norm * rho_m * (1.0 / max_rho + xi_mm * b * (r_array[mask] / r_pivot)**slope)
+
+		if not is_array:
+			rho = rho[0]
+
+		return rho
+
+	###############################################################################################
+	
+	# TODO correct this function; must include max_rho
+	def changePivot(self, new_pivot):
+		
+		#norm, slope, r_pivot, _, _ = self._getParameters()
+		
+		#self.par[self.term_par_names[0]] = norm * (r_pivot / new_pivot)**slope
+
+		return
 	
 ###################################################################################################
 # ABSTRACT BASE CLASS FOR HALO DENSITY PROFILES WITH A DESCRIPTION OF THE 2-HALO TERM
@@ -1194,6 +1287,9 @@ class HaloDensityProfileWithOuter(HaloDensityProfile):
 			# Set pointers to the par and opt dictionaries of the profile class that owns the terms
 			self.outer_terms[i].par = self.par
 			self.outer_terms[i].opt = self.opt
+			
+			# Set pointer to the profile itself
+			self.outer_terms[i].owner = self
 		
 		# We need to update the par and opt counters since the super constructor did not know 
 		# about the parameters for the outer terms

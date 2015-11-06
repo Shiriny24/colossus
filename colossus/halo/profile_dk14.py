@@ -129,12 +129,22 @@ class DK14Profile(profile_base.HaloDensityProfileWithOuter):
 		# Set outer terms
 		self.outer_terms = []
 		for i in range(len(outer_terms)):
+			
 			if outer_terms[i] == 'mean':
 				if z is None:
 					raise Exception('Redshift z must be set if a mean density outer term is chosen.')
 				t = profile_base.OuterTermRhoMean(z)
+			
 			elif outer_terms[i] == 'pl':
 				t = profile_base.OuterTermPowerLaw(be, se, 'R200m', 5.0, power_law_max, z, norm_name = 'be', slope_name = 'se')
+			
+			elif outer_terms[i] == 'ximm':
+				t = profile_base.OuterTermXiMatterPowerLaw(be, se, 'R200m', 5.0, power_law_max, z, norm_name = 'be', slope_name = 'se')
+		
+			else:
+				msg = 'Unknown outer term, %s.' % (outer_terms[i])
+				raise Exception(msg)
+		
 			self.outer_terms.append(t)
 		
 		# Run the constructor

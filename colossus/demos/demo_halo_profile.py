@@ -17,7 +17,9 @@ import matplotlib.gridspec as gridspec
 
 from colossus.cosmology import cosmology
 from colossus.halo import basics
-from colossus.halo import profile
+from colossus.halo import profile_nfw
+from colossus.halo import profile_einasto
+from colossus.halo import profile_dk14
 
 ###################################################################################################
 
@@ -45,19 +47,22 @@ def demonstrateProfiles():
 	
 	# Choose a set of radii
 	rR_min = 1E-3
-	rR_max = 1E1
-	rR = 10**np.arange(np.log(rR_min), np.log(rR_max), 0.02)
+	rR_max = 5E1
+	rR = 10**np.arange(np.log10(rR_min), np.log10(rR_max), 0.02)
 	r = rR * R
 	rho_m = cosmo.rho_m(z)
 	
 	# Initialize three profiles
-	p = [None, None, None]
-	p[0] = profile.EinastoProfile(M = M, c = c, z = z, mdef = mdef)
-	p[1] = profile.NFWProfile(M = M, c = c, z = z, mdef = mdef)
-	p[2] = profile.DK14Profile(M = M, c = c, z = z, mdef = mdef)
-	colors = ['darkblue', 'firebrick', 'deepskyblue']
-	ls = ['-.', '--', '-']
-	labels = ['Einasto', 'NFW', 'DK14']
+	p = [None, None, None, None, None, None]
+	p[0] = profile_nfw.NFWProfile(M = M, c = c, z = z, mdef = mdef)
+	p[1] = profile_einasto.EinastoProfile(M = M, c = c, z = z, mdef = mdef)
+	p[2] = profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, outer_terms = [])
+	p[3] = profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, outer_terms = ['mean'])
+	p[4] = profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, outer_terms = ['mean', 'pl'])
+	p[5] = profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, outer_terms = ['mean', 'ximm'], be = 1.0, se = 0.0)
+	colors = ['darkblue', 'firebrick', 'deepskyblue', 'red', 'green', 'orange']
+	ls = ['-.', '--', '-', '-', '-', '-']
+	labels = ['Einasto', 'NFW', 'DK14 (no outer)', 'DK14 (mean)', 'DK14 (mean + pl)', 'DK14 (mean + ximm)']
 	
 	# Prepare plot
 	fig = plt.figure(figsize = (5.5, 10.0))
@@ -83,7 +88,7 @@ def demonstrateProfiles():
 	plt.sca(p2)
 	plt.xscale('log')
 	plt.xlim(rR_min, rR_max)
-	plt.ylim(-4.5, -0.5)
+	plt.ylim(-5.5, 0.5)
 	plt.xlabel(r'$r / R_{\rm vir}$')
 	plt.ylabel(r'$d \log(\rho) / d \log(r)$')
 	
@@ -91,6 +96,13 @@ def demonstrateProfiles():
 	for i in range(len(p)):
 		slope = p[i].densityDerivativeLog(r)
 		plt.plot(rR, slope, ls = ls[i], color = colors[i], label = labels[i])
+
+	# Plot mean density and 2-halo term
+	xi_mm = cosmo.correlationFunction(r / 1000.0, z)
+	#xi_mm_der = cosmo.correlationFunction(r, z, derivative = True)
+	plt.sca(p1)
+	plt.axhline(1.0, ls = '--', color = 'gray')
+	plt.plot(rR, xi_mm, ls = '--', color = 'gray')
 
 	# Finalize plot
 	plt.sca(p1)
@@ -107,7 +119,7 @@ def demonstrateFitting():
 	cosmology.setCosmology('WMAP9')
 	rhos = 1E6
 	rs = 50.0
-	prof = profile.NFWProfile(rhos = rhos, rs = rs)
+	prof = profile_nfw.NFWProfile(rhos = rhos, rs = rs)
 	
 	# Create a fake dataset with some noise
 	r = 10**np.arange(0.1, 3.0, 0.3)
@@ -159,7 +171,7 @@ def demonstrateMassDefinitions():
 	print(("Rvir:   %.2e kpc / h" % Rvir))
 	print(("cvir:   %.2f" % cvir))
 	
-	M200c, R200c, c200c = profile.changeMassDefinition(Mvir, cvir, z, 'vir', '200c')
+	M200c, R200c, c200c = profile_nfw.changeMassDefinition(Mvir, cvir, z, 'vir', '200c')
 	
 	print(("Now, let's convert the halo data to the 200c mass definition, assuming an NFW profile:"))	
 	print(("M200c:  %.2e Msun / h" % M200c))
