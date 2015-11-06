@@ -1683,8 +1683,6 @@ class Cosmology(object):
 		transferFunctionEH98Smooth: The transfer function according to Eisenstein & Hu 1998, without the BAO features.
 		"""
 
-		# This version of the function is based on Matt Becker's CosmoCalc code.
-
 		# Define shorter expressions
 		omb = self.Ob0
 		om0 = self.Om0
@@ -2642,7 +2640,7 @@ class Cosmology(object):
 			if self.interpolation:
 				Pk = 10**Pk_interpolator(np.log10(k))
 			else:
-				Pk = self.matterPowerSpectrumExact(k, Pk_source)
+				Pk = self._matterPowerSpectrumExact(k, Pk_source)
 
 			ret = Pk * k / R * np.exp(-(k * R * f_cut)**2)
 			
@@ -2777,9 +2775,9 @@ class Cosmology(object):
 			if utilities.isArray(R):
 				ret = R * 0.0
 				for i in range(len(R)):
-					ret[i] = self.correlationFunctionExact(R[i], Pk_source = Pk_source)
+					ret[i] = self._correlationFunctionExact(R[i], Pk_source = Pk_source)
 			else:
-				ret = self.correlationFunctionExact(R, Pk_source = Pk_source)
+				ret = self._correlationFunctionExact(R, Pk_source = Pk_source)
 
 		if not derivative and z > 1E-5:
 			ret *= self.growthFactor(z)**2
