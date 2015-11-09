@@ -63,11 +63,11 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 	###############################################################################################
 
 	def __init__(self, rhos = None, rs = None, alpha = None,
-				M = None, c = None, z = None, mdef = None):
+				M = None, c = None, z = None, mdef = None, **kwargs):
 	
 		self.par_names = ['rhos', 'rs', 'alpha']
 		self.opt_names = []
-		profile_base.HaloDensityProfile.__init__(self)
+		profile_base.HaloDensityProfile.__init__(self, **kwargs)
 
 		# The fundamental way to define an Einasto profile by the density at the scale radius, 
 		# the scale radius, and alpha.
@@ -183,7 +183,7 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 
 	###############################################################################################
 
-	def density(self, r):
+	def densityInner(self, r):
 		
 		rho = self.par['rhos'] * np.exp(-2.0 / self.par['alpha'] * \
 										((r / self.par['rs'])**self.par['alpha'] - 1.0))
@@ -192,7 +192,7 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 
 	###############################################################################################
 	
-	def densityDerivativeLin(self, r):
+	def densityDerivativeLinInner(self, r):
 
 		rho = self.density(r)
 		drho_dr = rho * (-2.0 / self.par['rs']) * (r / self.par['rs'])**(self.par['alpha'] - 1.0)	
@@ -201,7 +201,7 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 
 	###############################################################################################
 	
-	def densityDerivativeLog(self, r):
+	def densityDerivativeLogInner(self, r):
 
 		der = -2.0 * (r / self.par['rs'])**self.par['alpha']
 		
@@ -209,7 +209,7 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 
 	###############################################################################################
 
-	def enclosedMass(self, r):
+	def enclosedMassInner(self, r):
 		
 		mass = self.mass_norm * self.gamma_3alpha * scipy.special.gammainc(3.0 / self.par['alpha'],
 								2.0 / self.par['alpha'] * (r / self.par['rs'])**self.par['alpha'])

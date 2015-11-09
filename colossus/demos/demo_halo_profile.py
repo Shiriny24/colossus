@@ -56,10 +56,10 @@ def demonstrateProfiles():
 	p = [None, None, None, None, None, None]
 	p[0] = profile_nfw.NFWProfile(M = M, c = c, z = z, mdef = mdef)
 	p[1] = profile_einasto.EinastoProfile(M = M, c = c, z = z, mdef = mdef)
-	p[2] = profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, outer_terms = [])
-	p[3] = profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, outer_terms = ['mean'])
-	p[4] = profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, outer_terms = ['mean', 'pl'])
-	p[5] = profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, outer_terms = ['mean', 'ximm'], be = 1.0, se = 0.0)
+	p[2] = profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, outer_term_names = [])
+	p[3] = profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, outer_term_names = ['mean'])
+	p[4] = profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, outer_term_names = ['mean', 'pl'])
+	p[5] = profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, outer_term_names = ['mean', 'ximm'], be = 1.0, se = 0.0)
 	colors = ['darkblue', 'firebrick', 'deepskyblue', 'red', 'green', 'orange']
 	ls = ['-.', '--', '-', '-', '-', '-']
 	labels = ['Einasto', 'NFW', 'DK14 (no outer)', 'DK14 (mean)', 'DK14 (mean + pl)', 'DK14 (mean + ximm)']

@@ -62,11 +62,11 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	###############################################################################################
 
 	def __init__(self, rhos = None, rs = None,
-				M = None, c = None, z = None, mdef = None):
+				M = None, c = None, z = None, mdef = None, **kwargs):
 		
 		self.par_names = ['rhos', 'rs']
 		self.opt_names = []
-		profile_base.HaloDensityProfile.__init__(self)
+		profile_base.HaloDensityProfile.__init__(self, **kwargs)
 
 		# The fundamental way to define an NFW profile by the central density and scale radius
 		if rhos is not None and rs is not None:
@@ -281,7 +281,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	# METHODS BOUND TO THE CLASS
 	###############################################################################################
 	
-	def density(self, r):
+	def densityInner(self, r):
 	
 		x = r / self.par['rs']
 		density = self.rho(self.par['rhos'], x)
@@ -290,7 +290,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 
 	###############################################################################################
 
-	def densityDerivativeLin(self, r):
+	def densityDerivativeLinInner(self, r):
 
 		x = r / self.par['rs']
 		density_der = -self.par['rhos'] / self.par['rs'] * (1.0 / x**2 / (1.0 + x)**2 + 2.0 / x / (1.0 + x)**3)
@@ -299,7 +299,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	
 	###############################################################################################
 
-	def densityDerivativeLog(self, r):
+	def densityDerivativeLogInner(self, r):
 
 		x = r / self.par['rs']
 		density_der = -(1.0 + 2.0 * x / (1.0 + x))
@@ -308,7 +308,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 
 	###############################################################################################
 
-	def enclosedMass(self, r):
+	def enclosedMassInner(self, r):
 		
 		x = r / self.par['rs']
 		mass = self.M(self.par['rhos'], self.par['rs'], x)
@@ -322,7 +322,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	# Lokas & Mamon (2001), but in their notation the density at this radius looks somewhat 
 	# complicated. In the notation used here, Sigma(rs) = 2/3 * rhos * rs.
 	
-	def surfaceDensity(self, r):
+	def surfaceDensityInner(self, r):
 	
 		xx = r / self.par['rs']
 		x, is_array = utilities.getArray(xx)

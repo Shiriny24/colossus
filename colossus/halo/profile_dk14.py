@@ -18,7 +18,7 @@ from colossus.halo import profile_utils
 # DIEMER & KRAVTSOV 2014 PROFILE
 ###################################################################################################
 
-class DK14Profile(profile_base.HaloDensityProfileWithOuter):
+class DK14Profile(profile_base.HaloDensityProfile):
 	"""
 	The Diemer & Kravtsov 2014 density profile.
 	
@@ -114,7 +114,7 @@ class DK14Profile(profile_base.HaloDensityProfileWithOuter):
 				R200m = None,
 				M = None, c = None, z = None, mdef = None,
 				selected_by = 'M', Gamma = None, 
-				outer_terms = ['mean', 'pl'], 
+				outer_term_names = ['mean', 'pl'], 
 				be = defaults.HALO_PROFILE_DK14_BE, se = defaults.HALO_PROFILE_DK14_SE,
 				power_law_max = 1000.0, acc_warn = 0.01, acc_err = 0.05):
 	
@@ -127,28 +127,28 @@ class DK14Profile(profile_base.HaloDensityProfileWithOuter):
 		self.fit_log_mask = np.array([False, False, False, False, False, False, False, False])
 
 		# Set outer terms
-		self.outer_terms = []
-		for i in range(len(outer_terms)):
+		outer_terms = []
+		for i in range(len(outer_term_names)):
 			
-			if outer_terms[i] == 'mean':
+			if outer_term_names[i] == 'mean':
 				if z is None:
 					raise Exception('Redshift z must be set if a mean density outer term is chosen.')
 				t = profile_base.OuterTermRhoMean(z)
 			
-			elif outer_terms[i] == 'pl':
+			elif outer_term_names[i] == 'pl':
 				t = profile_base.OuterTermPowerLaw(be, se, 'R200m', 5.0, power_law_max, z, norm_name = 'be', slope_name = 'se')
 			
-			elif outer_terms[i] == 'ximm':
+			elif outer_term_names[i] == 'ximm':
 				t = profile_base.OuterTermXiMatterPowerLaw(be, se, 'R200m', 5.0, power_law_max, z, norm_name = 'be', slope_name = 'se')
 		
 			else:
 				msg = 'Unknown outer term, %s.' % (outer_terms[i])
 				raise Exception(msg)
 		
-			self.outer_terms.append(t)
+			outer_terms.append(t)
 		
 		# Run the constructor
-		profile_base.HaloDensityProfileWithOuter.__init__(self)
+		profile_base.HaloDensityProfile.__init__(self, outer_terms = outer_terms)
 		
 		# The following parameters are not constants, they are temporarily changed by certain 
 		# functions.
@@ -244,7 +244,7 @@ class DK14Profile(profile_base.HaloDensityProfileWithOuter):
 			self.par['alpha'], self.par['beta'], self.par['gamma'], rt_R200m = \
 				self.getFixedParameters(selected_by, nu200m = nu200m, z = z, Gamma = Gamma)
 			self.par['rt'] = rt_R200m * R200m
-			self.par['rhos'] *= self.normalizeInner(R200m, M200m)
+			self.par['rhos'] *= self._normalizeInner(R200m, M200m)
 
 			par2['RDelta'] = self._RDeltaLowlevel(par2['RDelta'], rho_target, guess_tolerance = GUESS_TOL)
 			
@@ -330,7 +330,7 @@ class DK14Profile(profile_base.HaloDensityProfileWithOuter):
 	# example after a fit. This function remedies that, and also changes other parameters that 
 	# depend on R200m, for example be and se in the case of an outer power law term.
 
-	def recomputeR200m(self):
+	def update(self):
 		
 		R200m_new = self.RDelta(self.opt['z'], '200m')
 		

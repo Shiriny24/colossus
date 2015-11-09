@@ -22,6 +22,7 @@ import scipy.integrate
 import abc
 import collections
 import six
+import copy
 
 from colossus.utils import utilities
 from colossus.utils import constants
@@ -39,13 +40,22 @@ class HaloDensityProfile():
 	"""
 	Abstract base class for a halo density profile in physical units.
 	
-	This class contains a set of quantities that can be computed from halo density profiles in 
-	general. In principle, a particular functional form of the profile can be implemented by 
-	inheriting this class and overwriting the constructor and density method. In practice there 
-	are often faster implementations for particular forms of the profile.
+	This class provides a general implementation of a halo density profile. In principle, a 
+	particular functional form of the profile can be implemented by inheriting this class and
+	overwriting only the constructor and density method. In practice, there are often faster 
+	implementations for particular forms of the profile.
+	
+	Furthermore, this base class provides a general implementation of outer profile terms, 
+	i.e. descriptions of the outer profile beyond the virial radius. Thus, these terms can be
+	added to any derived density profile class without adding new code.
+
+	Parameters
+	-------------------------------------------------------------------------------------------
+	outer_terms: list
+		A list of OuterTerm objects to add to the density profile. 
 	"""
 
-	def __init__(self):
+	def __init__(self, outer_terms = []):
 		
 		# The radial limits within which the profile is valid. These can be used as integration
 		# limits for surface density, for example.
@@ -78,6 +88,31 @@ class HaloDensityProfile():
 		self.quantities['rho'] = self.density
 		self.quantities['M'] = self.enclosedMass
 		self.quantities['Sigma'] = self.surfaceDensity
+
+		# Now we also add any parameters for the 2-halo term(s)
+		self.outer_terms = copy.copy(outer_terms)
+		self.N_outer = len(self.outer_terms)
+		
+		for i in range(self.N_outer):
+
+			# Update the par/opt and par/opt-names dictionaries
+			self.par.update(self.outer_terms[i].term_par)
+			self.opt.update(self.outer_terms[i].term_opt)
+		
+			self.par_names.extend(self.outer_terms[i].term_par_names)
+			self.opt_names.extend(self.outer_terms[i].term_opt_names)
+			
+			# Set pointers to the par and opt dictionaries of the profile class that owns the terms
+			self.outer_terms[i].par = self.par
+			self.outer_terms[i].opt = self.opt
+			
+			# Set pointer to the profile itself
+			self.outer_terms[i].owner = self
+		
+		# We need to update the par and opt counters since the super constructor did not know 
+		# about the parameters for the outer terms
+		self.N_par = len(self.par)
+		self.N_opt = len(self.opt)
 
 		return
 
@@ -145,7 +180,6 @@ class HaloDensityProfile():
 
 	###############################################################################################
 
-	@abc.abstractmethod
 	def update(self):
 		"""
 		Update the profile object after a change in parameters.
@@ -160,7 +194,6 @@ class HaloDensityProfile():
 
 	###############################################################################################
 
-	@abc.abstractmethod
 	def density(self, r):
 		"""
 		Density as a function of radius.
@@ -179,26 +212,69 @@ class HaloDensityProfile():
 			as r.
 		"""
 
-		return
+		return self.densityInner(r) + self.densityOuter(r)
 
 	###############################################################################################
 
-	def _densityDerivativeLin(self, r, density_function):
+	@abc.abstractmethod
+	def densityInner(self, r):
+		"""
+		Density of the inner profile as a function of radius.
 		
-		r_use, is_array = utilities.getArray(r)
-		density_der = 0.0 * r_use
-		for i in range(len(r_use)):	
-			density_der[i] = scipy.misc.derivative(density_function, r_use[i], dx = 0.001, n = 1, order = 3)
-		if not is_array:
-			density_der = density_der[0]
+		Abstract function which must be overwritten by child classes.
 		
-		return density_der
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
 
+		Returns
+		-------------------------------------------------------------------------------------------
+		density: array_like
+			Density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions 
+			as r.
+		"""		
+		
+		return
+	
 	###############################################################################################
 	
+	def densityOuter(self, r):
+		"""
+		Density of the outer profile as a function of radius.
+		
+		This function should generally not be overwritten by child classes since it handles the 
+		general case of adding up the contributions from all outer profile terms.
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		density: array_like
+			Density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions 
+			as r.
+		"""		
+				
+		r_array, is_array = utilities.getArray(r)
+		rho_outer = np.zeros((len(r_array)), np.float)
+		for i in range(self.N_outer):
+			rho_outer += self.outer_terms[i].density(r)
+		if not is_array:
+			rho_outer = rho_outer[0]
+		
+		return rho_outer
+
+	###############################################################################################
+
 	def densityDerivativeLin(self, r):
 		"""
 		The linear derivative of density, :math:`d \\rho / dr`. 
+
+		This function should generally not be overwritten by child classes since it handles the 
+		general case of adding up the contributions from the inner and outer terms.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -216,13 +292,76 @@ class HaloDensityProfile():
 		densityDerivativeLog: The logarithmic derivative of density, :math:`d \log(\\rho) / d \log(r)`. 
 		"""
 		
-		return self._densityDerivativeLin(r, self.density)
+		return self.densityDerivativeLinInner(r) + self.densityDerivativeLinOuter(r)
+
+	###############################################################################################
+
+	def densityDerivativeLinInner(self, r):
+		"""
+		The linear derivative of the inner density, :math:`d \\rho_{\\rm inner} / dr`. 
+
+		This function provides a numerical approximation to the derivative of the inner term, and
+		should be overwritten by child classes if the derivative can be expressed analytically.
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		derivative: array_like
+			The linear derivative in physical :math:`M_{\odot} h / kpc^2`; has the same 
+			dimensions as r.
+		"""
+		
+		r_use, is_array = utilities.getArray(r)
+		density_der = 0.0 * r_use
+		for i in range(len(r_use)):	
+			density_der[i] = scipy.misc.derivative(self.densityInner, r_use[i], dx = 0.001, n = 1, order = 3)
+		if not is_array:
+			density_der = density_der[0]
+
+		return self._densityDerivativeLin(r, self.densityInner)
+
+	###############################################################################################
+	
+	def densityDerivativeLinOuter(self, r):
+		"""
+		The linear derivative of the outer density, :math:`d \\rho_{\\rm outer} / dr`. 
+
+		This function should generally not be overwritten by child classes since it handles the 
+		general case of adding up the contributions from all outer profile terms.
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		derivative: array_like
+			The linear derivative in physical :math:`M_{\odot} h / kpc^2`; has the same 
+			dimensions as r.
+		"""
+		
+		r_array, is_array = utilities.getArray(r)
+		rho_der_outer = np.zeros((len(r_array)), np.float)
+		for i in range(self.N_outer):
+			rho_der_outer += self.outer_terms[i].densityDerivativeLin(r)
+		if not is_array:
+			rho_der_outer = rho_der_outer[0]
+		
+		return rho_der_outer
 
 	###############################################################################################
 	
 	def densityDerivativeLog(self, r):
 		"""
 		The logarithmic derivative of density, :math:`d \log(\\rho) / d \log(r)`. 
+
+		This function should generally not be overwritten by child classes since it handles the 
+		general case of adding up the contributions from the inner and outer profile terms.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -238,20 +377,64 @@ class HaloDensityProfile():
 		-------------------------------------------------------------------------------------------
 		densityDerivativeLin: The linear derivative of density, :math:`d \\rho / dr`.
 		"""
-		
-		def logRho(logr):
-			return np.log(self.density(np.exp(logr)))
 
-		r_use, is_array = utilities.getArray(r)
-		density_der = 0.0 * r_use
-		for i in range(len(r_use)):	
-			density_der[i] = scipy.misc.derivative(logRho, np.log(r_use[i]), dx = 0.0001, n = 1, order = 3)
-		if not is_array:
-			density_der = density_der[0]
-
-		return density_der
+		return self.densityDerivativeLogInner(r) + self.densityDerivativeLogOuter(r)
 		
 	###############################################################################################
+	
+	def densityDerivativeLogInner(self, r):
+		"""
+		The logarithmic derivative of the inner density, :math:`d \log(\\rho_{\\rm inner}) / d \log(r)`. 
+
+		This function evaluates the logarithmic derivative based on the linear derivative. If there
+		is an analytic expression for the logarithmic derivative, child classes should overwrite 
+		this function.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		derivative: array_like
+			The dimensionless logarithmic derivative; has the same dimensions as r.
+		"""
+		
+		drho_dr = self.densityDerivativeLinInner(r)
+		rho = self.densityInner(r)
+		der = drho_dr * r / rho
+
+		return der
+		
+	###############################################################################################
+	
+	def densityDerivativeLogOuter(self, r):
+		"""
+		The logarithmic derivative of the outer density, :math:`d \log(\\rho_{\\rm outer}) / d \log(r)`. 
+
+		This function should generally not be overwritten by child classes since it handles the 
+		general case of adding up the contributions from outer profile terms.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		derivative: array_like
+			The dimensionless logarithmic derivative; has the same dimensions as r.
+		"""		
+		drho_dr = self.densityDerivativeLinOuter(r)
+		rho = self.densityOuter(r)
+		der = drho_dr * r / rho
+
+		return der
+
+	###############################################################################################
+	
+	# General function to integrate density.
 	
 	def _enclosedMass(self, r, accuracy, density_function):
 		
@@ -288,6 +471,48 @@ class HaloDensityProfile():
 
 		return self._enclosedMass(r, accuracy, self.density)
 
+	###############################################################################################
+
+	def enclosedMassInner(self, r, accuracy = 1E-6):
+		"""
+		The mass enclosed within radius r due to the inner profile term.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+		accuracy: float
+			The minimum accuracy of the integration.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		M: array_like
+			The mass enclosed within radius r, in :math:`M_{\odot}/h`; has the same dimensions as r.
+		"""		
+
+		return self._enclosedMass(r, accuracy, self.densityInner)
+
+	###############################################################################################
+
+	def enclosedMassOuter(self, r, accuracy = 1E-6):
+		"""
+		The mass enclosed within radius r due to the outer profile term.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+		accuracy: float
+			The minimum accuracy of the integration.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		M: array_like
+			The mass enclosed within radius r, in :math:`M_{\odot}/h`; has the same dimensions as r.
+		"""		
+
+		return self._enclosedMass(r, accuracy, self.densityOuter)
+	
 	###############################################################################################
 
 	def cumulativePdf(self, r, Rmax = None, z = None, mdef = None):
@@ -331,6 +556,9 @@ class HaloDensityProfile():
 
 	###############################################################################################
 	
+	# The surface density of the outer profile can be tricky, since some outer terms lead to a 
+	# diverging integral. Thus, constant terms such as rho_m need to be ignored in this function.
+	
 	def surfaceDensity(self, r, accuracy = 1E-6):
 		"""
 		The projected surface density at radius r.
@@ -347,11 +575,33 @@ class HaloDensityProfile():
 		Sigma: array_like
 			The surface density at radius r, in physical :math:`M_{\odot} h/kpc^2`; has the same 
 			dimensions as r.
-		"""		
+		"""
 		
-		def integrand(r, R):
-			ret = 2.0 * r * self.density(r) / np.sqrt(r**2 - R**2)
-			return ret
+		return self.surfaceDensityInner(r, accuracy) + self.surfaceDensityOuter(r, accuracy)
+
+	###############################################################################################
+
+	def surfaceDensityInner(self, r, accuracy = 1E-6):
+		"""
+		The projected surface density at radius r due to the inner profile.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+		accuracy: float
+			The minimum accuracy of the integration.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		Sigma: array_like
+			The surface density at radius r, in physical :math:`M_{\odot} h/kpc^2`; has the same 
+			dimensions as r.
+		"""
+
+		def integrand(r, R2):
+			
+			return r * self.densityInner(r) / np.sqrt(r**2 - R2)
 
 		if np.max(r) >= self.rmax:
 			msg = 'Cannot compute surface density at a radius (%.2e) greater than rmax (%.2e).' \
@@ -360,19 +610,70 @@ class HaloDensityProfile():
 
 		r_use, is_array = utilities.getArray(r)
 		surfaceDensity = 0.0 * r_use
-		for i in range(len(r_use)):	
-			
-			if r_use[i] >= self.rmax:
-				msg = 'Cannot compute surface density for radius %.2e since rmax is %.2e.' % (r_use[i], self.rmax)
-				raise Exception(msg)
-			
-			surfaceDensity[i], _ = scipy.integrate.quad(integrand, r_use[i], self.rmax, args = r_use[i],
-											epsrel = accuracy, limit = 1000)
+		for i in range(len(r_use)):
+			surfaceDensity[i], _ = scipy.integrate.quad(integrand, r_use[i], self.rmax, 
+										args = (r_use[i]**2), epsrel = accuracy, limit = 1000)
+			surfaceDensity[i] *= 2.0
+
 		if not is_array:
 			surfaceDensity = surfaceDensity[0]
 
 		return surfaceDensity
-	
+
+	###############################################################################################
+
+	def surfaceDensityOuter(self, r, accuracy = 1E-6):
+		"""
+		The projected surface density at radius r due to the outer profile.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+		accuracy: float
+			The minimum accuracy of the integration.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		Sigma: array_like
+			The surface density at radius r, in physical :math:`M_{\odot} h/kpc^2`; has the same 
+			dimensions as r.
+		"""
+		
+		density_functions = []
+
+		def integrand(r, R2):
+			
+			rho = 0.0
+			for i in range(len(density_functions)):
+				rho += density_functions[i](r)
+			ret = r * rho / np.sqrt(r**2 - R2)
+			
+			return ret
+
+		if np.max(r) >= self.rmax:
+			msg = 'Cannot compute surface density at a radius (%.2e) greater than rmax (%.2e).' \
+				% (np.max(r), self.rmax)
+			raise Exception(msg)
+
+		# Create a list of functions to evaluate so we don't need to make this decision at every
+		# evaluation
+		for i in range(self.N_outer):
+			if self.outer_terms[i].include_in_surface_density:
+				density_functions.append(self.outer_terms[i].density)
+
+		r_use, is_array = utilities.getArray(r)
+		surfaceDensity = 0.0 * r_use
+		for i in range(len(r_use)):
+			surfaceDensity[i], _ = scipy.integrate.quad(integrand, r_use[i], self.rmax, 
+										args = (r_use[i]**2), epsrel = accuracy, limit = 1000)
+			surfaceDensity[i] *= 2.0
+
+		if not is_array:
+			surfaceDensity = surfaceDensity[0]
+
+		return surfaceDensity
+
 	###############################################################################################
 
 	def circularVelocity(self, r):
@@ -430,6 +731,19 @@ class HaloDensityProfile():
 		vmax = self.circularVelocity(rmax)
 		
 		return vmax, rmax
+
+	###############################################################################################
+
+	# Find a number by which the inner profile needs to be multiplied in order to give a particular
+	# total enclosed mass at a particular radius.
+
+	def _normalizeInner(self, R, M):
+			
+		Mr_inner = self.enclosedMassInner(R)
+		Mr_outer = self.enclosedMassOuter(R)
+		norm = (M - Mr_outer) / Mr_inner
+		
+		return norm
 
 	###############################################################################################
 
@@ -1263,194 +1577,3 @@ class OuterTermXiMatterPowerLaw(OuterTerm):
 
 		return
 	
-###################################################################################################
-# ABSTRACT BASE CLASS FOR HALO DENSITY PROFILES WITH A DESCRIPTION OF THE 2-HALO TERM
-###################################################################################################
-
-@six.add_metaclass(abc.ABCMeta)
-class HaloDensityProfileWithOuter(HaloDensityProfile):
-	"""
-	Abstract base class for a halo density profile composed of both a 1-halo (inner) and a 2-halo 
-	(outer) term.
-	
-	This class extends HaloDensityProfile by a set of additional terms that describe the outer 
-	profile, or 2-halo term. The user can choose an arbitrary number of terms to add, for example
-	the mean density, a power law, and an estimate of the 2-halo term based on the matter-matter
-	correlation function.
-	
-	Derived classes must set the outer_terms variable with a list of OuterTerm classes, as well as
-	the usual par_names and opt_names variables.
-	"""
-	
-	def __init__(self):
-		
-		# In the constructor of HaloDensityProfile, the par and opt dictionaries are initialized
-		HaloDensityProfile.__init__(self)
-		
-		# Now we also add any parameters for the 2-halo term(s)
-		self.N_outer = len(self.outer_terms)
-		
-		for i in range(self.N_outer):
-
-			# Update the par/opt and par/opt-names dictionaries
-			self.par.update(self.outer_terms[i].term_par)
-			self.opt.update(self.outer_terms[i].term_opt)
-		
-			self.par_names.extend(self.outer_terms[i].term_par_names)
-			self.opt_names.extend(self.outer_terms[i].term_opt_names)
-			
-			# Set pointers to the par and opt dictionaries of the profile class that owns the terms
-			self.outer_terms[i].par = self.par
-			self.outer_terms[i].opt = self.opt
-			
-			# Set pointer to the profile itself
-			self.outer_terms[i].owner = self
-		
-		# We need to update the par and opt counters since the super constructor did not know 
-		# about the parameters for the outer terms
-		self.N_par = len(self.par)
-		self.N_opt = len(self.opt)
-		
-		return
-
-	###############################################################################################
-
-	# Add 1 halo and 2 halo densities
-
-	def density(self, r):
-		
-		return self.densityInner(r) + self.densityOuter(r)
-
-	###############################################################################################
-
-	@abc.abstractmethod
-	def densityInner(self, r):
-		
-		return
-	
-	###############################################################################################
-
-	# Add the contributions from all 2h terms
-	
-	def densityOuter(self, r):
-		
-		r_array, is_array = utilities.getArray(r)
-		rho_outer = np.zeros((len(r_array)), np.float)
-		for i in range(self.N_outer):
-			rho_outer += self.outer_terms[i].density(r)
-		if not is_array:
-			rho_outer = rho_outer[0]
-		
-		return rho_outer
-
-	###############################################################################################
-
-	def densityDerivativeLin(self, r):
-		
-		return self.densityDerivativeLinInner(r) + self.densityDerivativeLinOuter(r)
-
-	###############################################################################################
-
-	def densityDerivativeLinInner(self, r):
-
-		return self._densityDerivativeLin(r, self.densityInner)
-
-	###############################################################################################
-
-	# Add the contributions from all 2h terms
-	
-	def densityDerivativeLinOuter(self, r):
-		
-		r_array, is_array = utilities.getArray(r)
-		rho_der_outer = np.zeros((len(r_array)), np.float)
-		for i in range(self.N_outer):
-			rho_der_outer += self.outer_terms[i].densityDerivativeLin(r)
-		if not is_array:
-			rho_der_outer = rho_der_outer[0]
-		
-		return rho_der_outer
-
-	###############################################################################################
-	
-	def densityDerivativeLog(self, r):
-		
-		drho_dr = self.densityDerivativeLin(r)
-		rho = self.density(r)
-		der = drho_dr * r / rho
-
-		return der
-
-	###############################################################################################
-	
-	def enclosedMass(self, r, accuracy = 1E-6):
-
-		return self._enclosedMass(r, accuracy, self.density)
-
-	###############################################################################################
-
-	def enclosedMassInner(self, r, accuracy = 1E-6):
-
-		return self._enclosedMass(r, accuracy, self.densityInner)
-
-	###############################################################################################
-
-	def enclosedMassOuter(self, r, accuracy = 1E-6):
-
-		return self._enclosedMass(r, accuracy, self.densityOuter)
-	
-	###############################################################################################
-
-	# Find a number by which the inner profile needs to be multiplied in order to give a particular
-	# total enclosed mass at a particular radius.
-
-	def normalizeInner(self, R, M):
-		
-		Mr_inner = self.enclosedMassInner(R)
-		Mr_outer = self.enclosedMassOuter(R)
-		norm = (M - Mr_outer) / Mr_inner
-		
-		return norm
-	
-	###############################################################################################
-	
-	# The surface density of the outer profile can be tricky, since some outer terms lead to a 
-	# diverging integral. Thus, constant terms such as rho_m need to be ignored in this function.
-	
-	def surfaceDensity(self, r, accuracy = 1E-6):
-
-		density_functions = []
-
-		def integrand(r, R2):
-			
-			rho = 0.0
-			for i in range(len(density_functions)):
-				rho += density_functions[i](r)
-			ret = r * rho / np.sqrt(r**2 - R2)
-			
-			return ret
-
-		if np.max(r) >= self.rmax:
-			msg = 'Cannot compute surface density at a radius (%.2e) greater than rmax (%.2e).' \
-				% (np.max(r), self.rmax)
-			raise Exception(msg)
-
-		# Create a list of functions to evaluate so we don't need to make this decision at every
-		# evaluation
-		density_functions.append(self.densityInner)
-		for i in range(self.N_outer):
-			if self.outer_terms[i].include_in_surface_density:
-				density_functions.append(self.outer_terms[i].density)
-
-		r_use, is_array = utilities.getArray(r)
-		surfaceDensity = 0.0 * r_use
-		for i in range(len(r_use)):
-			surfaceDensity[i], _ = scipy.integrate.quad(integrand, r_use[i], self.rmax, 
-										args = (r_use[i]**2), epsrel = accuracy, limit = 1000)
-			surfaceDensity[i] *= 2.0
-
-		if not is_array:
-			surfaceDensity = surfaceDensity[0]
-
-		return surfaceDensity
-
-###################################################################################################
