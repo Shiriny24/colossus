@@ -14,27 +14,6 @@ for particular functional forms of the profile.
 Basic usage
 ---------------------------------------------------------------------------------------------------
 
-We create a density profile object which has a range of functions. For example, let us create an 
-NFW profile::
-	
-	profile = NFWProfile(M = 1E12, mdef = 'vir', z = 0.0, c = 10.0)
-	Rvir = profile.RDelta(0.0, 'vir')
-	rho = profile.density(Rvir)
-
-See the documentation of the abstract base class :class:`profile_base.HaloDensityProfile` for the functionality 
-of the profile objects. For documentation on spherical overdensity mass definitions, please see the 
-documentation of the :mod:`halo.basics` module. The following functional forms for the density 
-profile are implemented:
-
-============================ =============================== ========================== =============
-Class                        Explanation                     Paper                      Reference
-============================ =============================== ========================== =============
-:func:`SplineDensityProfile` A arbitrary density profile     ---                        ---
-:func:`EinastoProfile`       Einasto profile                 Einasto 1965               TrAlm 5, 87
-:func:`NFWProfile`           Navarro-Frenk-White profile     Navarro et al. 1997        ApJ 490, 493
-:func:`DK14Profile`          Diemer & Kravtsov 2014 profile  Diemer & Kravtsov 2014     ApJ 789, 1
-============================ =============================== ========================== =============
-
 Some functions make use of density profiles, but are not necessarily tied to a particular 
 functional form:
 
@@ -65,68 +44,6 @@ at z=1, and converted it to the 200m mass definition.
 Often, we do not know the concentration of a halo and wish to estimate it using a concentration-
 mass model. This function is performed by a convenient wrapper for the 
 :func:`changeMassDefinition` function, see :func:`halo.mass_definitions.changeMassDefinitionCModel`.
-
----------------------------------------------------------------------------------------------------
-Profile fitting
----------------------------------------------------------------------------------------------------
-
-Here, fitting refers to finding the parameters of a halo density profile which best describe a
-given set of data points. Each point corresponds to a radius and a particular quantity, such as 
-density, enclosed mass, or surface density. Optionally, the user can pass uncertainties on the 
-data points, or even a full covariance matrix. All fitting should be done using the very general 
-:func:`profile_base.HaloDensityProfile.fit` routine. For example, let us fit an NFW profile to some density 
-data::
-
-	profile = NFWProfile(M = 1E12, mdef = 'vir', z = 0.0, c = 10.0)
-	profile.fit(r, rho, 'rho')
-	
-Here, r and rho are arrays of radii and densities. Note that the current parameters of the profile 
-instance are used as an initial guess for the fit, and the profile object is set to the best-fit 
-parameters after the fit. Under the hood, the fit function handles multiple different fitting 
-methods. By default, the above fit is performed using a least-squares minimization, but we can also 
-use an MCMC sampler, for example to fit the surface density profile::
-
-	dict = profile.fit(r, Sigma, 'Sigma', method = 'mcmc', q_cov = covariance_matrix)
-	best_fit_params = dict['x_mean']
-	uncertainty = dict['percentiles'][0]
-	
-The :func:`profile_base.HaloDensityProfile.fit` function accepts many input options, some specific to the 
-fitting method used. Please see the detailed documentation below.
-
----------------------------------------------------------------------------------------------------
-Alternative mass definitions
----------------------------------------------------------------------------------------------------
-
-Two alternative mass definitions (as in, not spherical overdensity masses) are described in 
-More, Diemer & Kravtsov 2015. Those include:
-
-* :math:`M_{sp}`: The mass contained within the radius of the outermost density caustic. 
-  Caustics correspond to particles piling up at the apocenter of their orbits. The most pronounced
-  caustic is due to the most recently accreted matter, and that caustic is also found at the
-  largest radius which we call the splashback radius, :math:`R_{sp}`. This is designed as a 
-  physically meaningful radius definition that encloses all the mass ever accreted by a halo.
-* :math:`M_{<4r_s}`: The mass within 4 scale radii. This mass definition quantifies the mass in
-  the inner part of the halo. During the fast accretion regime, this mass definition tracks
-  :math:`M_{vir}`, but when the halo stops accreting it approaches a constant. 
-
-:math:`M_{<4r_s}`: can be computed from both NFW and DK14 profiles. :math:`R_{sp}` and 
-:math:`M_{sp}` can only be computed from DK14 profiles. Please see the :mod:`halo.mass_definitions`
-module for convenient converter functions between mass definitions.
-
----------------------------------------------------------------------------------------------------
-Units
----------------------------------------------------------------------------------------------------
-
-Unless otherwise noted, all functions in this module use the following units:
-
-================ =======================================
-Variable         Unit
-================ =======================================
-Length           Physical kpc/h
-Mass             :math:`M_{\odot}/h`
-Density          Physical :math:`M_{\odot} h^2 / kpc^3`
-Surface density  Physical :math:`M_{\odot} h / kpc^2`
-================ =======================================
 
 ---------------------------------------------------------------------------------------------------
 Module Reference

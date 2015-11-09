@@ -538,7 +538,7 @@ class DK14Profile(profile_base.HaloDensityProfileWithOuter):
 
 	###############################################################################################
 	
-	def _fitParamDeriv_rho(self, r, mask, N_par_fit):
+	def _fitParamDeriv_rho_(self, r, mask, N_par_fit):
 
 		x = self.getParameterArray()
 		deriv = np.zeros((N_par_fit, len(r)), np.float)

@@ -6,7 +6,7 @@
 ###################################################################################################
 
 """
-This module contains abstract base classes for halo density profiles.
+This module implements an abstract base class for halo density profiles.
 
 ---------------------------------------------------------------------------------------------------
 Module Reference
@@ -141,6 +141,21 @@ class HaloDensityProfile():
 					self.par[self.par_names[i]] = pars[counter]
 					counter += 1
 					
+		return
+
+	###############################################################################################
+
+	@abc.abstractmethod
+	def update(self):
+		"""
+		Update the profile object after a change in parameters.
+		
+		If the parameters dictionary has been changed (e.g. by the user or during fitting), this 
+		function must be called to ensure consistency within the profile object. This involves
+		deleting any pre-computed quantities (e.g., tabulated enclosed masses) and re-computing
+		profile properties that depend on the parameters.
+		"""
+		
 		return
 
 	###############################################################################################

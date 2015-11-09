@@ -6,7 +6,7 @@
 ###################################################################################################
 
 """
-This module represents a collection of utilities related to halo mass definitions. 
+This module represents a collection of advanced utilities related to halo mass definitions. 
 
 ---------------------------------------------------------------------------------------------------
 Changing mass definitions assuming a concentration
@@ -48,6 +48,7 @@ converter functions:
 	Rsp
 	Msp
 	M4rs
+
 
 ---------------------------------------------------------------------------------------------------
 Units
