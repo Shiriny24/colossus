@@ -14,7 +14,7 @@ import numpy as np
 from colossus.utils import utilities
 from colossus.cosmology import cosmology
 from colossus.halo import concentration
-from colossus.halo import profile
+from colossus.halo import profile_nfw
 
 ###################################################################################################
 
@@ -137,8 +137,8 @@ def computeConcentrationTable(cosmo_name):
 			
 		for j in range(len(M200c)):
 			line = '%5.2f  %5.3f  %8.2e  %5.2f  %5.2f' % (z[i], nu200c[j], M200c[j], c200c_median[j], c200c_mean[j])
-			prof_median = profile.NFWProfile(M = M200c[j], c = c200c_median[j], z = z[i], mdef = '200c')
-			prof_mean = profile.NFWProfile(M = M200c[j], c = c200c_mean[j], z = z[i], mdef = '200c')			
+			prof_median = profile_nfw.NFWProfile(M = M200c[j], c = c200c_median[j], z = z[i], mdef = '200c')
+			prof_mean = profile_nfw.NFWProfile(M = M200c[j], c = c200c_mean[j], z = z[i], mdef = '200c')			
 			for k in range(len(mdefs)):
 				R_delta_median, M_delta_median = prof_median.RMDelta(z[i], mdefs[k])
 				R_delta_mean, M_delta_mean = prof_mean.RMDelta(z[i], mdefs[k])

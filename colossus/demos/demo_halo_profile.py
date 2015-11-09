@@ -5,7 +5,7 @@
 #
 ###################################################################################################
 #
-# Sample code demonstrating the usage of the halo.profile.py module. 
+# Sample code demonstrating the usage of the halo.profile module. 
 #
 ###################################################################################################
 

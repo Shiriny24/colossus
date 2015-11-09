@@ -12,7 +12,7 @@ This module represents a collection of advanced utilities related to halo mass d
 Changing mass definitions assuming a concentration
 ---------------------------------------------------------------------------------------------------
 
-The :func:`halo.profile.changeMassDefinition` function needs to know the concentration of a 
+The :func:`halo.profile_utils.changeMassDefinition` function needs to know the concentration of a 
 halo. For convenience, the following function uses a concentration model to estimate the 
 concentration::
 
@@ -76,7 +76,8 @@ import numpy as np
 
 from colossus.cosmology import cosmology
 from colossus.halo import basics
-from colossus.halo import profile
+from colossus.halo import profile_utils
+from colossus.halo import profile_nfw
 from colossus.halo import concentration
 
 ###################################################################################################
@@ -122,7 +123,7 @@ def changeMassDefinitionCModel(M, z, mdef_in, mdef_out, profile = 'nfw', c_model
 	
 	c = concentration.concentration(M, mdef_in, z, model = c_model)
 	
-	return profile.pseudoEvolve(M, c, z, mdef_in, z, mdef_out, profile = profile)
+	return profile_utils.pseudoEvolve(M, c, z, mdef_in, z, mdef_out, profile = profile)
 
 ###################################################################################################
 
@@ -155,7 +156,7 @@ def M4rs(M, z, mdef, c = None):
 	if c is None:
 		c = concentration.concentration(M, mdef, z)
 	
-	Mfrs = M * profile.NFWProfile.mu(4.0) / profile.NFWProfile.mu(c)
+	Mfrs = M * profile_nfw.NFWProfile.mu(4.0) / profile_nfw.NFWProfile.mu(c)
 	
 	return Mfrs
 
@@ -290,7 +291,7 @@ def Rsp(R, z, mdef, c = None, profile = 'nfw'):
 		if c is None:
 			M200m, R200m, _ = changeMassDefinitionCModel(M, z, mdef, '200m', profile = profile)
 		else:
-			M200m, R200m, _ = profile.changeMassDefinition(M, c, z, mdef, '200m', profile = profile)
+			M200m, R200m, _ = profile_utils.changeMassDefinition(M, c, z, mdef, '200m', profile = profile)
 			
 	cosmo = cosmology.getCurrent()
 	nu200m = cosmo.peakHeight(M200m, z)
@@ -337,7 +338,7 @@ def Msp(M, z, mdef, c = None, profile = 'nfw'):
 		if c is None:
 			M200m, _, _ = changeMassDefinitionCModel(M, z, mdef, '200m', profile = profile)
 		else:
-			M200m, _, _ = profile.changeMassDefinition(M, c, z, mdef, '200m', profile = profile)
+			M200m, _, _ = profile_utils.changeMassDefinition(M, c, z, mdef, '200m', profile = profile)
 	
 	cosmo = cosmology.getCurrent()
 	nu200m = cosmo.peakHeight(M200m, z)

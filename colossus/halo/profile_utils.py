@@ -1,14 +1,13 @@
 ###################################################################################################
 #
-# profile.py                (c) Benedikt Diemer
+# profile_utils.py          (c) Benedikt Diemer
 #     				    	    benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
 
 """
-This module implements radial density profiles of dark matter halos, and functions that rely on 
-them. It contains a generic base class for halo density profiles, as well as derived classes
-for particular functional forms of the profile.
+This module implements functions that may or may not rely on particular forms of halo density
+profiles.
 
 ---------------------------------------------------------------------------------------------------
 Basic usage

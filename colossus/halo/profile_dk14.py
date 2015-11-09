@@ -12,7 +12,7 @@ from colossus.utils import defaults
 from colossus.cosmology import cosmology
 from colossus.halo import basics
 from colossus.halo import profile_base
-from colossus.halo import profile
+from colossus.halo import profile_utils
 
 ###################################################################################################
 # DIEMER & KRAVTSOV 2014 PROFILE
@@ -274,7 +274,7 @@ class DK14Profile(profile_base.HaloDensityProfileWithOuter):
 		else:
 			
 			# The user has supplied some other mass definition, we need to iterate.
-			_, R200m_guess, _ = profile.changeMassDefinition(M, c, z, mdef, '200m')
+			_, R200m_guess, _ = profile_utils.changeMassDefinition(M, c, z, mdef, '200m')
 			par2['RDelta'] = R_target
 			self.par['rhos'] = 1.0
 
@@ -398,7 +398,7 @@ class DK14Profile(profile_base.HaloDensityProfileWithOuter):
 	def RDelta(self, z, mdef):
 	
 		M200m = basics.R_to_M(self.opt['R200m'], z, mdef)
-		_, R_guess, _ = profile.changeMassDefinition(M200m, self.opt['R200m'] / self.par['rs'], z, '200m', mdef)
+		_, R_guess, _ = profile_utils.changeMassDefinition(M200m, self.opt['R200m'] / self.par['rs'], z, '200m', mdef)
 		density_threshold = basics.densityThreshold(z, mdef)
 		R = self._RDeltaLowlevel(R_guess, density_threshold)
 	

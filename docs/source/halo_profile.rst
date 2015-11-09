@@ -17,7 +17,12 @@ Philosophy
 ---------------------------------------------------------------------------------------------------
 
 Derive from HaloDensityProfile object
+A profile really means a description of the 1-halo term, but descriptions of the 2-halo term are
+generic and can be added to all profiles. Thus, they are generically implemented in the base class
 represents a physical halo density profile
+
+Can outer terms be added outside the constructor?? No... _outerTerms
+
 WithOuter
 parameters can be changed, update routine
 some profiles demand cosmological knowledge
