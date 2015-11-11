@@ -575,14 +575,61 @@ class HaloDensityProfile():
 
 	###############################################################################################
 
-	def _surfaceDensity(self, r, density_func, accuracy = 1E-6, interpolate = True):
+# 	def _surfaceDensity(self, r, density_func, accuracy = 1E-6, interpolate = True):
+# 
+# 		def integrand_interp(r, R2, interp):
+# 			ret = r * 10**interp(np.log10(r)) / np.sqrt(r**2 - R2)
+# 			return ret
+# 
+# 		def integrand_exact(r, R2, interp):
+# 			ret = r * density_func(r) / np.sqrt(r**2 - R2)
+# 			return ret
+# 
+# 		if np.max(r) >= self.rmax:
+# 			msg = 'Cannot compute surface density at a radius (%.2e) greater than rmax (%.2e).' \
+# 				% (np.max(r), self.rmax)
+# 			raise Exception(msg)
+# 		
+# 		if interpolate:
+# 			min_r = np.min(r) * 0.009
+# 			max_r = min(self.rmax, 100000.0)
+# 			table_log_r = np.arange(np.log10(min_r), np.log10(max_r * 1.001), 1.0)
+# 			table_r = 10**table_log_r
+# 			table_rho = density_func(table_r)
+# 			table_log_rho = np.log10(table_rho)
+# 			interp = scipy.interpolate.InterpolatedUnivariateSpline(table_log_r, table_log_rho)
+# 			integrand = integrand_interp
+# 		else:
+# 			max_r = self.rmax
+# 			interp = None
+# 			integrand = integrand_exact
+# 
+# 		r_use, is_array = utilities.getArray(r)
+# 		surfaceDensity = 0.0 * r_use
+# 		for i in range(len(r_use)):
+# 			surfaceDensity[i], _ = scipy.integrate.quad(integrand, r_use[i], max_r, 
+# 										args = (r_use[i]**2, interp), epsrel = accuracy, limit = 1000)
+# 			surfaceDensity[i] *= 2.0
+# 
+# 		if not is_array:
+# 			surfaceDensity = surfaceDensity[0]
+# 
+# 		return surfaceDensity
 
-		def integrand_interp(r, R2, interp):
-			ret = r * 10**interp(np.log10(r)) / np.sqrt(r**2 - R2)
+	###############################################################################################
+
+	# Integrate in log space
+	
+	def _surfaceDensity(self, r, density_func, accuracy = 1E-4, interpolate = True):
+		
+		def integrand_interp(logr, R2, interp):
+			r2 = np.exp(logr)**2
+			ret = r2 * np.exp(interp(logr)) / np.sqrt(r2 - R2)
 			return ret
 
-		def integrand_exact(r, R2, interp):
-			ret = r * density_func(r) / np.sqrt(r**2 - R2)
+		def integrand_exact(logr, R2, interp):
+			r = np.exp(logr)
+			ret = r**2 * density_func(r) / np.sqrt(r**2 - R2)
 			return ret
 
 		if np.max(r) >= self.rmax:
@@ -591,23 +638,22 @@ class HaloDensityProfile():
 			raise Exception(msg)
 		
 		if interpolate:
-			min_r = np.min(r) * 0.009
-			max_r = min(self.rmax, 100000.0)
-			table_log_r = np.arange(np.log10(min_r), np.log10(max_r * 1.001), 1.0)
-			table_r = 10**table_log_r
-			table_rho = density_func(table_r)
-			table_log_rho = np.log10(table_rho)
+			log_min_r = np.log(np.min(r) * 0.99)
+			log_max_r = np.log(min(self.rmax, 1000000.0))
+			table_log_r = np.arange(log_min_r, log_max_r + 0.01, 0.1)
+			table_log_rho = np.log(density_func(np.exp(table_log_r)))
 			interp = scipy.interpolate.InterpolatedUnivariateSpline(table_log_r, table_log_rho)
 			integrand = integrand_interp
 		else:
-			max_r = self.rmax
+			log_max_r = np.log(self.rmax)
 			interp = None
 			integrand = integrand_exact
 
 		r_use, is_array = utilities.getArray(r)
 		surfaceDensity = 0.0 * r_use
+		log_r_use = np.log(r_use)
 		for i in range(len(r_use)):
-			surfaceDensity[i], _ = scipy.integrate.quad(integrand, r_use[i], max_r, 
+			surfaceDensity[i], _ = scipy.integrate.quad(integrand, log_r_use[i], log_max_r, 
 										args = (r_use[i]**2, interp), epsrel = accuracy, limit = 1000)
 			surfaceDensity[i] *= 2.0
 
@@ -621,7 +667,7 @@ class HaloDensityProfile():
 	# The surface density of the outer profile can be tricky, since some outer terms lead to a 
 	# diverging integral. Thus, constant terms such as rho_m need to be ignored in this function.
 	
-	def surfaceDensity(self, r, accuracy = 1E-6, interpolate = True):
+	def surfaceDensity(self, r, accuracy = 1E-4, interpolate = True):
 		"""
 		The projected surface density at radius r.
 
@@ -631,6 +677,9 @@ class HaloDensityProfile():
 			Radius in physical kpc/h; can be a number or a numpy array.
 		accuracy: float
 			The minimum accuracy of the integration.
+		interpolate: bool
+			Use an interpolation table for density during the integration. This should make the
+			evaluation somewhat faster, depending on how large the radius array is. 
 			
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -643,7 +692,7 @@ class HaloDensityProfile():
 
 	###############################################################################################
 
-	def surfaceDensityInner(self, r, accuracy = 1E-6):
+	def surfaceDensityInner(self, r, accuracy = 1E-4, interpolate = True):
 		"""
 		The projected surface density at radius r due to the inner profile.
 
@@ -653,6 +702,9 @@ class HaloDensityProfile():
 			Radius in physical kpc/h; can be a number or a numpy array.
 		accuracy: float
 			The minimum accuracy of the integration.
+		interpolate: bool
+			Use an interpolation table for density during the integration. This should make the
+			evaluation somewhat faster, depending on how large the radius array is. 
 			
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -661,11 +713,11 @@ class HaloDensityProfile():
 			dimensions as r.
 		"""
 		
-		return self._surfaceDensity(r, self.densityInner, accuracy = accuracy)
+		return self._surfaceDensity(r, self.densityInner, accuracy = accuracy, interpolate = interpolate)
 
 	###############################################################################################
 
-	def surfaceDensityOuter(self, r, accuracy = 1E-6):
+	def surfaceDensityOuter(self, r, accuracy = 1E-4, interpolate = True):
 		"""
 		The projected surface density at radius r due to the outer profile.
 
@@ -675,6 +727,9 @@ class HaloDensityProfile():
 			Radius in physical kpc/h; can be a number or a numpy array.
 		accuracy: float
 			The minimum accuracy of the integration.
+		interpolate: bool
+			Use an interpolation table for density during the integration. This should make the
+			evaluation somewhat faster, depending on how large the radius array is. 
 			
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -683,47 +738,7 @@ class HaloDensityProfile():
 			dimensions as r.
 		"""
 
-		r_array, is_array = utilities.getArray(r)
-		rho_outer = np.zeros((len(r_array)), np.float)
-		for i in range(self.N_outer):
-			if self._outer_terms[i].include_in_surface_density:
-				rho_outer += self._outer_terms[i].surfaceDensity(r)
-		if not is_array:
-			rho_outer = rho_outer[0]
-				
-		density_functions = []
-
-		def integrand(r, R2):
-			
-			rho = 0.0
-			for i in range(len(density_functions)):
-				rho += density_functions[i](r)
-			ret = r * rho / np.sqrt(r**2 - R2)
-			
-			return ret
-
-		if np.max(r) >= self.rmax:
-			msg = 'Cannot compute surface density at a radius (%.2e) greater than rmax (%.2e).' \
-				% (np.max(r), self.rmax)
-			raise Exception(msg)
-
-		# Create a list of functions to evaluate so we don't need to make this decision at every
-		# evaluation
-		for i in range(self.N_outer):
-			if self._outer_terms[i].include_in_surface_density:
-				density_functions.append(self._outer_terms[i].density)
-
-		r_use, is_array = utilities.getArray(r)
-		surfaceDensity = 0.0 * r_use
-		for i in range(len(r_use)):
-			surfaceDensity[i], _ = scipy.integrate.quad(integrand, r_use[i], self.rmax, 
-										args = (r_use[i]**2), epsrel = accuracy, limit = 1000)
-			surfaceDensity[i] *= 2.0
-
-		if not is_array:
-			surfaceDensity = surfaceDensity[0]
-
-		return self._surfaceDensity(r, self.densityOuter, accuracy = accuracy)
+		return self._surfaceDensity(r, self.densityOuter, accuracy = accuracy, interpolate = interpolate)
 
 	###############################################################################################
 

@@ -1,13 +1,14 @@
 ###################################################################################################
 #
-# profile_utils.py          (c) Benedikt Diemer
+# mass_defs.py              (c) Benedikt Diemer
 #     				    	    benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
 
 """
-This module implements functions that may or may not rely on particular forms of halo density
-profiles.
+This module implements functions related to halo mass definitions that rely on particular forms of 
+the halo density profiles. For the most basic aspects of spherical overdensity mass definitions, 
+see the :doc:`mass_so` section.
 
 ---------------------------------------------------------------------------------------------------
 Basic usage
