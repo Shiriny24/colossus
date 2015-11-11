@@ -20,7 +20,7 @@ import six
 
 from colossus.utils import utilities
 from colossus.cosmology import cosmology
-from colossus.halo import basics
+from colossus.halo import mass_so
 from colossus.halo import bias
 
 ###################################################################################################
@@ -314,7 +314,7 @@ class OuterTermXiMatterPowerLaw(OuterTerm):
 		if np.count_nonzero(mask) > 0:
 			xi_mm = cosmo.correlationFunction(r_Mpc[mask], z)
 	
-			M200m = basics.R_to_M(self.owner.opt['R200m'], z, '200m')
+			M200m = mass_so.R_to_M(self.owner.opt['R200m'], z, '200m')
 			#M200m = self.owner.MDelta(z, '200m')
 			b = bias.haloBias(M200m, z, '200m')
 			

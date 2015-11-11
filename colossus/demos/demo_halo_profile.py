@@ -16,7 +16,8 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 from colossus.cosmology import cosmology
-from colossus.halo import basics
+from colossus.halo import mass_so
+from colossus.halo import mass_defs
 from colossus.halo import profile_nfw
 from colossus.halo import profile_einasto
 from colossus.halo import profile_dk14
@@ -43,7 +44,7 @@ def demonstrateProfiles():
 	z = 0.0
 	c = 5.0
 	cosmo = cosmology.setCosmology('WMAP9')
-	R = basics.M_to_R(M, z, mdef)
+	R = mass_so.M_to_R(M, z, mdef)
 	
 	# Choose a set of radii
 	rR_min = 1E-3
@@ -164,14 +165,14 @@ def demonstrateMassDefinitions():
 	z = 0.0
 	cosmology.setCosmology('WMAP9')
 
-	Rvir = basics.M_to_R(Mvir, z, 'vir')
+	Rvir = mass_so.M_to_R(Mvir, z, 'vir')
 
 	print(("We start with the following halo, defined using the virial mass definition:"))	
 	print(("Mvir:   %.2e Msun / h" % Mvir))
 	print(("Rvir:   %.2e kpc / h" % Rvir))
 	print(("cvir:   %.2f" % cvir))
 	
-	M200c, R200c, c200c = profile_nfw.changeMassDefinition(Mvir, cvir, z, 'vir', '200c')
+	M200c, R200c, c200c = mass_defs.changeMassDefinition(Mvir, cvir, z, 'vir', '200c')
 	
 	print(("Now, let's convert the halo data to the 200c mass definition, assuming an NFW profile:"))	
 	print(("M200c:  %.2e Msun / h" % M200c))

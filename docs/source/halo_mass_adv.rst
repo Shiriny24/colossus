@@ -1,6 +1,6 @@
 =====================================
-Pseudo-evolution and mass conversion
+Alternative Mass Definitions
 =====================================
 
-.. automodule:: halo.profile_utils
+.. automodule:: halo.mass_adv
     :members:

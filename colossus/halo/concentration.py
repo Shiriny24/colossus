@@ -24,7 +24,7 @@ most models are only valid over a certain range of masses, redshifts, and cosmol
 Furthermore, each model was only calibrated for one of a few particular mass definitions, such as 
 :math:`c_{200c}`, :math:`c_{vir}`, or :math:`c_{200m}`. The :func:`concentration` function 
 automatically converts these definitions to the definition chosen by the user. For documentation 
-on spherical overdensity mass definitions, please see the documentation of the :mod:`halo.basics` 
+on spherical overdensity mass definitions, please see the documentation of the :doc:`halo_mass` 
 module.
 
 ---------------------------------------------------------------------------------------------------
@@ -89,8 +89,8 @@ import warnings
 from colossus.utils import utilities
 from colossus.utils import constants
 from colossus.cosmology import cosmology
-from colossus.halo import basics
-from colossus.halo import profile_utils
+from colossus.halo import mass_so
+from colossus.halo import mass_defs
 
 ###################################################################################################
 
@@ -158,7 +158,7 @@ def concentration(M, mdef, z,
 	# corresponding mass in the user's mass definition is M_desired.
 	def eq(MDelta, M_desired, mdef_model, func, limited, args):
 		cDelta, _ = evaluateC(func, MDelta, limited, args)
-		Mnew, _, _ = profile_utils.changeMassDefinition(MDelta, cDelta, z, mdef_model, mdef,\
+		Mnew, _, _ = mass_defs.changeMassDefinition(MDelta, cDelta, z, mdef_model, mdef,\
 												profile = 'nfw')
 		return Mnew - M_desired
 
@@ -251,7 +251,7 @@ def concentration(M, mdef, z,
 
 		# To a good approximation, the relation M2 / M1 = Delta1 / Delta2. We use this mass
 		# as a guess around which to look for the solution.
-		Delta_ratio = basics.densityThreshold(z, mdef) / basics.densityThreshold(z, mdef_model)
+		Delta_ratio = mass_so.densityThreshold(z, mdef) / mass_so.densityThreshold(z, mdef_model)
 		M_guess = M_array * Delta_ratio
 		c = np.zeros_like(M_array)
 		
@@ -276,7 +276,7 @@ def concentration(M, mdef, z,
 				mask[i] = False
 				
 			cDelta, mask_element = evaluateC(func, MDelta, limited, args)
-			_, _, c[i] = profile_utils.changeMassDefinition(MDelta, cDelta, z, mdef_model,
+			_, _, c[i] = mass_defs.changeMassDefinition(MDelta, cDelta, z, mdef_model,
 									mdef, profile = conversion_profile)
 			if limited:
 				mask[i] = mask_element

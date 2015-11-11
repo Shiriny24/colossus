@@ -10,10 +10,10 @@ import scipy.optimize
 
 from colossus.utils import defaults
 from colossus.cosmology import cosmology
-from colossus.halo import basics
+from colossus.halo import mass_so
 from colossus.halo import profile_base
 from colossus.halo import profile_outer
-from colossus.halo import profile_utils
+from colossus.halo import mass_defs
 
 ###################################################################################################
 # DIEMER & KRAVTSOV 2014 PROFILE
@@ -236,7 +236,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		def radius_diff(R200m, par2, Gamma, rho_target, R_target):
 			
 			self.opt['R200m'] = R200m
-			M200m = basics.R_to_M(R200m, z, '200m')
+			M200m = mass_so.R_to_M(R200m, z, '200m')
 			nu200m = cosmo.peakHeight(M200m, z)
 
 			self.par['alpha'], self.par['beta'], self.par['gamma'], rt_R200m = \
@@ -252,14 +252,14 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		
 		# The user needs to set a cosmology before this function can be called
 		cosmo = cosmology.getCurrent()
-		R_target = basics.M_to_R(M, z, mdef)
+		R_target = mass_so.M_to_R(M, z, mdef)
 		self.par['rs'] = R_target / c
 		
 		if mdef == '200m':
 			
 			# The user has supplied M200m, the parameters follow directly from the input
 			M200m = M
-			self.opt['R200m'] = basics.M_to_R(M200m, z, '200m')
+			self.opt['R200m'] = mass_so.M_to_R(M200m, z, '200m')
 			nu200m = cosmo.peakHeight(M200m, z)
 			self.par['alpha'], self.par['beta'], self.par['gamma'], rt_R200m = \
 				self.getFixedParameters(selected_by, nu200m = nu200m, z = z, Gamma = Gamma)
@@ -272,18 +272,18 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		else:
 			
 			# The user has supplied some other mass definition, we need to iterate.
-			_, R200m_guess, _ = profile_utils.changeMassDefinition(M, c, z, mdef, '200m')
+			_, R200m_guess, _ = mass_defs.changeMassDefinition(M, c, z, mdef, '200m')
 			par2['RDelta'] = R_target
 			self.par['rhos'] = 1.0
 
 			# Iterate to find an M200m for which the desired mass is correct
-			rho_target = basics.densityThreshold(z, mdef)
+			rho_target = mass_so.densityThreshold(z, mdef)
 			args = par2, Gamma, rho_target, R_target
 			self.opt['R200m'] = scipy.optimize.brentq(radius_diff, R200m_guess / 1.3, R200m_guess * 1.3,
 								args = args, xtol = RTOL)
 
 			# Check the accuracy of the result; M should be very close to MDelta now
-			M_result = basics.R_to_M(par2['RDelta'], z, mdef)
+			M_result = mass_so.R_to_M(par2['RDelta'], z, mdef)
 			err = (M_result - M) / M
 			
 			if abs(err) > acc_warn:
@@ -397,9 +397,9 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	
 	def RDelta(self, z, mdef):
 	
-		M200m = basics.R_to_M(self.opt['R200m'], z, mdef)
-		_, R_guess, _ = profile_utils.changeMassDefinition(M200m, self.opt['R200m'] / self.par['rs'], z, '200m', mdef)
-		density_threshold = basics.densityThreshold(z, mdef)
+		M200m = mass_so.R_to_M(self.opt['R200m'], z, mdef)
+		_, R_guess, _ = mass_defs.changeMassDefinition(M200m, self.opt['R200m'] / self.par['rs'], z, '200m', mdef)
+		density_threshold = mass_so.densityThreshold(z, mdef)
 		R = self._RDeltaLowlevel(R_guess, density_threshold)
 	
 		return R

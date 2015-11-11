@@ -1,6 +1,6 @@
 =====================================
-Mass Definitions
+Mass conversions and pseudo-evolution
 =====================================
 
-.. automodule:: halo.mass_definitions
+.. automodule:: halo.mass_defs
     :members:

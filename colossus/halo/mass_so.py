@@ -9,7 +9,7 @@
 This module implements basic aspects of spherical overdensity mass definitions for dark matter 
 halos. The functions in this module are independent of the form of the density profile. For 
 functions that rely on a particular form of the halo density profile, please see the 
-:doc:`mass_defs` and :doc:`mass_alts` sections.
+:doc:`halo_mass_defs` and :doc:`halo_mass_adv` sections.
 
 ---------------------------------------------------------------------------------------------------
 Spherical overdensity masses

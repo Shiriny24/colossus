@@ -9,9 +9,9 @@ import numpy as np
 import scipy.special
 
 from colossus.cosmology import cosmology
-from colossus.halo import basics
+from colossus.halo import mass_so
 from colossus.halo import profile_base
-from colossus.halo import profile_utils
+from colossus.halo import mass_defs
 
 ###################################################################################################
 # EINASTO PROFILE
@@ -135,14 +135,14 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 			The radial dependence of the profile slope.
 		"""
 
-		R = basics.M_to_R(M, z, mdef)
+		R = mass_so.M_to_R(M, z, mdef)
 		self.par['rs'] = R / c
 		
 		if alpha is None:
 			if mdef == 'vir':
 				Mvir = M
 			else:
-				Mvir, _, _ = profile_utils.changeMassDefinition(M, c, z, mdef, 'vir')
+				Mvir, _, _ = mass_defs.changeMassDefinition(M, c, z, mdef, 'vir')
 			cosmo = cosmology.getCurrent()
 			nu_vir = cosmo.peakHeight(Mvir, z)
 			alpha = 0.155 + 0.0095 * nu_vir**2

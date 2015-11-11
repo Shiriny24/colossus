@@ -15,6 +15,7 @@ import numpy as np
 import scipy.misc
 import scipy.optimize
 import scipy.integrate
+import scipy.interpolate
 import abc
 import collections
 import six
@@ -23,7 +24,7 @@ import copy
 from colossus.utils import utilities
 from colossus.utils import constants
 from colossus.utils import mcmc
-from colossus.halo import basics
+from colossus.halo import mass_so
 
 ###################################################################################################
 # ABSTRACT BASE CLASS FOR HALO DENSITY PROFILES
@@ -846,7 +847,7 @@ class HaloDensityProfile():
 		RMDelta: The spherical overdensity radius and mass of a given mass definition.
 		"""		
 
-		density_threshold = basics.densityThreshold(z, mdef)
+		density_threshold = mass_so.densityThreshold(z, mdef)
 		R = scipy.optimize.brentq(self._thresholdEquation, self.min_RDelta, self.max_RDelta, density_threshold)
 
 		return R
@@ -880,7 +881,7 @@ class HaloDensityProfile():
 		"""		
 		
 		R = self.RDelta(z, mdef)
-		M = basics.R_to_M(R, z, mdef)
+		M = mass_so.R_to_M(R, z, mdef)
 		
 		return R, M
 

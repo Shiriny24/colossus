@@ -11,9 +11,10 @@ The NFW profile
 
 import numpy as np
 import scipy.optimize
+import scipy.interpolate
 
 from colossus.utils import utilities
-from colossus.halo import basics
+from colossus.halo import mass_so
 from colossus.halo import profile_base
 
 ###################################################################################################
@@ -123,7 +124,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 			The scale radius in physical kpc/h; has the same dimensions as M.
 		"""
 				
-		rs = basics.M_to_R(M, z, mdef) / c
+		rs = mass_so.M_to_R(M, z, mdef) / c
 		rhos = M / rs**3 / 4.0 / np.pi / cls.mu(c)
 		
 		return rhos, rs
@@ -247,7 +248,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		density_threshold: float
 			The desired enclosed density threshold in physical :math:`M_{\odot} h^2 / kpc^3`. This 
 			number can be generated from a mass definition and redshift using the 
-			:func:`halo.basics.densityThreshold` function. 
+			:func:`halo.mass_so.densityThreshold` function. 
 		
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -383,7 +384,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 
 	def RDelta(self, z, mdef):
 	
-		density_threshold = basics.densityThreshold(z, mdef)
+		density_threshold = mass_so.densityThreshold(z, mdef)
 		x = self.xDelta(self.par['rhos'], self.par['rs'], density_threshold)
 		R = x * self.par['rs']
 		
@@ -449,3 +450,120 @@ class NFWProfile(profile_base.HaloDensityProfile):
 			deriv[counter] = rho_r * rrs * (1.0 / rrs + 2.0 / (1.0 + rrs))
 			
 		return deriv
+
+###################################################################################################
+# OTHER FUNCTIONS
+###################################################################################################
+
+def radiusFromPdf(M, c, z, mdef, cumulativePdf,
+					interpolate = True, min_interpolate_pdf = 0.01):
+	"""
+	Get the radius where the cumulative density distribution of a halo has a certain value, 
+	assuming an NFW profile. 
+	
+	This function can be useful when assigning radii to satellite galaxies in mock halos, for 
+	example. The function is optimized for speed when M is a large array. The density 
+	distribution is cut off at the virial radius corresponding to the given mass 
+	definition. For example, if ``mdef == vir``, the NFW profile is cut off at :math:`R_{vir}`. 
+	The accuracy achieved is about 0.2%, unless min_interpolate_pdf is changed to a lower value; 
+	below 0.01, the accuracy of the interpolation drops.
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	M: array_like
+		Halo mass in units of :math:`M_{\odot}/h`; can be a number or a numpy array.
+	c: array_like
+		Halo concentration, in the same definition as M; must have the same dimensions as M.
+	z: float
+		Redshift
+	mdef: str
+		The mass definition in which the halo mass M is given. 
+	cumulativePdf: array_like
+		The cumulative pdf that we are seeking. If an array, this array needs to have the same 
+		dimensions as the M array.
+	c_model: str
+		The model used to evaluate concentration if ``c is None``.
+	interpolate: bool
+		If ``interpolate == True``, an interpolation table is built before computing the radii. This 
+		is much faster if M is a large array. 
+	min_interpolate_pdf: float
+		For values of the cumulativePdf that fall below this value, the radius is computed exactly,
+		even if ``interpolation == True``. The reason is that the interpolation becomes unreliable
+		for these very low pdfs. 
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	r: array_like
+		The radii where the cumulative pdf(s) is/are achieved, in units of physical kpc/h; has the 
+		same dimensions as M.
+
+	Warnings
+	-----------------------------------------------------------------------------------------------
+		If many pdf values fall below ``min_interpolate_pdf``, this will slow the function
+		down significantly.
+	"""
+
+	def equ(c, target):
+		return NFWProfile.mu(c) - target
+	
+	def getX(c, p):
+		
+		target = NFWProfile.mu(c) * p
+		x = scipy.optimize.brentq(equ, 0.0, c, args = target)
+		
+		return x
+	
+	M_array, is_array = utilities.getArray(M)
+	R = mass_so.M_to_R(M, z, mdef)
+	N = len(M_array)
+	x = 0.0 * M_array
+	c_array, _ = utilities.getArray(c)
+	p_array, _ = utilities.getArray(cumulativePdf)
+	
+	if interpolate:
+
+		# Create an interpolator on a regular grid in c-p space.
+		bin_width_c = 0.1
+		c_min = np.min(c_array) * 0.99
+		c_max = np.max(c_array) * 1.01
+		c_bins = np.arange(c_min, c_max + bin_width_c, bin_width_c)
+		
+		p_bins0 = np.arange(0.0, 0.01, 0.001)
+		p_bins1 = np.arange(0.01, 0.1, 0.01)
+		p_bins2 = np.arange(0.1, 1.1, 0.1)
+		p_bins = np.concatenate((p_bins0, p_bins1, p_bins2))
+		
+		N_c = len(c_bins)
+		N_p = len(p_bins)
+
+		x_ = np.zeros((N_c, N_p), dtype = float)
+		for i in range(N_c):			
+			for j in range(N_p):
+				p = p_bins[j]
+				target = NFWProfile.mu(c_bins[i]) * p
+				x_[i, j] = scipy.optimize.brentq(equ, 0.0, c_bins[i], args = target) / c_bins[i]
+		
+		spl = scipy.interpolate.RectBivariateSpline(c_bins, p_bins, x_)
+
+		# For very small values, overwrite the interpolated values with the exact value.
+		for i in range(N):
+			if p_array[i] < min_interpolate_pdf:
+				x[i] = getX(c_array[i], cumulativePdf[i]) / c_array[i]
+			else:
+				x[i] = spl(c_array[i], p_array[i])
+
+		r = R * x
+	
+	else:
+
+		# A simple root-finding algorithm. 
+		for i in range(N):
+			x[i] = getX(c_array[i], cumulativePdf[i])
+		r = R / c_array * x
+			
+	if not is_array:
+		r = r[0]
+	
+	return r
+
+###################################################################################################

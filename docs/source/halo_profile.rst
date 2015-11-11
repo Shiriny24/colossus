@@ -47,7 +47,7 @@ NFW profile::
 
 See the documentation of the abstract base class :class:`halo.profile_base.HaloDensityProfile` for the functionality 
 of the profile objects. For documentation on spherical overdensity mass definitions, please see the 
-documentation of the :mod:`halo.basics` module. The following functional forms for the density 
+documentation of the :doc:`halo_mass` module. The following functional forms for the density 
 profile are implemented:
 
 ============================================ =============================== ========================= =============
@@ -122,12 +122,3 @@ Specific forms
     halo_profile_einasto
     halo_profile_nfw
     halo_profile_dk14
-
----------------------------------------------------------------------------------------------------
-Advanced functions
----------------------------------------------------------------------------------------------------
-
-.. toctree::
-    :maxdepth: 3
-
-    halo_profile_utils

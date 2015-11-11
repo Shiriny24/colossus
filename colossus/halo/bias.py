@@ -24,7 +24,7 @@ import numpy as np
 
 from colossus.utils import constants
 from colossus.cosmology import cosmology
-from colossus.halo import basics
+from colossus.halo import mass_so
 
 ###################################################################################################
 # HALO BIAS
@@ -60,7 +60,7 @@ def haloBiasFromNu(nu, z, mdef):
 	"""
 	
 	cosmo = cosmology.getCurrent()
-	Delta = basics.densityThreshold(z, mdef) / cosmo.rho_m(z)
+	Delta = mass_so.densityThreshold(z, mdef) / cosmo.rho_m(z)
 	y = np.log10(Delta)
 
 	A = 1.0 + 0.24 * y * np.exp(-1.0 * (4.0 / y)**4)

@@ -1,6 +1,6 @@
 =====================================
-Basics
+Spherical overdensity basics
 =====================================
 
-.. automodule:: halo.basics
+.. automodule:: halo.mass_so
     :members:
