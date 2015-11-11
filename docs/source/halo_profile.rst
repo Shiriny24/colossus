@@ -13,19 +13,33 @@ Density Profiles
     halo_profile_utils
 
 ---------------------------------------------------------------------------------------------------
-Philosophy
+General Philosophy
 ---------------------------------------------------------------------------------------------------
 
-Derive from HaloDensityProfile object
-A profile really means a description of the 1-halo term, but descriptions of the 2-halo term are
-generic and can be added to all profiles. Thus, they are generically implemented in the base class
-represents a physical halo density profile
-
-Can outer terms be added outside the constructor?? No... _outerTerms
-
-WithOuter
-parameters can be changed, update routine
-some profiles demand cosmological knowledge
+The entire halo density profile module is based on a powerful base class, profile_base.HaloDensityProfile.
+Some of the major design decisions regarding this class are:
+* The halo density profile is represented in physical units, not some re-scaled units.
+* A halo density profile is split into two parts, an inner profile (1-halo term) and an outer profile
+  (2-halo term). The inner profile is what sets different profile models apart, whereas there are 
+  numerous solutions for how to implement the 2-halo term.
+* The outer profile is implemented as the sum of a number of possible terms, such as the mean
+  density, a power law, and a 2-halo term based on the matter-matter correlation function. These
+  terms are implemented in profile_base.HaloDensityProfile so that they can be used with any 
+  of the derived profile classes.
+* There are two fundamental aspects to a profile model: it's functional form, and the values of the
+  parameters of this form. These parameters should be independent from each other, i.e., parameters
+  should not be derivable from the other parameters. Such derived variables should be stored as 
+  options rather than parameters.
+* The functional form cannot be changed once the profile object has been
+  instantiated, i.e., the user cannot change the outer profile terms, density function etc. 
+* The values of the parameters can be changed either directly by the user or during fitting. After
+  such changes, the update() function must be called. Otherwise, internal variables may fall out of
+  sync with the profile parameters.
+* Some profile forms may require knowledge of cosmological parameters and/or redshift, while some
+  others do not (for example, an NFW profile without outer terms is a physical model that is independent
+  of cosmology and redshift, whereas an outer term based on the mean density obviously relies on 
+  cosmological information). If a profile object relies on cosmology, the user needs to set a 
+  cosmology or an error will be thrown.
 
 ---------------------------------------------------------------------------------------------------
 Basic usage

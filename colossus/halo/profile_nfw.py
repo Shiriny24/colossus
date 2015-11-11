@@ -409,18 +409,26 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	
 	###############################################################################################
 
-	# When fitting the NFW profile, use log(rho_c) and log(rs); since both parameters are 
-	# converted in the same way, we don't have to worry about the mask
+	# When fitting the NFW profile, use log(rho_c) and log(rs); we need to worry about the mask in 
+	# case there are outer terms.
 
 	def _fitConvertParams(self, p, mask):
 		
-		return np.log(p)
+		N_convert = np.count_nonzero(mask[:2])
+		pp = p.copy()
+		pp[:N_convert] = np.log(pp[:N_convert])
+		
+		return pp
 
 	###############################################################################################
 	
 	def _fitConvertParamsBack(self, p, mask):
 		
-		return np.exp(p)
+		N_convert = np.count_nonzero(mask[:2])
+		pp = p.copy()
+		pp[:N_convert] = np.exp(pp[:N_convert])
+		
+		return pp
 
 	###############################################################################################
 
@@ -439,6 +447,5 @@ class NFWProfile(profile_base.HaloDensityProfile):
 			counter += 1
 		if mask[1]:
 			deriv[counter] = rho_r * rrs * (1.0 / rrs + 2.0 / (1.0 + rrs))
-			counter += 1
 			
 		return deriv

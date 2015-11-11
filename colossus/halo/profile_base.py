@@ -90,25 +90,41 @@ class HaloDensityProfile():
 		self.quantities['Sigma'] = self.surfaceDensity
 
 		# Now we also add any parameters for the 2-halo term(s)
-		self.outer_terms = copy.copy(outer_terms)
-		self.N_outer = len(self.outer_terms)
+		self._outer_terms = copy.copy(outer_terms)
+		self.N_outer = len(self._outer_terms)
+		self._outer_par_positions = []
 		
 		for i in range(self.N_outer):
-
+			
+			# Check which parameters are not yet existent in the parameters array
+			added_parameters = []
+			for p in self._outer_terms[i].term_par.keys():
+				if not p in self.par:
+					added_parameters.append(p)
+			N_added = len(added_parameters)
+			
 			# Update the par/opt and par/opt-names dictionaries
-			self.par.update(self.outer_terms[i].term_par)
-			self.opt.update(self.outer_terms[i].term_opt)
+			self.par.update(self._outer_terms[i].term_par)
+			self.opt.update(self._outer_terms[i].term_opt)
 		
-			self.par_names.extend(self.outer_terms[i].term_par_names)
-			self.opt_names.extend(self.outer_terms[i].term_opt_names)
+			self.par_names.extend(self._outer_terms[i].term_par_names)
+			self.opt_names.extend(self._outer_terms[i].term_opt_names)
 			
 			# Set pointers to the par and opt dictionaries of the profile class that owns the terms
-			self.outer_terms[i].par = self.par
-			self.outer_terms[i].opt = self.opt
+			self._outer_terms[i].par = self.par
+			self._outer_terms[i].opt = self.opt
 			
 			# Set pointer to the profile itself
-			self.outer_terms[i].owner = self
+			self._outer_terms[i].owner = self
 		
+			# For convenience, also store at what positions in the par array the outer parameters
+			# were inserted.
+			pp = np.zeros((N_added), np.int)
+			key_list = list(self.par.keys())
+			for j in range(N_added):
+				pp[j] = key_list.index(added_parameters[j])
+			self._outer_par_positions.append(pp)
+			
 		# We need to update the par and opt counters since the super constructor did not know 
 		# about the parameters for the outer terms
 		self.N_par = len(self.par)
@@ -165,17 +181,22 @@ class HaloDensityProfile():
 			parameters that correspond to ``True`` values are set (meaning the pars parameter must
 			be shorter than profile.N_par).
 		"""
-		
+
 		if mask is None:		
 			for i in range(self.N_par):
 				self.par[self.par_names[i]] = pars[i]
 		else:
+			if len(pars) != np.count_nonzero(mask):
+				msg = 'Received %d parameters and %d mask elements that are True.' % \
+					(len(pars), np.count_nonzero(mask))
+				raise Exception(msg)
+			
 			counter = 0
 			for i in range(self.N_par):
 				if mask[i]:
 					self.par[self.par_names[i]] = pars[counter]
 					counter += 1
-					
+
 		return
 
 	###############################################################################################
@@ -261,7 +282,7 @@ class HaloDensityProfile():
 		r_array, is_array = utilities.getArray(r)
 		rho_outer = np.zeros((len(r_array)), np.float)
 		for i in range(self.N_outer):
-			rho_outer += self.outer_terms[i].density(r)
+			rho_outer += self._outer_terms[i].density(r)
 		if not is_array:
 			rho_outer = rho_outer[0]
 		
@@ -348,7 +369,7 @@ class HaloDensityProfile():
 		r_array, is_array = utilities.getArray(r)
 		rho_der_outer = np.zeros((len(r_array)), np.float)
 		for i in range(self.N_outer):
-			rho_der_outer += self.outer_terms[i].densityDerivativeLin(r)
+			rho_der_outer += self._outer_terms[i].densityDerivativeLin(r)
 		if not is_array:
 			rho_der_outer = rho_der_outer[0]
 		
@@ -659,8 +680,8 @@ class HaloDensityProfile():
 		# Create a list of functions to evaluate so we don't need to make this decision at every
 		# evaluation
 		for i in range(self.N_outer):
-			if self.outer_terms[i].include_in_surface_density:
-				density_functions.append(self.outer_terms[i].density)
+			if self._outer_terms[i].include_in_surface_density:
+				density_functions.append(self._outer_terms[i].density)
 
 		r_use, is_array = utilities.getArray(r)
 		surfaceDensity = 0.0 * r_use
@@ -875,14 +896,12 @@ class HaloDensityProfile():
 	# Note that the matrix Q is the matrix that is dot-multiplied with the difference vector; this 
 	# is not the same as the inverse covariance matrix.	
 
-	def _fitDiffFunction(self, x, r, q, f, fder, Q, mask, N_par_fit, verbose):
+	def _fitDiffFunction(self, x, r, q, f, df_inner, df_outer, Q, mask, N_par_fit, verbose):
 
 		self.setParameterArray(self._fitConvertParamsBack(x.copy(), mask), mask = mask)
 		q_fit = f(r)
 		q_diff = q_fit - q
 		mf = np.dot(Q, q_diff)
-		#print('mf')
-		#print(mf)
 		
 		return mf
 
@@ -892,14 +911,24 @@ class HaloDensityProfile():
 	# function. This function should only be called if fp is not None, i.e. if the analytical 
 	# derivative is implemented.
 
-	def _fitParamDerivHighlevel(self, x, r, q, f, fder, Q, mask, N_par_fit, verbose):
+	def _fitParamDerivHighlevel(self, x, r, q, f, df_inner, df_outer, Q, mask, N_par_fit, verbose):
 		
-		deriv = fder(self, r, mask, N_par_fit)		
+		deriv = df_inner(self, r, mask, N_par_fit)
+		#print('1111')
+		#print(deriv)
+		# Add derivative of outer terms
+		if self.N_outer > 0:
+			for i in range(self.N_outer):
+				if df_outer[i] is not None:
+					f_outer = df_outer[i][0]
+					pp = df_outer[i][1]
+					mask_outer = df_outer[i][2]
+					N_par_fit_outer = df_outer[i][3]
+					deriv[pp, :] = f_outer(self._outer_terms[i], r, mask_outer, N_par_fit_outer)
+		#print('222')
+		#print(deriv)
 		for j in range(N_par_fit):
 			deriv[j] = np.dot(Q, deriv[j])
-		#print(deriv)
-		#print(Q)
-		#exit()
 		
 		return deriv
 
@@ -967,14 +996,14 @@ class HaloDensityProfile():
 
 	###############################################################################################
 
-	def _fitMethodLeastsq(self, r, q, f, fder, Q, mask, N_par_fit, verbose, tolerance):
+	def _fitMethodLeastsq(self, r, q, f, df_inner, df_outer, Q, mask, N_par_fit, verbose, tolerance):
 		
 		# Prepare arguments
-		if fder is None:
+		if df_inner is None:
 			deriv_func = None
 		else:
-			deriv_func = self._fitParamDerivHighlevel	
-		args = r, q, f, fder, Q, mask, N_par_fit, verbose
+			deriv_func = self._fitParamDerivHighlevel
+		args = r, q, f, df_inner, df_outer, Q, mask, N_par_fit, verbose
 
 		# Run the actual fit
 		ini_guess = self._fitConvertParams(self.getParameterArray(mask = mask), mask)
@@ -1236,14 +1265,43 @@ class HaloDensityProfile():
 			
 		elif method == 'leastsq':
 		
-			# If an analytical parameter derivative is implemented for this class, use it.
+			# If an analytical parameter derivative is implemented for this class, use it. We need
+			# to check both for the inner and outer terms.
 			deriv_name = '_fitParamDeriv_%s' % (quantity)
-			if deriv_name in self.__class__.__dict__:
-				fder = self.__class__.__dict__[deriv_name]
+			all_found = (deriv_name in self.__class__.__dict__)
+			for i in range(self.N_outer):
+				N_outer_par = np.count_nonzero(mask[self._outer_par_positions[i]])
+				all_found = all_found and (N_outer_par == 0 or (deriv_name in self._outer_terms[i].__class__.__dict__))
+			
+			# If we have analytical derivatives for inner and outer terms, we pre-compute
+			# function pointers and the indices of the outer parameters.
+			if all_found:				
+				df_inner = self.__class__.__dict__[deriv_name]
+				df_outer = []
+				
+				for i in range(self.N_outer):
+					N_outer_par = np.count_nonzero(mask[self._outer_par_positions[i]])
+					par_pos = self._outer_par_positions[i][mask[self._outer_par_positions[i]]]
+				
+					if N_outer_par > 0:
+						_df_outer = []
+						_df_outer.append(self._outer_terms[i].__class__.__dict__[deriv_name])
+						pp = np.zeros((N_outer_par), np.int)
+						for j in range(N_outer_par):
+							pp[j] = np.count_nonzero(mask[:par_pos[j]])
+						_df_outer.append(pp)
+						_df_outer.append(mask[self._outer_par_positions[i]])
+						_df_outer.append(np.count_nonzero(mask[self._outer_par_positions[i]]))
+						df_outer.append(_df_outer)
+						
+					else:
+						df_outer.append(None)
+						
 				if verbose:
 					print(('Found analytical derivative function for quantity %s.' % (quantity)))
 			else:
-				fder = None
+				df_inner = None
+				df_outer = None
 				if verbose:
 					print(('Could not find analytical derivative function for quantity %s.' % (quantity)))
 
@@ -1275,7 +1333,8 @@ class HaloDensityProfile():
 			else:
 				Q = covinv
 				
-			x, dict = self._fitMethodLeastsq(r, q, f, fder, Q, mask, N_par_fit, verbose, tolerance)
+			x, dict = self._fitMethodLeastsq(r, q, f, df_inner, df_outer,
+									Q, mask, N_par_fit, verbose, tolerance)
 			
 		else:
 			msg = 'Unknown fitting method, %s.' % method
@@ -1437,12 +1496,14 @@ class OuterTermPowerLaw(OuterTerm):
 	def _getParameters(self):
 
 		r_pivot_id = self.opt[self.term_opt_names[0]]
-		if r_pivot_id in self.par:
+		if r_pivot_id == 'fixed':
+			r_pivot = 1.0
+		elif r_pivot_id in self.par:
 			r_pivot = self.par[r_pivot_id]
 		elif r_pivot_id in self.opt:
 			r_pivot = self.opt[r_pivot_id]
 		else:
-			msg = 'Could not find the parameter or option %s.' % (r_pivot_id)
+			msg = 'Could not find the parameter or option "%s".' % (r_pivot_id)
 			raise Exception(msg)
 
 		norm = self.par[self.term_par_names[0]]
@@ -1460,6 +1521,7 @@ class OuterTermPowerLaw(OuterTerm):
 		
 		norm, slope, r_pivot, max_rho, rho_m = self._getParameters()
 		rho = rho_m * norm / (1.0 / max_rho + (r / r_pivot)**slope)
+		#rho = rho_m * norm / ((r / r_pivot)**slope)
 
 		return rho
 
@@ -1473,6 +1535,30 @@ class OuterTermPowerLaw(OuterTerm):
 		drho_dr = -rho_m * norm * slope * t1 * (1.0 / max_rho + t2**slope)**-2 * t2**(slope - 1.0)
 
 		return drho_dr
+
+	###############################################################################################
+
+	def _fitParamDeriv_rho(self, r, mask, N_par_fit):
+		
+		deriv = np.zeros((N_par_fit, len(r)), np.float)
+		norm, slope, r_pivot, max_rho, rho_m = self._getParameters()
+		
+		#print(norm, slope, r_pivot, max_rho, rho_m)
+		rro = r / r_pivot
+		t1 = 1.0 / max_rho + rro**slope
+		rho = rho_m * norm / t1
+		
+		counter = 0
+		# norm
+		if mask[0]:
+			deriv[counter] = rho / norm
+			counter += 1
+		# slope
+		if mask[1]:
+			deriv[counter] = -rho * np.log(rro) / t1 * rro**slope
+		
+		#print(deriv)
+		return deriv
 
 	###############################################################################################
 	

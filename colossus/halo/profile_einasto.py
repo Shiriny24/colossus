@@ -93,7 +93,7 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 		self.r_guess = self.par['rs']
 		
 		# Pre-compute the mass terms now that the parameters have been fixed
-		self._setMassTerms()
+		self._computeMassTerms()
 
 		return
 	
@@ -149,9 +149,19 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 		
 		self.par['alpha'] = alpha
 		self.par['rhos'] = 1.0
-		self._setMassTerms()
+		self._computeMassTerms()
 		M_unnorm = self.enclosedMass(R)
 		self.par['rhos'] = M / M_unnorm
+		
+		return
+	
+	###############################################################################################
+
+	def _computeMassTerms(self):
+		
+		self.mass_norm = np.pi * self.par['rhos'] * self.par['rs']**3 * 2.0**(2.0 - 3.0 / self.par['alpha']) \
+			* self.par['alpha']**(-1.0 + 3.0 / self.par['alpha']) * np.exp(2.0 / self.par['alpha']) 
+		self.gamma_3alpha = scipy.special.gamma(3.0 / self.par['alpha'])
 		
 		return
 	
@@ -161,23 +171,23 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 	# in terms of Gamma functions. We pre-compute some factors to speed up the computation 
 	# later.
 	
-	def _setMassTerms(self):
-
-		self.mass_norm = np.pi * self.par['rhos'] * self.par['rs']**3 * 2.0**(2.0 - 3.0 / self.par['alpha']) \
-			* self.par['alpha']**(-1.0 + 3.0 / self.par['alpha']) * np.exp(2.0 / self.par['alpha']) 
-		self.gamma_3alpha = scipy.special.gamma(3.0 / self.par['alpha'])
+	def update(self):
+		
+		profile_base.HaloDensityProfile.update(self)
+		self._computeMassTerms()
 		
 		return
 	
 	###############################################################################################
 
 	# We need to overwrite the setParameterArray function because the mass terms need to be 
-	# updated when the user changes the parameters.
+	# updated when the user changes the parameters. Note that we do not call the update function
+	# which triggers an update of the parent class.
 	
 	def setParameterArray(self, pars, mask = None):
 		
 		profile_base.HaloDensityProfile.setParameterArray(self, pars, mask = mask)
-		self._setMassTerms()
+		self._computeMassTerms()
 		
 		return
 
@@ -221,15 +231,23 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 	# When fitting the Einasto profile, use log(rhos), log(rs) and log(alpha)
 
 	def _fitConvertParams(self, p, mask):
-		
-		return np.log(p)
+
+		N_convert = np.count_nonzero(mask[:3])
+		pp = p.copy()
+		pp[:N_convert] = np.log(pp[:N_convert])
+				
+		return pp
 
 	###############################################################################################
 	
 	def _fitConvertParamsBack(self, p, mask):
 		
-		return np.exp(p)
-
+		N_convert = np.count_nonzero(mask[:3])
+		pp = p.copy()
+		pp[:N_convert] = np.exp(pp[:N_convert])
+		
+		return pp
+	
 	###############################################################################################
 
 	# Return and array of d rho / d ln(rhos) and d rho / d ln(rs)
@@ -250,6 +268,5 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 			counter += 1
 		if mask[2]:
 			deriv[counter] = rho_r * 2.0 / x[2] * rrs**x[2] * (1.0 - rrs**(-x[2]) - x[2] * np.log(rrs))
-			counter += 1
 
 		return deriv

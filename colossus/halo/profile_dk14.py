@@ -121,10 +121,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		# Set the fundamental variables par_names and opt_names
 		self.par_names = ['rhos', 'rs', 'rt', 'alpha', 'beta', 'gamma']
 		self.opt_names = ['selected_by', 'Gamma', 'R200m']
-		
-		# TODO the length of fit_log_mask depends on 
-		#self.fit_log_mask = np.array([True, True, True, True, True, True])
-		self.fit_log_mask = np.array([False, False, False, False, False, False, False, False])
+		self.fit_log_mask = np.array([False, False, False, False, False, False])
 
 		# Set outer terms
 		outer_terms = []
@@ -332,13 +329,15 @@ class DK14Profile(profile_base.HaloDensityProfile):
 
 	def update(self):
 		
+		profile_base.HaloDensityProfile.update(self)
+		
 		R200m_new = self.RDelta(self.opt['z'], '200m')
 		
 		# If the power law outer term relies on 
-		for i in range(len(self.outer_terms)):
-			if isinstance(self.outer_terms[i], profile_base.OuterTermPowerLaw):
-				if self.outer_terms[i].term_opt['r_pivot'] == 'R200m':
-					self.outer_terms[i].changePivot(R200m_new)
+		for i in range(len(self._outer_terms)):
+			if isinstance(self._outer_terms[i], profile_base.OuterTermPowerLaw):
+				if self._outer_terms[i].term_opt['r_pivot'] == 'R200m':
+					self._outer_terms[i].changePivot(R200m_new)
 				
 		self.opt['R200m'] = R200m_new
 		
@@ -516,14 +515,15 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	
 	###############################################################################################
 
-	# When fitting the DK14 profile, use a mixture of linear and logarithmic parameters
+	# When fitting the DK14 profile, use a mixture of linear and logarithmic parameters. Only 
+	# conver the parameters for the inner profile though.
 
 	def _fitConvertParams(self, p, mask):
-
-		p_fit = p
-		log_mask = [self.fit_log_mask[mask]]
-		p_fit[log_mask] = np.log(p_fit[log_mask])
 		
+		p_fit = p.copy()
+		log_mask = self.fit_log_mask[mask[:6]]
+		p_fit[log_mask] = np.log(p_fit[log_mask])
+
 		return p_fit
 
 	###############################################################################################
@@ -531,17 +531,21 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	def _fitConvertParamsBack(self, p, mask):
 		
 		p_def = p.copy()
-		log_mask = [self.fit_log_mask[mask]]
+		log_mask = self.fit_log_mask[mask[:6]]
 		p_def[log_mask] = np.exp(p_def[log_mask])
-		
+
 		return p_def
 
 	###############################################################################################
 	
-	def _fitParamDeriv_rho_(self, r, mask, N_par_fit):
+	def _fitParamDeriv_rho(self, r, mask, N_par_fit):
 
 		x = self.getParameterArray()
 		deriv = np.zeros((N_par_fit, len(r)), np.float)
+		
+		# Evaluate derivative of outer terms 
+		
+		
 		rho_inner = self.densityInner(r)
 
 		counter = 0
@@ -552,16 +556,10 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		alpha = x[3]
 		beta = x[4]
 		gamma = x[5]
-		be = x[6]
-		se = x[7]
 
-		ro = 5.0 * x[8]
 		rrs = r / rs
 		rrt = r / rt
-		rro = r / ro
 		term1 = 1.0 + rrt**beta
-		#rho_outer = x[9] * be * rro**-se
-		rho_outer = x[9] * be / (self.max_outer_prof + (r / ro)**se)
 		
 		# rho_s
 		if mask[0]:
@@ -588,18 +586,10 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		if mask[5]:
 			deriv[counter] = -rho_inner * np.log(term1) / beta
 			counter += 1
-		# be
-		if mask[6]:
-			deriv[counter] = rho_outer / be
-			counter += 1
-		# se
-		if mask[7]:
-			deriv[counter] = -rho_outer * np.log(rro)
-			counter += 1
 
 		# Correct for log parameters
 		counter = 0
-		for i in range(self.N_par):
+		for i in range(6):
 			if self.fit_log_mask[i] and mask[i]:
 				deriv[counter] *= x[i]
 			if mask[i]:
