@@ -12,6 +12,7 @@ from colossus.utils import defaults
 from colossus.cosmology import cosmology
 from colossus.halo import basics
 from colossus.halo import profile_base
+from colossus.halo import profile_outer
 from colossus.halo import profile_utils
 
 ###################################################################################################
@@ -130,13 +131,13 @@ class DK14Profile(profile_base.HaloDensityProfile):
 			if outer_term_names[i] == 'mean':
 				if z is None:
 					raise Exception('Redshift z must be set if a mean density outer term is chosen.')
-				t = profile_base.OuterTermRhoMean(z)
+				t = profile_outer.OuterTermRhoMean(z)
 			
 			elif outer_term_names[i] == 'pl':
-				t = profile_base.OuterTermPowerLaw(be, se, 'R200m', 5.0, power_law_max, z, norm_name = 'be', slope_name = 'se')
+				t = profile_outer.OuterTermPowerLaw(be, se, 'R200m', 5.0, power_law_max, z, norm_name = 'be', slope_name = 'se')
 			
 			elif outer_term_names[i] == 'ximm':
-				t = profile_base.OuterTermXiMatterPowerLaw(be, se, 'R200m', 5.0, power_law_max, z, norm_name = 'be', slope_name = 'se')
+				t = profile_outer.OuterTermXiMatterPowerLaw(be, se, 'R200m', 5.0, power_law_max, z, norm_name = 'be', slope_name = 'se')
 		
 			else:
 				msg = 'Unknown outer term, %s.' % (outer_terms[i])
@@ -266,7 +267,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 
 			# Guess rhos = 1.0, then re-normalize			
 			self.par['rhos'] = 1.0
-			self.par['rhos'] *= self.normalizeInner(self.opt['R200m'], M200m)
+			self.par['rhos'] *= self._normalizeInner(self.opt['R200m'], M200m)
 			
 		else:
 			
@@ -335,7 +336,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		
 		# If the power law outer term relies on 
 		for i in range(len(self._outer_terms)):
-			if isinstance(self._outer_terms[i], profile_base.OuterTermPowerLaw):
+			if isinstance(self._outer_terms[i], profile_outer.OuterTermPowerLaw):
 				if self._outer_terms[i].term_opt['r_pivot'] == 'R200m':
 					self._outer_terms[i].changePivot(R200m_new)
 				
@@ -542,14 +543,8 @@ class DK14Profile(profile_base.HaloDensityProfile):
 
 		x = self.getParameterArray()
 		deriv = np.zeros((N_par_fit, len(r)), np.float)
-		
-		# Evaluate derivative of outer terms 
-		
-		
 		rho_inner = self.densityInner(r)
 
-		counter = 0
-		
 		rhos = x[0]
 		rs = x[1]
 		rt = x[2]
@@ -561,6 +556,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		rrt = r / rt
 		term1 = 1.0 + rrt**beta
 		
+		counter = 0
 		# rho_s
 		if mask[0]:
 			deriv[counter] = rho_inner / rhos

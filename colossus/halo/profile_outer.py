@@ -65,7 +65,7 @@ class OuterTerm():
 			self.term_opt[self.term_opt_names[i]] = opt_array[i]
 		
 		# Some other settings
-		self.include_in_surface_density = True
+		#self.include_in_surface_density = True
 		
 		return
 
@@ -100,7 +100,7 @@ class OuterTerm():
 			density_der = density_der[0]
 			
 		return density_der
-		
+
 ###################################################################################################
 # OUTER TERM: MEAN DENSITY
 ###################################################################################################
@@ -120,7 +120,7 @@ class OuterTermRhoMean(OuterTerm):
 		
 		# This term should not be included when computing the surface density, as it leads to 
 		# a diverging integral.
-		self.include_in_surface_density = False
+		#self.include_in_surface_density = False
 		
 		return
 
@@ -196,7 +196,6 @@ class OuterTermPowerLaw(OuterTerm):
 		
 		norm, slope, r_pivot, max_rho, rho_m = self._getParameters()
 		rho = rho_m * norm / (1.0 / max_rho + (r / r_pivot)**slope)
-		#rho = rho_m * norm / ((r / r_pivot)**slope)
 
 		return rho
 
@@ -205,9 +204,8 @@ class OuterTermPowerLaw(OuterTerm):
 	def densityDerivativeLin(self, r):
 
 		norm, slope, r_pivot, max_rho, rho_m = self._getParameters()
-		t1 = 1.0 / r_pivot
-		t2 = r * t1
-		drho_dr = -rho_m * norm * slope * t1 * (1.0 / max_rho + t2**slope)**-2 * t2**(slope - 1.0)
+		t1 = (r / r_pivot)**slope
+		drho_dr = -rho_m * norm * slope * t1 / r / (1.0 / max_rho + t1)**2
 
 		return drho_dr
 

@@ -393,7 +393,11 @@ class HaloDensityProfile():
 		densityDerivativeLin: The linear derivative of density, :math:`d \\rho / dr`.
 		"""
 
-		return self.densityDerivativeLogInner(r) + self.densityDerivativeLogOuter(r)
+		drho_dr = self.densityDerivativeLin(r)
+		rho = self.density(r)
+		der = drho_dr * r / rho
+
+		return der
 		
 	###############################################################################################
 	
@@ -417,7 +421,7 @@ class HaloDensityProfile():
 		"""
 		
 		drho_dr = self.densityDerivativeLinInner(r)
-		rho = self.densityInner(r)
+		rho = self.density(r)
 		der = drho_dr * r / rho
 
 		return der
@@ -442,7 +446,7 @@ class HaloDensityProfile():
 			The dimensionless logarithmic derivative; has the same dimensions as r.
 		"""		
 		drho_dr = self.densityDerivativeLinOuter(r)
-		rho = self.densityOuter(r)
+		rho = self.density(r)
 		der = drho_dr * r / rho
 
 		return der
@@ -570,11 +574,54 @@ class HaloDensityProfile():
 		return pdf
 
 	###############################################################################################
+
+	def _surfaceDensity(self, r, density_func, accuracy = 1E-6, interpolate = True):
+
+		def integrand_interp(r, R2, interp):
+			ret = r * 10**interp(np.log10(r)) / np.sqrt(r**2 - R2)
+			return ret
+
+		def integrand_exact(r, R2, interp):
+			ret = r * density_func(r) / np.sqrt(r**2 - R2)
+			return ret
+
+		if np.max(r) >= self.rmax:
+			msg = 'Cannot compute surface density at a radius (%.2e) greater than rmax (%.2e).' \
+				% (np.max(r), self.rmax)
+			raise Exception(msg)
+		
+		if interpolate:
+			min_r = np.min(r) * 0.009
+			max_r = min(self.rmax, 100000.0)
+			table_log_r = np.arange(np.log10(min_r), np.log10(max_r * 1.001), 1.0)
+			table_r = 10**table_log_r
+			table_rho = density_func(table_r)
+			table_log_rho = np.log10(table_rho)
+			interp = scipy.interpolate.InterpolatedUnivariateSpline(table_log_r, table_log_rho)
+			integrand = integrand_interp
+		else:
+			max_r = self.rmax
+			interp = None
+			integrand = integrand_exact
+
+		r_use, is_array = utilities.getArray(r)
+		surfaceDensity = 0.0 * r_use
+		for i in range(len(r_use)):
+			surfaceDensity[i], _ = scipy.integrate.quad(integrand, r_use[i], max_r, 
+										args = (r_use[i]**2, interp), epsrel = accuracy, limit = 1000)
+			surfaceDensity[i] *= 2.0
+
+		if not is_array:
+			surfaceDensity = surfaceDensity[0]
+
+		return surfaceDensity
+
+	###############################################################################################
 	
 	# The surface density of the outer profile can be tricky, since some outer terms lead to a 
 	# diverging integral. Thus, constant terms such as rho_m need to be ignored in this function.
 	
-	def surfaceDensity(self, r, accuracy = 1E-6):
+	def surfaceDensity(self, r, accuracy = 1E-6, interpolate = True):
 		"""
 		The projected surface density at radius r.
 
@@ -592,7 +639,7 @@ class HaloDensityProfile():
 			dimensions as r.
 		"""
 		
-		return self.surfaceDensityInner(r, accuracy) + self.surfaceDensityOuter(r, accuracy)
+		return self._surfaceDensity(r, self.density, accuracy = accuracy, interpolate = interpolate)
 
 	###############################################################################################
 
@@ -613,27 +660,8 @@ class HaloDensityProfile():
 			The surface density at radius r, in physical :math:`M_{\odot} h/kpc^2`; has the same 
 			dimensions as r.
 		"""
-
-		def integrand(r, R2):
-			
-			return r * self.densityInner(r) / np.sqrt(r**2 - R2)
-
-		if np.max(r) >= self.rmax:
-			msg = 'Cannot compute surface density at a radius (%.2e) greater than rmax (%.2e).' \
-				% (np.max(r), self.rmax)
-			raise Exception(msg)
-
-		r_use, is_array = utilities.getArray(r)
-		surfaceDensity = 0.0 * r_use
-		for i in range(len(r_use)):
-			surfaceDensity[i], _ = scipy.integrate.quad(integrand, r_use[i], self.rmax, 
-										args = (r_use[i]**2), epsrel = accuracy, limit = 1000)
-			surfaceDensity[i] *= 2.0
-
-		if not is_array:
-			surfaceDensity = surfaceDensity[0]
-
-		return surfaceDensity
+		
+		return self._surfaceDensity(r, self.densityInner, accuracy = accuracy)
 
 	###############################################################################################
 
@@ -654,7 +682,15 @@ class HaloDensityProfile():
 			The surface density at radius r, in physical :math:`M_{\odot} h/kpc^2`; has the same 
 			dimensions as r.
 		"""
-		
+
+		r_array, is_array = utilities.getArray(r)
+		rho_outer = np.zeros((len(r_array)), np.float)
+		for i in range(self.N_outer):
+			if self._outer_terms[i].include_in_surface_density:
+				rho_outer += self._outer_terms[i].surfaceDensity(r)
+		if not is_array:
+			rho_outer = rho_outer[0]
+				
 		density_functions = []
 
 		def integrand(r, R2):
@@ -687,7 +723,7 @@ class HaloDensityProfile():
 		if not is_array:
 			surfaceDensity = surfaceDensity[0]
 
-		return surfaceDensity
+		return self._surfaceDensity(r, self.densityOuter, accuracy = accuracy)
 
 	###############################################################################################
 
@@ -990,7 +1026,8 @@ class HaloDensityProfile():
 
 	###############################################################################################
 
-	def _fitMethodLeastsq(self, r, q, f, df_inner, df_outer, Q, mask, N_par_fit, verbose, tolerance):
+	def _fitMethodLeastsq(self, r, q, f, df_inner, df_outer, Q, mask, N_par_fit, verbose,
+						tolerance, maxfev):
 		
 		# Prepare arguments
 		if df_inner is None:
@@ -1001,9 +1038,9 @@ class HaloDensityProfile():
 
 		# Run the actual fit
 		ini_guess = self._fitConvertParams(self.getParameterArray(mask = mask), mask)
-		x_fit, cov, dict, fit_msg, err_code = scipy.optimize.leastsq(self._fitDiffFunction, ini_guess,
-							Dfun = deriv_func, col_deriv = 1, args = args, full_output = 1,
-							xtol = tolerance)
+		x_fit, cov, dict, fit_msg, err_code = scipy.optimize.leastsq(self._fitDiffFunction, 
+							ini_guess, Dfun = deriv_func, col_deriv = 1, args = args, 
+							full_output = 1, xtol = tolerance, maxfev = maxfev)
 		
 		# Check the output
 		if not err_code in [1, 2, 3, 4]:
@@ -1064,7 +1101,7 @@ class HaloDensityProfile():
 		# General fitting options: method, parameters to vary
 		method = 'leastsq', mask = None, verbose = True,
 		# Options specific to leastsq
-		tolerance = 1E-5,
+		tolerance = 1E-5, maxfev = 0,
 		# Options specific to the MCMC initialization
 		initial_step = 0.1, nwalkers = 100, random_seed = None,
 		# Options specific to running the MCMC chain and its analysis
@@ -1124,6 +1161,9 @@ class HaloDensityProfile():
 		tolerance: float
 			Only active when ``method==leastsq``. The accuracy to which the best-fit parameters
 			are found.
+		maxfev: int
+			Only active when ``method==leastsq``. The maximum number of function evaluations before
+			the fit is aborted. If zero, the default value of the scipy leastsq function is used.
 		initial_step: array_like
 			Only active when ``method==mcmc``. The MCMC samples ("walkers") are initially 
 			distributed in a Gaussian around the initial guess. The width of the Gaussian is given
@@ -1328,7 +1368,7 @@ class HaloDensityProfile():
 				Q = covinv
 				
 			x, dict = self._fitMethodLeastsq(r, q, f, df_inner, df_outer,
-									Q, mask, N_par_fit, verbose, tolerance)
+									Q, mask, N_par_fit, verbose, tolerance, maxfev)
 			
 		else:
 			msg = 'Unknown fitting method, %s.' % method
