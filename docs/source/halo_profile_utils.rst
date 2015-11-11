@@ -1,6 +1,6 @@
 =====================================
-General utilities
+Pseudo-evolution and mass conversion
 =====================================
 
-.. automodule:: utils.utilities
+.. automodule:: halo.profile_utils
     :members:

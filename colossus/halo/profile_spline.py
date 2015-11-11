@@ -15,7 +15,7 @@ from colossus.halo import profile_base
 # SPLINE DEFINED PROFILE
 ###################################################################################################
 
-class SplineDensityProfile(profile_base.HaloDensityProfile):
+class SplineProfile(profile_base.HaloDensityProfile):
 	"""
 	An arbitrary density profile using spline interpolation.
 	

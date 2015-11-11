@@ -1,6 +1,6 @@
 =====================================
-General utilities
+The HaloDensityProfile base class
 =====================================
 
-.. automodule:: utils.utilities
+.. automodule:: halo.profile_base
     :members:

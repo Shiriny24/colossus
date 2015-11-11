@@ -12,14 +12,14 @@ This module represents a collection of advanced utilities related to halo mass d
 Changing mass definitions assuming a concentration
 ---------------------------------------------------------------------------------------------------
 
-The :func:`halo.profile_utils.changeMassDefinition` function needs to know the concentration of a 
+The :func:`halo.profile_utils.changeMassDefinition()` function needs to know the concentration of a 
 halo. For convenience, the following function uses a concentration model to estimate the 
 concentration::
 
 	M200m, R200m, c200m = changeMassDefinitionCModel(1E12, 1.0, 'vir', '200m')
 	
 By default, the function uses the ``diemer_15`` concentration model (see the documentation of the
-:mod:`halo.concentration` module). This function is not included in the :mod:`halo.profile`
+:mod:`halo.concentration` module). This function is not included in the :doc:`halo_profile`
 module because it uses concentration models.
 
 ---------------------------------------------------------------------------------------------------
@@ -49,7 +49,6 @@ converter functions:
 	Msp
 	M4rs
 
-
 ---------------------------------------------------------------------------------------------------
 Units
 ---------------------------------------------------------------------------------------------------
@@ -66,7 +65,7 @@ Surface density  Physical :math:`M_{\odot} h / kpc^2`
 ================ =======================================
 
 ---------------------------------------------------------------------------------------------------
-Module Reference
+Module reference
 ---------------------------------------------------------------------------------------------------
 """
 
@@ -86,7 +85,7 @@ def changeMassDefinitionCModel(M, z, mdef_in, mdef_out, profile = 'nfw', c_model
 	"""
 	Change the spherical overdensity mass definition, using a model for the concentration.
 	
-	This function is a wrapper for the :func:`changeMassDefinition` function. Instead of forcing 
+	This function is a wrapper for the :func:`halo.profile_utils.changeMassDefinition()` function. Instead of forcing 
 	the user to provide concentrations, they are computed from a model indicated by the ``c_model``
 	parameter.
 	
@@ -103,7 +102,7 @@ def changeMassDefinitionCModel(M, z, mdef_in, mdef_out, profile = 'nfw', c_model
 	profile: str
 		The functional form of the profile assumed in the computation; can be ``nfw`` or ``dk14``.
 	c_model: str
-		The identifier of a concentration model (see :mod:`concentration` for valid inputs).
+		The identifier of a concentration model (see :mod:`halo.concentration` for valid inputs).
 
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -117,8 +116,8 @@ def changeMassDefinitionCModel(M, z, mdef_in, mdef_out, profile = 'nfw', c_model
 		
 	See also
 	-----------------------------------------------------------------------------------------------
-	pseudoEvolve: Evolve the spherical overdensity radius for a fixed profile.
-	changeMassDefinition: Change the spherical overdensity mass definition.
+	halo.profile_utils.pseudoEvolve: Evolve the spherical overdensity radius for a fixed profile.
+	halo.profile_utils.changeMassDefinition: Change the spherical overdensity mass definition.
 	"""
 	
 	c = concentration.concentration(M, mdef_in, z, model = c_model)

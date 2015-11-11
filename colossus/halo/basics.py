@@ -8,7 +8,7 @@
 """
 This module implements basic aspects of dark matter halos, such as spherical overdensity masses. 
 For functions that rely on a particular form of the halo density profile, please see the 
-:mod:`halo.profile` module.
+:doc:`halo_profile` section.
 
 ---------------------------------------------------------------------------------------------------
 Spherical overdensity masses
@@ -38,7 +38,7 @@ Virial     'vir'      vir                  An overdensity that varies with redsh
 ========== ========== ==================== ================================================================
 
 ---------------------------------------------------------------------------------------------------
-Module Reference
+Module reference
 ---------------------------------------------------------------------------------------------------
 """
 

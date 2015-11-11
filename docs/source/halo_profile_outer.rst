@@ -1,6 +1,6 @@
 =====================================
-General utilities
+The outer profile
 =====================================
 
-.. automodule:: utils.utilities
+.. automodule::halo.profile_outer
     :members:

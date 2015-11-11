@@ -1,23 +1,16 @@
 =====================================
-Density Profiles
+Halo Density Profiles
 =====================================
 
-.. toctree::
-    :maxdepth: 3
-
-    halo_profile_base
-    halo_profile_spline
-    halo_profile_nfw
-    halo_profile_einasto
-    halo_profile_dk14
-    halo_profile_utils
+This document describes the Colossus mechanisms for dealing with halo density profiles.
 
 ---------------------------------------------------------------------------------------------------
-General Philosophy
+General philosophy
 ---------------------------------------------------------------------------------------------------
 
 The entire halo density profile module is based on a powerful base class, profile_base.HaloDensityProfile.
 Some of the major design decisions regarding this class are:
+
 * The halo density profile is represented in physical units, not some re-scaled units.
 * A halo density profile is split into two parts, an inner profile (1-halo term) and an outer profile
   (2-halo term). The inner profile is what sets different profile models apart, whereas there are 
@@ -52,20 +45,19 @@ NFW profile::
     Rvir = profile.RDelta(0.0, 'vir')
     rho = profile.density(Rvir)
 
-See the documentation of the abstract base class :class:`profile_base.HaloDensityProfile` for the functionality 
+See the documentation of the abstract base class :class:`halo.profile_base.HaloDensityProfile` for the functionality 
 of the profile objects. For documentation on spherical overdensity mass definitions, please see the 
 documentation of the :mod:`halo.basics` module. The following functional forms for the density 
 profile are implemented:
 
-============================ =============================== ========================== =============
-Class                        Explanation                     Paper                      Reference
-============================ =============================== ========================== =============
-:func:`SplineDensityProfile` A arbitrary density profile     ---                        ---
-:func:`EinastoProfile`       Einasto profile                 Einasto 1965               TrAlm 5, 87
-:func:`NFWProfile`           Navarro-Frenk-White profile     Navarro et al. 1997        ApJ 490, 493
-:func:`DK14Profile`          Diemer & Kravtsov 2014 profile  Diemer & Kravtsov 2014     ApJ 789, 1
-============================ =============================== ========================== =============
-
+============================================ =============================== ========================= =============
+Class                                        Explanation                     Paper                      Reference
+============================================ =============================== ========================= =============
+:class:`halo.profile_spline.SplineProfile`   An arbitrary density profile     ---                      ---
+:class:`halo.profile_einasto.EinastoProfile` Einasto profile                 Einasto 1965              TrAlm 5, 87
+:class:`halo.profile_nfw.NFWProfile`         Navarro-Frenk-White profile     Navarro et al. 1997       ApJ 490, 493
+:class:`halo.profile_dk14.DK14Profile`       Diemer & Kravtsov 2014 profile  Diemer & Kravtsov 2014    ApJ 789, 1
+============================================ =============================== ========================= =============
 
 ---------------------------------------------------------------------------------------------------
 Profile fitting
@@ -75,8 +67,8 @@ Here, fitting refers to finding the parameters of a halo density profile which b
 given set of data points. Each point corresponds to a radius and a particular quantity, such as 
 density, enclosed mass, or surface density. Optionally, the user can pass uncertainties on the 
 data points, or even a full covariance matrix. All fitting should be done using the very general 
-:func:`profile_base.HaloDensityProfile.fit` routine. For example, let us fit an NFW profile to some density 
-data::
+:func:`halo.profile_base.HaloDensityProfile.fit` routine. For example, let us fit an NFW profile 
+to some density data::
 
     profile = NFWProfile(M = 1E12, mdef = 'vir', z = 0.0, c = 10.0)
     profile.fit(r, rho, 'rho')
@@ -91,7 +83,7 @@ use an MCMC sampler, for example to fit the surface density profile::
     best_fit_params = dict['x_mean']
     uncertainty = dict['percentiles'][0]
     
-The :func:`profile_base.HaloDensityProfile.fit` function accepts many input options, some specific to the 
+The :func:`halo.profile_base.HaloDensityProfile.fit` function accepts many input options, some specific to the 
 fitting method used. Please see the detailed documentation below.
 
 ---------------------------------------------------------------------------------------------------
@@ -110,11 +102,32 @@ Surface density  Physical :math:`M_{\odot} h / kpc^2`
 ================ =======================================
 
 ---------------------------------------------------------------------------------------------------
-Units
+General profile implementation
 ---------------------------------------------------------------------------------------------------
 
-.. automodule:: halo.profile_base
-    :members:
+.. toctree::
+    :maxdepth: 3
 
-.. automodule:: halo.profile
-    :members:
+    halo_profile_base
+    halo_profile_outer
+
+---------------------------------------------------------------------------------------------------
+Specific forms
+---------------------------------------------------------------------------------------------------
+
+.. toctree::
+    :maxdepth: 3
+
+    halo_profile_spline
+    halo_profile_einasto
+    halo_profile_nfw
+    halo_profile_dk14
+
+---------------------------------------------------------------------------------------------------
+Advanced functions
+---------------------------------------------------------------------------------------------------
+
+.. toctree::
+    :maxdepth: 3
+
+    halo_profile_utils

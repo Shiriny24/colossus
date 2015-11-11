@@ -14,7 +14,7 @@ This module implements the following functions related to halo bias:
 	twoHaloTerm
     
 ---------------------------------------------------------------------------------------------------
-Module Reference
+Module reference
 ---------------------------------------------------------------------------------------------------
 """
 

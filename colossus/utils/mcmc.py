@@ -38,7 +38,7 @@ There are numerous more advanced parameters that can be adjusted. Please see the
 the individual functions below.
 
 ---------------------------------------------------------------------------------------------------
-Module Reference
+Module reference
 ---------------------------------------------------------------------------------------------------
 """
 

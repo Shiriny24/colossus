@@ -75,7 +75,7 @@ many different cosmologies (for example, in an MCMC chain), please consult the d
 ``interpolation`` switch in the cosmology module.
 
 ---------------------------------------------------------------------------------------------------
-Module Reference
+Module reference
 --------------------------------------------------------------------------------------------------- 
 """
 

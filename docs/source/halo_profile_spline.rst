@@ -1,6 +1,6 @@
 =====================================
-General utilities
+Spline profile
 =====================================
 
-.. automodule:: utils.utilities
+.. automodule:: halo.profile_spline
     :members:

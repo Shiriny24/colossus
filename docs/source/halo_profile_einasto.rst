@@ -1,6 +1,6 @@
 =====================================
-General utilities
+Einasto profile
 =====================================
 
-.. automodule:: utils.utilities
+.. automodule:: halo.profile_einasto
     :members:

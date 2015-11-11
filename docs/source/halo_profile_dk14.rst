@@ -1,6 +1,6 @@
 =====================================
-General utilities
+Diemer & Kravtsov 2014 profile
 =====================================
 
-.. automodule:: utils.utilities
+.. automodule:: halo.profile_dk14
     :members:

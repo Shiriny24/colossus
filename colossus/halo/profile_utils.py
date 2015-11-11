@@ -45,7 +45,7 @@ mass model. This function is performed by a convenient wrapper for the
 :func:`changeMassDefinition` function, see :func:`halo.mass_definitions.changeMassDefinitionCModel`.
 
 ---------------------------------------------------------------------------------------------------
-Module Reference
+Module reference
 ---------------------------------------------------------------------------------------------------
 """
 

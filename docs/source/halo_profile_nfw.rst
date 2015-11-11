@@ -1,6 +1,6 @@
 =====================================
-General utilities
+Navarro-Frenk-White profile
 =====================================
 
-.. automodule:: utils.utilities
+.. automodule:: halo.profile_nfw
     :members:

@@ -5,6 +5,10 @@
 #
 ###################################################################################################
 
+"""
+The NFW profile
+"""
+
 import numpy as np
 import scipy.optimize
 
@@ -132,7 +136,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		The NFW density as a function of :math:`x=r/r_s`.
 		
 		This routine can be called without instantiating an NFWProfile object. In most cases, the 
-		:func:`profile_base.HaloDensityProfile.density` function should be used instead.
+		:func:`halo.profile_base.HaloDensityProfile.density` function should be used instead.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -149,7 +153,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 
 		See also
 		-------------------------------------------------------------------------------------------
-		profile_base.HaloDensityProfile.density: Density as a function of radius.
+		halo.profile_base.HaloDensityProfile.density: Density as a function of radius.
 		"""
 		
 		return rhos / x / (1.0 + x)**2
@@ -177,7 +181,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		See also
 		-------------------------------------------------------------------------------------------
 		M: The enclosed mass in an NFW profile as a function of :math:`x=r/r_s`.
-		profile_base.HaloDensityProfile.enclosedMass: The mass enclosed within radius r.
+		halo.profile_base.HaloDensityProfile.enclosedMass: The mass enclosed within radius r.
 		"""
 		
 		return np.log(1.0 + x) - x / (1.0 + x)
@@ -190,7 +194,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		The enclosed mass in an NFW profile as a function of :math:`x=r/r_s`.
 
 		This routine can be called without instantiating an NFWProfile object. In most cases, the 
-		:func:`profile_base.HaloDensityProfile.enclosedMass` function should be used instead.
+		:func:`halo.profile_base.HaloDensityProfile.enclosedMass` function should be used instead.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -210,7 +214,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		See also
 		-------------------------------------------------------------------------------------------
 		mu: A function of :math:`x=r/r_s` that appears in the NFW enclosed mass.
-		profile_base.HaloDensityProfile.enclosedMass: The mass enclosed within radius r.
+		halo.profile_base.HaloDensityProfile.enclosedMass: The mass enclosed within radius r.
 		"""
 		
 		return 4.0 * np.pi * rs**3 * rhos * cls.mu(x)
@@ -229,7 +233,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		"""
 		Find :math:`x=r/r_s` where the enclosed density has a particular value.
 		
-		This function is the basis for the :func:`RDelta` routine, but can 
+		This function is the basis for the RDelta routine, but can 
 		be used without instantiating an NFWProfile object. This is preferable when the function 
 		needs to be evaluated many times, for example when converting a large number of mass 
 		definitions.
@@ -250,10 +254,6 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		x: float
 			The radius in units of the scale radius, :math:`x=r/r_s`, where the enclosed density
 			reaches ``density_threshold``. 
-
-		See also
-		-------------------------------------------------------------------------------------------
-		RDelta: The spherical overdensity radius of a given mass definition.
 		"""
 		
 		# A priori, we have no idea at what radius the result will come out, but we need to 

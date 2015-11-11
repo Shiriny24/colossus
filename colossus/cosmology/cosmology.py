@@ -136,7 +136,7 @@ The kpc/h units for density make them compatible with the HaloDensityProfile mod
 lengths are expressed in physical kpc/h.
 
 ---------------------------------------------------------------------------------------------------
-Derivatives and Inverses
+Derivatives and inverses
 ---------------------------------------------------------------------------------------------------
 
 Almost all cosmology functions that are interpolated (e.g., :func:`Cosmology.age`, 
@@ -183,7 +183,7 @@ interpolation is accurate to better than 0.2% unless specifically noted in the f
 documentation, meaning that it is very rarely necessary to use the exact routines. 
 
 ---------------------------------------------------------------------------------------------------
-Module Reference
+Module reference
 ---------------------------------------------------------------------------------------------------
 """
 
