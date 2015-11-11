@@ -6,7 +6,8 @@
 ###################################################################################################
 
 """
-
+This module implements terms that describe the outer halo density profile. Specific terms are 
+derived from the :class:`OuterTerm` base class.
 """
 
 ###################################################################################################
@@ -32,6 +33,9 @@ from colossus.halo import bias
 
 @six.add_metaclass(abc.ABCMeta)
 class OuterTerm():
+	"""
+	Base class for outer profile terms.
+	"""
 	
 	def __init__(self, par_array, opt_array, par_names, opt_names):
 		

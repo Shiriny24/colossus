@@ -2,5 +2,5 @@
 The outer profile
 =====================================
 
-.. automodule::halo.profile_outer
+.. automodule:: halo.profile_outer
     :members:
