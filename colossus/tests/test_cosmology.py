@@ -1,12 +1,12 @@
 ###################################################################################################
 #
-# test_cosmology.p      (c) Benedikt Diemer
+# test_cosmology.py     (c) Benedikt Diemer
 #     				    	benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
 
 import unittest
-import numpy
+import numpy as np
 
 from colossus.tests import test_colossus
 from colossus.utils import defaults
@@ -16,24 +16,22 @@ from colossus.cosmology import cosmology
 # TEST PARAMETERS
 ###################################################################################################
 
-TEST_N_DIGITS = 10
-TEST_Z = numpy.array([0.0, 1.283, 20.0])
+TEST_N_DIGITS = test_colossus.TEST_N_DIGITS
+
+TEST_Z = np.array([0.0, 1.283, 20.0])
 TEST_Z2 = 5.4
 TEST_M = 3E12
 TEST_R = 1.245
-TEST_K = numpy.array([1.2E-3, 1.1E3])
-TEST_RR = numpy.array([1.2E-3, 1.4, 1.1E3])
+TEST_K = np.array([1.2E-3, 1.1E3])
+TEST_RR = np.array([1.2E-3, 1.4, 1.1E3])
 TEST_NU = 0.89
+TEST_AGE = np.array([13.7, 0.1])
 
 ###################################################################################################
-# UNIT TEST CLASS
+# GENERAL CLASS FOR COSMOLOGY TEST CASES
 ###################################################################################################
 
 class CosmologyTestCase(test_colossus.ColosssusTestCase):
-
-	def setUp(self):
-		self.cosmo_name = 'planck15'
-		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 'storage': False})
 
 	def _testRedshiftArray(self, f, correct):
 		self.assertAlmostEqualArray(f(TEST_Z), correct, places = TEST_N_DIGITS)		
@@ -43,6 +41,16 @@ class CosmologyTestCase(test_colossus.ColosssusTestCase):
 
 	def _testRZArray(self, f, z, correct):
 		self.assertAlmostEqualArray(f(TEST_RR, z), correct, places = TEST_N_DIGITS)		
+
+###################################################################################################
+# TEST CASE 1: COMPUTATIONS WITHOUT INTERPOLATION
+###################################################################################################
+
+class CosmologyTestCaseComputations(CosmologyTestCase):
+
+	def setUp(self):
+		self.cosmo_name = 'planck15'
+		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 'storage': False})
 
 	###############################################################################################
 	# BASICS
@@ -232,20 +240,49 @@ class CosmologyTestCase(test_colossus.ColosssusTestCase):
 		correct = [5.6455937600879116, 0.15828538486611424, -1.1061848795175795e-08]
 		self._testRZArray(self.cosmo.correlationFunction, TEST_Z2, correct)
 
+###################################################################################################
+# TEST CASE 2: INTERPOLATION, DERIVATIVES, INVERSES
+###################################################################################################
+
+class CosmologyTestCaseInterpolation(CosmologyTestCase):
+
+	def setUp(self):
+		self.cosmo_name = 'planck15'
+		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': True, 'storage': True})
+
 	###############################################################################################
-	# Interpolation, derivatives, and inverses
+	# Function tests
 	###############################################################################################
 
-	# This test is general for all derivative functions, since they are based on the same routine
-	#def testZDerivative(self):
-	#	correct = [0.0, 6257.341863900032, 156183.01636351796]
-	#	self.assertAlmostEqualArray(self.cosmo.age(TEST_Z, derivative = 1), correct, places = TEST_N_DIGITS)		
+	def test_sigma(self):
+		self.assertAlmostEqual(self.cosmo.sigma(12.5, 0.0), 0.5892735283988848, places = TEST_N_DIGITS)		
 
-	#def test_massFromPeakHeight(self):
-	#	self.assertAlmostEqual(self.cosmo.massFromPeakHeight(TEST_NU, 0.0), 0.94312293214221243, places = TEST_N_DIGITS)
-	#	self.assertAlmostEqual(self.cosmo.massFromPeakHeight(TEST_NU, TEST_Z2), 4.7404825899781677, places = TEST_N_DIGITS)
+	def testZDerivative(self):
+		correct = [-14.431423683052429, -3.0331864799122887, -0.012861392030709832]
+		self.assertAlmostEqualArray(self.cosmo.age(TEST_Z, derivative = 1), correct, places = TEST_N_DIGITS)		
 
-	#def test_nonLinearMass(self):
+	def testZDerivative2(self):
+		correct = [20.668766775933239, 3.0310718810786343, 0.0015163247225108648]
+		self.assertAlmostEqualArray(self.cosmo.age(TEST_Z, derivative = 2), correct, places = TEST_N_DIGITS)		
+
+	def testZInverse(self):
+		correct = [0.0067749101503343997, 29.812799507392906]
+		self.assertAlmostEqualArray(self.cosmo.age(TEST_AGE, inverse = True), correct, places = TEST_N_DIGITS)		
+
+	def testZInverseDerivative(self):
+		correct = [-0.069866754435913142, -204.97494464862859]
+		self.assertAlmostEqualArray(self.cosmo.age(TEST_AGE, inverse = True, derivative = 1), correct, places = TEST_N_DIGITS)		
+
+	def test_massFromPeakHeight(self):
+		self.assertAlmostEqual(self.cosmo.massFromPeakHeight(TEST_NU, 0.0), 2077137637380.1235, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(self.cosmo.massFromPeakHeight(TEST_NU, TEST_Z2), 59607.184484321471, places = TEST_N_DIGITS)
+
+	def test_nonLinearMass(self):
+		self.assertAlmostEqual(self.cosmo.nonLinearMass(1.1), 98435044937.058929, places = TEST_N_DIGITS)				
+
+###################################################################################################
+# TRIGGER
+###################################################################################################
 
 if __name__ == '__main__':
 	unittest.main()

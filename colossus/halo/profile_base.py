@@ -944,7 +944,16 @@ class HaloDensityProfile():
 
 	def _fitDiffFunction(self, x, r, q, f, df_inner, df_outer, Q, mask, N_par_fit, verbose):
 
-		self.setParameterArray(self._fitConvertParamsBack(x.copy(), mask), mask = mask)
+		p = self._fitConvertParamsBack(x.copy(), mask)
+		self.setParameterArray(p, mask = mask)
+		
+		# If very verbose, output the best-fit parameters at this iteration
+		if verbose > 1:
+			s = ''
+			for i in range(N_par_fit):
+				s += '%+10.2e' % (p[i])
+			print(s)
+		
 		q_fit = f(r)
 		q_diff = q_fit - q
 		mf = np.dot(Q, q_diff)
@@ -960,8 +969,7 @@ class HaloDensityProfile():
 	def _fitParamDerivHighlevel(self, x, r, q, f, df_inner, df_outer, Q, mask, N_par_fit, verbose):
 		
 		deriv = df_inner(self, r, mask, N_par_fit)
-		#print('1111')
-		#print(deriv)
+
 		# Add derivative of outer terms
 		if self.N_outer > 0:
 			for i in range(self.N_outer):
@@ -971,8 +979,7 @@ class HaloDensityProfile():
 					mask_outer = df_outer[i][2]
 					N_par_fit_outer = df_outer[i][3]
 					deriv[pp, :] = f_outer(self._outer_terms[i], r, mask_outer, N_par_fit_outer)
-		#print('222')
-		#print(deriv)
+
 		for j in range(N_par_fit):
 			deriv[j] = np.dot(Q, deriv[j])
 		
@@ -1051,6 +1058,14 @@ class HaloDensityProfile():
 		else:
 			deriv_func = self._fitParamDerivHighlevel
 		args = r, q, f, df_inner, df_outer, Q, mask, N_par_fit, verbose
+
+		# Very verbose output
+		if verbose > 1:
+			s = ''
+			for i in range(self.N_par):
+				if mask[i]:			
+					s += '%10s' % list(self.par.keys())[i]
+			print(s)
 
 		# Run the actual fit
 		ini_guess = self._fitConvertParams(self.getParameterArray(mask = mask), mask)
@@ -1172,8 +1187,10 @@ class HaloDensityProfile():
 			of the density profile class. Only variables where ``mask == True`` are varied in the
 			fit, all others are kept constant. Important: this has to be a numpy array rather than
 			a list.
-		verbose: bool
-			If true, output information about the fitting process.
+		verbose: bool / int
+			If true, output information about the fitting process. The flag can also be set as a
+			number, where 1 has the same effect as True, and 2 outputs large amounts of information
+			such as the fit parameters at each iteration.
 		tolerance: float
 			Only active when ``method==leastsq``. The accuracy to which the best-fit parameters
 			are found.
@@ -1222,6 +1239,9 @@ class HaloDensityProfile():
 				The chi^2 of the best-fit profile. If a covariance matrix was passed, the 
 				covariances are taken into account. If no uncertainty was passed at all, chi2 is
 				in units of absolute difference, meaning its value will depend on the units of q.
+			``ndof``: int
+				The number of degrees of freedom, i.e. the number of fitted data points minus 
+				the number of free parameters.
 			``chi2_ndof``: float
 				The chi^2 per degree of freedom.
 		
@@ -1394,9 +1414,11 @@ class HaloDensityProfile():
 		dict['x'] = x
 		dict['q_fit'] = f(r)
 		dict['chi2'] = self._fitChi2(r, q, f, covinv)
-		dict['chi2_ndof'] = dict['chi2'] / (len(r) - N_par_fit)
+		dict['ndof'] = (len(r) - N_par_fit)
+		dict['chi2_ndof'] = dict['chi2'] / dict['ndof']
 		
 		if verbose:
+			print('chi2 / Ndof = %.1f / %d = %.2f' % (dict['chi2'], dict['ndof'], dict['chi2_ndof']))
 			utilities.printLine()
 
 		return dict
