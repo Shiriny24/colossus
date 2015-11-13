@@ -14,7 +14,7 @@ from colossus.utils import utilities
 # TEST CASES
 ###################################################################################################
 
-class UtilitiesTest(test_colossus.ColosssusTestCase):
+class TCGen(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
 		pass

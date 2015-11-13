@@ -46,7 +46,7 @@ class CosmologyTestCase(test_colossus.ColosssusTestCase):
 # TEST CASE 1: COMPUTATIONS WITHOUT INTERPOLATION
 ###################################################################################################
 
-class CosmologyTestCaseComputations(CosmologyTestCase):
+class TCComp(CosmologyTestCase):
 
 	def setUp(self):
 		self.cosmo_name = 'planck15'
@@ -73,7 +73,7 @@ class CosmologyTestCaseComputations(CosmologyTestCase):
 			self.assertAlmostEqual(self.cosmo.Neff, defaults.COSMOLOGY_NEFF, places = TEST_N_DIGITS)
 		self.assertAlmostEqual(self.cosmo.Ogamma0, 5.3888999e-05, places = TEST_N_DIGITS)
 		self.assertAlmostEqual(self.cosmo.Onu0, 3.7278733e-05, places = TEST_N_DIGITS)
-		self.assertAlmostEqual(self.cosmo.Or0, 9.1167732e-05, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(self.cosmo.Or0, 9.116773280347645e-05, places = TEST_N_DIGITS)
 	
 	def test_initNoRel(self):
 		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 'storage': False, 'relspecies': False})
@@ -244,7 +244,7 @@ class CosmologyTestCaseComputations(CosmologyTestCase):
 # TEST CASE 2: INTERPOLATION, DERIVATIVES, INVERSES
 ###################################################################################################
 
-class CosmologyTestCaseInterpolation(CosmologyTestCase):
+class TCInterp(CosmologyTestCase):
 
 	def setUp(self):
 		self.cosmo_name = 'planck15'
