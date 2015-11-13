@@ -100,13 +100,13 @@ class SplineProfile(profile_base.HaloDensityProfile):
 	# METHODS BOUND TO THE CLASS
 	###############################################################################################
 
-	def density(self, r):
+	def densityInner(self, r):
 		
 		return np.exp(self.rho_spline(np.log(r)))
 
 	###############################################################################################
 	
-	def densityDerivativeLin(self, r):
+	def densityDerivativeLinInner(self, r):
 
 		log_deriv = self.rho_spline(np.log(r), nu = 1)
 		deriv = log_deriv * self.density(r) / r
@@ -115,12 +115,18 @@ class SplineProfile(profile_base.HaloDensityProfile):
 
 	###############################################################################################
 
-	def densityDerivativeLog(self, r):
+	def densityDerivativeLogInner(self, r):
 	
 		return self.rho_spline(np.log(r), nu = 1)
 	
 	###############################################################################################
 
-	def enclosedMass(self, r):
+	def enclosedMass(self, r, accuracy = 1E-6):
+
+		return self.enclosedMassInner(r) + self.enclosedMassOuter(r, accuracy)
+
+	###############################################################################################
+
+	def enclosedMassInner(self, r):
 
 		return np.exp(self.M_spline(np.log(r)))

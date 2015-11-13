@@ -14,5 +14,8 @@ Default settings used in colossus.
 COSMOLOGY_TCMB0 = 2.7255
 COSMOLOGY_NEFF = 3.046
 
+HALO_BIAS_MODEL = 'tinker10'
+
 HALO_PROFILE_DK14_BE = 1.0
 HALO_PROFILE_DK14_SE = 1.5
+
