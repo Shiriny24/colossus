@@ -58,6 +58,7 @@ Module reference
 
 import numpy as np
 
+from colossus.utils import defaults
 from colossus.cosmology import cosmology
 from colossus.halo import mass_so
 from colossus.halo import mass_defs
@@ -66,7 +67,9 @@ from colossus.halo import concentration
 
 ###################################################################################################
 
-def changeMassDefinitionCModel(M, z, mdef_in, mdef_out, profile = 'nfw', c_model = 'diemer15'):
+def changeMassDefinitionCModel(M, z, mdef_in, mdef_out, 
+							profile = defaults.HALO_MASS_CONVERSION_PROFILE, 
+							c_model = defaults.HALO_CONCENTRATION_MODEL):
 	"""
 	Change the spherical overdensity mass definition, using a model for the concentration.
 	
@@ -236,7 +239,7 @@ def MspOverM200m(nu200m = None, z = None, Gamma = None):
 
 ###################################################################################################
 
-def Rsp(R, z, mdef, c = None, profile = 'nfw'):
+def Rsp(R, z, mdef, c = None, profile = defaults.HALO_MASS_CONVERSION_PROFILE):
 	"""
 	:math:`R_{sp}` as a function of spherical overdensity radius.
 	
@@ -285,7 +288,7 @@ def Rsp(R, z, mdef, c = None, profile = 'nfw'):
 
 ###################################################################################################
 
-def Msp(M, z, mdef, c = None, profile = 'nfw'):
+def Msp(M, z, mdef, c = None, profile = defaults.HALO_MASS_CONVERSION_PROFILE):
 	"""
 	:math:`M_{sp}` as a function of spherical overdensity mass.
 	
@@ -329,3 +332,5 @@ def Msp(M, z, mdef, c = None, profile = 'nfw'):
 	Msp = M200m * MspOverM200m(nu200m = nu200m)
 	
 	return Msp
+
+###################################################################################################

@@ -55,6 +55,7 @@ import numpy as np
 import inspect
 
 from colossus.utils import utilities
+from colossus.utils import defaults
 from colossus.halo import mass_so
 from colossus.halo import profile_nfw
 
@@ -62,7 +63,8 @@ from colossus.halo import profile_nfw
 # FUNCTIONS THAT CAN REFER TO DIFFERENT FORMS OF THE DENSITY PROFILE
 ###################################################################################################
 
-def pseudoEvolve(M_i, c_i, z_i, mdef_i, z_f, mdef_f, profile = 'nfw'):
+def pseudoEvolve(M_i, c_i, z_i, mdef_i, z_f, mdef_f, 
+				profile = defaults.HALO_MASS_CONVERSION_PROFILE):
 	"""
 	Evolve the spherical overdensity radius for a fixed profile.
 	
@@ -142,7 +144,8 @@ def pseudoEvolve(M_i, c_i, z_i, mdef_i, z_f, mdef_f, profile = 'nfw'):
 
 ###################################################################################################
 
-def changeMassDefinition(M, c, z, mdef_in, mdef_out, profile = 'nfw'):
+def changeMassDefinition(M, c, z, mdef_in, mdef_out, 
+						profile = defaults.HALO_MASS_CONVERSION_PROFILE):
 	"""
 	Change the spherical overdensity mass definition.
 	

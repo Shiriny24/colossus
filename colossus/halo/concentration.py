@@ -88,6 +88,7 @@ import warnings
 
 from colossus.utils import utilities
 from colossus.utils import constants
+from colossus.utils import defaults
 from colossus.cosmology import cosmology
 from colossus.halo import mass_so
 from colossus.halo import mass_defs
@@ -101,7 +102,8 @@ MODELS = ['diemer15', 'klypin15_nu', 'klypin15_m', 'dutton14', 'bhattacharya13',
 ###################################################################################################
 
 def concentration(M, mdef, z,
-				model = 'diemer15', statistic = 'median', conversion_profile = 'nfw',
+				model = defaults.HALO_CONCENTRATION_MODEL, statistic = defaults.HALO_CONCENTRATION_STATISTIC,
+				conversion_profile = defaults.HALO_MASS_CONVERSION_PROFILE, 
 				range_return = False, range_warning = True):
 	"""
 	Concentration as a function of halo mass and redshift, for different concentration models, 
@@ -164,8 +166,7 @@ def concentration(M, mdef, z,
 	# corresponding mass in the user's mass definition is M_desired.
 	def eq(MDelta, M_desired, mdef_model, func, limited, args):
 		cDelta, _ = evaluateC(func, MDelta, limited, args)
-		Mnew, _, _ = mass_defs.changeMassDefinition(MDelta, cDelta, z, mdef_model, mdef,\
-												profile = 'nfw')
+		Mnew, _, _ = mass_defs.changeMassDefinition(MDelta, cDelta, z, mdef_model, mdef)
 		return Mnew - M_desired
 
 	# Distinguish between models
