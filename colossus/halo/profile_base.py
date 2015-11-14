@@ -177,10 +177,15 @@ class HaloDensityProfile():
 			be shorter than profile.N_par).
 		"""
 
-		if mask is None:		
+		if mask is None:
 			for i in range(self.N_par):
 				self.par[self.par_names[i]] = pars[i]
 		else:
+			if len(mask) != self.N_par:
+				msg = 'Received %d mask elements for %d parameters.' % \
+					(np.count_nonzero(mask), self.N_par)
+				raise Exception(msg)
+				
 			if len(pars) != np.count_nonzero(mask):
 				msg = 'Received %d parameters and %d mask elements that are True.' % \
 					(len(pars), np.count_nonzero(mask))

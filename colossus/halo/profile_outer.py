@@ -19,6 +19,7 @@ import collections
 import six
 
 from colossus.utils import utilities
+from colossus.utils import defaults
 from colossus.cosmology import cosmology
 from colossus.halo import mass_so
 from colossus.halo import bias
@@ -143,10 +144,11 @@ class OuterTermRhoMean(OuterTerm):
 
 class OuterTermPowerLaw(OuterTerm):
 	
-	def __init__(self, norm, slope, pivot, pivot_factor, max_rho, z,
+	def __init__(self, norm = None, slope = None, pivot = None, pivot_factor = None, 
+				z = None, max_rho = defaults.HALO_PROFILE_OUTER_PL_MAXRHO, 
 				norm_name = 'norm', slope_name = 'slope', 
-				pivot_name = 'pivot', pivot_factor_name = 'pivot_factor', 
-				max_rho_name = 'pl_max_rho', z_name = 'z'):
+				pivot_name = 'pivot', pivot_factor_name = 'pivot_factor', z_name = 'z', 
+				max_rho_name = 'pl_max_rho'):
 
 		if norm is None:
 			raise Exception('Normalization of power law cannot be None.')
@@ -156,13 +158,13 @@ class OuterTermPowerLaw(OuterTerm):
 			raise Exception('Pivot of power law cannot be None.')
 		if pivot_factor is None:
 			raise Exception('Pivot factor of power law cannot be None.')
-		if max_rho is None:
-			raise Exception('Maximum of power law cannot be None.')
 		if z is None:
 			raise Exception('Redshift of power law cannot be None.')
+		if max_rho is None:
+			raise Exception('Maximum of power law cannot be None.')
 		
-		OuterTerm.__init__(self, [norm, slope], [pivot, pivot_factor, max_rho, z],
-						[norm_name, slope_name], [pivot_name, pivot_factor_name, max_rho_name, z_name])
+		OuterTerm.__init__(self, [norm, slope], [pivot, pivot_factor, z, max_rho],
+						[norm_name, slope_name], [pivot_name, pivot_factor_name, z_name, max_rho_name])
 
 		return
 
@@ -184,8 +186,8 @@ class OuterTermPowerLaw(OuterTerm):
 		norm = self.par[self.term_par_names[0]]
 		slope = self.par[self.term_par_names[1]]
 		r_pivot *= self.opt[self.term_opt_names[1]]
-		max_rho = self.opt[self.term_opt_names[2]]
-		z = self.opt[self.term_opt_names[3]]
+		z = self.opt[self.term_opt_names[2]]
+		max_rho = self.opt[self.term_opt_names[3]]
 		rho_m = cosmology.getCurrent().rho_m(z)
 		
 		return norm, slope, r_pivot, max_rho, rho_m
@@ -216,7 +218,6 @@ class OuterTermPowerLaw(OuterTerm):
 		deriv = np.zeros((N_par_fit, len(r)), np.float)
 		norm, slope, r_pivot, max_rho, rho_m = self._getParameters()
 		
-		#print(norm, slope, r_pivot, max_rho, rho_m)
 		rro = r / r_pivot
 		t1 = 1.0 / max_rho + rro**slope
 		rho = rho_m * norm / t1
@@ -230,7 +231,6 @@ class OuterTermPowerLaw(OuterTerm):
 		if mask[1]:
 			deriv[counter] = -rho * np.log(rro) / t1 * rro**slope
 		
-		#print(deriv)
 		return deriv
 
 	###############################################################################################
@@ -250,10 +250,11 @@ class OuterTermPowerLaw(OuterTerm):
 
 class OuterTermXiMatterPowerLaw(OuterTerm):
 	
-	def __init__(self, norm, slope, pivot, pivot_factor, max_rho, z,
+	def __init__(self, norm = None, slope = None, pivot = None, pivot_factor = None, 
+				z = None, max_rho = defaults.HALO_PROFILE_OUTER_PL_MAXRHO, 
 				norm_name = 'norm', slope_name = 'slope', 
-				pivot_name = 'pivot', pivot_factor_name = 'pivot_factor', 
-				max_rho_name = 'pl_max_rho', z_name = 'z'):
+				pivot_name = 'pivot', pivot_factor_name = 'pivot_factor', z_name = 'z', 
+				max_rho_name = 'pl_max_rho'):
 
 		if norm is None:
 			raise Exception('Normalization of power law cannot be None.')
@@ -263,13 +264,13 @@ class OuterTermXiMatterPowerLaw(OuterTerm):
 			raise Exception('Pivot of power law cannot be None.')
 		if pivot_factor is None:
 			raise Exception('Pivot factor of power law cannot be None.')
-		if max_rho is None:
-			raise Exception('Maximum of power law cannot be None.')
 		if z is None:
 			raise Exception('Redshift of power law cannot be None.')
+		if max_rho is None:
+			raise Exception('Maximum of power law cannot be None.')
 		
-		OuterTerm.__init__(self, [norm, slope], [pivot, pivot_factor, max_rho, z],
-						[norm_name, slope_name], [pivot_name, pivot_factor_name, max_rho_name, z_name])
+		OuterTerm.__init__(self, [norm, slope], [pivot, pivot_factor, z, max_rho],
+						[norm_name, slope_name], [pivot_name, pivot_factor_name, z_name, max_rho_name])
 
 		return
 
@@ -289,8 +290,8 @@ class OuterTermXiMatterPowerLaw(OuterTerm):
 		norm = self.par[self.term_par_names[0]]
 		slope = self.par[self.term_par_names[1]]
 		r_pivot *= self.opt[self.term_opt_names[1]]
-		max_rho = self.opt[self.term_opt_names[2]]
-		z = self.opt[self.term_opt_names[3]]
+		z = self.opt[self.term_opt_names[2]]
+		max_rho = self.opt[self.term_opt_names[3]]
 		rho_m = cosmology.getCurrent().rho_m(z)
 		
 		return norm, slope, r_pivot, max_rho, z, rho_m

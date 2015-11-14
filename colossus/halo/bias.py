@@ -114,6 +114,8 @@ def twoHaloTerm(r, M, z, mdef, model = defaults.HALO_BIAS_MODEL):
 	halos due to the proximity of other halos. This contribution can be approximated as the matter-
 	matter correlation function times a linear bias which depends on the peak height of the halo.
 	
+	Sometimes this term includes an additional factor of the mean density which is omitted here. 
+	
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	r: array_like
@@ -138,7 +140,7 @@ def twoHaloTerm(r, M, z, mdef, model = defaults.HALO_BIAS_MODEL):
 	bias = haloBias(M, z, mdef, model = model)
 	r_comoving_Mpc = r / 1000.0 * (1.0 + z)
 	xi = cosmo.correlationFunction(r_comoving_Mpc, z)
-	rho_2h = cosmo.rho_m(z) * (1.0 + bias * xi)
+	rho_2h = cosmo.rho_m(z) * bias * xi
 	
 	return rho_2h
 

@@ -117,7 +117,8 @@ class DK14Profile(profile_base.HaloDensityProfile):
 				selected_by = 'M', Gamma = None, 
 				outer_term_names = ['mean', 'pl'], 
 				be = defaults.HALO_PROFILE_DK14_BE, se = defaults.HALO_PROFILE_DK14_SE,
-				power_law_max = 1000.0, acc_warn = 0.01, acc_err = 0.05):
+				power_law_max = defaults.HALO_PROFILE_OUTER_PL_MAXRHO, 
+				acc_warn = 0.01, acc_err = 0.05):
 	
 		# Set the fundamental variables par_names and opt_names
 		self.par_names = ['rhos', 'rs', 'rt', 'alpha', 'beta', 'gamma']
@@ -134,10 +135,14 @@ class DK14Profile(profile_base.HaloDensityProfile):
 				t = profile_outer.OuterTermRhoMean(z)
 			
 			elif outer_term_names[i] == 'pl':
-				t = profile_outer.OuterTermPowerLaw(be, se, 'R200m', 5.0, power_law_max, z, norm_name = 'be', slope_name = 'se')
+				t = profile_outer.OuterTermPowerLaw(norm = be, slope = se, pivot = 'R200m', 
+								pivot_factor = 5.0, z = z, max_rho = power_law_max, 
+								norm_name = 'be', slope_name = 'se')
 			
 			elif outer_term_names[i] == 'ximm':
-				t = profile_outer.OuterTermXiMatterPowerLaw(be, se, 'R200m', 5.0, power_law_max, z, norm_name = 'be', slope_name = 'se')
+				t = profile_outer.OuterTermXiMatterPowerLaw(norm = be, slope = se, pivot = 'R200m', 
+								pivot_factor = 5.0, z = z, max_rho = power_law_max, 
+								norm_name = 'be', slope_name = 'se')
 		
 			else:
 				msg = 'Unknown outer term, %s.' % (outer_terms[i])

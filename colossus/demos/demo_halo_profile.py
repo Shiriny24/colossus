@@ -17,7 +17,7 @@ import matplotlib.gridspec as gridspec
 
 from colossus.cosmology import cosmology
 from colossus.halo import mass_so
-from colossus.halo import mass_defs
+from colossus.halo import profile_outer
 from colossus.halo import profile_nfw
 from colossus.halo import profile_einasto
 from colossus.halo import profile_dk14
@@ -26,17 +26,22 @@ from colossus.halo import profile_dk14
 
 def main():
 
-	demonstrateProfiles()
-	#demonstrateFitting()
-	#demonstrateMassDefinitions()
+	#demoProfiles()
+
+	#demoFittingLeastsq(profile = 'einasto', quantity = 'M', scatter = 0.1)
+	#demoFittingLeastsq(profile = 'nfw', quantity = 'Sigma', scatter = 0.1)
+	#demoFittingLeastsq(profile = 'dk14', quantity = 'rho', scatter = 0.1)
+	
+	#demoFittingMCMC()
 
 	return
 
 ###################################################################################################
 
-# Compare the Diemer & Kravtsov 2014, NFW, and Einasto profiles of a massive cluster halo
+# Compare the Diemer & Kravtsov 2014, NFW, and Einasto profiles of a massive cluster halo. We also
+# add various descriptions of the outer profile and plot the logarithmic slope.
 
-def demonstrateProfiles():
+def demoProfiles():
 	
 	# Choose halo parameters
 	M = 1E15
@@ -53,18 +58,25 @@ def demonstrateProfiles():
 	r = rR * R
 	rho_m = cosmo.rho_m(z)
 	
-	# Initialize three profiles
-	p = [None, None, None, None, None, None]
-	p[0] = profile_nfw.NFWProfile(M = M, c = c, z = z, mdef = mdef)
-	p[1] = profile_einasto.EinastoProfile(M = M, c = c, z = z, mdef = mdef)
-	p[2] = profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, outer_term_names = [])
-	p[3] = profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, outer_term_names = ['mean'])
-	p[4] = profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, outer_term_names = ['mean', 'pl'])
-	p[5] = profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, outer_term_names = ['mean', 'ximm'], be = 1.0, se = 0.0)
-	colors = ['darkblue', 'firebrick', 'deepskyblue', 'red', 'green', 'orange']
-	ls = ['-.', '--', '-', '-', '-', '-']
-	labels = ['Einasto', 'NFW', 'DK14 (no outer)', 'DK14 (mean)', 'DK14 (mean + pl)', 'DK14 (mean + ximm)']
-	
+	# Initialize profiles; create an outer power-law term with a pivot at 1 Mpc/h
+	outer_term = profile_outer.OuterTermRhoMean(z = z)
+	p = []
+	labels = []
+	p.append(profile_nfw.NFWProfile(M = M, c = c, z = z, mdef = mdef))
+	labels.append('NFW (no outer)')
+	p.append(profile_nfw.NFWProfile(M = M, c = c, z = z, mdef = mdef, outer_terms = [outer_term]))
+	labels.append('NFW (mean)')
+	p.append(profile_einasto.EinastoProfile(M = M, c = c, z = z, mdef = mdef))
+	labels.append('Einasto (no outer)')
+	p.append(profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, outer_term_names = ['mean']))
+	labels.append('DK14 (mean)')
+	p.append(profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, 
+									outer_term_names = ['mean', 'pl'], be = 1.0, se = 1.5))
+	labels.append('DK14 (mean + pl)')
+
+	colors = ['darkblue', 'darkblue', 'firebrick', 'deepskyblue', 'deepskyblue']
+	ls = ['-', '-.', '-', '--', '-']
+
 	# Prepare plot
 	fig = plt.figure(figsize = (5.5, 10.0))
 	gs = gridspec.GridSpec(2, 1)
@@ -72,49 +84,101 @@ def demonstrateProfiles():
 	p1 = fig.add_subplot(gs[0])	
 	p2 = fig.add_subplot(gs[1])
 
-	# Prepare density panel
+	# Density panel
 	plt.sca(p1)		
 	plt.loglog()
 	plt.ylabel(r'$\rho / \rho_m$')
 	p1.set_xticklabels([])	
 	plt.xlim(rR_min, rR_max)
 	plt.ylim(1E-1, 5E6)
-	
-	# Plot density
 	for i in range(len(p)):
 		rho = p[i].density(r)
 		plt.plot(rR, rho / rho_m, ls = ls[i], color = colors[i], label = labels[i])
 
-	# Prepare slope panel
+	# Slope panel
 	plt.sca(p2)
 	plt.xscale('log')
 	plt.xlim(rR_min, rR_max)
 	plt.ylim(-5.5, 0.5)
 	plt.xlabel(r'$r / R_{\rm vir}$')
 	plt.ylabel(r'$d \log(\rho) / d \log(r)$')
-	
-	# Plot slope
 	for i in range(len(p)):
 		slope = p[i].densityDerivativeLog(r)
 		plt.plot(rR, slope, ls = ls[i], color = colors[i], label = labels[i])
 
-	# Plot mean density and 2-halo term
-	xi_mm = cosmo.correlationFunction(r / 1000.0, z)
-	#xi_mm_der = cosmo.correlationFunction(r, z, derivative = True)
-	plt.sca(p1)
-	plt.axhline(1.0, ls = '--', color = 'gray')
-	plt.plot(rR, xi_mm, ls = '--', color = 'gray')
-
 	# Finalize plot
 	plt.sca(p1)
 	plt.legend()
-	plt.savefig('HaloDensityProfileDemo.pdf')
+	plt.show()
 	
 	return
 
 ###################################################################################################
 
-def demonstrateFitting():
+# This function explores fitting density profiles. The user can choose three profiles ('nfw',
+# 'einasto', and 'dk14') as well as different quantities to fit ('rho', 'M', 'Sigma'). Depending
+# on the profile, the quantity, and the scatter chosen, the fit can take more or less time and 
+# converges more or less well.
+
+def demoFittingLeastsq(profile = 'nfw', quantity = 'rho', scatter = 0.2):
+	
+	cosmology.setCosmology('bolshoi')
+	M = 1E12
+	c = 6.0
+	mdef = 'vir'
+	z = 0.0
+	r = 10**np.arange(0.1, 3.6, 0.1)
+	
+	if profile == 'nfw':
+		prof = profile_nfw.NFWProfile(M = M, c = c, z = z, mdef = mdef)
+		mask = np.array([True, True])
+	
+	elif profile == 'einasto':
+		prof = profile_einasto.EinastoProfile(M = M, c = c, z = z, mdef = mdef)
+		mask = np.array([True, True, True])
+
+	elif profile == 'dk14':
+		prof = profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, be = 1.0, se = 1.5)
+		# 'rhos', 'rs', 'rt', 'alpha', 'beta', 'gamma', 'be', 'se'
+		mask = np.array([True, True, True, False, False, True, True, True])
+	
+	else:
+		raise Exception('Invalid profile')
+
+	# Our initial guess is wrong by 50% in all parameters
+	x_true = prof.getParameterArray(mask)
+	ini_guess = x_true * 1.5
+	prof.setParameterArray(ini_guess, mask = mask)
+
+	# Add scatter proportional to the profile itself
+	q_true = prof.quantities[quantity](r)
+	scatter_sigma = scatter * 0.3
+	np.random.seed(155)
+	q_err = np.abs(np.random.normal(scatter, scatter_sigma, (len(r)))) * q_true
+	q = q_true.copy()
+	for i in range(len(r)):
+		q[i] += np.random.normal(0.0, q_err[i])
+	
+	# Perform the fit
+	dict = prof.fit(r, q, quantity, q_err = q_err, verbose = True, mask = mask, tolerance = 1E-4)
+	x = prof.getParameterArray(mask = mask)
+	
+	print('Solution Accuracy')
+	print(x / x_true - 1.0)
+	
+	plt.figure()
+	plt.loglog()
+	plt.errorbar(r, q, yerr = q_err, fmt = '.', marker = 'o', ms = 4.0, label = 'Data')
+	plt.plot(r, q_true, '--', color = 'gray', label = 'True')
+	plt.plot(r, dict['q_fit'], '-', label = 'Fit')
+	plt.legend()
+	plt.show()
+	
+	return
+
+###################################################################################################
+
+def demoFittingMCMC():
 
 	# Create a "true" NFW profile
 	cosmology.setCosmology('WMAP9')
@@ -151,33 +215,6 @@ def demonstrateFitting():
 	plt.plot(rr, rho_fit_mcmc, '--', label = 'mcmc')
 	plt.legend()
 	plt.show()
-	
-	return
-
-###################################################################################################
-
-# Convert one mass definition to another, assuming an NFW profile
-
-def demonstrateMassDefinitions():
-	
-	Mvir = 1E12
-	cvir = 10.0
-	z = 0.0
-	cosmology.setCosmology('WMAP9')
-
-	Rvir = mass_so.M_to_R(Mvir, z, 'vir')
-
-	print(("We start with the following halo, defined using the virial mass definition:"))	
-	print(("Mvir:   %.2e Msun / h" % Mvir))
-	print(("Rvir:   %.2e kpc / h" % Rvir))
-	print(("cvir:   %.2f" % cvir))
-	
-	M200c, R200c, c200c = mass_defs.changeMassDefinition(Mvir, cvir, z, 'vir', '200c')
-	
-	print(("Now, let's convert the halo data to the 200c mass definition, assuming an NFW profile:"))	
-	print(("M200c:  %.2e Msun / h" % M200c))
-	print(("R200c:  %.2e kpc / h" % R200c))
-	print(("c200c:  %.2f" % c200c))
 	
 	return
 
