@@ -94,6 +94,12 @@ from colossus.halo import mass_defs
 
 ###################################################################################################
 
+MODELS = ['diemer15', 'klypin15_nu', 'klypin15_m', 'dutton14', 'bhattacharya13', 'prada12', 
+		'klypin11', 'duffy08', 'bullock01']
+"""A list of all implemented concentration models."""
+
+###################################################################################################
+
 def concentration(M, mdef, z,
 				model = 'diemer15', statistic = 'median', conversion_profile = 'nfw',
 				range_return = False, range_warning = True):
@@ -269,17 +275,20 @@ def concentration(M, mdef, z,
 				except Exception:
 					j += 1
 
-			if MDelta is None:
-				msg = 'Could not find concentration for mass %.2e, mdef %s. The mask array indicates invalid concentrations.' % (MDelta, mdef)
-				warnings.warn(msg)
+			if MDelta is None or MDelta < 0.1:
+				if range_warning:
+					msg = 'Could not find concentration for model %s, mass %.2e, mdef %s. The mask array indicates invalid concentrations.' \
+						% (model, M_array[i], mdef)
+					warnings.warn(msg)
 				c[i] = 0.0
 				mask[i] = False
-				
-			cDelta, mask_element = evaluateC(func, MDelta, limited, args)
-			_, _, c[i] = mass_defs.changeMassDefinition(MDelta, cDelta, z, mdef_model,
-									mdef, profile = conversion_profile)
-			if limited:
-				mask[i] = mask_element
+			
+			else:
+				cDelta, mask_element = evaluateC(func, MDelta, limited, args)
+				_, _, c[i] = mass_defs.changeMassDefinition(MDelta, cDelta, z, mdef_model,
+										mdef, profile = conversion_profile)
+				if limited:
+					mask[i] = mask_element
 	
 		# If necessary, convert back to scalars
 		if not is_array:

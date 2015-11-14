@@ -87,10 +87,6 @@ class TCComp(CosmologyTestCase):
 		self.assertAlmostEqual(self.cosmo.Neff, defaults.COSMOLOGY_NEFF, places = TEST_N_DIGITS)
 		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 'storage': False})
 
-	# TODO
-	#def test_initNonFlat(self):
-		
-
 	###############################################################################################
 	# Basic cosmology calculations
 	###############################################################################################

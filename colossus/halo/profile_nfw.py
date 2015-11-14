@@ -123,7 +123,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		rs: array_like
 			The scale radius in physical kpc/h; has the same dimensions as M.
 		"""
-				
+		
 		rs = mass_so.M_to_R(M, z, mdef) / c
 		rhos = M / rs**3 / 4.0 / np.pi / cls.mu(c)
 		
