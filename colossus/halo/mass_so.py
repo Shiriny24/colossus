@@ -38,6 +38,9 @@ Critical   '<int>c'   200c, 500c, 2500c    An integer number times the critical 
 Virial     'vir'      vir                  An overdensity that varies with redshift (Bryan & Norman 1998)
 ========== ========== ==================== ================================================================
 
+Furthermore, spherical overdensity radii are commonly denoted by R<mdef> (e.g., R200m) and masses
+by M<mdef>, e.g. M500c.
+
 ---------------------------------------------------------------------------------------------------
 Module reference
 ---------------------------------------------------------------------------------------------------
@@ -47,11 +50,87 @@ Module reference
 
 import numpy as np
 
-from colossus.utils import constants
 from colossus.cosmology import cosmology
 
 ###################################################################################################
 # FUNCTIONS RELATED TO SPHERICAL OVERDENSITY MASSES
+###################################################################################################
+
+def parseMassDefinition(mdef):
+	"""
+	The type and overdensity of a given spherical overdensity mass definition.
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	mdef: str
+		The mass definition
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	mdef_type: str
+		Can either be based on the mean density (``mdef_type=='m'``), the critical density 
+		(``mdef_type=='m'``) or the virial overdensity (``mdef_type=='vir'``).
+	mdef_delta: int
+		The overdensity; if ``mdef_type=='vir'``, the overdensity depends on redshift, and this
+		parameter is None.
+	"""
+	
+	if mdef[-1] == 'c':
+		mdef_type = 'c'
+		mdef_delta = int(mdef[:-1])
+
+	elif mdef[-1] == 'm':
+		mdef_type = 'm'
+		mdef_delta = int(mdef[:-1])
+
+	elif mdef == 'vir':
+		mdef_type = 'vir'
+		mdef_delta = None
+
+	else:
+		msg = 'Invalid mass definition, %s.' % mdef
+		raise Exception(msg)
+	
+	return mdef_type, mdef_delta
+
+###################################################################################################
+
+def parseRadiusMassDefinition(rmdef):
+	"""
+	Parse a radius or mass identifier as well as the mass definition.
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	rmdef: str
+		The radius or mass identifier
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	radius_mass: str
+		Can be 'R' for radius or 'M' for mass.
+	mdef: str
+		The mdef the mass or radius are based on.
+	mdef_type: str
+		Can either be based on the mean density (``mdef_type=='m'``), the critical density 
+		(``mdef_type=='m'``) or the virial overdensity (``mdef_type=='vir'``).
+	mdef_delta: int
+		The overdensity; if ``mdef_type=='vir'``, the overdensity depends on redshift, and this
+		parameter is None.
+	"""
+		
+	if rmdef[0] in ['r', 'R']:
+		radius_mass = 'R'
+	elif rmdef[0] in ['m', 'M']:
+		radius_mass = 'M'
+	else:
+		msg = 'Invalid identifier, %s. Must be either R for radius or M for mass.' % rmdef[0]
+		raise Exception(msg)
+	
+	mdef = rmdef[1:]
+	mdef_type, mdef_delta = parseMassDefinition(mdef)
+	
+	return radius_mass, mdef, mdef_type, mdef_delta
+
 ###################################################################################################
 
 def densityThreshold(z, mdef):
@@ -76,21 +155,14 @@ def densityThreshold(z, mdef):
 	"""
 	
 	cosmo = cosmology.getCurrent()
-	rho_crit = constants.RHO_CRIT_0_KPC3 * cosmo.Ez(z)**2
-
-	if mdef[-1] == 'c':
-		delta = int(mdef[:-1])
-		rho_treshold = rho_crit * delta
-
-	elif mdef[-1] == 'm':
-		delta = int(mdef[:-1])
-		rho_m = constants.RHO_CRIT_0_KPC3 * cosmo.Om0 * (1.0 + z)**3
-		rho_treshold = delta * rho_m
-
-	elif mdef == 'vir':
-		delta = deltaVir(z)
-		rho_treshold = rho_crit * delta
-
+	mdef_type, mdef_delta = parseMassDefinition(mdef)
+	
+	if mdef_type == 'c':
+		rho_treshold = mdef_delta * cosmo.rho_c(z)
+	elif mdef_type == 'm':
+		rho_treshold = mdef_delta * cosmo.rho_m(z)
+	elif mdef_type == 'vir':
+		rho_treshold = deltaVir(z) * cosmo.rho_c(z)
 	else:
 		msg = 'Invalid mass definition, %s.' % mdef
 		raise Exception(msg)

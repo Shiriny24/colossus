@@ -29,7 +29,7 @@ from colossus.halo import profile_spline
 
 def main():
 
-	#demoProfiles()
+	demoProfiles()
 
 	#demoFittingLeastsq(profile = 'einasto', quantity = 'M', scatter = 0.1)
 	#demoFittingLeastsq(profile = 'nfw', quantity = 'Sigma', scatter = 0.1)
@@ -242,7 +242,7 @@ def demoProfiles():
 	rho_m = cosmo.rho_m(z)
 	
 	# Initialize profiles; create an outer power-law term with a pivot at 1 Mpc/h
-	outer_term = profile_outer.OuterTermRhoMean(z = z)
+	outer_term = profile_outer.OuterTermMeanDensity(z = z)
 	p = []
 	labels = []
 	p.append(profile_nfw.NFWProfile(M = M, c = c, z = z, mdef = mdef))
@@ -254,7 +254,7 @@ def demoProfiles():
 	p.append(profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, outer_term_names = ['mean']))
 	labels.append('DK14 (mean)')
 	p.append(profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, 
-									outer_term_names = ['mean', 'pl'], be = 1.0, se = 1.5))
+									outer_term_names = ['mean', 'cf'], be = 1.0, se = 1.5))
 	labels.append('DK14 (mean + pl)')
 
 	colors = ['darkblue', 'darkblue', 'firebrick', 'deepskyblue', 'deepskyblue']

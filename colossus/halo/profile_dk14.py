@@ -132,20 +132,23 @@ class DK14Profile(profile_base.HaloDensityProfile):
 			if outer_term_names[i] == 'mean':
 				if z is None:
 					raise Exception('Redshift z must be set if a mean density outer term is chosen.')
-				t = profile_outer.OuterTermRhoMean(z)
+				t = profile_outer.OuterTermMeanDensity(z)
 			
 			elif outer_term_names[i] == 'pl':
 				t = profile_outer.OuterTermPowerLaw(norm = be, slope = se, pivot = 'R200m', 
 								pivot_factor = 5.0, z = z, max_rho = power_law_max, 
 								norm_name = 'be', slope_name = 'se')
 			
-			elif outer_term_names[i] == 'ximm':
-				t = profile_outer.OuterTermXiMatterPowerLaw(norm = be, slope = se, pivot = 'R200m', 
-								pivot_factor = 5.0, z = z, max_rho = power_law_max, 
+			elif outer_term_names[i] == 'cf':
+				t = profile_outer.OuterTermCorrelationFunction(derive_bias_from = 'R200m', z = z)
+		
+			elif outer_term_names[i] == 'cfpl':
+				t = profile_outer.OuterTermCorrelationFunctionPowerLaw(norm = be, slope = se, 
+								derive_bias_from = 'R200m', z = z, max_rho = power_law_max, 
 								norm_name = 'be', slope_name = 'se')
 		
 			else:
-				msg = 'Unknown outer term, %s.' % (outer_terms[i])
+				msg = 'Unknown outer term name, %s.' % (outer_terms[i])
 				raise Exception(msg)
 		
 			outer_terms.append(t)
@@ -339,12 +342,19 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		
 		R200m_new = self.RDelta(self.opt['z'], '200m')
 		
-		# If the power law outer term relies on 
+		# If the power law outer term relies on R200m, we need to update the normalization. Note
+		# that this conversion is not quite accurate in the presence of a 1/m term.
+		
 		for i in range(len(self._outer_terms)):
 			if isinstance(self._outer_terms[i], profile_outer.OuterTermPowerLaw):
 				if self._outer_terms[i].term_opt['r_pivot'] == 'R200m':
-					self._outer_terms[i].changePivot(R200m_new)
-				
+					
+					old_norm, slope, r_pivot, _, _ = self._outer_terms[i]._getParameters()
+					new_pivot = R200m_new * self.opt[self.term_opt_names[1]]
+					new_norm = old_norm * (r_pivot / new_pivot)**slope
+					
+					self.par[self.term_par_names[0]] = new_norm
+
 		self.opt['R200m'] = R200m_new
 		
 		return

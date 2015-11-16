@@ -8,6 +8,22 @@
 """
 This module implements terms that describe the outer halo density profile. Specific terms are 
 derived from the :class:`OuterTerm` base class.
+
+---------------------------------------------------------------------------------------------------
+Specific outer terms
+---------------------------------------------------------------------------------------------------
+
+============================================ ===============================================================
+Class                                        Explanation
+============================================ ===============================================================
+:class:`OuterTermMeanDensity`                The mean matter density of the universe  
+:class:`OuterTermCorrelationFunction`        An estimate based on the matter-matter correlation function      
+:class:`OuterTermPowerLaw`                   A power-law profile
+============================================ ===============================================================
+
+---------------------------------------------------------------------------------------------------
+Module reference
+---------------------------------------------------------------------------------------------------
 """
 
 ###################################################################################################
@@ -22,20 +38,45 @@ from colossus.utils import utilities
 from colossus.utils import defaults
 from colossus.cosmology import cosmology
 from colossus.halo import mass_so
-from colossus.halo import bias
+from colossus.halo import bias as halo_bias
 
 ###################################################################################################
 # ABSTRACT BASE CLASS FOR OUTER PROFILE TERMS
 ###################################################################################################
 
-# The parameter and option names in this class are up to the user. This enables two kinds of 
-# behavior: first, potentially conflicting standard names can be changed, and second, the user can
-# "point" to an already existing parameter.
-
 @six.add_metaclass(abc.ABCMeta)
 class OuterTerm():
 	"""
 	Base class for outer profile terms.
+	
+	In colossus, the density profile is assumed to consist of an inner term (i.e., a description
+	of the 1-halo term, such as an NFW profile) as well as one or multiple outer terms which are 
+	added to the inner term. 
+	
+	These outer terms must be derived from the OuterTerm base class, and must at least overwrite 
+	the _density() routine. The derived outer terms must also, in their constructor, call the 
+	constructor of this class with the parameters specified below. The user interface to such
+	derived classes will, in general, be much simpler than the constructor of this super class.
+	
+	The user can then add one or multiple outer terms to a density profile by calling its 
+	constructor and passing a list of OuterTerm objects in the outer_terms argument (see the 
+	documentation of :class:`halo.profile_base.HaloDensityProfile`). Once the profile has been 
+	created, the outer terms themselves cannot be added or removed. Their parameters, however, can
+	be modified in the same ways as the parameters of the inner profile.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	par_array: list
+		A list of parameter values for the outer term.
+	opt_array: list
+		A list of option values for the outer term.
+	par_names: list
+		A list of parameter names, corresponding to the values passed in par_array. If these names
+		overlap with already existing parameters, the parameter is NOT added to the profile. 
+		Instead, the value of the existing parameter will be used. This behavior can be useful when
+		outer profile terms rely on parameters or options of the inner profile.
+	opt_names:
+		A list of option names, corresponding to the values passed in opt_array.
 	"""
 	
 	def __init__(self, par_array, opt_array, par_names, opt_names):
@@ -64,10 +105,7 @@ class OuterTerm():
 		self.N_opt = len(self.term_opt_names)
 		for i in range(self.N_opt):
 			self.term_opt[self.term_opt_names[i]] = opt_array[i]
-		
-		# Some other settings
-		#self.include_in_surface_density = True
-		
+
 		return
 
 	###############################################################################################
@@ -76,11 +114,46 @@ class OuterTerm():
 
 	@abc.abstractmethod
 	def _density(self, r):
+		"""
+		The density due to the outer term as a function of radius.
+		
+		Abstract function which must be overwritten by child classes.
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; guaranteed to be an array, even if of length 1.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		density: array_like
+			Density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions 
+			as r.
+		"""
+
 		return
 
 	###############################################################################################
 
 	def density(self, r):
+		"""
+		The density due to the outer term as a function of radius.
+		
+		This function provides a convenient wrapper around _density() by ensuring that the radius
+		values passed are a numpy array. This function should generally not be overwritten by 
+		child classes.
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		density: array_like
+			Density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions 
+			as r.
+		"""
 
 		r_array, is_array = utilities.getArray(r)
 		rho = self._density(r_array)
@@ -92,6 +165,23 @@ class OuterTerm():
 	###############################################################################################
 
 	def densityDerivativeLin(self, r):
+		"""
+		The linear derivative of the density due to the outer term, :math:`d \\rho / dr`. 
+
+		This function should be overwritten by child classes if there is an analytic, faster 
+		expression for the derivative.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		derivative: array_like
+			The linear derivative in physical :math:`M_{\odot} h / kpc^2`; has the same 
+			dimensions as r.
+		"""
 		
 		r_use, is_array = utilities.getArray(r)
 		density_der = 0.0 * r_use
@@ -106,43 +196,237 @@ class OuterTerm():
 # OUTER TERM: MEAN DENSITY
 ###################################################################################################
 
-class OuterTermRhoMean(OuterTerm):
+class OuterTermMeanDensity(OuterTerm):
+	"""
+	An outer term that adds the mean matter density of the universe to a density profile.
 	
-	def __init__(self, z):
+	This is perhaps the simplest outer term one can imagine. The only parameter is the redshift at
+	which the halo density profile is modeled. Note that this term is cosmology dependent, meaning
+	a cosmology has to be set before the constructor is called.
+	
+	Furthermore, note that a constant term such as this one means that the surface density cannot
+	be evaluated any more, since the integral over density will diverge. If the surface density
+	is to be evaluated, one should always remove constant outer terms from the profile.
+	
+	In this implementation, the redshift is added to the profile options rather than parameters,
+	meaning it cannot be varied in a fit.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	z: float
+		The redshift at which the profile is modeled.
+	z_name: str
+		The internal name of the redshift option. If this name is set to an already existing
+		profile option, the redshift is set to this other profile option, and thus not an
+		independent option any more.
+	"""
+
+	def __init__(self, z = None, z_name = 'z'):
 		
 		if z is None:
 			raise Exception('Redshift cannot be None.')
 		
-		OuterTerm.__init__(self, [], [z], [], ['z'])
-		
-		self.z = z
-		cosmo = cosmology.getCurrent()
-		self.rho_m = cosmo.rho_m(z)
-		
-		# This term should not be included when computing the surface density, as it leads to 
-		# a diverging integral.
-		#self.include_in_surface_density = False
-		
+		OuterTerm.__init__(self, [], [z], [], [z_name])
+
 		return
+
+	###############################################################################################
+
+	def _getParameters(self):
+
+		z = self.opt[self.term_opt_names[0]]
+		
+		return z
 
 	###############################################################################################
 
 	def _density(self, r):
 		
-		return np.ones((len(r)), np.float) * self.rho_m
+		z = self._getParameters()
+		cosmo = cosmology.getCurrent()
+		rho = np.ones((len(r)), np.float) * cosmo.rho_m(z)
+		
+		return rho
+
+###################################################################################################
+# OUTER TERM: HALO-MATTER CORRELATION FUNCTION
+###################################################################################################
+
+class OuterTermCorrelationFunction(OuterTerm):
+	"""
+	An outer term that adds an estimate based on the matter-matter correlation function.
+
+	The halo-matter correlation function on large scales, i.e. the outer density profile, can be 
+	modeled assuming linear bias, i.e. that the halo-matter correlation is a multiple of the
+	matter-matter correlation function, independent of radius:
+	
+	.. math::
+		\\rho(r) = \\rho_{\\rm m} \\times b(\\nu) \\times \\xi_{\\rm mm}
+		
+	where the multiple b is called the halo bias. Note that this implementation does not add the 
+	constant due to the mean density of the universe which is sometimes included in this 
+	so-called 2-halo term of the correlation function.
+	
+	The bias should be initialized to a physically motivated value. This cannot be performed by 
+	this class itself because the bias depends on mass, which circularly depends on the value of
+	bias due to the inclusion of this outer term. See the :mod:`halo.bias` module for models of the
+	bias as a function of halo mass.
+
+	In this implementation, the redshift is added to the profile options rather than parameters,
+	meaning it cannot be varied in a fit. The halo bias (i.e., the normalization of this outer 
+	term) is a parameter though and can be varied in a fit. 
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	z: float
+		The redshift at which the profile is modeled.
+	derive_bias_from: str or None
+		If None, the bias is passed through the bias parameter and added to the profile parameters.
+		If derive_bias_from is a string, it must correspond to a profile parameter or option. 
+		Furthermore, this parameter or option must represent a valid spherical overdensity mass or
+		radius such as 'R200m' or 'Mvir' from which the bias can be computed. If so, the bias is
+		updated from that quantity every time the density is computed. 
+	bias: float
+		The halo bias.
+	z_name: str
+		The internal name of the redshift option. If this name is set to an already existing
+		profile option, the redshift is set to this other profile option, and thus not an
+		independent option any more.
+	bias_name: str
+		The internal name of the bias parameter. If this name is set to an already existing
+		profile parameter, the bias is set to this other profile parameter, and thus not an
+		independent parameter any more.
+	"""
+
+	def __init__(self, z = None, derive_bias_from = None, bias = None, z_name = 'z', bias_name = 'bias'):
+		
+		if z is None:
+			raise Exception('Redshift cannot be None.')
+		
+		par_array = []
+		opt_array = [z]
+		par_names = []
+		opt_names = [z_name]
+		
+		if derive_bias_from is None:
+			if bias is None:
+				raise Exception('Bias cannot be None if derive_bias_from is None.')
+			par_array.append(bias)
+			par_names.append(bias_name)
+			self._derive_bias = False
+		else:
+			if bias is None:
+				bias = 0.0
+			_rm, self._bias_from_mdef, _, _ = mass_so.parseRadiusMassDefinition(derive_bias_from)
+			self._bias_from_radius = (_rm == 'R')
+			self._derive_bias = True
+			self._rm_bias_name = derive_bias_from
+			
+		OuterTerm.__init__(self, par_array, opt_array, par_names, opt_names)
+		
+		return
+
+	###############################################################################################
+
+	def _getParameters(self):
+
+		z = self.opt[self.term_opt_names[0]]
+		
+		if self._derive_bias:
+			if self._rm_bias_name in self.par:
+				rm_bias = self.par[self._rm_bias_name]
+			elif self._rm_bias_name in self.opt:
+				rm_bias = self.opt[self._rm_bias_name]
+			else:
+				msg = 'Could not find the parameter or option "%s".' % (self._rm_bias_name)
+				raise Exception(msg)
+
+			if self._bias_from_radius:
+				rm_bias = mass_so.R_to_M(rm_bias, z, self._bias_from_mdef)
+			
+			bias = halo_bias.haloBias(rm_bias, z, self._bias_from_mdef)
+			
+		else:
+			bias = self.par[self.term_par_names[0]]
+		
+		return z, bias
+
+	###############################################################################################
+
+	def _density(self, r):
+		
+		z, bias = self._getParameters()
+		cosmo = cosmology.getCurrent()
+		rho_m = cosmo.rho_m(z)
+		xi_mm = cosmo.correlationFunction(r / 1000.0 * (1 + z), z)
+		rho = rho_m * bias * xi_mm
+
+		return rho
 
 ###################################################################################################
 # OUTER TERM: POWER LAW
 ###################################################################################################
 
-# This class implements a power-law outer profile with a free normalization and slope, but a fixed
-# pivot radius. Note that the slope is inverted, i.e. a more positive slope means a steeper 
-# profile.
-#
-# The max_rho factor provides a convenient upper limit, since steep power-law profiles can lead to
-# a very high, unphysical density contribution at the halo center.
-
 class OuterTermPowerLaw(OuterTerm):
+	"""
+	An outer term that describes density as a power-law in radius. 
+	
+	This class implements a power-law outer profile with a free normalization and slope, and a 
+	fixed ior variable pivot radius,
+	
+	.. math::
+		\\rho(r) = \\frac{a \\times \\rho_m(z)}{\\frac{1}{m} + \\left(\\frac{r}{r_{\\rm pivot}}\\right)^{b}}
+		
+	where a is the normalization in units of the mean density of the universe, b the slope, and m 
+	the maximum contribution to the density this term can make. Without such a limit, sufficiently 
+	steep power-law profiles can lead to a spurious density contribution at the halo center. Note 
+	that the slope is inverted, i.e. that a more positive slope means a steeper profile.
+	
+	The user can also set the internal parameter names of the input variables. If these names are 
+	matched with an existing profile variable, that variable is used instead, meaning the outer
+	term variable is not independent any more.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	norm: float
+		The density normalization of the term, in units of the mean matter density of the universe.
+	slope: float
+		The slope of the power-law profile.
+	pivot: str
+		Can either be ``fixed``, in which case pivot_factor gives the pivot radius in physical 
+		units, or the name of one of the profile parameters or options. See the pivot_factor 
+		parameter below for details.
+	pivot_factor: float
+		There are fundamentally two ways to set the pivot radius. If ``pivot=='fixed'``, 
+		pivot_factor gives the pivot radius in physical kpc/h. Otherwise, pivot must indicate the
+		name of a profile parameter or option. In this case, the pivot radius is set to 
+		pivot_factor times the parameter or option in question. For example, for profiles based on
+		a scale radius, a pivot radius of :math:`2 r_s` can be set by passing ``pivot=='rs'`` and
+		``pivot_factor = 2``. 
+	z: float
+		The redshift at which the profile is modeled. 
+	max_rho: float
+		The maximum density in units of the normalization times the mean density of the universe.
+		This limit prevents spurious density contributions at the very center of halos. If you are
+		unsure what this parameter should be set to, it can be useful to plot the density 
+		contribution of the outer profile term. It should flatten to max_rho times norm times the 
+		mean density at a radius where the inner profile strongly dominates the density, i.e. 
+		where the contribution from the outer term does not matter.
+	norm_name: str
+		The internal name of the normalization parameter. If this name is set to an already existing
+		profile parameter, the normalization is set to this other profile parameter, and thus not an
+		independent parameter any more.
+	slope_name: str
+		The internal name of the slope parameter. See norm_name above.
+	pivot_name: str
+		The internal name of the pivot parameter. See norm_name above.
+	pivot_factor_name: str
+		The internal name of the pivot_factor parameter. See norm_name above.
+	z_name: str
+		The internal name of the redshift parameter. See norm_name above.
+	max_rho_name: str
+		The internal name of the maximum density parameter. See norm_name above.
+	"""
 	
 	def __init__(self, norm = None, slope = None, pivot = None, pivot_factor = None, 
 				z = None, max_rho = defaults.HALO_PROFILE_OUTER_PL_MAXRHO, 
@@ -233,22 +517,11 @@ class OuterTermPowerLaw(OuterTerm):
 		
 		return deriv
 
-	###############################################################################################
-	
-	# TODO correct this function; must include max_rho
-	def changePivot(self, new_pivot):
-		
-		norm, slope, r_pivot, _, _ = self._getParameters()
-		
-		self.par[self.term_par_names[0]] = norm * (r_pivot / new_pivot)**slope
-
-		return
-
 ###################################################################################################
 # OUTER TERM: 2-HALO TERM BASED ON THE MATTER-MATTER CORRELATION FUNCTION, TIMES POWER LAW
 ###################################################################################################
 
-class OuterTermXiMatterPowerLaw(OuterTerm):
+class OuterTermCorrelationFunctionPowerLaw(OuterTerm):
 	
 	def __init__(self, norm = None, slope = None, pivot = None, pivot_factor = None, 
 				z = None, max_rho = defaults.HALO_PROFILE_OUTER_PL_MAXRHO, 
@@ -317,7 +590,7 @@ class OuterTermXiMatterPowerLaw(OuterTerm):
 	
 			M200m = mass_so.R_to_M(self.owner.opt['R200m'], z, '200m')
 			#M200m = self.owner.MDelta(z, '200m')
-			b = bias.haloBias(M200m, z, '200m')
+			b = halo_bias.haloBias(M200m, z, '200m')
 			
 			rho[mask] = norm * rho_m * (1.0 / max_rho + xi_mm * b * (r_array[mask] / r_pivot)**slope)
 

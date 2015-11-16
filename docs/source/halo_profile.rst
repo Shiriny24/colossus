@@ -21,8 +21,10 @@ Some of the major design decisions regarding this class are:
   of the derived profile classes.
 * There are two fundamental aspects to a profile model: it's functional form, and the values of the
   parameters of this form. These parameters should be independent from each other, i.e., parameters
-  should not be derivable from the other parameters. Such derived variables should be stored as 
-  options rather than parameters.
+  should not be derivable from the other parameters.
+* Other quantities, such as settings and values derived from the parameters, are stored as options.
+  Options cannot be varied in a fit, and are not generally meant to be modified by the user once
+  the profile has been instantiated.
 * The functional form cannot be changed once the profile object has been
   instantiated, i.e., the user cannot change the outer profile terms, density function etc. 
 * The values of the parameters can be changed either directly by the user or during fitting. After
