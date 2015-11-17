@@ -277,6 +277,23 @@ class TCInterp(CosmologyTestCase):
 		self.assertAlmostEqual(self.cosmo.nonLinearMass(1.1), 98435044937.058929, places = TEST_N_DIGITS)				
 
 ###################################################################################################
+# TEST CASE 3: NON-FLAT COSMOLOGY
+###################################################################################################
+
+class TCNotFlat(CosmologyTestCase):
+
+	def setUp(self):
+		c = {'flat': False, 'H0': 70.00, 'Om0': 0.2700, 'OL0': 0.7, 'Ob0': 0.0469, 'sigma8': 0.8200, 'ns': 0.9500, 'relspecies': True}
+		cosmology.addCosmology('myCosmo', c)
+		self.assertTrue('myCosmo' in cosmology.cosmologies)
+		cosmology.setCosmology('myCosmo')
+		self.cosmo = cosmology.getCurrent()
+
+	def test_nonFlat(self):
+		self.assertAlmostEqual(self.cosmo.Ok0, 0.02991462406767552, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(self.cosmo.Ok(4.5), 0.019417039615692584, places = TEST_N_DIGITS)
+
+###################################################################################################
 # TRIGGER
 ###################################################################################################
 

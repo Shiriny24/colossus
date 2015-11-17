@@ -10,15 +10,24 @@ import unittest
 from colossus.tests import test_cosmology
 from colossus.tests import test_utils
 from colossus.tests import test_halo_bias
+from colossus.tests import test_halo_concentration
+from colossus.tests import test_halo_mass
 
 ###################################################################################################
 
-suite_cosmo1 = unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCComp)
-suite_cosmo2 = unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCInterp)
+suites = []
 
-suite_utils = unittest.TestLoader().loadTestsFromTestCase(test_utils.TCGen)
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCComp))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCInterp))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCNotFlat))
 
-suite_halo_bias = unittest.TestLoader().loadTestsFromTestCase(test_halo_bias.TCBias)
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_utils.TCGen))
 
-suite = unittest.TestSuite([suite_cosmo1, suite_cosmo2, suite_utils, suite_halo_bias])
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_bias.TCBias))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_concentration.TCConcentration))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_mass.TCMassSO))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_mass.TCMassDefs))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_mass.TCMassAdv))
+
+suite = unittest.TestSuite(suites)
 unittest.TextTestRunner(verbosity = 2).run(suite)

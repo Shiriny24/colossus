@@ -45,13 +45,26 @@ are converted into one another, we have to assume a form of the density profile.
 of the NFW profile makes this computation very fast."""
 
 ###################################################################################################
-# HALO PROFILE
+# HALO PROFILE (BASE CLASS)
+###################################################################################################
+
+HALO_PROFILE_ENCLOSED_MASS_ACCURACY = 1E-6
+"""Integration accuracy for enclosed mass."""
+HALO_PROFILE_SURFACE_DENSITY_ACCURACY = 1E-4
+"""Integration accuracy for surface density."""
+
+###################################################################################################
+# HALO PROFILE (SPECIFIC INNER PROFILES)
 ###################################################################################################
 
 HALO_PROFILE_DK14_BE = 1.0
 """The default normalization of the power-law outer profile for the DK14 profile."""
 HALO_PROFILE_DK14_SE = 1.5
 """The default slope of the power-law outer profile for the DK14 profile."""
+
+###################################################################################################
+# HALO PROFILE (SPECIFIC OUTER PROFILE TERMS)
+###################################################################################################
 
 HALO_PROFILE_OUTER_PL_MAXRHO = 1000.0
 """The default maximum density the power-law outer profile term can contribute to the total 

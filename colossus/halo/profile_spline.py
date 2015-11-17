@@ -9,6 +9,7 @@ import numpy as np
 import scipy.integrate
 import scipy.interpolate
 
+from colossus.utils import defaults
 from colossus.halo import profile_base
 
 ###################################################################################################
@@ -121,7 +122,7 @@ class SplineProfile(profile_base.HaloDensityProfile):
 	
 	###############################################################################################
 
-	def enclosedMass(self, r, accuracy = 1E-6):
+	def enclosedMass(self, r, accuracy = defaults.HALO_PROFILE_ENCLOSED_MASS_ACCURACY):
 
 		return self.enclosedMassInner(r) + self.enclosedMassOuter(r, accuracy)
 

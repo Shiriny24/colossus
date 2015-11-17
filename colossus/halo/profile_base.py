@@ -21,6 +21,7 @@ import collections
 import six
 import copy
 
+from colossus.utils import defaults
 from colossus.utils import utilities
 from colossus.utils import constants
 from colossus.utils import mcmc
@@ -477,7 +478,7 @@ class HaloDensityProfile():
 
 	###############################################################################################
 	
-	def enclosedMass(self, r, accuracy = 1E-6):
+	def enclosedMass(self, r, accuracy = defaults.HALO_PROFILE_ENCLOSED_MASS_ACCURACY):
 		"""
 		The mass enclosed within radius r.
 
@@ -498,7 +499,7 @@ class HaloDensityProfile():
 
 	###############################################################################################
 
-	def enclosedMassInner(self, r, accuracy = 1E-6):
+	def enclosedMassInner(self, r, accuracy = defaults.HALO_PROFILE_ENCLOSED_MASS_ACCURACY):
 		"""
 		The mass enclosed within radius r due to the inner profile term.
 
@@ -519,7 +520,7 @@ class HaloDensityProfile():
 
 	###############################################################################################
 
-	def enclosedMassOuter(self, r, accuracy = 1E-6):
+	def enclosedMassOuter(self, r, accuracy = defaults.HALO_PROFILE_ENCLOSED_MASS_ACCURACY):
 		"""
 		The mass enclosed within radius r due to the outer profile term.
 
@@ -626,7 +627,8 @@ class HaloDensityProfile():
 
 	# Integrate in log space
 	
-	def _surfaceDensity(self, r, density_func, accuracy = 1E-4, interpolate = True):
+	def _surfaceDensity(self, r, density_func, 
+					accuracy = defaults.HALO_PROFILE_SURFACE_DENSITY_ACCURACY, interpolate = True):
 		
 		def integrand_interp(logr, R2, interp):
 			r2 = np.exp(logr)**2
@@ -673,7 +675,8 @@ class HaloDensityProfile():
 	# The surface density of the outer profile can be tricky, since some outer terms lead to a 
 	# diverging integral. Thus, constant terms such as rho_m need to be ignored in this function.
 	
-	def surfaceDensity(self, r, accuracy = 1E-4, interpolate = True):
+	def surfaceDensity(self, r, 
+					accuracy = defaults.HALO_PROFILE_SURFACE_DENSITY_ACCURACY, interpolate = True):
 		"""
 		The projected surface density at radius r.
 
@@ -698,7 +701,8 @@ class HaloDensityProfile():
 
 	###############################################################################################
 
-	def surfaceDensityInner(self, r, accuracy = 1E-4, interpolate = True):
+	def surfaceDensityInner(self, r, 
+					accuracy = defaults.HALO_PROFILE_SURFACE_DENSITY_ACCURACY, interpolate = True):
 		"""
 		The projected surface density at radius r due to the inner profile.
 
@@ -723,7 +727,8 @@ class HaloDensityProfile():
 
 	###############################################################################################
 
-	def surfaceDensityOuter(self, r, accuracy = 1E-4, interpolate = True):
+	def surfaceDensityOuter(self, r, 
+					accuracy = defaults.HALO_PROFILE_SURFACE_DENSITY_ACCURACY, interpolate = True):
 		"""
 		The projected surface density at radius r due to the outer profile.
 
