@@ -4,9 +4,11 @@
 #     				    	     benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
-#
-# Sample code demonstrating the usage of the concentration.py module. 
-#
+
+"""
+Sample code demonstrating the usage of the halo.concentration module.
+"""
+
 ###################################################################################################
 
 import numpy as np
@@ -20,18 +22,18 @@ from colossus.halo import profile_nfw
 
 def main():
 	
-	computeConcentration()
-	#computeConcentrationTable('WMAP9')
-	#computeAllTables()
+	demoConcentration()
+	#demoConcentrationTable('WMAP9')
 
 	return
 
 ###################################################################################################
 
-# A small demonstration of the concentration model. This function outputs the concentrations in 
-# the virial and 200c mass definitions, for three halo masses, in the WMAP9 cosmology.
-
-def computeConcentration():
+def demoConcentration():
+	"""
+	A small demonstration of the concentration model: output the concentrations in the virial and 
+	200c mass definitions, for three halo masses, in the WMAP9 cosmology.
+	"""
 	
 	M = np.array([1E9, 1E12, 1E15])
 
@@ -60,24 +62,11 @@ def computeConcentration():
 
 ###################################################################################################
 
-# Create data tables for a range of cosmologies.
-
-def computeAllTables():
-	
-	cosmos = ['bolshoi', 'millennium', 'planck15', 'planck15-only', 'planck13', 'planck13-only',
-			'WMAP9', 'WMAP9-ML', 'WMAP9-only', 'WMAP7', 'WMAP7-ML', 'WMAP7-only',
-			'WMAP5', 'WMAP5-ML', 'WMAP5-only']
-	for c in cosmos:
-		computeConcentrationTable(c)
-
-	return
-
-###################################################################################################
-
-# Create a file with a table of concentrations for a range of redshifts, halo masses, and mass
-# definitions.
-
-def computeConcentrationTable(cosmo_name):
+def demoConcentrationTable(cosmo_name):
+	"""
+	Create a file with a table of concentrations according to the Diemer & Kravtsov 2015 model for 
+	a range of redshifts, halo masses, and mass definitions.	
+	"""
 	
 	cosmo = cosmology.setCosmology(cosmo_name)
 	mdefs = ['2500c', '500c', 'vir', '200m']
@@ -120,7 +109,7 @@ def computeConcentrationTable(cosmo_name):
 	# Write block for each redshift
 	for i in range(len(z)):
 
-		print(z[i])
+		print('z = %.2f' % z[i])
 
 		if z[i] > 5.0:
 			nu_min = 1.0
@@ -142,14 +131,26 @@ def computeConcentrationTable(cosmo_name):
 			for k in range(len(mdefs)):
 				R_delta_median, M_delta_median = prof_median.RMDelta(z[i], mdefs[k])
 				R_delta_mean, M_delta_mean = prof_mean.RMDelta(z[i], mdefs[k])
-				c_delta_median = R_delta_median / prof_median.rs
-				c_delta_mean = R_delta_mean / prof_mean.rs
+				c_delta_median = R_delta_median / prof_median.par['rs']
+				c_delta_mean = R_delta_mean / prof_mean.par['rs']
 				line += '  %8.2e  %5.2f  %8.2e  %5.2f' % (M_delta_median, c_delta_median, M_delta_mean, c_delta_mean)
 			line += '\n'
 			f.write(line)
 			
 	f.close()
 	
+	return
+
+###################################################################################################
+
+def _outputAllTables():
+	
+	cosmos = ['bolshoi', 'millennium', 'planck15', 'planck15-only', 'planck13', 'planck13-only',
+			'WMAP9', 'WMAP9-ML', 'WMAP9-only', 'WMAP7', 'WMAP7-ML', 'WMAP7-only',
+			'WMAP5', 'WMAP5-ML', 'WMAP5-only']
+	for c in cosmos:
+		demoConcentrationTable(c)
+
 	return
 
 ###################################################################################################

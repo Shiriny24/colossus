@@ -62,6 +62,48 @@ Class                                        Explanation                     Pap
 ============================================ =============================== ========================= =============
 
 ---------------------------------------------------------------------------------------------------
+Example of derived profile class
+---------------------------------------------------------------------------------------------------
+
+It is easy to create a new form of the density profile in colossus. For example, let us create a
+Hernquist profile. All we have to do is:
+
+* Set the arrays of parameters and options our profile class will have
+* Call the super class' constructor
+* Set the profile parameters that were passed to the constructor
+* Overwrite the density function (note that the function should be able to take either a number
+  or a numpy array for the radius)
+
+Here is the code::
+
+    class HernquistProfile(profile_base.HaloDensityProfile):
+        
+        def __init__(self, rhos, rs):
+            
+            self.par_names = ['rhos', 'rs']
+            self.opt_names = []
+            profile_base.HaloDensityProfile.__init__(self)
+            
+            self.par['rhos'] = rhos
+            self.par['rs'] = rs
+            
+            return
+        
+        def densityInner(self, r):
+        
+            x = r / self.par['rs']
+            density = self.par['rhos'] / x / (1.0 + x)**3
+            
+            return density
+      
+This derived class inherits all the functionality of the parent class, including other physical
+quantities (enclosed mass, surface density etc), derivatives, fitting to data, and the ability to
+add outer profile terms. In order to make this class more convenient to use and faster, we could 
+improve it by letting the user pass mass and concentration to the constructor and computing rhos 
+and rs, and overwriting more methods such as the density derivative and enclosed mass of the
+Hernquist profile.
+
+---------------------------------------------------------------------------------------------------
 Profile fitting
 ---------------------------------------------------------------------------------------------------
 

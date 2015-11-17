@@ -5,6 +5,12 @@
 #
 ###################################################################################################
 
+"""
+Sample code demonstrating the usage of the various utils.mcmc module.
+"""
+
+###################################################################################################
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -14,40 +20,33 @@ from colossus.utils import mcmc
 
 def main():
 
-	testMCMC(plot_output = True)
+	demoMCMC()
 
 	return
 
 ###################################################################################################
 
-# This function demonstrates the use of the MCMC module. If we want to plot the chain, we need to 
-# obtain it from the runChain function. If we only want a basic analysis, such as the mean and 
-# median of the chain, we can use the very simple run() function.
 
-def testMCMC(plot_output = True):
-
+def demoMCMC():
+	"""
+	This function demonstrates the use of the MCMC module for a likelihood with correlated
+	parameters.
+	"""
+	
 	n_params = 2
 	param_names = ['x1', 'x2']
-	x_initial = np.ones((n_params), np.float)
-	
-	if plot_output:
-		walkers = mcmc.initWalkers(x_initial, nwalkers = 200, random_seed = 156)
-		chain_thin, chain_full, _ = mcmc.runChain(likelihood, walkers)
-		mcmc.analyzeChain(chain_thin, param_names = param_names)
-		mcmc.plotChain(chain_full, param_names)
-		plt.savefig('MCMC_Gaussian.pdf')
+	x_initial = np.ones((n_params), np.float)	
+	walkers = mcmc.initWalkers(x_initial, nwalkers = 200, random_seed = 156)
+	chain_thin, chain_full, _ = mcmc.runChain(_likelihood, walkers)
+	mcmc.analyzeChain(chain_thin, param_names = param_names)
+	mcmc.plotChain(chain_full, param_names)
+	plt.show()
 
-	else:
-		mcmc.run(x_initial, likelihood)	
-		
 	return
 
 ###################################################################################################
 
-# The likelihood of two Gaussian parameters with means 0, different sigmas, and a strong correlation 
-# between the parameters.
-
-def likelihood(x):
+def _likelihood(x):
 	
 	sig1 = 1.0
 	sig2 = 2.0

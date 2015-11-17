@@ -69,6 +69,7 @@ Contents
     cosmology_cosmology
     halo
     utils
+    demos
 
 * :ref:`genindex`
 * :ref:`modindex`

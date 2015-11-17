@@ -4,9 +4,11 @@
 #     				    	    benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
-#
-# Sample code demonstrating the usage of the halo.profile module. 
-#
+
+"""
+Sample code demonstrating the usage of the various halo.mass_* modules.
+"""
+
 ###################################################################################################
 
 import numpy as np
@@ -21,14 +23,17 @@ from colossus.halo import mass_defs
 
 def main():
 
-	#compareDensityThresholds()
-	#demonstrateMassDefinitions()
+	demoDensityThresholds()
+	#demoMassDefinitions()
 
 	return
 
 ###################################################################################################
 
-def compareDensityThresholds():
+def demoDensityThresholds():
+	"""
+	Make a plot of the matter, critical and virial density criteria across redshift.
+	"""
 
 	cosmology.setCosmology('bolshoi')
 	
@@ -66,9 +71,10 @@ def compareDensityThresholds():
 
 ###################################################################################################
 
-# Convert one mass definition to another, assuming an NFW profile
-
-def demonstrateMassDefinitions():
+def demoMassDefinitions():
+	"""
+	Convert one mass definition to another, assuming an NFW profile.
+	"""
 	
 	Mvir = 1E12
 	cvir = 10.0

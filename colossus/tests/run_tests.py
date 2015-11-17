@@ -12,6 +12,7 @@ from colossus.tests import test_utils
 from colossus.tests import test_halo_bias
 from colossus.tests import test_halo_concentration
 from colossus.tests import test_halo_mass
+from colossus.tests import test_halo_profile
 
 ###################################################################################################
 
@@ -28,6 +29,7 @@ suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_concentratio
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_mass.TCMassSO))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_mass.TCMassDefs))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_mass.TCMassAdv))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_profile.TCBase))
 
 suite = unittest.TestSuite(suites)
 unittest.TextTestRunner(verbosity = 2).run(suite)

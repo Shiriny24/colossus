@@ -338,13 +338,13 @@ class HaloDensityProfile():
 		"""
 		
 		r_use, is_array = utilities.getArray(r)
-		density_der = 0.0 * r_use
+		rho_der = 0.0 * r_use
 		for i in range(len(r_use)):	
-			density_der[i] = scipy.misc.derivative(self.densityInner, r_use[i], dx = 0.001, n = 1, order = 3)
+			rho_der[i] = scipy.misc.derivative(self.densityInner, r_use[i], dx = 0.001, n = 1, order = 3)
 		if not is_array:
-			density_der = density_der[0]
+			rho_der = rho_der[0]
 
-		return self._densityDerivativeLin(r, self.densityInner)
+		return rho_der
 
 	###############################################################################################
 	
