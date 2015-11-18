@@ -48,14 +48,18 @@ from matplotlib.colors import LogNorm
 import matplotlib.gridspec as gridspec
 
 from colossus.utils import utilities
+from colossus.utils import defaults
 
 ###################################################################################################
 
 def run(x_initial, L_func, args = (), verbose = True,
 		# Options for the initial walker placement
-		initial_step = 0.1, nwalkers = 100, random_seed = None,
+		initial_step = defaults.MCMC_INITIAL_STEP, 
+		nwalkers = defaults.MCMC_N_WALKERS, 
+		random_seed = None,
 		# Options for the MCMC chain
-		convergence_step = 100, converged_GR = 0.01, 
+		convergence_step = defaults.MCMC_CONVERGENCE_STEP, 
+		converged_GR = defaults.MCMC_CONVERGED_GR, 
 		# Options for the analysis of the chain
 		param_names = None, percentiles = [68.27, 95.45, 99.73]):
 	"""
@@ -77,7 +81,9 @@ def run(x_initial, L_func, args = (), verbose = True,
 
 ###################################################################################################
 
-def initWalkers(x_initial, initial_step = 0.1, nwalkers = 100, random_seed = None):
+def initWalkers(x_initial, 
+			initial_step = defaults.MCMC_INITIAL_STEP, 
+			nwalkers = defaults.MCMC_N_WALKERS, random_seed = None):
 	"""
 	Create a set of MCMC walkers.
 	
@@ -130,11 +136,11 @@ def initWalkers(x_initial, initial_step = 0.1, nwalkers = 100, random_seed = Non
 
 ###################################################################################################
 
-def runChain(L_func, walkers, args = (), convergence_step = 100, converged_GR = 0.01,
-			verbose = True, output_every_n = 100):
+def runChain(L_func, walkers, args = (), 
+			convergence_step = defaults.MCMC_CONVERGENCE_STEP, 
+			converged_GR = defaults.MCMC_CONVERGED_GR,
+			verbose = True, output_every_n = defaults.MCMC_OUTPUT_EVERY_N):
 	"""
-	Run an MCMC chain.
-	
 	Run an MCMC chain using the Goodman & Weare (2010) algorithm. 
 	
 	Parameters

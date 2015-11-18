@@ -56,7 +56,7 @@ def demoConcentration():
 	utilities.printLine()
 	print("We note that the prediction for mass definitions other than c200c is not as accurate")
 	print("due to differences between the real density profiles and the NFW approximation that")
-	print("is used for the conversion. See Appendix C of Diemer & Kravtsov 2014b for details.")
+	print("is used for the conversion. See Appendix C of Diemer & Kravtsov 2015 for details.")
 	
 	return
 
@@ -77,7 +77,8 @@ def demoConcentrationTable(cosmo_name):
 
 	# Write file header
 	f = open('cM_%s.txt' % (cosmo_name), 'w')
-	line = '# This file contains concentrations according to the model of Diemer & Kravtsov 2014. The model natively predicts the mean and median c200c. For all other mass definitions,\n'
+	line = '# This file contains concentrations according to the model of Diemer & Kravtsov 2015. \
+		The model natively predicts the mean and median c200c. For all other mass definitions,\n'
 	f.write(line)
 	line = '# the halo mass and concentrations are converted using either the mean or median c200c.\n'
 	f.write(line)

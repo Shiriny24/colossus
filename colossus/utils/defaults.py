@@ -71,3 +71,19 @@ HALO_PROFILE_OUTER_PL_MAXRHO = 1000.0
 density. If this number is set too high, the power-law profile can lead to a spurious density 
 contribution at very small radii, if it is set too high the power-law term will not contribute
 at all."""
+
+###################################################################################################
+# MCMC
+###################################################################################################
+
+MCMC_N_WALKERS = 100
+"""The number of chains (called walkers) run in parallel."""
+MCMC_INITIAL_STEP = 0.1
+"""A guess at the initial step taken by the walkers."""
+MCMC_CONVERGENCE_STEP = 100
+"""Test the convergence of the MCMC chains every n steps."""
+MCMC_CONVERGED_GR = 0.01
+"""Take the chains to have converged when the Gelman-Rubin statistic is smaller than this number
+in all parameters."""
+MCMC_OUTPUT_EVERY_N = 100
+"""Output the current state of the chain every n steps."""
