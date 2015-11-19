@@ -24,28 +24,25 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	The Diemer & Kravtsov 2014 density profile.
 	
 	This profile corresponds to an Einasto profile at small radii, and steepens around the virial 
-	radius. At large radii, the profile approaches a power-law in r. The profile formula has 8
-	free parameters, but most of those are fixed to particular values that depend on the mass and
-	mass accretion rate of a halo. This can be done automatically, the user only needs to pass the 
-	mass of a halo, and optionally concentration. However, there are some further options.
+	radius. The profile formula has 6 free parameters, but most of those are fixed to particular 
+	values that depend on the mass and mass accretion rate of a halo. The parameter values, and 
+	their dependence on mass etc, are explained in Section 3.3 of Diemer & Kravtsov 2014.
 	
 	======= ================ ===================================================================================
 	Param.  Symbol           Explanation	
 	======= ================ ===================================================================================
-	R200m	:math:`R_{200m}` The radius that encloses and average overdensity of 200 :math:`\\rho_m(z)`
 	rhos	:math:`\\rho_s`   The central scale density, in physical :math:`M_{\odot} h^2 / kpc^3`
 	rs      :math:`r_s`      The scale radius in physical kpc/h
 	rt      :math:`r_t`      The radius where the profile steepens, in physical kpc/h
 	alpha   :math:`\\alpha`   Determines how quickly the slope of the inner Einasto profile steepens
 	beta    :math:`\\beta`    Sharpness of the steepening
 	gamma	:math:`\\gamma`   Asymptotic negative slope of the steepening term
-	be      :math:`b_e`      Normalization of the power-law outer profile
-	se      :math:`s_e`      Slope of the power-law outer profile
-	parts   ---              'inner', 'outer', or 'both' (default)
+	R200m	:math:`R_{200m}` The radius that encloses and average overdensity of 200 :math:`\\rho_m(z)`
 	======= ================ ===================================================================================
-		
-	The profile has two parts, the 1-halo term (``inner``) and the 2-halo term (``outer``). By default, 
-	the function returns their sum (``both``).
+	
+	The user does not have to pass the values of these parameters, but can instead pass a 
+	spherical overdensity mass and (optionally) concentration. The conversion to the native 
+	parameters relies on the calibrations in DK14. 
 	
 	The profile was calibrated for the median and mean profiles of two types of halo samples, 
 	namely samples selected by mass, and samples selected by both mass and mass accretion rate. 
@@ -54,21 +51,16 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	in a more accurate representation of the density profile, but the mass accretion rate must be 
 	known. 
 	
-	Furthermore, the parameters for the power-law outer profile (be and se) exhibit a complicated 
-	dependence on halo mass, redshift and cosmology. At the moment, they are not automatically 
-	determined and must be set by the user if ``part == both``, i.e. if the outer profile is to
-	be included which is recommended if the profile is to be reliable beyond the virial radius. 
-	At low redshift, and for the cosmology considered in our paper, ``be = 1.0`` and ``se = 1.5`` 
-	are good values over a wide range of masses (see Figure 18 in Diemer & Kravtsov 2014). 
-	
-	The parameter values, and their dependence on mass etc, are explained in Section 3.3 of
-	Diemer & Kravtsov 2014.
-	
-	Get the native DK14 parameters given a halo mass, and possibly concentration.
-	
-	Get the DK14 parameters that correspond to a profile with a particular mass M in some mass
-	definition mdef. Optionally, the user can define the concentration c; otherwise, it is 
-	computed automatically. 
+	If the profile is chosen to model halo samples selected by mass (``selected_by = 'M'``),
+	we set beta = 4 and gamma = 8. If the sample is selected by both mass and mass 
+	accretion rate (``selected_by = 'Gamma'``), we set beta = 6 and gamma = 4. Those choices
+	result in a different calibration of the turnover radius rt. In the latter case, both z and 
+	Gamma must not be None. See the :func:`deriveParameters` function for more details.
+
+	The DK14 profile only makes sense if some description of the outer profile is added to this
+	inner term. Adding these terms is easy using the :func:`getDK14ProfileWithOuterTerms` 
+	function. Alternatively, the user can pass a list of OuterTerm objects (see documentation 
+	of the :class:`halo.profile_base.HaloDensityProfile` parent class).
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -81,24 +73,12 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	mdef: str
 		The mass definition to which M corresponds.
 	selected_by: str
-		The halo sample to which this profile refers can be selected ``by_mass`` or 
-		``by_accretion_rate``. This parameter influences how some of the fixed parameters in the 
+		The halo sample to which this profile refers can be selected mass ``M`` or by accretion
+		rate ``Gamma``. This parameter influences how some of the fixed parameters in the 
 		profile are set, in particular those that describe the steepening term.
 	Gamma: float
 		The mass accretion rate as defined in DK14. This parameter only needs to be passed if 
-		``selected == by_accretion_rate``.
-	part: str
-		Can be ``both`` or ``inner``. This parameter is simply passed into the return structure. The 
-		value ``outer`` makes no sense in this function, since the outer profile alone cannot be 
-		normalized to have the mass M.
-	be: float
-		Normalization of the power-law outer profile. Only needs to be passed if ``part == both``.
-		The best-fit be and se parameters depend on redshift, halo mass, cosmology etc,
-		and there is no convenient formula to describe their values. At low redshift, ``be = 1.0``
-		and ``se = 1.5`` are a good assumption (see Figure 18 in Diemer & Kravtsov 2014). 
-	se: float
-		Slope of the power-law outer profile (see parameter ``be`` above). Only needs to be 
-		passed if ``part == both``.
+		``selected_by == 'Gamma'``.
 	acc_warn: float
 		If the function achieves a relative accuracy in matching M less than this value, a warning 
 		is printed.
@@ -111,47 +91,17 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	# CONSTRUCTOR
 	###############################################################################################
 	
-	def __init__(self, rhos = None, rs = None, rt = None, alpha = None, beta = None, gamma = None, 
-				R200m = None,
-				M = None, c = None, z = None, mdef = None,
-				selected_by = 'M', Gamma = None, 
-				outer_term_names = ['mean', 'pl'], 
-				be = defaults.HALO_PROFILE_DK14_BE, se = defaults.HALO_PROFILE_DK14_SE,
-				power_law_max = defaults.HALO_PROFILE_OUTER_PL_MAXRHO, 
-				acc_warn = 0.01, acc_err = 0.05):
+	def __init__(self, rhos = None, rs = None, rt = None, alpha = None, beta = None, gamma = None, R200m = None,
+				M = None, c = None, z = None, mdef = None, 
+				selected_by = defaults.HALO_PRPFOLE_DK14_SELECTED_BY, Gamma = None, 
+				outer_terms = [], 
+				acc_warn = defaults.HALO_PROFILE_DK14_ACC_WARN, 
+				acc_err = defaults.HALO_PROFILE_DK14_ACC_ERR):
 	
 		# Set the fundamental variables par_names and opt_names
 		self.par_names = ['rhos', 'rs', 'rt', 'alpha', 'beta', 'gamma']
 		self.opt_names = ['selected_by', 'Gamma', 'R200m']
 		self.fit_log_mask = np.array([False, False, False, False, False, False])
-
-		# Set outer terms
-		outer_terms = []
-		for i in range(len(outer_term_names)):
-			
-			if outer_term_names[i] == 'mean':
-				if z is None:
-					raise Exception('Redshift z must be set if a mean density outer term is chosen.')
-				t = profile_outer.OuterTermMeanDensity(z)
-			
-			elif outer_term_names[i] == 'pl':
-				t = profile_outer.OuterTermPowerLaw(norm = be, slope = se, pivot = 'R200m', 
-								pivot_factor = 5.0, z = z, max_rho = power_law_max, 
-								norm_name = 'be', slope_name = 'se')
-			
-			elif outer_term_names[i] == 'cf':
-				t = profile_outer.OuterTermCorrelationFunction(derive_bias_from = 'R200m', z = z)
-		
-			elif outer_term_names[i] == 'cfpl':
-				t = profile_outer.OuterTermCorrelationFunctionPowerLaw(norm = be, slope = se, 
-								derive_bias_from = 'R200m', z = z, max_rho = power_law_max, 
-								norm_name = 'be', slope_name = 'se')
-		
-			else:
-				msg = 'Unknown outer term name, %s.' % (outer_terms[i])
-				raise Exception(msg)
-		
-			outer_terms.append(t)
 		
 		# Run the constructor
 		profile_base.HaloDensityProfile.__init__(self, outer_terms = outer_terms)
@@ -166,8 +116,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		self.opt['R200m'] = R200m
 		
 		if rhos is not None and rs is not None and rt is not None and alpha is not None \
-			and beta is not None and gamma is not None and be is not None and se is not None \
-			and R200m is not None:
+			and beta is not None and gamma is not None and R200m is not None:
 			self.par['rhos'] = rhos
 			self.par['rs'] = rs
 			self.par['rt'] = rt
@@ -187,37 +136,69 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	# STATIC METHODS
 	###############################################################################################
 
-	# This function returns various calibrations of rt / R200m. Depending on selected, the chosen
-	# beta and gamma are different, and thus rt is rather different. 
-	#
-	# If selected ==  by_nu, we use Equation 6 in DK14. Though this relation was originally 
-	# calibrated for nu = nu_vir, the difference is small (<5%). 
-	#
-	# If selected == by_accretion_rate, there are multiple ways to calibrate the relation: from 
-	# Gamma and z directly, or for the nu-selected samples but fitted like the accretion 
-	# rate-selected samples (i.e., with beta = 6 and gamma = 4).
-
 	@staticmethod
-	def rtOverR200m(selected_by, nu200m = None, z = None, Gamma = None):
+	def deriveParameters(selected_by, nu200m = None, z = None, Gamma = None):
+		"""
+		Calibration of the parameters alpha, beta, gamma, and the turnover radius rt.
+
+		This function determines the values of those parameters in the DK14 profile that can be 
+		calibrated based on mass, and potentially mass accretion rate. 
+
+		If the profile is chosen to model halo samples selected by mass (``selected_by = 'M'``),
+		we set beta = 4 and gamma = 8. If the sample is selected by both mass and mass 
+		accretion rate (``selected_by = 'Gamma'``), we set beta = 6 and gamma = 4. 
 		
+		Those choices result in a different calibration of the turnover radius rt. If 
+		``selected_by = 'M'``, we use Equation 6 in DK14. Though this relation was originally 
+		calibrated for nu = nu_vir, but the difference is small. If ``selected_by = 'Gamma'``, 
+		rt is calibrated from Gamma and z.
+
+		Finally, the parameter that determines how quickly the Einasto profile steepens with
+		radius, alpha, is calibrated according to the Gao et al. 2008 relation between alpha and 
+		nu. This function was originally calibrated for nu = nu_vir, but the difference is very 
+		small.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		selected_by: str
+			The halo sample to which this profile refers can be selected mass ``M`` or by accretion
+			rate ``Gamma``.
+		nu200m: float
+			The peak height of the halo for which the parameters are to be calibrated, based on
+			M200m. This parameter only needs to be passed if ``selected_by == 'M'``.
+		z: float
+			Redshift
+		Gamma: float
+			The mass accretion rate as defined in DK14. This parameter only needs to be passed if 
+			``selected_by == 'Gamma'``.
+		"""
+
 		if selected_by == 'M':
-			ratio = 1.9 - 0.18 * nu200m
-		
+			beta = 4.0
+			gamma = 8.0
+			if (nu200m is not None):
+				rt_R200m = 1.9 - 0.18 * nu200m
+			else:
+				msg = 'Need nu200m to compute rt.'
+				raise Exception(msg)				
+			
 		elif selected_by == 'Gamma':
+			beta = 6.0
+			gamma = 4.0
 			if (Gamma is not None) and (z is not None):
 				cosmo = cosmology.getCurrent()
-				ratio =  0.43 * (1.0 + 0.92 * cosmo.Om(z)) * (1.0 + 2.18 * np.exp(-Gamma / 1.91))
-			elif nu200m is not None:
-				ratio = 0.79 * (1.0 + 1.63 * np.exp(-nu200m / 1.56))
+				rt_R200m =  0.43 * (1.0 + 0.92 * cosmo.Om(z)) * (1.0 + 2.18 * np.exp(-Gamma / 1.91))
 			else:
-				msg = 'Need either Gamma and z, or nu.'
+				msg = 'Need Gamma and z to compute rt.'
 				raise Exception(msg)
-		
+
 		else:
 			msg = "Unknown sample selection, %s." % (selected_by)
 			raise Exception(msg)
-		
-		return ratio
+
+		alpha = 0.155 + 0.0095 * nu200m**2
+
+		return alpha, beta, gamma, rt_R200m
 
 	###############################################################################################
 	# METHODS BOUND TO THE CLASS
@@ -248,7 +229,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 			nu200m = cosmo.peakHeight(M200m, z)
 
 			self.par['alpha'], self.par['beta'], self.par['gamma'], rt_R200m = \
-				self.getFixedParameters(selected_by, nu200m = nu200m, z = z, Gamma = Gamma)
+				self.deriveParameters(selected_by, nu200m = nu200m, z = z, Gamma = Gamma)
 			self.par['rt'] = rt_R200m * R200m
 			self.par['rhos'] *= self._normalizeInner(R200m, M200m)
 
@@ -270,7 +251,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 			self.opt['R200m'] = mass_so.M_to_R(M200m, z, '200m')
 			nu200m = cosmo.peakHeight(M200m, z)
 			self.par['alpha'], self.par['beta'], self.par['gamma'], rt_R200m = \
-				self.getFixedParameters(selected_by, nu200m = nu200m, z = z, Gamma = Gamma)
+				self.deriveParameters(selected_by, nu200m = nu200m, z = z, Gamma = Gamma)
 			self.par['rt'] = rt_R200m * self.opt['R200m']
 
 			# Guess rhos = 1.0, then re-normalize			
@@ -306,37 +287,14 @@ class DK14Profile(profile_base.HaloDensityProfile):
 
 	###############################################################################################
 
-	# Get the parameter values for the DK14 profile that should be fixed, or can be determined from the 
-	# peak height or mass accretion rate. If selected is 'by_mass', only nu must be passed. If selected 
-	# is 'by_accretion_rate', then both z and Gamma must be passed.
-	
-	def getFixedParameters(self, selected_by, nu200m = None, z = None, Gamma = None):
-	
-		if selected_by == 'M':
-			beta = 4.0
-			gamma = 8.0
-			rt_R200m = self.rtOverR200m('M', nu200m = nu200m)
-		elif selected_by == 'Gamma':
-			beta = 6.0
-			gamma = 4.0
-			rt_R200m = self.rtOverR200m('Gamma', z = z, Gamma = Gamma)
-		else:
-			msg = "Unknown sample selection, %s." % (selected_by)
-			raise Exception(msg)
-		
-		# Gao et al. 2008 relation between alpha and nu. This function was originally calibrated for 
-		# nu = nu_vir, but the difference is very small.
-		alpha = 0.155 + 0.0095 * nu200m**2
-
-		return alpha, beta, gamma, rt_R200m
-
-	###############################################################################################
-
-	# The opt['R200m'] parameter is not guaranteed to stay in sync with the other parameters, for
-	# example after a fit. This function remedies that, and also changes other parameters that 
-	# depend on R200m, for example be and se in the case of an outer power law term.
-
 	def update(self):
+		"""
+		Update the profile options after a parameter change.
+		
+		The opt['R200m'] parameter is not guaranteed to stay in sync with the other parameters, for
+		example after a fit. This function remedies that, and also changes other parameters that 
+		depend on R200m, for example the norm and slope in the case of an outer power law term.
+		"""
 		
 		profile_base.HaloDensityProfile.update(self)
 		
@@ -607,4 +565,101 @@ class DK14Profile(profile_base.HaloDensityProfile):
 				counter += 1
 		
 		return deriv
+
+###################################################################################################
+# DIEMER & KRAVTSOV 2014 PROFILE
+###################################################################################################
+
+def getDK14ProfileWithOuterTerms(outer_term_names = ['mean', 'pl'],
+				# Parameters for a power-law outer profile
+				power_law_norm = defaults.HALO_PROFILE_DK14_PL_NORM,
+				power_law_slope = defaults.HALO_PROFILE_DK14_PL_SLOPE,
+				power_law_max = defaults.HALO_PROFILE_OUTER_PL_MAXRHO,
+				# Parameters for a correlation function outer profile
+				derive_bias_from = 'R200m', bias = 1.0, 
+				# The parameters for the DK14 inner profile
+				**kwargs):
+	"""
+	A convenient wrapper function to create a DK14 profile with one or many outer profile terms.
+
+	The DK14 profile only makes sense if some description of the outer profile is added. This
+	function provides a convenient way to construct such profiles without having to set the 
+	properties of the outer terms manually. Valid keys for outer terms include the following.
 	
+	``mean``: The mean density of the universe at redshift z (see the documentation of the 
+	:class:`halo.profile_outer.OuterTermMeanDensity` class).
+	
+	``pl``: A power-law profile in radius (see the documentation of the 
+	:class:`halo.profile_outer.OuterTermPowerLaw` class). For the DK14 profile, the chosen pivot
+	radius is 5 R200m. Note that R200m is set as a profile option in the constructor once, but not
+	adjusted thereafter unless the update() function is called. Thus, in a fit, the fitted norm and
+	slope refer to a pivot of the original R200m until update() is called which adjusts these
+	parameters.
+	
+	Furthermore, the parameters for the power-law outer profile (norm and slope, called be and se
+	in the DK14 paper) exhibit a complicated dependence on halo mass, redshift and cosmology. 
+	At low redshift, and for the cosmology considered in our paper, ``pl_norm = 1.0`` and 
+	``pl_slope = 1.5`` are reasonable values over a wide range of masses (see Figure 18 in DK14), but
+	these values are by no means universal or accurate. 
+	
+	``cf``: The matter-matter correlation function times halo bias (see the documentation of the 
+	:class:`halo.profile_outer.OuterTermCorrelationFunction` class). Here, the user has a choice
+	regarding halo bias: it can enter the profile as a parameter (if ``derive_bias_from == 
+	None`` or it can be derived according to the default model of halo bias based on M200m 
+	(in which case ``derive_bias_from = 'R200m'`` and the bias parameter is ignored).
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	outer_term_names: array_like
+		A list of outer profile term identifiers (see above).
+	power_law_norm: float
+		The normalization of a power-law term (called be in DK14).
+	power_law_slope: float
+		The slope of a power-law term (called se in DK14).
+	power_law_max: float
+		The maximum density contributed by a power-law term.	
+	derive_bias_from: str
+		See cf term section above.
+	bias: float
+		See cf term section above.
+	**kwargs: keyword arguments
+		The arguments passed to the DK14 profile constructor (i.e., the parameters or M, c etc).
+	"""
+	
+	outer_terms = []
+	if len(outer_term_names) > 0:
+		if not 'z' in kwargs:
+			raise Exception('Expect redshift z in arguments.')
+		else:
+			z = kwargs['z']
+	
+	for i in range(len(outer_term_names)):
+		
+		if outer_term_names[i] == 'mean':
+			if z is None:
+				raise Exception('Redshift z must be set if a mean density outer term is chosen.')
+			t = profile_outer.OuterTermMeanDensity(z)
+		
+		elif outer_term_names[i] == 'pl':
+			t = profile_outer.OuterTermPowerLaw(norm = power_law_norm, slope = power_law_slope, 
+							pivot = 'R200m', pivot_factor = 5.0, z = z, max_rho = power_law_max)
+		
+		elif outer_term_names[i] == 'cf':
+			t = profile_outer.OuterTermCorrelationFunction(derive_bias_from = derive_bias_from,
+														z = z, bias = bias)
+	
+		elif outer_term_names[i] == 'cfpl':
+			t = profile_outer.OuterTermCorrelationFunctionPowerLaw(norm = power_law_norm, 
+							slope = power_law_slope, 
+							derive_bias_from = 'R200m', z = z, max_rho = power_law_max)
+	
+		else:
+			msg = 'Unknown outer term name, %s.' % (outer_terms[i])
+			raise Exception(msg)
+	
+		outer_terms.append(t)
+
+	prof = DK14Profile(outer_terms = outer_terms, **kwargs)
+	
+			
+	return prof

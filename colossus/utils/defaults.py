@@ -57,10 +57,19 @@ HALO_PROFILE_SURFACE_DENSITY_ACCURACY = 1E-4
 # HALO PROFILE (SPECIFIC INNER PROFILES)
 ###################################################################################################
 
-HALO_PROFILE_DK14_BE = 1.0
+HALO_PRPFOLE_DK14_SELECTED_BY = 'M'
+"""The constructor of the DK14 profile sets the profile parameters to either predict the mean 
+profile of halos selected by their mass ('M') or mass accretion rate and mass ('Gamma')."""
+HALO_PROFILE_DK14_PL_NORM = 1.0
 """The default normalization of the power-law outer profile for the DK14 profile."""
-HALO_PROFILE_DK14_SE = 1.5
+HALO_PROFILE_DK14_PL_SLOPE = 1.5
 """The default slope of the power-law outer profile for the DK14 profile."""
+HALO_PROFILE_DK14_ACC_WARN = 0.01
+"""If the desired halo mass cannot be matched with a DK14 profile to better than this accuracy,
+a warning is displayed."""
+HALO_PROFILE_DK14_ACC_ERR = 0.05
+"""If the desired halo mass cannot be matched with a DK14 profile to better than this accuracy,
+an exception is raised."""
 
 ###################################################################################################
 # HALO PROFILE (SPECIFIC OUTER PROFILE TERMS)

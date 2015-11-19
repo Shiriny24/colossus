@@ -353,13 +353,37 @@ class OuterTermCorrelationFunction(OuterTerm):
 
 	###############################################################################################
 
+	# We have to be a little careful when evaluating the matter-matter correlation function, since
+	# it may not be defined at very small or large radii.
+
+	def _xi_mm(self, r, z):
+
+		cosmo = cosmology.getCurrent()
+		r_com = r / 1000.0 * (1 + z)
+		
+		R_min = cosmo.R_xi[0] * 1.00001
+		R_max = cosmo.R_xi[-1] * 0.99999
+		
+		mask_not_small = (r_com > R_min)
+		mask_not_large = (r_com < R_max)
+		mask = (mask_not_small & mask_not_large)
+		
+		xi_mm = np.zeros((len(r)), np.float)
+
+		if np.count_nonzero(mask) > 0:
+			xi_mm[mask] = cosmo.correlationFunction(r_com[mask], z)
+
+		xi_mm[np.logical_not(mask_not_small)] = cosmo.correlationFunction(R_min, z)
+		xi_mm[np.logical_not(mask_not_large)] = cosmo.correlationFunction(R_max, z)
+		
+		return xi_mm
+
+	###############################################################################################
+
 	def _density(self, r):
 		
 		z, bias = self._getParameters()
-		cosmo = cosmology.getCurrent()
-		rho_m = cosmo.rho_m(z)
-		xi_mm = cosmo.correlationFunction(r / 1000.0 * (1 + z), z)
-		rho = rho_m * bias * xi_mm
+		rho = cosmology.getCurrent().rho_m(z) * bias * self._xi_mm(r, z)
 
 		return rho
 
@@ -430,7 +454,7 @@ class OuterTermPowerLaw(OuterTerm):
 	
 	def __init__(self, norm = None, slope = None, pivot = None, pivot_factor = None, 
 				z = None, max_rho = defaults.HALO_PROFILE_OUTER_PL_MAXRHO, 
-				norm_name = 'norm', slope_name = 'slope', 
+				norm_name = 'pl_norm', slope_name = 'pl_slope', 
 				pivot_name = 'pivot', pivot_factor_name = 'pivot_factor', z_name = 'z', 
 				max_rho_name = 'pl_max_rho'):
 
@@ -516,97 +540,3 @@ class OuterTermPowerLaw(OuterTerm):
 			deriv[counter] = -rho * np.log(rro) / t1 * rro**slope
 		
 		return deriv
-
-###################################################################################################
-# OUTER TERM: 2-HALO TERM BASED ON THE MATTER-MATTER CORRELATION FUNCTION, TIMES POWER LAW
-###################################################################################################
-
-class OuterTermCorrelationFunctionPowerLaw(OuterTerm):
-	
-	def __init__(self, norm = None, slope = None, pivot = None, pivot_factor = None, 
-				z = None, max_rho = defaults.HALO_PROFILE_OUTER_PL_MAXRHO, 
-				norm_name = 'norm', slope_name = 'slope', 
-				pivot_name = 'pivot', pivot_factor_name = 'pivot_factor', z_name = 'z', 
-				max_rho_name = 'pl_max_rho'):
-
-		if norm is None:
-			raise Exception('Normalization of power law cannot be None.')
-		if slope is None:
-			raise Exception('Slope of power law cannot be None.')
-		if pivot is None:
-			raise Exception('Pivot of power law cannot be None.')
-		if pivot_factor is None:
-			raise Exception('Pivot factor of power law cannot be None.')
-		if z is None:
-			raise Exception('Redshift of power law cannot be None.')
-		if max_rho is None:
-			raise Exception('Maximum of power law cannot be None.')
-		
-		OuterTerm.__init__(self, [norm, slope], [pivot, pivot_factor, z, max_rho],
-						[norm_name, slope_name], [pivot_name, pivot_factor_name, z_name, max_rho_name])
-
-		return
-
-	###############################################################################################
-
-	def _getParameters(self):
-
-		r_pivot_id = self.opt[self.term_opt_names[0]]
-		if r_pivot_id in self.par:
-			r_pivot = self.par[r_pivot_id]
-		elif r_pivot_id in self.opt:
-			r_pivot = self.opt[r_pivot_id]
-		else:
-			msg = 'Could not find the parameter or option %s.' % (r_pivot_id)
-			raise Exception(msg)
-
-		norm = self.par[self.term_par_names[0]]
-		slope = self.par[self.term_par_names[1]]
-		r_pivot *= self.opt[self.term_opt_names[1]]
-		z = self.opt[self.term_opt_names[2]]
-		max_rho = self.opt[self.term_opt_names[3]]
-		rho_m = cosmology.getCurrent().rho_m(z)
-		
-		return norm, slope, r_pivot, max_rho, z, rho_m
-
-	###############################################################################################
-
-	# TODO don't use special knowledge about DK14 profile
-	def _density(self, r):
-		
-		r_array, is_array = utilities.getArray(r)
-
-		norm, slope, r_pivot, max_rho, z, rho_m = self._getParameters()
-		
-		cosmo = cosmology.getCurrent()
-		r_Mpc = r_array / 1000.0
-		mask = (r_Mpc > cosmo.R_xi[0]) & (r_Mpc < cosmo.R_xi[-1])
-
-		rho = np.ones((len(r)), np.float) * norm * rho_m / max_rho
-		
-		#print(mask)
-		if np.count_nonzero(mask) > 0:
-			xi_mm = cosmo.correlationFunction(r_Mpc[mask], z)
-	
-			M200m = mass_so.R_to_M(self.owner.opt['R200m'], z, '200m')
-			#M200m = self.owner.MDelta(z, '200m')
-			b = halo_bias.haloBias(M200m, z, '200m')
-			
-			rho[mask] = norm * rho_m * (1.0 / max_rho + xi_mm * b * (r_array[mask] / r_pivot)**slope)
-
-		if not is_array:
-			rho = rho[0]
-
-		return rho
-
-	###############################################################################################
-	
-	# TODO correct this function; must include max_rho
-	def changePivot(self, new_pivot):
-		
-		#norm, slope, r_pivot, _, _ = self._getParameters()
-		
-		#self.par[self.term_par_names[0]] = norm * (r_pivot / new_pivot)**slope
-
-		return
-	

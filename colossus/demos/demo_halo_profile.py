@@ -29,7 +29,8 @@ from colossus.halo import profile_base
 
 def main():
 
-	demoProfiles()
+	#demoProfiles()
+	demoOuterProfiles()
 	#demoNewProfile()
 
 	#demoFittingLeastsq(profile = 'einasto', quantity = 'M', scatter = 0.1)
@@ -45,7 +46,7 @@ def main():
 def demoProfiles():
 	"""
 	Compare the Diemer & Kravtsov 2014, NFW, and Einasto profiles of a massive cluster halo. We 
-	also add various descriptions of the outer profile and plot the logarithmic slope.
+	also add a description of the outer profile and plot the logarithmic slope.
 	"""
 	
 	# Choose halo parameters
@@ -73,14 +74,11 @@ def demoProfiles():
 	labels.append('NFW (mean)')
 	p.append(profile_einasto.EinastoProfile(M = M, c = c, z = z, mdef = mdef))
 	labels.append('Einasto (no outer)')
-	p.append(profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, outer_term_names = ['mean']))
-	labels.append('DK14 (mean)')
-	p.append(profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, 
-									outer_term_names = ['mean', 'pl'], be = 1.0, se = 1.5))
+	p.append(profile_dk14.getDK14ProfileWithOuterTerms(M = M, c = c, z = z, mdef = mdef))
 	labels.append('DK14 (mean + pl)')
 
-	colors = ['darkblue', 'darkblue', 'firebrick', 'deepskyblue', 'deepskyblue']
-	ls = ['-', '-.', '-', '--', '-']
+	colors = ['darkblue', 'darkblue', 'firebrick', 'deepskyblue']
+	ls = ['-', '--', '-', '-']
 
 	# Prepare plot
 	fig = plt.figure(figsize = (5.5, 10.0))
@@ -99,6 +97,87 @@ def demoProfiles():
 	for i in range(len(p)):
 		rho = p[i].density(r)
 		plt.plot(rR, rho / rho_m, ls = ls[i], color = colors[i], label = labels[i])
+
+	# Slope panel
+	plt.sca(p2)
+	plt.xscale('log')
+	plt.xlim(rR_min, rR_max)
+	plt.ylim(-5.5, 0.5)
+	plt.xlabel(r'$r / R_{\rm vir}$')
+	plt.ylabel(r'$d \log(\rho) / d \log(r)$')
+	for i in range(len(p)):
+		slope = p[i].densityDerivativeLog(r)
+		plt.plot(rR, slope, ls = ls[i], color = colors[i], label = labels[i])
+
+	# Finalize plot
+	plt.sca(p1)
+	plt.legend()
+	plt.show()
+	
+	return
+
+###################################################################################################
+
+def demoOuterProfiles():
+	"""
+	Compare various descriptions of the outer profile.
+	"""
+	
+	# Choose halo parameters
+	M = 1E15
+	mdef = 'vir'
+	z = 0.0
+	c = 5.0
+	cosmo = cosmology.setCosmology('WMAP9')
+	R = mass_so.M_to_R(M, z, mdef)
+	
+	# Choose a set of radii
+	rR_min = 1E-3
+	rR_max = 5E1
+	rR = 10**np.arange(np.log10(rR_min), np.log10(rR_max), 0.02)
+	r = rR * R
+	rho_m = cosmo.rho_m(z)
+	
+	# Initialize profiles; create an outer power-law term with a pivot at 1 Mpc/h
+	p = []
+	labels = []
+	p.append(profile_dk14.getDK14ProfileWithOuterTerms(M = M, c = c, z = z, mdef = mdef, 
+													outer_term_names = []))
+	labels.append('DK14 (no outer)')
+	p.append(profile_dk14.getDK14ProfileWithOuterTerms(M = M, c = c, z = z, mdef = mdef, 
+													outer_term_names = ['mean']))
+	labels.append('DK14 (mean)')
+	p.append(profile_dk14.getDK14ProfileWithOuterTerms(M = M, c = c, z = z, mdef = mdef, 
+													outer_term_names = ['mean', 'pl']))
+	labels.append('DK14 (mean + pl)')
+	p.append(profile_dk14.getDK14ProfileWithOuterTerms(M = M, c = c, z = z, mdef = mdef, 
+													outer_term_names = ['mean', 'cf']))
+	labels.append('DK14 (mean + cf)')
+
+	colors = ['darkblue', 'darkblue', 'darkblue', 'darkblue']
+	ls = [':', '-', '-.', '--']
+
+	# Prepare plot
+	fig = plt.figure(figsize = (5.5, 10.0))
+	gs = gridspec.GridSpec(2, 1)
+	plt.subplots_adjust(left = 0.2, right = 0.95, top = 0.95, bottom = 0.1, hspace = 0.1)
+	p1 = fig.add_subplot(gs[0])	
+	p2 = fig.add_subplot(gs[1])
+
+	# Density panel
+	plt.sca(p1)		
+	plt.loglog()
+	plt.ylabel(r'$\rho / \rho_m$')
+	p1.set_xticklabels([])	
+	plt.xlim(rR_min, rR_max)
+	plt.ylim(1E-1, 5E6)
+	for i in range(len(p)):
+		rho = p[i].density(r)
+		plt.plot(rR, rho / rho_m, ls = ls[i], color = colors[i], label = labels[i])
+
+	# Plot correlation function
+	xi = cosmo.correlationFunction(r / 1000.0 * (1 + z), z)
+	plt.plot(rR, xi, '--', color = 'gray', label = r'$\xi_{\rm mm} \rho_{\rm m}$')
 
 	# Slope panel
 	plt.sca(p2)
