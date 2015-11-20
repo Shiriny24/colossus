@@ -16,8 +16,6 @@ from colossus.cosmology import cosmology
 # TEST PARAMETERS
 ###################################################################################################
 
-TEST_N_DIGITS = test_colossus.TEST_N_DIGITS
-
 TEST_Z = np.array([0.0, 1.283, 20.0])
 TEST_Z2 = 5.4
 TEST_M = 3E12
@@ -34,13 +32,13 @@ TEST_AGE = np.array([13.7, 0.1])
 class CosmologyTestCase(test_colossus.ColosssusTestCase):
 
 	def _testRedshiftArray(self, f, correct):
-		self.assertAlmostEqualArray(f(TEST_Z), correct, places = TEST_N_DIGITS)		
+		self.assertAlmostEqualArray(f(TEST_Z), correct)		
 
 	def _testKArray(self, f, correct):
-		self.assertAlmostEqualArray(f(TEST_K), correct, places = TEST_N_DIGITS)		
+		self.assertAlmostEqualArray(f(TEST_K), correct)		
 
 	def _testRZArray(self, f, z, correct):
-		self.assertAlmostEqualArray(f(TEST_RR, z), correct, places = TEST_N_DIGITS)		
+		self.assertAlmostEqualArray(f(TEST_RR, z), correct)		
 
 ###################################################################################################
 # TEST CASE 1: COMPUTATIONS WITHOUT INTERPOLATION
@@ -59,32 +57,32 @@ class TCComp(CosmologyTestCase):
 	def test_init(self):
 		c_dict = cosmology.cosmologies[self.cosmo_name]
 		self.assertEqual(self.cosmo.name, self.cosmo_name)
-		self.assertAlmostEqual(self.cosmo.Om0, c_dict['Om0'], places = TEST_N_DIGITS)
-		self.assertAlmostEqual(self.cosmo.Ob0, c_dict['Ob0'], places = TEST_N_DIGITS)
-		self.assertAlmostEqual(self.cosmo.sigma8, c_dict['sigma8'], places = TEST_N_DIGITS)
-		self.assertAlmostEqual(self.cosmo.ns, c_dict['ns'], places = TEST_N_DIGITS)
+		self.assertAlmostEqual(self.cosmo.Om0, c_dict['Om0'])
+		self.assertAlmostEqual(self.cosmo.Ob0, c_dict['Ob0'])
+		self.assertAlmostEqual(self.cosmo.sigma8, c_dict['sigma8'])
+		self.assertAlmostEqual(self.cosmo.ns, c_dict['ns'])
 		if 'Tcmb0' in c_dict:
-			self.assertAlmostEqual(self.cosmo.Tcmb0, c_dict['Tcmb0'], places = TEST_N_DIGITS)
+			self.assertAlmostEqual(self.cosmo.Tcmb0, c_dict['Tcmb0'])
 		else:
-			self.assertAlmostEqual(self.cosmo.Tcmb0, defaults.COSMOLOGY_TCMB0, places = TEST_N_DIGITS)
+			self.assertAlmostEqual(self.cosmo.Tcmb0, defaults.COSMOLOGY_TCMB0)
 		if 'Neff' in c_dict:
-			self.assertAlmostEqual(self.cosmo.Neff, c_dict['Neff'], places = TEST_N_DIGITS)
+			self.assertAlmostEqual(self.cosmo.Neff, c_dict['Neff'])
 		else:
-			self.assertAlmostEqual(self.cosmo.Neff, defaults.COSMOLOGY_NEFF, places = TEST_N_DIGITS)
-		self.assertAlmostEqual(self.cosmo.Ogamma0, 5.388899947524e-05, places = TEST_N_DIGITS)
-		self.assertAlmostEqual(self.cosmo.Onu0, 3.727873332823e-05, places = TEST_N_DIGITS)
-		self.assertAlmostEqual(self.cosmo.Or0, 9.116773280347645e-05, places = TEST_N_DIGITS)
+			self.assertAlmostEqual(self.cosmo.Neff, defaults.COSMOLOGY_NEFF)
+		self.assertAlmostEqual(self.cosmo.Ogamma0, 5.388899947524e-05)
+		self.assertAlmostEqual(self.cosmo.Onu0, 3.727873332823e-05)
+		self.assertAlmostEqual(self.cosmo.Or0, 9.116773280347645e-05)
 	
 	def test_initNoRel(self):
 		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 'storage': False, 'relspecies': False})
 		c_dict = cosmology.cosmologies[self.cosmo_name]
-		self.assertAlmostEqual(self.cosmo.Om0, c_dict['Om0'], places = TEST_N_DIGITS)
-		self.assertAlmostEqual(self.cosmo.OL0, 1.0 - c_dict['Om0'], places = TEST_N_DIGITS)
-		self.assertAlmostEqual(self.cosmo.Ob0, c_dict['Ob0'], places = TEST_N_DIGITS)
-		self.assertAlmostEqual(self.cosmo.sigma8, c_dict['sigma8'], places = TEST_N_DIGITS)
-		self.assertAlmostEqual(self.cosmo.ns, c_dict['ns'], places = TEST_N_DIGITS)
-		self.assertAlmostEqual(self.cosmo.Tcmb0, defaults.COSMOLOGY_TCMB0, places = TEST_N_DIGITS)
-		self.assertAlmostEqual(self.cosmo.Neff, defaults.COSMOLOGY_NEFF, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(self.cosmo.Om0, c_dict['Om0'])
+		self.assertAlmostEqual(self.cosmo.OL0, 1.0 - c_dict['Om0'])
+		self.assertAlmostEqual(self.cosmo.Ob0, c_dict['Ob0'])
+		self.assertAlmostEqual(self.cosmo.sigma8, c_dict['sigma8'])
+		self.assertAlmostEqual(self.cosmo.ns, c_dict['ns'])
+		self.assertAlmostEqual(self.cosmo.Tcmb0, defaults.COSMOLOGY_TCMB0)
+		self.assertAlmostEqual(self.cosmo.Neff, defaults.COSMOLOGY_NEFF)
 		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 'storage': False})
 
 	###############################################################################################
@@ -117,7 +115,7 @@ class TCComp(CosmologyTestCase):
 	
 	def test_comovingDistance(self):
 		correct = [0.0, 2740.5127865862187, 7432.2116524758285]
-		self.assertAlmostEqualArray(self.cosmo.comovingDistance(z_max = TEST_Z), correct, places = TEST_N_DIGITS)		
+		self.assertAlmostEqualArray(self.cosmo.comovingDistance(z_max = TEST_Z), correct)		
 
 	def test_luminosityDistance(self):
 		correct = [0.0, 6256.5906917763368, 156076.44470199241]
@@ -129,10 +127,10 @@ class TCComp(CosmologyTestCase):
 
 	def test_distanceModulus(self):
 		correct = [44.827462759550897, 51.81246085652802]
-		self.assertAlmostEqualArray(self.cosmo.distanceModulus(TEST_Z[1:]), correct, places = TEST_N_DIGITS)		
+		self.assertAlmostEqualArray(self.cosmo.distanceModulus(TEST_Z[1:]), correct)		
 	
 	def test_soundHorizon(self):
-		self.assertAlmostEqual(self.cosmo.soundHorizon(), 150.21442991795007, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(self.cosmo.soundHorizon(), 150.21442991795007)
 
 	###############################################################################################
 	# Densities and overdensities
@@ -147,7 +145,7 @@ class TCComp(CosmologyTestCase):
 		self._testRedshiftArray(self.cosmo.rho_m, correct)
 	
 	def test_rho_L(self):
-		self.assertAlmostEqual(self.cosmo.rho_L(), 191.7444476198966, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(self.cosmo.rho_L(), 191.7444476198966)
 	
 	def test_rho_gamma(self):
 		correct = [0.014953378241588128, 0.40622155544932192, 2908.1479538023009]
@@ -190,10 +188,10 @@ class TCComp(CosmologyTestCase):
 	###############################################################################################
 
 	def test_lagrangianR(self):
-		self.assertAlmostEqual(self.cosmo.lagrangianR(TEST_M), 2.0292015228231484, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(self.cosmo.lagrangianR(TEST_M), 2.0292015228231484)
 
 	def test_lagrangianM(self):
-		self.assertAlmostEqual(self.cosmo.lagrangianM(TEST_R), 692873211113.4847, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(self.cosmo.lagrangianM(TEST_R), 692873211113.4847)
 
 	def test_growthFactor(self):
 		correct = [1.0, 0.54093225419799251, 0.060968602011373191]
@@ -218,8 +216,8 @@ class TCComp(CosmologyTestCase):
 		self._testRZArray(self.cosmo.sigma, TEST_Z2, correct)
 
 	def test_peakHeight(self):
-		self.assertAlmostEqual(self.cosmo.peakHeight(TEST_M, 0.0), 0.94312293214221243, places = TEST_N_DIGITS)
-		self.assertAlmostEqual(self.cosmo.peakHeight(TEST_M, TEST_Z2), 4.7404825899781677, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(self.cosmo.peakHeight(TEST_M, 0.0), 0.94312293214221243)
+		self.assertAlmostEqual(self.cosmo.peakHeight(TEST_M, TEST_Z2), 4.7404825899781677)
 
 	def test_peakCurvature(self):
 		correct = [[1.7282851398751131, 0.64951660047324522, 2.3770980172992502, 1.2545481285991393, 0.31882292066585705], 
@@ -228,7 +226,7 @@ class TCComp(CosmologyTestCase):
 			z = [0.0, TEST_Z2][j]
 			res = self.cosmo.peakCurvature(TEST_M, z)
 			for i in range(5):
-				self.assertAlmostEqual(res[i], correct[j][i], places = TEST_N_DIGITS)
+				self.assertAlmostEqual(res[i], correct[j][i])
 
 	def test_correlationFunction(self):
 		correct = [142.63237915313539, 3.9989807960025816, -2.7947065951546593e-07]
@@ -251,30 +249,30 @@ class TCInterp(CosmologyTestCase):
 	###############################################################################################
 
 	def test_sigma(self):
-		self.assertAlmostEqual(self.cosmo.sigma(12.5, 0.0), 0.5892735283988848, places = TEST_N_DIGITS)		
+		self.assertAlmostEqual(self.cosmo.sigma(12.5, 0.0), 0.5892735283988848)		
 
 	def test_ZDerivative(self):
 		correct = [-14.431423683052429, -3.0331864799122887, -0.012861392030709832]
-		self.assertAlmostEqualArray(self.cosmo.age(TEST_Z, derivative = 1), correct, places = TEST_N_DIGITS)		
+		self.assertAlmostEqualArray(self.cosmo.age(TEST_Z, derivative = 1), correct)		
 
 	def test_ZDerivative2(self):
 		correct = [20.668766775933239, 3.0310718810786343, 0.0015163247225108648]
-		self.assertAlmostEqualArray(self.cosmo.age(TEST_Z, derivative = 2), correct, places = TEST_N_DIGITS)		
+		self.assertAlmostEqualArray(self.cosmo.age(TEST_Z, derivative = 2), correct)		
 
 	def test_ZInverse(self):
 		correct = [0.0067749101503343997, 29.812799507392906]
-		self.assertAlmostEqualArray(self.cosmo.age(TEST_AGE, inverse = True), correct, places = TEST_N_DIGITS)		
+		self.assertAlmostEqualArray(self.cosmo.age(TEST_AGE, inverse = True), correct)		
 
 	def test_ZInverseDerivative(self):
 		correct = [-0.069866754435913142, -204.97494464862859]
-		self.assertAlmostEqualArray(self.cosmo.age(TEST_AGE, inverse = True, derivative = 1), correct, places = TEST_N_DIGITS)		
+		self.assertAlmostEqualArray(self.cosmo.age(TEST_AGE, inverse = True, derivative = 1), correct)		
 
 	def test_massFromPeakHeight(self):
-		self.assertAlmostEqual(self.cosmo.massFromPeakHeight(TEST_NU, 0.0), 2077137637380.1235, places = TEST_N_DIGITS)
-		self.assertAlmostEqual(self.cosmo.massFromPeakHeight(TEST_NU, TEST_Z2), 59607.184484321471, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(self.cosmo.massFromPeakHeight(TEST_NU, 0.0), 2077137637380.1235)
+		self.assertAlmostEqual(self.cosmo.massFromPeakHeight(TEST_NU, TEST_Z2), 59607.184484321471)
 
 	def test_nonLinearMass(self):
-		self.assertAlmostEqual(self.cosmo.nonLinearMass(1.1), 98435044937.058929, places = TEST_N_DIGITS)				
+		self.assertAlmostEqual(self.cosmo.nonLinearMass(1.1), 98435044937.058929)				
 
 ###################################################################################################
 # TEST CASE 3: NON-FLAT COSMOLOGY
@@ -290,8 +288,8 @@ class TCNotFlat(CosmologyTestCase):
 		self.cosmo = cosmology.getCurrent()
 
 	def test_nonFlat(self):
-		self.assertAlmostEqual(self.cosmo.Ok0, 0.02991462406767552, places = TEST_N_DIGITS)
-		self.assertAlmostEqual(self.cosmo.Ok(4.5), 0.019417039615692584, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(self.cosmo.Ok0, 0.02991462406767552)
+		self.assertAlmostEqual(self.cosmo.Ok(4.5), 0.019417039615692584)
 
 ###################################################################################################
 # TRIGGER

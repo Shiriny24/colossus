@@ -13,10 +13,6 @@ from colossus.cosmology import cosmology
 from colossus.halo import concentration
 
 ###################################################################################################
-
-TEST_N_DIGITS = test_colossus.TEST_N_DIGITS
-
-###################################################################################################
 # TEST CASES
 ###################################################################################################
 
@@ -81,23 +77,23 @@ class TCConcentration(test_colossus.ColosssusTestCase):
 			msg = 'Failure in model = %s' % (models[i])
 			c = concentration.concentration(M, mdef, z = z, model = models[i], range_return = False, range_warning = False)
 			if models[i] == 'diemer15':
-				self.assertAlmostEqual(c, 6.6521444198414388, places = TEST_N_DIGITS, msg = msg)
+				self.assertAlmostEqual(c, 6.6521444198414388, msg = msg)
 			elif models[i] == 'klypin15_nu':
-				self.assertAlmostEqual(c, 6.4588364940434486, places = TEST_N_DIGITS, msg = msg)
+				self.assertAlmostEqual(c, 6.4588364940434486, msg = msg)
 			elif models[i] == 'klypin15_m':
-				self.assertAlmostEqual(c, 6.2107920072554768, places = TEST_N_DIGITS, msg = msg)
+				self.assertAlmostEqual(c, 6.2107920072554768, msg = msg)
 			elif models[i] == 'dutton14':
-				self.assertAlmostEqual(c, 7.5907186889384706, places = TEST_N_DIGITS, msg = msg)
+				self.assertAlmostEqual(c, 7.5907186889384706, msg = msg)
 			elif models[i] == 'bhattacharya13':
-				self.assertAlmostEqual(c, 5.8630201567079006, places = TEST_N_DIGITS, msg = msg)
+				self.assertAlmostEqual(c, 5.8630201567079006, msg = msg)
 			elif models[i] == 'prada12':
-				self.assertAlmostEqual(c, 7.5547918752086218, places = TEST_N_DIGITS, msg = msg)
+				self.assertAlmostEqual(c, 7.5547918752086218, msg = msg)
 			elif models[i] == 'klypin11':
-				self.assertAlmostEqual(c, 9.3289793383381223, places = TEST_N_DIGITS, msg = msg)
+				self.assertAlmostEqual(c, 9.3289793383381223, msg = msg)
 			elif models[i] == 'duffy08':
-				self.assertAlmostEqual(c, 5.8441337918319354, places = TEST_N_DIGITS, msg = msg)
+				self.assertAlmostEqual(c, 5.8441337918319354, msg = msg)
 			elif models[i] == 'bullock01':
-				self.assertAlmostEqual(c, 6.8400945591304065, places = TEST_N_DIGITS, msg = msg)
+				self.assertAlmostEqual(c, 6.8400945591304065, msg = msg)
 			else:
 				msg = 'Unknown model, %s.' % models[i]
 				raise Exception(msg)

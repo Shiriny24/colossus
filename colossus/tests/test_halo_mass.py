@@ -16,10 +16,6 @@ from colossus.halo import profile_dk14
 from colossus.halo import profile_outer
 
 ###################################################################################################
-
-TEST_N_DIGITS = test_colossus.TEST_N_DIGITS
-
-###################################################################################################
 # TEST CASE: SPHERICAL OVERDENSITY
 ###################################################################################################
 
@@ -67,22 +63,22 @@ class TCMassSO(test_colossus.ColosssusTestCase):
 			mass_so.parseRadiusMassDefinition('79.6c')
 
 	def test_densityThreshold(self):
-		self.assertAlmostEqual(mass_so.densityThreshold(0.7, '200m'), 84223.612767872, places = TEST_N_DIGITS)
-		self.assertAlmostEqual(mass_so.densityThreshold(6.1, '400c'), 12373756.401747715, places = TEST_N_DIGITS)
-		self.assertAlmostEqual(mass_so.densityThreshold(1.2, 'vir'), 179234.67533064212, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(mass_so.densityThreshold(0.7, '200m'), 84223.612767872)
+		self.assertAlmostEqual(mass_so.densityThreshold(6.1, '400c'), 12373756.401747715)
+		self.assertAlmostEqual(mass_so.densityThreshold(1.2, 'vir'), 179234.67533064212)
 		with self.assertRaises(Exception):
 			mass_so.densityThreshold('100t')
 
 	def test_deltaVir(self):
-		self.assertAlmostEqual(mass_so.deltaVir(0.7), 148.15504207273736, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(mass_so.deltaVir(0.7), 148.15504207273736)
 	
 	def test_M_to_R(self):
-		self.assertAlmostEqual(mass_so.M_to_R(1.1E12, 0.7, '200m'), 146.09098023845536, places = TEST_N_DIGITS)
-		self.assertAlmostEqual(mass_so.M_to_R(1.1E12, 0.7, 'vir'), 142.45956950993343, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(mass_so.M_to_R(1.1E12, 0.7, '200m'), 146.09098023845536)
+		self.assertAlmostEqual(mass_so.M_to_R(1.1E12, 0.7, 'vir'), 142.45956950993343)
 
 	def test_R_to_M(self):
-		self.assertAlmostEqual(mass_so.R_to_M(212.0, 0.7, '200m'), 3361476338653.47, places = TEST_N_DIGITS)
-		self.assertAlmostEqual(mass_so.R_to_M(150.0, 0.7, 'vir'), 1284078514739.949, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(mass_so.R_to_M(212.0, 0.7, '200m'), 3361476338653.47)
+		self.assertAlmostEqual(mass_so.R_to_M(150.0, 0.7, 'vir'), 1284078514739.949)
 
 ###################################################################################################
 # TEST CASE: DEFINITIONS
@@ -103,9 +99,9 @@ class TCMassDefs(test_colossus.ColosssusTestCase):
 		correct_c = [1.3008705755189411, 1.300870575518942]
 		for i in range(len(M1)):
 			M, R, c = mass_defs.pseudoEvolve(M1[i], c1, z1, '200m', z2, 'vir')
-			self.assertAlmostEqual(M, correct_M[i], places = TEST_N_DIGITS)
-			self.assertAlmostEqual(R, correct_R[i], places = TEST_N_DIGITS)
-			self.assertAlmostEqual(c, correct_c[i], places = TEST_N_DIGITS)
+			self.assertAlmostEqual(M, correct_M[i])
+			self.assertAlmostEqual(R, correct_R[i])
+			self.assertAlmostEqual(c, correct_c[i])
 
 	def test_pseudoEvolveWithDk14(self):
 		z1 = 0.68
@@ -120,9 +116,9 @@ class TCMassDefs(test_colossus.ColosssusTestCase):
 											pivot_factor = 5.0, z = 0.0)
 			M, R, c = mass_defs.pseudoEvolve(M1[i], c1, z1, '200m', z2, 'vir',
 						profile = profile_dk14.DK14Profile, outer_terms = [t])
-			self.assertAlmostEqual(M, correct_M[i], places = TEST_N_DIGITS)
-			self.assertAlmostEqual(R, correct_R[i], places = TEST_N_DIGITS)
-			self.assertAlmostEqual(c, correct_c[i], places = TEST_N_DIGITS)
+			self.assertAlmostEqual(M, correct_M[i])
+			self.assertAlmostEqual(R, correct_R[i])
+			self.assertAlmostEqual(c, correct_c[i])
 
 	def test_changeMassDefinition(self):
 		z1 = 0.98
@@ -133,9 +129,9 @@ class TCMassDefs(test_colossus.ColosssusTestCase):
 		correct_c = [3.4334724175833529, 3.433472417583356]
 		for i in range(len(M1)):
 			M, R, c = mass_defs.changeMassDefinition(M1[i], c1, z1, 'vir', '300c')
-			self.assertAlmostEqual(M, correct_M[i], places = TEST_N_DIGITS)
-			self.assertAlmostEqual(R, correct_R[i], places = TEST_N_DIGITS)
-			self.assertAlmostEqual(c, correct_c[i], places = TEST_N_DIGITS)
+			self.assertAlmostEqual(M, correct_M[i])
+			self.assertAlmostEqual(R, correct_R[i])
+			self.assertAlmostEqual(c, correct_c[i])
 	
 ###################################################################################################
 # TEST CASE: ADVANCED
@@ -155,28 +151,28 @@ class TCMassAdv(test_colossus.ColosssusTestCase):
 		correct_c = [9.0766320379479737, 3.6654767598601383]
 		for i in range(len(M1)):
 			M, R, c = mass_adv.changeMassDefinitionCModel(M1[i], z1, 'vir', '300c')
-			self.assertAlmostEqual(M, correct_M[i], places = TEST_N_DIGITS)
-			self.assertAlmostEqual(R, correct_R[i], places = TEST_N_DIGITS)
-			self.assertAlmostEqual(c, correct_c[i], places = TEST_N_DIGITS)
+			self.assertAlmostEqual(M, correct_M[i])
+			self.assertAlmostEqual(R, correct_R[i])
+			self.assertAlmostEqual(c, correct_c[i])
 
 		return
 	
 	def test_M4rs(self):
-		self.assertAlmostEqual(mass_adv.M4rs(1E12, 0.7, '500c', 3.8), 1041815679897.7153, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(mass_adv.M4rs(1E12, 0.7, '500c', 3.8), 1041815679897.7153)
 
 	def test_RspOverR200m(self):
-		self.assertAlmostEqual(mass_adv.RspOverR200m(nu200m = 2.4, z = None, Gamma = None), 1.1038203372651374, places = TEST_N_DIGITS)
-		self.assertAlmostEqual(mass_adv.RspOverR200m(nu200m = 2.4, z = 1.4, Gamma = 0.8), 1.6080082344281803, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(mass_adv.RspOverR200m(nu200m = 2.4, z = None, Gamma = None), 1.1038203372651374)
+		self.assertAlmostEqual(mass_adv.RspOverR200m(nu200m = 2.4, z = 1.4, Gamma = 0.8), 1.6080082344281803)
 				
 	def test_MspOverM200m(self):
-		self.assertAlmostEqual(mass_adv.MspOverM200m(nu200m = 2.4, z = None, Gamma = None), 1.0812429190621984, places = TEST_N_DIGITS)
-		self.assertAlmostEqual(mass_adv.MspOverM200m(nu200m = 2.4, z = 1.4, Gamma = 0.8), 1.359753402031187, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(mass_adv.MspOverM200m(nu200m = 2.4, z = None, Gamma = None), 1.0812429190621984)
+		self.assertAlmostEqual(mass_adv.MspOverM200m(nu200m = 2.4, z = 1.4, Gamma = 0.8), 1.359753402031187)
 
 	def test_Rsp(self):
-		self.assertAlmostEqual(mass_adv.Rsp(450.2, 0.4, '200m'), 549.64492801853442, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(mass_adv.Rsp(450.2, 0.4, '200m'), 549.64492801853442)
 
 	def test_Msp(self):
-		self.assertAlmostEqual(mass_adv.Msp(1.1E12, 0.4, '200m'), 1330106019812.7119, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(mass_adv.Msp(1.1E12, 0.4, '200m'), 1330106019812.7119)
 	
 ###################################################################################################
 # TRIGGER
