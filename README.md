@@ -2,32 +2,7 @@ Colossus
 ========
 
 Colossus is an acronym for **CO**smology, ha**LO** and large-**S**cale **S**tr**U**cture 
-tool**S**. As the name suggests, Colossus constitutes a collection of modules pertaining to 
-cosmology and dark matter halos, the most important of which are:
-
-* **cosmology**: Cosmological calculations with an emphasis on structure formation applications 
-  (power spectrum, variance, correlation function, peaks in Gaussian random fields and such).
-* **halo.profile**: Implementation of general and specific density profiles (including the 
-  NFW and Diemer & Kravtsov 2014 profiles), pseudo-evolution, and alternative radius and mass 
-  definitions such as the splashback radius.
-* **halo.concentration**: A large range of models for the concentration-mass relation (including 
-  the Diemer & Kravtsov 2015 model), with a conversion to arbitrary mass definitions.
-
-Colossus is developed with the following design goals in mind:
-
-* **Performance**: Computationally intensive routines have been optimized for fast execution, 
-  often using smart interpolation. Virtually all functions accept both numbers and numpy arrays 
-  as input.
-* **Pure Python**: No C modules that need to be compiled, and no dependencies beyond the 
-  standard numpy and scipy libraries.
-* **Object-orientation**: Class-based implementations wherever it makes sense and does not 
-  hurt performance.
-* **Easy (or no) installation**: You can either install Colossus as a python package with 
-  pip/easy_install, or clone the repository and develop the code yourself.
-
-While Colossus has been tested against various other codes, there is no guarantee that it is free 
-of bugs. Use it at your own risk, and please report any errors, inconveniences and unclear 
-documentation to the developer.
+tool**S**. 
 
 Documentation
 -------------
