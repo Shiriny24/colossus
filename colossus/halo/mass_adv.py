@@ -20,25 +20,25 @@ concentration::
 	
 By default, the function uses the ``diemer_15`` concentration model (see the documentation of the
 :mod:`halo.concentration` module). This function is not included in the :mod:`halo.mass_defs`
-module because it uses concentration models.
+module in order to avoid circular dependencies.
 
 ---------------------------------------------------------------------------------------------------
 Alternative mass definitions
 ---------------------------------------------------------------------------------------------------
 
-Two alternative mass definitions (as in, not spherical overdensity masses) are described in 
-More, Diemer & Kravtsov 2015. Those include:
+Two alternative mass definitions (as in, not spherical overdensity masses) are implemented in this 
+module:
 
-* :math:`M_{sp}`: The mass contained within the radius of the outermost density caustic. 
-  Caustics correspond to particles piling up at the apocenter of their orbits. The most pronounced
-  caustic is due to the most recently accreted matter, and that caustic is also found at the
-  largest radius which we call the splashback radius, :math:`R_{sp}`. This is designed as a 
-  physically meaningful radius definition that encloses all the mass ever accreted by a halo.
-* :math:`M_{<4r_s}`: The mass within 4 scale radii. This mass definition quantifies the mass in
+* :math:`M_{sp}`, the splashback mass that is contained within :math:`R_{sp}`, the splashback 
+  radius. The radius corresponds to the apocenter of particles on their first orbit after infall,
+  and thus physically separates matter that is orbiting in the halo potential and matter that has
+  not fallen in yet. Operationally, :math:`R_{sp}` is defined to be the radius where the logarithmic
+  slope of the 3D density profile is most negative.
+* :math:`M_{<4r_s}`, the mass within 4 scale radii. This mass definition quantifies the mass in
   the inner part of the halo. During the fast accretion regime, this mass definition tracks
   :math:`M_{vir}`, but when the halo stops accreting it approaches a constant. 
 
-:math:`M_{<4r_s}`: can be computed from both NFW and DK14 profiles. :math:`R_{sp}` and 
+:math:`M_{<4r_s}`: can be computed from both NFW and DK14 profiles, while :math:`R_{sp}` and 
 :math:`M_{sp}` can only be computed from DK14 profiles. For both mass definitions there are
 converter functions:
 
@@ -48,6 +48,9 @@ converter functions:
 	Rsp
 	Msp
 	M4rs
+
+For more information, please see Diemer & Kravtsov 2014, Adhikari et al. 2014, and More, Diemer & 
+Kravtsov 2015.
 
 ---------------------------------------------------------------------------------------------------
 Module reference

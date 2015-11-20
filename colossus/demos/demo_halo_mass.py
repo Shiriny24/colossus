@@ -23,7 +23,7 @@ from colossus.halo import mass_defs
 
 def main():
 
-	demoDensityThresholds()
+	#demoDensityThresholds()
 	#demoMassDefinitions()
 
 	return

@@ -6,7 +6,13 @@
 ###################################################################################################
 
 """
-The NFW profile
+This module implements the Navarro-Frenk-White form of the density profile. Please see 
+:doc:`halo_profile` for a general introduction to the colossus density profile module, and
+:doc:`demos` for example code.
+
+---------------------------------------------------------------------------------------------------
+Module reference
+---------------------------------------------------------------------------------------------------
 """
 
 import numpy as np

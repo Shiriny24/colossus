@@ -5,6 +5,27 @@
 #
 ###################################################################################################
 
+"""
+This module implements the Diemer & Kravtsov 2014 form of the density profile. Please see 
+:doc:`halo_profile` for a general introduction to the colossus density profile module, and
+:doc:`demos` for example code.
+
+Unlike other implementations of the density profile, the DK14 profile makes little sense without 
+the addition of a description of the outer profile. Thus, the module contains a convenient 
+wrapper function to create the profile objects, :func:`getDK14ProfileWithOuterTerms`::
+
+	getDK14ProfileWithOuterTerms(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir')
+	
+This line will return a DK14 profile object with some default terms already added in. The outer 
+terms can be changed by the user::
+
+	getDK14ProfileWithOuterTerms(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir', outer_terms = ['mean', 'cf'])
+
+---------------------------------------------------------------------------------------------------
+Module reference
+---------------------------------------------------------------------------------------------------
+"""
+
 import numpy as np
 import scipy.optimize
 

@@ -6,24 +6,17 @@
 ###################################################################################################
 
 """
-This module implements functions related to halo mass definitions that rely on particular forms of 
-the halo density profiles. For the most basic aspects of spherical overdensity mass definitions, 
+This module implements functions to convert between spherical overdensity mass definitions, and to 
+compute pseudo-evolution. For the most basic aspects of spherical overdensity mass definitions, 
 see the :doc:`halo_mass_so` section.
 
 ---------------------------------------------------------------------------------------------------
 Basic usage
 ---------------------------------------------------------------------------------------------------
 
-Some functions make use of density profiles, but are not necessarily tied to a particular 
-functional form:
-
-.. autosummary::
-	pseudoEvolve
-	changeMassDefinition
-
 Pseudo-evolution is the evolution of a spherical overdensity halo radius, mass, and concentration 
 due to an evolving reference density (see Diemer, More & Kravtsov 2013 for more information). 
-The :func:`pseudoEvolve` function is a very general implementation of this effect. The function 
+The :func:`pseudoEvolve` function is a general implementation of this effect. The function 
 assumes a profile that is fixed in physical units, and computes how the radius, mass and 
 concentration evolve due to changes in mass definition and/or redshift. In the following 
 example we compute the pseudo-evolution of a halo with virial mass :math:`M_{vir}=10^{12} M_{\odot}/h` 
@@ -31,9 +24,10 @@ from z=1 to z=0::
 
 	M, R, c = pseudoEvolve(1E12, 10.0, 1.0, 'vir', 0.0, 'vir')
 	
-Here we have assumed that the halo has a concentration :math:`c_{vir} = 10` at z=1. Another 
+Here we have assumed that the halo has a concentration :math:`c_{vir} = 10` at z=1. By default, 
+an NFW density profile is assumed, but the user can also pass another profile object. Another
 useful application of this function is to convert one spherical overdensity mass definitions 
-to another::
+to another (at fixed redshift)::
 
 	M200m, R200m, c200m = changeMassDefinition(1E12, 10.0, 1.0, 'vir', '200m')
 	
@@ -41,8 +35,8 @@ Here we again assumed a halo with :math:`M_{vir}=10^{12} M_{\odot}/h` and :math:
 at z=1, and converted it to the 200m mass definition. 
 
 Often, we do not know the concentration of a halo and wish to estimate it using a concentration-
-mass model. This function is performed by a convenient wrapper for the 
-:func:`changeMassDefinition` function, see :func:`halo.mass_adv.changeMassDefinitionCModel`.
+mass model. This function is performed by a convenient wrapper for the changeMassDefinition()
+function, :func:`halo.mass_adv.changeMassDefinitionCModel`.
 
 ---------------------------------------------------------------------------------------------------
 Module reference

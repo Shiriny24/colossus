@@ -7,39 +7,30 @@
 
 """
 This module implements basic aspects of spherical overdensity mass definitions for dark matter 
-halos. The functions in this module are independent of the form of the density profile. For 
-functions that rely on a particular form of the halo density profile, please see the 
-:doc:`halo_mass_defs` and :doc:`halo_mass_adv` sections.
+halos (please see :doc:`halo_mass` for an introduction).
 
 ---------------------------------------------------------------------------------------------------
-Spherical overdensity masses
+Basic usage
 ---------------------------------------------------------------------------------------------------
 
-Halo masses and radii are most commonly defined using spherical overdensity mass definitions. A
-spherical overdensity radius is the radius within which the halo has an overdensity :math:`\Delta`
-with respect to some reference density, usually the mean or critical density of the universe. The
-following functions compute the overdensity threshold :math:`\Delta` and convert from radius to 
-mass and vice versa:
+For example, we can compute the spherical overdensity radius of a halo with particular mass or
+vice versa::
+
+	R200m = M_to_R(1E12, 0.0, '200m')
+	Mvir = R_to_M(400.0, 1.5, 'vir')
+
+The other functions in this module allow us to parse the mass definition strings and compute the 
+density thresholds, but typically the user will not need to evaluate those functions manually
+since most SO-related functions in colossus accept mdef as an argument.
 
 .. autosummary:: 
-	densityThreshold
-	deltaVir
+
+	parseMassDefinition
+	parseRadiusMassDefinition
+    densityThreshold
+    deltaVir
     M_to_R
     R_to_M
-
-Throughout all Colossus modules that use spherical overdensity masses, the definition is passed
-through a parameter called ``mdef`` which is a string and can take on the following values:
-
-========== ========== ==================== ================================================================
-Type       mdef       Examples             Explanation
-========== ========== ==================== ================================================================
-Matter     '<int>m'   178m, 200m           An integer number times the mean matter density of the universe
-Critical   '<int>c'   200c, 500c, 2500c    An integer number times the critical density of the universe
-Virial     'vir'      vir                  An overdensity that varies with redshift (Bryan & Norman 1998)
-========== ========== ==================== ================================================================
-
-Furthermore, spherical overdensity radii are commonly denoted by R<mdef> (e.g., R200m) and masses
-by M<mdef>, e.g. M500c.
 
 ---------------------------------------------------------------------------------------------------
 Module reference

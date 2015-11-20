@@ -1,5 +1,5 @@
 =====================================
-Spherical overdensity basics
+Spherical overdensity masses
 =====================================
 
 .. automodule:: halo.mass_so

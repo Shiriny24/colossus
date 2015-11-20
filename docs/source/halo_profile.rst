@@ -63,6 +63,8 @@ Class                                        Explanation                     Pap
 :class:`halo.profile_dk14.DK14Profile`       Diemer & Kravtsov 2014 profile  Diemer & Kravtsov 2014    ApJ 789, 1
 ============================================ =============================== ========================= =============
 
+The :doc:`demos` code contains coding example for these profile classes.
+
 ---------------------------------------------------------------------------------------------------
 Adding an outer profile
 ---------------------------------------------------------------------------------------------------
@@ -90,24 +92,19 @@ Hernquist profile. All we have to do is:
 
 Here is the code::
 
-    class HernquistProfile(profile_base.HaloDensityProfile):
-        
+    class HernquistProfile(profile_base.HaloDensityProfile):  
+       
         def __init__(self, rhos, rs):
-            
             self.par_names = ['rhos', 'rs']
             self.opt_names = []
             profile_base.HaloDensityProfile.__init__(self)
-            
             self.par['rhos'] = rhos
             self.par['rs'] = rs
-            
             return
         
         def densityInner(self, r):
-        
             x = r / self.par['rs']
             density = self.par['rhos'] / x / (1.0 + x)**3
-            
             return density
       
 This derived class inherits all the functionality of the parent class, including other physical

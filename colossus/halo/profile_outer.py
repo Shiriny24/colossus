@@ -7,19 +7,20 @@
 
 """
 This module implements terms that describe the outer halo density profile. Specific terms are 
-derived from the :class:`OuterTerm` base class.
+derived from the :class:`OuterTerm` base class. The :doc:`demos` contain example code that 
+demonstrates the usage of the outer profile.
 
 ---------------------------------------------------------------------------------------------------
 Specific outer terms
 ---------------------------------------------------------------------------------------------------
 
-============================================ ===============================================================
-Class                                        Explanation
-============================================ ===============================================================
-:class:`OuterTermMeanDensity`                The mean matter density of the universe  
-:class:`OuterTermCorrelationFunction`        An estimate based on the matter-matter correlation function      
-:class:`OuterTermPowerLaw`                   A power-law profile
-============================================ ===============================================================
+======================================= =======================================================
+Class                                   Explanation
+======================================= =======================================================
+:class:`OuterTermMeanDensity`           The mean matter density of the universe  
+:class:`OuterTermCorrelationFunction`   A term based on the matter-matter correlation      
+:class:`OuterTermPowerLaw`              A power-law profile
+======================================= =======================================================
 
 ---------------------------------------------------------------------------------------------------
 Module reference
