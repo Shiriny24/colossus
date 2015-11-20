@@ -71,8 +71,8 @@ class TCComp(CosmologyTestCase):
 			self.assertAlmostEqual(self.cosmo.Neff, c_dict['Neff'], places = TEST_N_DIGITS)
 		else:
 			self.assertAlmostEqual(self.cosmo.Neff, defaults.COSMOLOGY_NEFF, places = TEST_N_DIGITS)
-		self.assertAlmostEqual(self.cosmo.Ogamma0, 5.3888999e-05, places = TEST_N_DIGITS)
-		self.assertAlmostEqual(self.cosmo.Onu0, 3.7278733e-05, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(self.cosmo.Ogamma0, 5.388899947524e-05, places = TEST_N_DIGITS)
+		self.assertAlmostEqual(self.cosmo.Onu0, 3.727873332823e-05, places = TEST_N_DIGITS)
 		self.assertAlmostEqual(self.cosmo.Or0, 9.116773280347645e-05, places = TEST_N_DIGITS)
 	
 	def test_initNoRel(self):
