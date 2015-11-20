@@ -26,10 +26,11 @@ class ColosssusTestCase(unittest.TestCase):
 		
 		if abs(second) < 1E-15:
 			diff = abs(first)
+			msg_ = 'Got %.12e, expected %.12e, relative difference %.2e. ' % (first, second, diff)
 		else:
 			diff = abs((first - second) / second)
+			msg_ = 'Got %.12e, expected %.12e, absolute difference %.6e. ' % (first, second, diff)
 		
-		msg_ = 'Got %.12e, expected %.12e. ' % (first, second)
 		if msg is not None:
 			msg_ += msg
 		
