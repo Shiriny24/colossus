@@ -8,18 +8,18 @@ This document describes the Colossus mechanisms for dealing with halo density pr
 General philosophy
 ---------------------------------------------------------------------------------------------------
 
-The entire halo density profile module is based on a powerful base class, profile_base.HaloDensityProfile.
-Some of the major design decisions regarding this class are:
+The halo density profile module is based on a powerful base class, 
+:class:`halo.profile_base.HaloDensityProfile`. Some of the major design decisions regarding this 
+class are:
 
-* The halo density profile is represented in physical units, not some re-scaled units.
+* The halo density profile is represented in physical units.
 * A halo density profile is split into two parts, an inner profile (1-halo term) and an outer profile
-  (2-halo term). The inner profile is what sets different profile models apart, whereas there are 
-  numerous solutions for how to implement the 2-halo term.
+  (2-halo term). The inner profile is specific to particular profile models, whereas there are 
+  generic solutions for how to implement the 2-halo term.
 * The outer profile is implemented as the sum of a number of possible terms, such as the mean
   density, a power law, and a 2-halo term based on the matter-matter correlation function. These
-  terms are implemented in profile_base.HaloDensityProfile so that they can be used with any 
-  of the derived profile classes.
-* There are two fundamental aspects to a profile model: it's functional form, and the values of the
+  terms can be added to the HaloDensityProfile base class, and thus to all derived profile models.
+* There are two fundamental aspects to a model of the inner profile: it's functional form, and the values of the
   parameters of this form. These parameters should be independent from each other, i.e., parameters
   should not be derivable from the other parameters.
 * Other quantities, such as settings and values derived from the parameters, are stored as options.
@@ -40,17 +40,19 @@ Some of the major design decisions regarding this class are:
 Basic usage
 ---------------------------------------------------------------------------------------------------
 
-We create a density profile object which has a range of functions. For example, let us create an 
-NFW profile::
+Almost all profile related functions are encapsulated within profile objects. For example, let us 
+create an NFW profile for a halo with a particular virial mass and concentration::
     
     profile = NFWProfile(M = 1E12, mdef = 'vir', z = 0.0, c = 10.0)
-    Rvir = profile.RDelta(0.0, 'vir')
-    rho = profile.density(Rvir)
+    R200m = profile.RDelta(0.0, '200m')
+    rho = profile.density(R200m)
+    Sigma = profile.surfaceDensity(R200m)
+    M = profile.enclosedMass(R200m)
 
-See the documentation of the abstract base class :class:`halo.profile_base.HaloDensityProfile` for the functionality 
-of the profile objects. For documentation on spherical overdensity mass definitions, please see the 
-documentation of the :doc:`halo_mass` module. The following functional forms for the density 
-profile are implemented:
+See the documentation of the abstract base class :class:`halo.profile_base.HaloDensityProfile` for a
+reference of the functionality of the profile objects. For documentation on spherical overdensity 
+mass definitions, please see the documentation of the :doc:`halo_mass` module. The following 
+functional forms for the density profile are currently implemented:
 
 ============================================ =============================== ========================= =============
 Class                                        Explanation                     Paper                      Reference
@@ -62,7 +64,19 @@ Class                                        Explanation                     Pap
 ============================================ =============================== ========================= =============
 
 ---------------------------------------------------------------------------------------------------
-Example of derived profile class
+Adding an outer profile
+---------------------------------------------------------------------------------------------------
+
+Let us again create an NFW profile, but add a description of the outer profile using the matter-
+matter correlation function::
+    
+    outer_term = OuterTermCorrelationFunction(z = 0.0, bias = 2.0)
+    profile = NFWProfile(M = 1E12, mdef = 'vir', z = 0.0, c = 10.0, outer_terms = [outer_term])
+
+The outer_terms keyword can be used with any class derived from HaloDensityProfile.
+
+---------------------------------------------------------------------------------------------------
+Creating a new profile class
 ---------------------------------------------------------------------------------------------------
 
 It is easy to create a new form of the density profile in colossus. For example, let us create a
@@ -131,22 +145,7 @@ The :func:`halo.profile_base.HaloDensityProfile.fit` function accepts many input
 fitting method used. Please see the detailed documentation below.
 
 ---------------------------------------------------------------------------------------------------
-Units
----------------------------------------------------------------------------------------------------
-
-Unless otherwise noted, all functions in this module use the following units:
-
-================ =======================================
-Variable         Unit
-================ =======================================
-Length           Physical kpc/h
-Mass             :math:`M_{\odot}/h`
-Density          Physical :math:`M_{\odot} h^2 / kpc^3`
-Surface density  Physical :math:`M_{\odot} h / kpc^2`
-================ =======================================
-
----------------------------------------------------------------------------------------------------
-General profile implementation
+The general base classes for inner and outer profiles
 ---------------------------------------------------------------------------------------------------
 
 .. toctree::
@@ -156,7 +155,7 @@ General profile implementation
     halo_profile_outer
 
 ---------------------------------------------------------------------------------------------------
-Specific forms
+Specific forms of the density profile
 ---------------------------------------------------------------------------------------------------
 
 .. toctree::

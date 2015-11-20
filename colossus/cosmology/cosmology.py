@@ -116,26 +116,6 @@ Those cosmologies that refer to particular simulations (such as bolshoi and mill
 to ignore relativistic species, i.e. photons and neutrinos.
 
 ---------------------------------------------------------------------------------------------------
-Units
----------------------------------------------------------------------------------------------------
-
-Unless otherwise noted, all functions in this module use the following units:
-
-============ =======================================
-Variable     Unit
-============ =======================================
-Length       Comoving Mpc/h
-Wavenumber   Comoving h/Mpc
-Time         Gigayears
-Mass         :math:`M_{\odot}/h`
-Density      Physical :math:`M_{\odot} h^2 / kpc^3`
-============ =======================================
-
-Note that densities use physical kpc/h whereas all other lengths are expressed in comoving Mpc/h. 
-The kpc/h units for density make them compatible with the HaloDensityProfile module, where all 
-lengths are expressed in physical kpc/h.
-
----------------------------------------------------------------------------------------------------
 Derivatives and inverses
 ---------------------------------------------------------------------------------------------------
 

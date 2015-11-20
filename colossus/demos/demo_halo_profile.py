@@ -30,7 +30,7 @@ from colossus.halo import profile_base
 def main():
 
 	#demoProfiles()
-	demoOuterProfiles()
+	#demoOuterProfiles()
 	#demoNewProfile()
 
 	#demoFittingLeastsq(profile = 'einasto', quantity = 'M', scatter = 0.1)
@@ -149,13 +149,15 @@ def demoOuterProfiles():
 	labels.append('DK14 (mean)')
 	p.append(profile_dk14.getDK14ProfileWithOuterTerms(M = M, c = c, z = z, mdef = mdef, 
 													outer_term_names = ['mean', 'pl']))
+	pl_prof = p[-1]._outer_terms[1]
 	labels.append('DK14 (mean + pl)')
 	p.append(profile_dk14.getDK14ProfileWithOuterTerms(M = M, c = c, z = z, mdef = mdef, 
 													outer_term_names = ['mean', 'cf']))
+	cf_prof = p[-1]._outer_terms[1]
 	labels.append('DK14 (mean + cf)')
 
 	colors = ['darkblue', 'darkblue', 'darkblue', 'darkblue']
-	ls = [':', '-', '-.', '--']
+	ls = [':', '-', '--', '-.']
 
 	# Prepare plot
 	fig = plt.figure(figsize = (5.5, 10.0))
@@ -175,9 +177,11 @@ def demoOuterProfiles():
 		rho = p[i].density(r)
 		plt.plot(rR, rho / rho_m, ls = ls[i], color = colors[i], label = labels[i])
 
-	# Plot correlation function
+	# Plot correlation function, power-law etc
 	xi = cosmo.correlationFunction(r / 1000.0 * (1 + z), z)
-	plt.plot(rR, xi, '--', color = 'gray', label = r'$\xi_{\rm mm} \rho_{\rm m}$')
+	plt.plot(rR, pl_prof.density(r) / rho_m, '--', color = 'gray', label = 'PL term')
+	plt.plot(rR, xi, ':', color = 'gray', label = r'$\xi_{\rm mm} \rho_{\rm m}$')
+	plt.plot(rR, cf_prof.density(r) / rho_m, '-.', color = 'gray', label = r'$\xi_{\rm mm} \rho_{\rm m} b(\nu)$')
 
 	# Slope panel
 	plt.sca(p2)
@@ -273,17 +277,13 @@ def demoFittingLeastsq(profile = 'nfw', quantity = 'rho', scatter = 0.2):
 		mask = np.array([True, True, True])
 
 	elif profile == 'dk14':
-		prof = profile_dk14.DK14Profile(M = M, c = c, z = z, mdef = mdef, be = 1.0, se = 1.5)
-		# 'rhos', 'rs', 'rt', 'alpha', 'beta', 'gamma', 'be', 'se'
-		mask = np.array([True, True, True, False, False, True, True, True])
+		prof = profile_dk14.getDK14ProfileWithOuterTerms(M = M, c = c, z = z, mdef = mdef,
+												outer_term_names = ['mean', 'pl'])
+		# 'rhos', 'rs', 'rt', 'alpha', 'beta', 'gamma', 'pl_norm', 'pl_slope'
+		mask = np.array([True, True, True, False, False, False, True, True])
 	
 	else:
 		raise Exception('Invalid profile')
-
-	# Our initial guess is wrong by 50% in all parameters
-	x_true = prof.getParameterArray(mask)
-	ini_guess = x_true * 1.5
-	prof.setParameterArray(ini_guess, mask = mask)
 
 	# Add scatter proportional to the profile itself
 	q_true = prof.quantities[quantity](r)
@@ -294,6 +294,11 @@ def demoFittingLeastsq(profile = 'nfw', quantity = 'rho', scatter = 0.2):
 	for i in range(len(r)):
 		q[i] += np.random.normal(0.0, q_err[i])
 	
+	# Our initial guess is wrong by 50% in all parameters
+	x_true = prof.getParameterArray(mask)
+	ini_guess = x_true * 1.5
+	prof.setParameterArray(ini_guess, mask = mask)
+
 	# Perform the fit
 	dict = prof.fit(r, q, quantity, q_err = q_err, verbose = True, mask = mask, tolerance = 1E-4)
 	x = prof.getParameterArray(mask = mask)
@@ -304,8 +309,8 @@ def demoFittingLeastsq(profile = 'nfw', quantity = 'rho', scatter = 0.2):
 	plt.figure()
 	plt.loglog()
 	plt.errorbar(r, q, yerr = q_err, fmt = '.', marker = 'o', ms = 4.0, label = 'Data')
-	plt.plot(r, q_true, '--', color = 'gray', label = 'True')
-	plt.plot(r, dict['q_fit'], '-', label = 'Fit')
+	plt.plot(r, dict['q_fit'], '-', color = 'deepskyblue', label = 'Fit')
+	plt.plot(r, q_true, '--', color = 'firebrick', label = 'True')
 	plt.legend()
 	plt.show()
 	

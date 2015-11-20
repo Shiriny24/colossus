@@ -287,13 +287,25 @@ class DK14Profile(profile_base.HaloDensityProfile):
 
 	###############################################################################################
 
-	def update(self):
+	def update(self, adjust_outer_parameters = True):
 		"""
 		Update the profile options after a parameter change.
 		
-		The opt['R200m'] parameter is not guaranteed to stay in sync with the other parameters, for
-		example after a fit. This function remedies that, and also changes other parameters that 
-		depend on R200m, for example the norm and slope in the case of an outer power law term.
+		The DK14 profile has one internal option, opt['R200m'], that does not stay in sync with
+		the other profile parameters if they are changed outside the constructor. This function 
+		adjusts R200m, in addition to whatever action is taken in the update function of the 
+		super class.
+		
+		Additionally, this function can adjust the parameters of outer profiles that rely on R200m,
+		for example the pivot radius of a power-law outer profile. This behavior can be switched
+		off using the adjust_outer_parameters flag. Note that the conversion only works for those
+		profiles supported by the :func:`getDK14ProfileWithOuterTerms` initializer function. For
+		user-defined outer terms, the rescaling will not work out of the box.
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		adjust_outer_parameters: bool
+			See above.
 		"""
 		
 		profile_base.HaloDensityProfile.update(self)
@@ -305,13 +317,12 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		
 		for i in range(len(self._outer_terms)):
 			if isinstance(self._outer_terms[i], profile_outer.OuterTermPowerLaw):
-				if self._outer_terms[i].term_opt['r_pivot'] == 'R200m':
+				if self._outer_terms[i].term_opt['pivot'] == 'R200m':
 					
 					old_norm, slope, r_pivot, _, _ = self._outer_terms[i]._getParameters()
-					new_pivot = R200m_new * self.opt[self.term_opt_names[1]]
+					new_pivot = R200m_new * self.opt[self._outer_terms[i].term_opt_names[1]]
 					new_norm = old_norm * (r_pivot / new_pivot)**slope
-					
-					self.par[self.term_par_names[0]] = new_norm
+					self.par[self._outer_terms[i].term_par_names[0]] = new_norm
 
 		self.opt['R200m'] = R200m_new
 		
@@ -648,11 +659,6 @@ def getDK14ProfileWithOuterTerms(outer_term_names = ['mean', 'pl'],
 			t = profile_outer.OuterTermCorrelationFunction(derive_bias_from = derive_bias_from,
 														z = z, bias = bias)
 	
-		elif outer_term_names[i] == 'cfpl':
-			t = profile_outer.OuterTermCorrelationFunctionPowerLaw(norm = power_law_norm, 
-							slope = power_law_slope, 
-							derive_bias_from = 'R200m', z = z, max_rho = power_law_max)
-	
 		else:
 			msg = 'Unknown outer term name, %s.' % (outer_terms[i])
 			raise Exception(msg)
@@ -661,5 +667,6 @@ def getDK14ProfileWithOuterTerms(outer_term_names = ['mean', 'pl'],
 
 	prof = DK14Profile(outer_terms = outer_terms, **kwargs)
 	
-			
 	return prof
+
+###################################################################################################

@@ -1153,8 +1153,12 @@ class HaloDensityProfile():
 		This function represents a general interface for finding the best-fit parameters of a 
 		halo density profile given a set of data points. These points can represent a number of
 		different physical quantities: ``quantity`` can either be density, enclosed mass, or 
-		surface density (``rho``, ``M``, or ``Sigma``). The data points q at radii r can optionally 
-		have error bars, and the user can pass a full covariance matrix.
+		surface density (``rho``, ``M``, or ``Sigma``). 
+		
+		The data points q at radii r can optionally have error bars, and the user can pass a full 
+		covariance matrix. Please note that not passing any estimate of the uncertainty, i.e. 
+		q_err = q_cov = None, can lead to very poor fit results: the fitter will minimize the 
+		absolute difference between points, strongly favoring the high densities at the center.
 		
 		There are two fundamental methods for performing the fit, a least-squares minimization 
 		(method = leastsq) and a Markov-Chain Monte Carlo (method = mcmc). The MCMC method has some

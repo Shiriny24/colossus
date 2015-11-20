@@ -12,6 +12,8 @@ from colossus.cosmology import cosmology
 from colossus.halo import mass_so
 from colossus.halo import mass_defs
 from colossus.halo import mass_adv
+from colossus.halo import profile_dk14
+from colossus.halo import profile_outer
 
 ###################################################################################################
 
@@ -90,7 +92,6 @@ class TCMassDefs(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
 		cosmology.setCosmology('planck15')
-		pass
 	
 	def test_pseudoEvolve(self):
 		z1 = 0.68
@@ -106,7 +107,22 @@ class TCMassDefs(test_colossus.ColosssusTestCase):
 			self.assertAlmostEqual(R, correct_R[i], places = TEST_N_DIGITS)
 			self.assertAlmostEqual(c, correct_c[i], places = TEST_N_DIGITS)
 
-		return
+	def test_pseudoEvolveWithDk14(self):
+		z1 = 0.68
+		z2 = 3.1
+		M1 = [1.5E8, 1.1E15]
+		c1 = 4.6
+		correct_M = [44691058.002433784, 475175859681114.38]
+		correct_R = [2.1535281431819411, 473.54558944921223]
+		correct_c = [1.3019045634376127, 1.4735218662210423]
+		for i in range(len(M1)):
+			t = profile_outer.OuterTermPowerLaw(norm = 1.0, slope = 1.5, pivot = 'R200m', 
+											pivot_factor = 5.0, z = 0.0)
+			M, R, c = mass_defs.pseudoEvolve(M1[i], c1, z1, '200m', z2, 'vir',
+						profile = profile_dk14.DK14Profile, outer_terms = [t])
+			self.assertAlmostEqual(M, correct_M[i], places = TEST_N_DIGITS)
+			self.assertAlmostEqual(R, correct_R[i], places = TEST_N_DIGITS)
+			self.assertAlmostEqual(c, correct_c[i], places = TEST_N_DIGITS)
 
 	def test_changeMassDefinition(self):
 		z1 = 0.98
@@ -120,8 +136,6 @@ class TCMassDefs(test_colossus.ColosssusTestCase):
 			self.assertAlmostEqual(M, correct_M[i], places = TEST_N_DIGITS)
 			self.assertAlmostEqual(R, correct_R[i], places = TEST_N_DIGITS)
 			self.assertAlmostEqual(c, correct_c[i], places = TEST_N_DIGITS)
-
-		return
 	
 ###################################################################################################
 # TEST CASE: ADVANCED

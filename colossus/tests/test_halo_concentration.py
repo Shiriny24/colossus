@@ -103,6 +103,12 @@ class TCConcentration(test_colossus.ColosssusTestCase):
 				raise Exception(msg)
 
 	###############################################################################################
+	
+	def test_hard_fail(self):
+		c = concentration.concentration(1E16, 'vir', z = 0.0, model = 'bullock01', range_return = False, range_warning = False)
+		self.assertEqual(c, concentration.INVALID_CONCENTRATION)
+
+	###############################################################################################
 
 	# If interpolation = False, the slope is computed "manually" in the concentration routine. This 
 	# function tests how different the result is from the derivative function in the Cosmology module.

@@ -7,72 +7,68 @@
 
 """
 This module implements a range of models for halo concentration as a function of mass, redshift, 
-and cosmology. 
-
----------------------------------------------------------------------------------------------------
-Basic usage
----------------------------------------------------------------------------------------------------
-
-The main function in this module, :func:`concentration`, is a wrapper for all models::
+and cosmology. The main function in this module, :func:`concentration`, is a wrapper for all 
+models::
 	
 	setCosmology('WMAP9')
 	cvir = concentration(1E12, 'vir', 0.0, model = 'diemer15')
 
-Alternatively, the user can also call the individual model functions directly. Note, however, that 
-most models are only valid over a certain range of masses, redshifts, and cosmologies.
+Alternatively, the user can also call the individual model functions directly. However, there are
+two aspects which the concentration() function handles automatically. 
 
-Furthermore, each model was only calibrated for one of a few particular mass definitions, such as 
-:math:`c_{200c}`, :math:`c_{vir}`, or :math:`c_{200m}`. The :func:`concentration` function 
-automatically converts these definitions to the definition chosen by the user. For documentation 
-on spherical overdensity mass definitions, please see the documentation of the :doc:`halo_mass` 
-module.
+First, many concentration models are only valid over a certain range of masses, redshifts, and 
+cosmologies. If the user requests a mass or redshift outside these ranges, the function returns a 
+*soft fail*: the concentration value is computed, but a warning is displayed and/or a False flag
+is returned in a boolean array. If a concentration model cannot be computed, this leads to a *hard
+fail* and a returned value of INVALID_CONCENTRATION (-1).
+
+Second, each model was only calibrated for one of a few particular mass definitions, such as 
+:math:`c_{200c}`, :math:`c_{vir}`, or :math:`c_{200m}`. The concentration() function 
+automatically converts these definitions to the definition chosen by the user (see :doc:`halo_mass`
+for more information on spherical overdensity masses). For the conversion, we necessarily have to
+assume a particular form of the density profile (see the documentation of the 
+:func:`halo.mass_defs.changeMassDefinition` function). 
+
+.. warning::
+	The conversion to other mass definitions can degrade the accuracy of the predicted 
+	concentration.
+	
+The conversion to other mass definitions can degrade the accuracy by up to ~15-20% for certain 
+mass definitions, masses, and redshifts. Using the DK14 profile (see :mod:`halo.profile_dk14`) 
+for the mass conversion gives slightly improved results, but the conversion is slower. Please 
+see Appendix C in Diemer & Kravtsov 2015 for details.
+
+.. warning::
+	The user must ensure that the cosmology is set consistently.
+	
+Many concentration models were calibrated only for one particular cosmology (though the default
+concentration model, 'diemer15', is valid for all masses, redshifts, and cosmologies). Neither the 
+concentration() function nor the invidual model functions issue warnings if the set cosmology does
+not match the concentration model (with the exception of the modelKlypin15fromM() model). For 
+example, it is possible to set a WMAP9 cosmology, and evaluate the Duffy et al. 2008 model which 
+is only valid for a WMAP5 cosmology. When using such models, it is the user's responsibility to 
+ensure consistency with other calculations.
 
 ---------------------------------------------------------------------------------------------------
 Concentration models
 ---------------------------------------------------------------------------------------------------
 
 The following models are supported in this module, and their ID can be passed as the ``model`` 
-parameter to the :func:`concentration` function. Alternatively, the user 
-can call the models directly using the <ID>_c() functions documented below. Please note that those 
-functions do not convert mass definitions, check on the validity of the results etc.
+parameter to the :func:`concentration` function:
 
-============== ================ ================== =========== =============== ========================== =================
-ID             Native mdefs     M range (z=0)      z range     Cosmology       Paper                      Reference
-============== ================ ================== =========== =============== ========================== =================
-diemer15       200c             Any                Any         Any             Diemer & Kravtsov 2015     ApJ 799, 108
-klypin15_nu    200c, vir        M > 1E10           0 < z < 5   Planck1         Klypin et al. 2014
-klypin15_m     200c, vir        M > 1E10           0 < z < 5   Planck1/WMAP7   Klypin et al. 2014
-dutton14       200c, vir        M > 1E10           0 < z < 5   Planck1         Dutton & Maccio 2014       MNRAS 441, 3359
-bhattacharya13 200c, vir, 200m  2E12 < M < 2E15    0 < z < 2   WMAP7           Bhattacharya et al. 2013   ApJ 766, 32
-prada12        200c             Any                Any         Any             Prada et al. 2012          MNRAS 423, 3018
-klypin11       vir              3E10 < M < 5E14    0           WMAP7           Klypin et al. 2011         ApJ 740, 102
-duffy08        200c, vir, 200m  1E11 < M < 1E15    0 < z < 2   WMAP5           Duffy et al. 2008          MNRAS 390, L64
-bullock01	   200c             Almost any         Any         Any             Bullock et al. 2001        MNRAS 321, 559
-============== ================ ================== =========== =============== ========================== =================
-
----------------------------------------------------------------------------------------------------
-Conversion between mass definitions
----------------------------------------------------------------------------------------------------
-	
-If the user requests a mass definition that is not one of the native definitions of the c-M model,
-the mass and concentration are converted, necessarily assuming a particular form of the density
-profile. For this purpose, the user can choose between ``nfw`` and ``dk14`` profiles.
-	
-.. warning:: The conversion to other mass definitions can degrade the accuracy of the predicted 
-	concentration. Diemer & Kravtsov 2014 we have evaluated this added inaccuracy,
-	and found that it can degrade the prediction by up to ~15-20% for certain mass definitions, 
-	masses, and redshifts. The density profile of Diemer & Kravtsov 2014a gives slightly improved
-	results, but the conversion is slower. Please see Appendix C in Diemer & Kravtsov 2014 for
-	details.
-	              
----------------------------------------------------------------------------------------------------
-Performance optimization
----------------------------------------------------------------------------------------------------
-
-Some models, including the diemer15 model, use certain cosmological quantities, such as 
-:math:`\sigma(R)`, that can be computationally intensive. If you wish to compute concentration for 
-many different cosmologies (for example, in an MCMC chain), please consult the documentation of the 
-``interpolation`` switch in the cosmology module.
+============== ================ ================== =========== ========== ======================================
+ID             Native mdefs     M range (z=0)      z range     Cosmology  Paper
+============== ================ ================== =========== ========== ======================================
+diemer15       200c             Any                Any         Any        Diemer & Kravtsov 2015 (ApJ 799, 108)
+klypin15_nu    200c, vir        M > 1E10           0 < z < 5   Pl1        Klypin et al. 2014 (arXiv 1411.4001)
+klypin15_m     200c, vir        M > 1E10           0 < z < 5   Pl1/WMAP7  Klypin et al. 2014 (arXiv 1411.4001)
+dutton14       200c, vir        M > 1E10           0 < z < 5   Pl1        Dutton & Maccio 2014 (MNRAS 441, 3359)
+bhattacharya13 200c, vir, 200m  2E12 < M < 2E15    0 < z < 2   WMAP7      Bhattacharya et al. 2013 (ApJ 766, 32)
+prada12        200c             Any                Any         Any        Prada et al. 2012 (MNRAS 423, 3018)
+klypin11       vir              3E10 < M < 5E14    0           WMAP7      Klypin et al. 2011 (ApJ 740, 102)
+duffy08        200c, vir, 200m  1E11 < M < 1E15    0 < z < 2   WMAP5      Duffy et al. 2008 (MNRAS 390, L64)
+bullock01	   200c             Almost any         Any         Any        Bullock et al. 2001 (MNRAS 321, 559)
+============== ================ ================== =========== ========== ======================================
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -99,6 +95,9 @@ MODELS = ['diemer15', 'klypin15_nu', 'klypin15_m', 'dutton14', 'bhattacharya13',
 		'klypin11', 'duffy08', 'bullock01']
 """A list of all implemented concentration models."""
 
+INVALID_CONCENTRATION = -1.0
+"""The concentration value returned if the model routine fails to compute."""
+
 ###################################################################################################
 
 def concentration(M, mdef, z,
@@ -106,9 +105,17 @@ def concentration(M, mdef, z,
 				conversion_profile = defaults.HALO_MASS_CONVERSION_PROFILE, 
 				range_return = False, range_warning = True):
 	"""
-	Concentration as a function of halo mass and redshift, for different concentration models, 
-	statistics, and conversion profiles. For some models, a cosmology must be set (see the 
-	documentation of the cosmology module).
+	Concentration as a function of halo mass and redshift.
+	
+	This function encapsulates all the concentration models implemented in this module. It
+	automatically converts between mass definitions if necessary. For some models, a cosmology 
+	must be set (see the documentation of the :mod:`cosmology.cosmology` module).
+	
+	In some cases, the function cannot return concentrations for the masses, redshift, or cosmology
+	requested due to limitations on a particular concentration model. If so, the mask return 
+	parameter contains a boolean list indicating which elements are valid. It is highly recommended
+	that you switch this functionality on by setting ``range_return = True`` if you are not sure
+	about the concentration model used.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -130,7 +137,9 @@ def concentration(M, mdef, z,
 		concentrations.
 	range_warning: bool
 		If ``True``, a warning is thrown if the user requested a mass or redshift where the model is 
-		not calibrated.
+		not calibrated. This warning is suppressed if range_return is True, since it is assumed 
+		that the user will evaluate the returned mask array to check the validity of the returned
+		concentrations.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -140,20 +149,14 @@ def concentration(M, mdef, z,
 		If ``range_return == True``, the function returns True/False values, where 
 		False indicates that the model was not calibrated at the chosen mass or redshift; has the
 		same dimensions as M.
-		
-	Warnings
-	-----------------------------------------------------------------------------------------------
-	Many concentration models were calibrated on a particular cosmology. Note that this function 
-	does not always issue a warning if the user has not set the same cosmology! For example, it is
-	possible to set a WMAP9 cosmology, and evaluate the Duffy et al. 2008 model which is only valid
-	for a WMAP5 cosmology. When using such models, it is the user's responsibility to ensure 
-	consistency with other calculations.
 	"""
 	
-	guess_factors = [5.0, 10.0, 100.0, 10000.0]
+	guess_factors = [2.0, 5.0, 10.0, 100.0, 10000.0]
 	n_guess_factors = len(guess_factors)
 
+	# ---------------------------------------------------------------------------------------------
 	# Evaluate the concentration model
+
 	def evaluateC(func, M, limited, args):
 		if limited:
 			c, mask = func(M, *args)
@@ -162,13 +165,19 @@ def concentration(M, mdef, z,
 			c = func(M, *args)
 		return c, mask
 	
+	# ---------------------------------------------------------------------------------------------
 	# This equation is zero for a mass MDelta (in the mass definition of the c-M model) when the
 	# corresponding mass in the user's mass definition is M_desired.
 	def eq(MDelta, M_desired, mdef_model, func, limited, args):
+		
 		cDelta, _ = evaluateC(func, MDelta, limited, args)
+		if cDelta < 0.0:
+			return np.nan
 		Mnew, _, _ = mass_defs.changeMassDefinition(MDelta, cDelta, z, mdef_model, mdef)
+		
 		return Mnew - M_desired
 
+	# ---------------------------------------------------------------------------------------------
 	# Distinguish between models
 	if model == 'diemer15':
 		mdefs_model = ['200c']
@@ -231,7 +240,7 @@ def concentration(M, mdef, z,
 	# Now check whether the definition the user has requested is the native definition of the model.
 	# If yes, we just return the model concentration. If not, the problem is much harder. Without 
 	# knowing the concentration, we do not know what mass in the model definition corresponds to 
-	# the input mass M. Thus, we need to find both M and c iteratively.
+	# the input mass M. Thus, we need to   find both M and c iteratively.
 	if mdef in mdefs_model:
 		
 		if len(mdefs_model) > 1:
@@ -269,19 +278,30 @@ def concentration(M, mdef, z,
 			j = 0
 			MDelta = None
 			while MDelta is None and j < n_guess_factors:
+				M_min = M_guess[i] / guess_factors[j]
+				M_max = M_guess[i] * guess_factors[j]
+				
+				# If we catch an exception at this point, or the model function can't compute c,
+				# it's not gonna get better by going to more extreme masses, we might as well give
+				# up.
 				try:
-					M_min = M_guess[i] / guess_factors[j]
-					M_max = M_guess[i] * guess_factors[j]
-					MDelta = scipy.optimize.brentq(eq, M_min, M_max, args = args_solver)
+					eq_min = eq(M_min, *args_solver)
+					eq_max = eq(M_max, *args_solver)
+					if np.isnan(eq_min) or np.isnan(eq_max):
+						break						
+					if eq_min * eq_max < 0.0:
+						MDelta = scipy.optimize.brentq(eq, M_min, M_max, args = args_solver)
+					else:
+						j += 1
 				except Exception:
-					j += 1
+					break
 
 			if MDelta is None or MDelta < 0.1:
 				if range_warning:
-					msg = 'Could not find concentration for model %s, mass %.2e, mdef %s. The mask array indicates invalid concentrations.' \
+					msg = 'Could not find concentration for model %s, mass %.2e, mdef %s.' \
 						% (model, M_array[i], mdef)
 					warnings.warn(msg)
-				c[i] = 0.0
+				c[i] = INVALID_CONCENTRATION
 				mask[i] = False
 			
 			else:
@@ -916,7 +936,6 @@ def modelBullock01(M200c, z):
 	M_array, is_array = utilities.getArray(M200c)
 	D_target = cosmo.peakHeight(F * M_array, 0.0)
 	mask = (D_target > Dmin) & (D_target < Dmax)
-
 	N = len(M_array)
 	c200c = np.zeros((N), dtype = float)
 	H0 = cosmo.Hz(z)
@@ -926,7 +945,7 @@ def modelBullock01(M200c, z):
 			Hc = cosmo.Hz(zc)
 			c200c[i] = K * (Hc / H0)**0.6666
 		else:
-			c200c[i] = 0.0
+			c200c[i] = INVALID_CONCENTRATION
 	
 	if not is_array:
 		c200c = c200c[0]

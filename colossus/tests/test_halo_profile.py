@@ -11,19 +11,21 @@ import unittest
 from colossus.tests import test_colossus
 from colossus.utils import utilities
 from colossus.cosmology import cosmology
+from colossus.halo import mass_so
 from colossus.halo import profile_outer
 from colossus.halo import profile_nfw
 from colossus.halo import profile_einasto
 from colossus.halo import profile_dk14
 from colossus.halo import profile_base
 from colossus.halo import profile_spline
+from colossus.halo import concentration
 
 ###################################################################################################
 
 TEST_N_DIGITS = test_colossus.TEST_N_DIGITS
 
 ###################################################################################################
-# TEST CASE: SPHERICAL OVERDENSITY
+# TEST CASE: BASE CLASS
 ###################################################################################################
 
 # This test case compares three different implementations of the NFW density profile: 
@@ -47,7 +49,7 @@ class TCBase(test_colossus.ColosssusTestCase):
 		self.MAX_DIFF_SO_R = 1E-8
 		self.MAX_DIFF_SO_M = 1E-8
 	
-	def test_profileAccuracy(self, verbose = False):
+	def test_base_nfw(self, verbose = False):
 
 		class TestProfile(profile_base.HaloDensityProfile):
 			
@@ -252,6 +254,189 @@ class TCBase(test_colossus.ColosssusTestCase):
 				self.assertLess(max_diff, self.MAX_DIFF_SO_M, 'Difference in SO mass too large.')
 				if verbose:
 					print(('Profile: %12s    Max diff: %9.2e' % (prof_names[i], max_diff)))
+
+###################################################################################################
+# TEST CASE: PROFILE VALUES FOR INNER PROFILES
+###################################################################################################
+
+class TCInner(test_colossus.ColosssusTestCase):
+
+	def setUp(self):
+		cosmology.setCosmology('WMAP9')
+		
+		M = 4E14
+		c = 5.7
+		mdef = '200c'
+		z = 0.2
+		
+		self.p = []
+		self.p.append(profile_nfw.NFWProfile(M = M, c = c, mdef = mdef, z = z))
+		self.p.append(profile_einasto.EinastoProfile(M = M, c = c, mdef = mdef, z = z))
+		self.p.append(profile_dk14.DK14Profile(M = M, c = c, mdef = mdef, z = z))
+	
+	def test_inner(self, verbose = False):
+		
+		r = 576.2
+
+		correct_rho = [87808.770952624793, 88484.228470315546, 89374.936828127422]
+		correct_Menc = [236306365549189.75, 242969347272094.19, 247265891283410.44]
+		correct_Sigma = [114631282.98323689, 107127499.53028558, 100715743.79995093]
+		correct_derLin = [-379.41823828559359, -394.55464355743817, -404.29227795786403]
+		correct_derLog = [-2.489737488958943, -2.5692983885152381, -2.6064713310768792]
+		correct_vcirc = [1328.2265364218915, 1346.8219502791576, 1358.6780165060245]
+		correct_vmax = [1339.0321613005094, 1360.357622100061, 1373.1897650926066]
+		correct_rdelta = [1010.9220128231149, 1014.0087194079377, 1016.4548249128767]
+
+		for i in range(len(self.p)):
+			
+			q = self.p[i].density(r)
+			self.assertAlmostEqual(q, correct_rho[i], places = TEST_N_DIGITS)
+			
+			q = self.p[i].enclosedMass(r)
+			self.assertAlmostEqual(q, correct_Menc[i], places = TEST_N_DIGITS)
+
+			q = self.p[i].surfaceDensity(r)
+			self.assertAlmostEqual(q, correct_Sigma[i], places = TEST_N_DIGITS)
+
+			q = self.p[i].densityDerivativeLin(r)
+			self.assertAlmostEqual(q, correct_derLin[i], places = TEST_N_DIGITS)
+
+			q = self.p[i].densityDerivativeLog(r)
+			self.assertAlmostEqual(q, correct_derLog[i], places = TEST_N_DIGITS)
+
+			q = self.p[i].circularVelocity(r)
+			self.assertAlmostEqual(q, correct_vcirc[i], places = TEST_N_DIGITS)
+
+			q, _ = self.p[i].Vmax()
+			self.assertAlmostEqual(q, correct_vmax[i], places = TEST_N_DIGITS)
+
+			q = self.p[i].RDelta(0.7, mdef = 'vir')
+			self.assertAlmostEqual(q, correct_rdelta[i], places = TEST_N_DIGITS)
+
+###################################################################################################
+# TEST CASE: OUTER PROFILES
+###################################################################################################
+
+class TCOuter(test_colossus.ColosssusTestCase):
+
+	def setUp(self):
+		cosmology.setCosmology('WMAP9')
+
+		z = 0.2
+		M = 4E12
+		c = 5.7
+		mdef = '200c'
+
+		self.t = []
+		self.t.append(profile_outer.OuterTermMeanDensity(z = z))
+		self.t.append(profile_outer.OuterTermCorrelationFunction(z = z, bias = 2.2))
+		self.t.append(profile_outer.OuterTermPowerLaw(z = z, norm = 2.0, slope = 1.4, 
+										max_rho = 1200.0, pivot = 'fixed', pivot_factor = 257.0))
+		
+		self.p = []
+		for i in range(len(self.t)):
+			self.p.append(profile_nfw.NFWProfile(M = M, c = c, mdef = mdef, z = z, outer_terms = [self.t[i]]))
+	
+	def test_outer(self, verbose = False):
+		
+		r = 980.2
+
+		correct_rho = [432.67954041340778, 1422.4730615494523, 337.46916847447704]
+		correct_der = [-0.87875850766375896, -1.8800114299286981, -0.9389736340514605]
+
+		for i in range(len(self.p)):
+			
+			q = self.p[i].density(r)
+			self.assertAlmostEqual(q, correct_rho[i], places = TEST_N_DIGITS)
+
+			q = self.p[i].densityDerivativeLin(r)
+			self.assertAlmostEqual(q, correct_der[i], places = TEST_N_DIGITS)
+
+###################################################################################################
+# TEST CASE: FITTING
+###################################################################################################
+
+class TCFitting(test_colossus.ColosssusTestCase):
+
+	def setUp(self):
+		cosmology.setCosmology('WMAP9')
+		M = 1E12
+		c = 6.0
+		mdef = 'vir'
+		z = 0.0
+		self.p = profile_nfw.NFWProfile(M = M, c = c, z = z, mdef = mdef)
+	
+	def test_leastsq(self, verbose = False):
+
+		scatter = 0.001
+		r = 10**np.arange(0.1, 3.6, 0.1)
+		mask = np.array([True, True])
+		q_true = self.p.density(r)
+		scatter_sigma = scatter * 0.3
+		np.random.seed(157)
+		q_err = np.abs(np.random.normal(scatter, scatter_sigma, (len(r)))) * q_true
+		q = q_true.copy()
+		for i in range(len(r)):
+			q[i] += np.random.normal(0.0, q_err[i])
+		x_true = self.p.getParameterArray(mask)
+		ini_guess = x_true * 1.5
+		self.p.setParameterArray(ini_guess, mask = mask)
+		dict = self.p.fit(r, q, 'rho', q_err = q_err, verbose = False, mask = mask, tolerance = 1E-6)
+		x = self.p.getParameterArray(mask = mask)
+		acc = abs(x / x_true - 1.0)
+		
+		self.assertLess(acc[0], 1E-2)
+		self.assertLess(acc[1], 1E-2)
+
+###################################################################################################
+# TEST CASE: NFW SPECIAL FUNCTIONS
+###################################################################################################
+	
+class TCNFW(test_colossus.ColosssusTestCase):
+
+	def setUp(self):
+		cosmology.setCosmology('WMAP9')
+				
+	def test_pdf(self):
+		
+		M = 10**np.arange(9.0, 15.5, 0.2)
+		mdef = 'vir'
+		z = 0.0
+		c = concentration.concentration(M, mdef, z)
+		N = len(M)
+		p = np.random.uniform(0.0, 1.0, (N))
+		r1 = profile_nfw.radiusFromPdf(M, c, z, mdef, p, interpolate = False)
+		r2 = profile_nfw.radiusFromPdf(M, c, z, mdef, p, interpolate = True)
+		R = mass_so.M_to_R(M, z, mdef)
+		rs = R / c
+		p1 = profile_nfw.NFWProfile.mu(r1 / rs) / profile_nfw.NFWProfile.mu(c)
+		p2 = profile_nfw.NFWProfile.mu(r2 / rs) / profile_nfw.NFWProfile.mu(c)
+		diff1 = np.max(np.abs(p1 / p - 1.0))
+		diff2 = np.max(np.abs(p2 / p - 1.0))
+		
+		self.assertLess(diff1, 1E-8)
+		self.assertLess(diff2, 1E-2)
+
+###################################################################################################
+# TEST CASE: DK14 SPECIAL FUNCTIONS
+###################################################################################################
+
+class TCDK14(test_colossus.ColosssusTestCase):
+
+	def setUp(self):
+		cosmology.setCosmology('WMAP9')
+	
+	def test_update(self, verbose = False):
+		self.prof = profile_dk14.getDK14ProfileWithOuterTerms(outer_term_names = ['mean', 'pl'], 
+				power_law_norm = 1.0, power_law_slope = 1.5,  power_law_max = 1000.0, 
+				M = 1E12, c = 5.0, mdef = 'vir', z = 0.5)
+		r = 1000.0
+		rho_old = self.prof.density(r)
+		self.prof.par['rs'] *= 1.5
+		self.prof.update()
+		rho_new = self.prof.density(r)
+		diff = abs(rho_new / rho_old - 1.0)
+		self.assertLess(diff, 1E-3)
 
 ###################################################################################################
 # TRIGGER

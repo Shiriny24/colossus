@@ -77,9 +77,9 @@ an exception is raised."""
 
 HALO_PROFILE_OUTER_PL_MAXRHO = 1000.0
 """The default maximum density the power-law outer profile term can contribute to the total 
-density. If this number is set too high, the power-law profile can lead to a spurious density 
-contribution at very small radii, if it is set too high the power-law term will not contribute
-at all."""
+density, in units of the mean matter density. If this number is set too high, the power-law profile 
+can lead to a spurious density contribution at very small radii, if it is set too high the 
+power-law term will not contribute at all."""
 
 ###################################################################################################
 # MCMC

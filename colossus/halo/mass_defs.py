@@ -64,15 +64,22 @@ from colossus.halo import profile_nfw
 ###################################################################################################
 
 def pseudoEvolve(M_i, c_i, z_i, mdef_i, z_f, mdef_f, 
-				profile = defaults.HALO_MASS_CONVERSION_PROFILE):
+				profile = defaults.HALO_MASS_CONVERSION_PROFILE, **profile_args):
 	"""
 	Evolve the spherical overdensity radius for a fixed profile.
 	
 	This function computes the evolution of spherical overdensity mass and radius due to a changing 
 	reference density, an effect called 'pseudo-evolution' (Diemer, et al. 2013 ApJ 766, 25). The 
 	user passes the mass and concentration of the density profile, together with a redshift and 
-	mass definition to which M and c refer. Given this profile, we evaluate the spherical overdensity
-	radius at a different redshift and/or mass definition.
+	mass definition to which M and c refer. The reference density can change both due to a changing 
+	redshift of a changing mass definition.
+	
+	To evaluate the new mass, radius, and concentration, we need to assume a particular form of the
+	density profile. This profile can be either the NFW profile (``profile = 'nfw'``), or any 
+	other profile class (derived from :class:`halo.profile_base.HaloDensityProfile`). In the latter
+	case, the passed profile class must accept mass, mass definition, concentration, and redshift
+	as parameters to its constructor. Additional parameters can be passed as well, for example
+	outer profile terms.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -90,9 +97,10 @@ def pseudoEvolve(M_i, c_i, z_i, mdef_i, z_f, mdef_f,
 		The final mass definition (can be the same as mdef_i, or different).
 	profile: str or HaloDensityProfile
 		The functional form of the profile assumed in the computation; can be ``nfw`` or an 
-		instance of HaloDensityProfile which must have the parameter rs. In the latter case, only 
-		one value of M_i (rather than an array) can be converted.
-
+		instance of HaloDensityProfile (which satisfies particular conditions, see above).
+	profile_args: kwargs
+		Any other keyword args are passed to the constructor of the density profile class.
+		
 	Returns
 	-----------------------------------------------------------------------------------------------
 	Mnew: array_like
@@ -126,9 +134,9 @@ def pseudoEvolve(M_i, c_i, z_i, mdef_i, z_f, mdef_f,
 	elif inspect.isclass(profile):
 		
 		for i in range(N):
-			prof = profile(M = M_i[i], mdef = mdef_i, z = z_i, c = c_i[i])
+			prof = profile(M = M_i[i], mdef = mdef_i, z = z_i, c = c_i[i], **profile_args)
 			Rnew[i] = prof.RDelta(z_f, mdef_f)
-			cnew[i] = Rnew[i] / prof.rs
+			cnew[i] = Rnew[i] / prof.par['rs']
 
 	else:
 		msg = 'This function is not defined for profile %s.' % (profile)
