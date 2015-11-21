@@ -33,4 +33,4 @@ The output should look something like this::
     
     OK
         
-If any errors occur, please send the output to the developer (benedikt.diemer@cfa.harvard.edu).
+If any errors occur, please send the output to the developer.

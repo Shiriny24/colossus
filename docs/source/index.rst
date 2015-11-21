@@ -6,7 +6,7 @@ Colossus is an acronym for **CO**\ smology, ha\ **LO** and large-\ **S**\ cale *
 tool\ **S**\ . As the name suggests, Colossus constitutes a collection of modules pertaining to 
 cosmology and dark matter halos, including:
 
-* Cosmological calculations with an emphasis on structure formation applications.
+* Cosmological calculations with an emphasis on structure formation applications
   (power spectrum, variance, correlation function, peaks in Gaussian random fields and more).
 * General and specific halo density profiles (including the NFW, Einasto, and Diemer & Kravtsov 2014 
   profiles).

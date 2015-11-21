@@ -4,3 +4,4 @@ syntax:glob
 .settings
 colossus/cache
 *.pyc
+*DS_Store
