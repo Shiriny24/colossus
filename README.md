@@ -39,19 +39,16 @@ The output should look something like this:
 
 If any errors occur, please send the output to the developer (benedikt.diemer@cfa.harvard.edu).
 
-Citing Colossus
----------------
+License & Citing
+----------------
+
+Author:        Benedikt Diemer (benedikt.diemer@cfa.harvard.edu)
+
+Contributors:  Andrey Kravtsov (MCMC)
+
+License:       MIT. Copyright (c) 2014-2015
 
 If you use Colossus for a publication, please cite Diemer & Kravtsov 2015 [[ApJ 799, 108](http://adsabs.harvard.edu/abs/2015ApJ...799..108D)] and/or the [[ASCL entry](http://adsabs.harvard.edu/abs/2015ascl.soft01016D)]. Many Colossus routines are 
 based on other papers that proposed, for example, density profile or concentration-mass models. 
 If you use such routines, please cite the paper(s) mentioned in the function and/or module
 documentation.
-
-License
--------
-
-License:       MIT. Copyright (c) 2014-2015
-
-Author:        Benedikt Diemer (benedikt.diemer@cfa.harvard.edu)
-
-Contributors:  Andrey Kravtsov (MCMC)
