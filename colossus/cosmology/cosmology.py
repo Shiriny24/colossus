@@ -1149,6 +1149,25 @@ class Cosmology(object):
 			
 		return constants.RHO_CRIT_0_KPC3 * self.Om0 * (1.0 + z)**3
 
+	###############################################################################################
+	
+	def rho_b(self, z):
+		"""
+		The baryon density of the universe at redshift z.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		z: array_like
+			Redshift; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		rho_baryon: array_like
+			The baryon density in units of physical :math:`M_{\odot} h^2 / kpc^3`; has the same 
+			dimensions as z.
+		"""
+
+		return constants.RHO_CRIT_0_KPC3 * self.Ob0 * (1.0 + z)**3
 
 	###############################################################################################
 	

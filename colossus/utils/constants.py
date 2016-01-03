@@ -31,3 +31,8 @@ RHO_CRIT_0_MPC3 = 2.774848e+11
 """The critical density of the universe at z = 0 in units of :math:`M_{\odot} h^2 / Mpc^3`."""
 DELTA_COLLAPSE = 1.686
 """The threshold overdensity for halo collapse according to the top-hat collapse model."""
+
+M_PROTON = 1.67262178e-24
+"""The mass of a proton in gram."""
+KB = 1.38064852E-16
+"""The Boltzmann constant in cgs units."""
