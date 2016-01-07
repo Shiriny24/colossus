@@ -25,7 +25,7 @@ Module reference
 import numpy as np
 
 from colossus.utils import constants
-from colossus.utils import defaults
+from colossus import defaults
 from colossus.cosmology import cosmology
 from colossus.halo import mass_so
 

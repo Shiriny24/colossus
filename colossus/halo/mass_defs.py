@@ -49,7 +49,7 @@ import numpy as np
 import inspect
 
 from colossus.utils import utilities
-from colossus.utils import defaults
+from colossus import defaults
 from colossus.halo import mass_so
 from colossus.halo import profile_nfw
 

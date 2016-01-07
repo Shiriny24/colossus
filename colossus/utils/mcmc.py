@@ -48,7 +48,7 @@ from matplotlib.colors import LogNorm
 import matplotlib.gridspec as gridspec
 
 from colossus.utils import utilities
-from colossus.utils import defaults
+from colossus import defaults
 
 ###################################################################################################
 

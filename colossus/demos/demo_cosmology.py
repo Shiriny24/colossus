@@ -179,7 +179,7 @@ def demoAdvancedComputations():
 	print("Now, a lookup table for sigma(R) should be stored in a binary file in the Data/ directory.")
 	print("If you call this function again, it should execute faster!")
 	utilities.printLine()
-	print("If we want to turn this behavior off, set 'storage = False'.")
+	print("If we want to turn this behavior off, set 'storage = ""'.")
 	print("If we do not want to use any lookup tables at all, set 'interpolation = False'.")
 	print("This setting is almost never recommended, though.")
 		

@@ -51,6 +51,7 @@ Contents
 
     installation
     units
+    global
     modules
     demos
 

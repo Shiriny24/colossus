@@ -36,7 +36,7 @@ import collections
 import six
 
 from colossus.utils import utilities
-from colossus.utils import defaults
+from colossus import defaults
 from colossus.cosmology import cosmology
 from colossus.halo import mass_so
 from colossus.halo import bias as halo_bias

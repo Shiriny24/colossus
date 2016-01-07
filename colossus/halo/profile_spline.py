@@ -19,7 +19,7 @@ import numpy as np
 import scipy.integrate
 import scipy.interpolate
 
-from colossus.utils import defaults
+from colossus import defaults
 from colossus.halo import profile_base
 
 ###################################################################################################

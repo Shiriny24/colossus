@@ -14,6 +14,8 @@ import numpy as np
 import sys
 import six
 
+from colossus import settings
+
 ###################################################################################################
 
 def printLine():
@@ -45,10 +47,13 @@ def getCacheDir(module = None):
 		The cache directory.
 	"""
 	
-	base_dir = getHomeDir()
-	if base_dir is None:
-		base_dir = getCodeDir()
-	
+	if settings.BASE_DIR is None:
+		base_dir = getHomeDir()
+		if base_dir is None:
+			base_dir = getCodeDir()
+	else:
+		base_dir = settings.BASE_DIR
+		
 	cache_dir = base_dir + '/.colossus/cache/'
 	
 	if module is not None:

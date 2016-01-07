@@ -9,7 +9,7 @@ import unittest
 import numpy as np
 
 from colossus.tests import test_colossus
-from colossus.utils import defaults
+from colossus import defaults
 from colossus.cosmology import cosmology
 
 ###################################################################################################
@@ -48,7 +48,7 @@ class TCComp(CosmologyTestCase):
 
 	def setUp(self):
 		self.cosmo_name = 'planck15'
-		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 'storage': False})
+		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 'storage': ''})
 
 	###############################################################################################
 	# BASICS
@@ -74,7 +74,7 @@ class TCComp(CosmologyTestCase):
 		self.assertAlmostEqual(self.cosmo.Or0, 9.116773280347645e-05)
 	
 	def test_initNoRel(self):
-		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 'storage': False, 'relspecies': False})
+		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 'storage': '', 'relspecies': False})
 		c_dict = cosmology.cosmologies[self.cosmo_name]
 		self.assertAlmostEqual(self.cosmo.Om0, c_dict['Om0'])
 		self.assertAlmostEqual(self.cosmo.OL0, 1.0 - c_dict['Om0'])
@@ -83,7 +83,7 @@ class TCComp(CosmologyTestCase):
 		self.assertAlmostEqual(self.cosmo.ns, c_dict['ns'])
 		self.assertAlmostEqual(self.cosmo.Tcmb0, defaults.COSMOLOGY_TCMB0)
 		self.assertAlmostEqual(self.cosmo.Neff, defaults.COSMOLOGY_NEFF)
-		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 'storage': False})
+		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 'storage': ''})
 
 	###############################################################################################
 	# Basic cosmology calculations
@@ -242,7 +242,7 @@ class TCInterp(CosmologyTestCase):
 
 	def setUp(self):
 		self.cosmo_name = 'planck15'
-		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': True, 'storage': True})
+		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': True, 'storage': 'rw'})
 
 	###############################################################################################
 	# Function tests

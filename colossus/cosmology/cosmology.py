@@ -148,7 +148,7 @@ default, tabulated, stored in files, and re-loaded when the same cosmology is se
 some rare applications (for example, MCMC chains where functions are evaluated few times, but for 
 a large number of cosmologies), the user can turn this behavior off::
 
-	cosmo = Cosmology.setCosmology('WMAP9', {"interpolation": False, "storage": False})
+	cosmo = Cosmology.setCosmology('WMAP9', {"interpolation": False, "storage": ''})
 
 For more details, please see the documentation of the ``interpolation`` and ``storage`` parameters.
 In order to turn off the interpolation temporarily, the user can simply switch the ``interpolation``
@@ -177,7 +177,8 @@ import scipy.interpolate
 import hashlib
 import pickle
 
-from colossus.utils import defaults
+from colossus import defaults
+from colossus import settings
 from colossus.utils import utilities
 from colossus.utils import constants
 
@@ -268,11 +269,12 @@ class Cosmology(object):
 		However, many functions will be *much* slower if this setting is False, please use it only 
 		if absolutely necessary. Furthermore, the derivative functions of :math:`P(k)`, 
 		:math:`\sigma(R)` etc will not work if ``interpolation == False``.
-	storage: bool 
+	storage: str 
 		By default, interpolation tables and other data are stored in a permanent file for
 		each cosmology. This avoids re-computing the tables when the same cosmology is set again. 
-		However, if any file access is to be avoided (for example in MCMC chains), the user can 
-		set ``storage = False``.
+		However, if either read or write file access is to be avoided (for example in MCMC chains),
+		the user can set this parameter to any combination of read ('r') and write ('w'), such as 
+		'rw' (read and write, the default), 'r' (read only), 'w' (write only), or '' (no storage).
 	print_info: bool
 		Output information to the console.
 	print_warnings: bool
@@ -292,7 +294,7 @@ class Cosmology(object):
 		Tcmb0 = defaults.COSMOLOGY_TCMB0, Neff = defaults.COSMOLOGY_NEFF,
 		power_law = False, power_law_n = 0.0,
 		print_info = False, print_warnings = True,
-		interpolation = True, storage = True, text_output = False):
+		interpolation = True, storage = settings.STORAGE, text_output = False):
 		
 		if name is None:
 			raise Exception('A name for the cosmology must be set.')
@@ -369,10 +371,17 @@ class Cosmology(object):
 		
 		# Flag for interpolation tables, storage, printing etc
 		self.interpolation = interpolation
-		self.storage = storage
 		self.text_output = text_output
 		self.print_info = print_info
 		self.print_warnings = print_warnings
+		
+		if storage in [True, False]:
+			raise DeprecationWarning('The storage parameter is no longer boolean, but a combination of r and w, such as "rw".')
+		for l in storage:
+			if not l in ['r', 'w']:
+				raise Exception('The storage parameter contains an unknown letter %c.' % l)
+		self.storage_read = ('r' in storage)
+		self.storage_write = ('w' in storage)
 		
 		# Lookup table for functions of z. This table runs from the future (a = 200.0) to 
 		# a = 0.005. Due to some interpolation errors at the extrema of the range, the table 
@@ -405,10 +414,10 @@ class Cosmology(object):
 		
 		# Some functions permanently store lookup tables for faster execution. For this purpose,
 		# we compute and save the storage path. 
-		if self.storage:
+		if self.storage_read or self.storage_write:
 			self.cache_dir = utilities.getCacheDir(module = 'cosmology')
 		
-		# Note that the storage is active even if interpolation == False or storage == False, 
+		# Note that the storage is active even if interpolation == False or storage == '', 
 		# since fields can still be stored non-persistently (without writing to file).
 		self._resetStorage()
 
@@ -504,7 +513,7 @@ class Cosmology(object):
 		# Check if there is a persistent object storage file. If so, load its contents into the
 		# storage dictionary. We only load from file if the user has not switched of storage, and
 		# if the user has not switched off interpolation.
-		if self.storage and self.interpolation:
+		if self.storage_read and self.interpolation:
 			filename_pickle = self._getUniqueFilename()
 			if os.path.exists(filename_pickle):
 				input_file = open(filename_pickle, "rb")
@@ -553,7 +562,7 @@ class Cosmology(object):
 		elif object_id in self.storage_temp:	
 			object_data = self.storage_temp[object_id]
 
-		elif self.storage and os.path.exists(self.cache_dir + object_id):
+		elif self.storage_read and os.path.exists(self.cache_dir + object_id):
 			object_data = np.loadtxt(self.cache_dir + object_id, usecols = (0, 1),
 									skiprows = 0, unpack = True)
 			self.storage_temp[object_id] = object_data
@@ -577,7 +586,7 @@ class Cosmology(object):
 				if object_name in self.storage_pers:	
 					object_raw = self.storage_pers[object_name]
 		
-				elif self.storage and os.path.exists(self.cache_dir + object_name):
+				elif self.storage_read and os.path.exists(self.cache_dir + object_name):
 					object_raw = np.loadtxt(self.cache_dir + object_name, usecols = (0, 1),
 									skiprows = 0, unpack = True)
 
@@ -613,7 +622,7 @@ class Cosmology(object):
 	###############################################################################################
 
 	# Save an object in memory and file storage. If persistent == True, this object is written to 
-	# file storage (unless storage == False), and will be loaded the next time the same cosmology
+	# file storage (unless storage != 'w'), and will be loaded the next time the same cosmology
 	# is loaded. If persistent == False, the object is stored non-persistently.
 	#
 	# Note that all objects are reset if the cosmology changes. Thus, this function should be used
@@ -624,7 +633,7 @@ class Cosmology(object):
 		if persistent:
 			self.storage_pers[object_name] = object_data
 			
-			if self.storage:
+			if self.storage_write:
 				# If the user has chosen text output, write a text file.
 				if self.text_output:
 					filename_text =  self.cache_dir + object_name

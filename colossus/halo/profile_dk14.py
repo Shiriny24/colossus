@@ -29,7 +29,7 @@ Module reference
 import numpy as np
 import scipy.optimize
 
-from colossus.utils import defaults
+from colossus import defaults
 from colossus.cosmology import cosmology
 from colossus.halo import mass_so
 from colossus.halo import profile_base
