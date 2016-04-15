@@ -276,7 +276,8 @@ class TCInner(test_colossus.ColosssusTestCase):
 
 		correct_rho = [87808.770952624793, 88484.228470315546, 89374.936828127422]
 		correct_Menc = [236306365549189.75, 242969347272094.19, 247265891283410.44]
-		correct_Sigma = [114631282.98323689, 107127499.53028558, 100715743.79995093]
+		correct_Sigma = [1.146313109242e+08, 1.071274995675e+08, 1.007159590602e+08]
+		correct_DeltaSigma = [1.857504107214e+08, 1.923576934645e+08, 1.964754638958e+08]
 		correct_derLin = [-379.41823828559359, -394.55464355743817, -404.29227795786403]
 		correct_derLog = [-2.489737488958943, -2.5692983885152381, -2.6064713310768792]
 		correct_vcirc = [1328.2265364218915, 1346.8219502791576, 1358.6780165060245]
@@ -293,6 +294,9 @@ class TCInner(test_colossus.ColosssusTestCase):
 
 			q = self.p[i].surfaceDensity(r)
 			self.assertAlmostEqual(q, correct_Sigma[i])
+
+			q = self.p[i].deltaSigma(r)
+			self.assertAlmostEqual(q, correct_DeltaSigma[i])
 
 			q = self.p[i].densityDerivativeLin(r)
 			self.assertAlmostEqual(q, correct_derLin[i])

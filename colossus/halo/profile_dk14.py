@@ -145,7 +145,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 			self.par['beta'] = beta
 			self.par['gamma'] = gamma
 		else:
-			self.fundamentalParameters(M, c, z, mdef, selected_by, Gamma = Gamma,
+			self._fundamentalParameters(M, c, z, mdef, selected_by, Gamma = Gamma,
 									acc_warn = acc_warn, acc_err = acc_err)
 
 		# We need to guess a radius when computing vmax
@@ -225,7 +225,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	# METHODS BOUND TO THE CLASS
 	###############################################################################################
 
-	def fundamentalParameters(self, M, c, z, mdef, selected_by, Gamma = None, 
+	def _fundamentalParameters(self, M, c, z, mdef, selected_by, Gamma = None, 
 							acc_warn = 0.01, acc_err = 0.05):
 
 		# Declare shared variables; these parameters are advanced during the iterations
@@ -401,6 +401,26 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	# compute what R would be for an NFW profile and use this radius as an initial guess.
 	
 	def RDelta(self, z, mdef):
+		"""
+		The spherical overdensity radius of a given mass definition.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		z: float
+			Redshift
+		mdef: str
+			The mass definition for which the spherical overdensity radius is computed.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		R: float
+			Spherical overdensity radius in physical kpc/h.
+
+		See also
+		-------------------------------------------------------------------------------------------
+		MDelta: The spherical overdensity mass of a given mass definition.
+		RMDelta: The spherical overdensity radius and mass of a given mass definition.
+		"""		
 	
 		M200m = mass_so.R_to_M(self.opt['R200m'], z, mdef)
 		_, R_guess, _ = mass_defs.changeMassDefinition(M200m, self.opt['R200m'] / self.par['rs'], z, '200m', mdef)

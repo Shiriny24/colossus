@@ -207,7 +207,8 @@ class OuterTermMeanDensity(OuterTerm):
 	
 	Furthermore, note that a constant term such as this one means that the surface density cannot
 	be evaluated any more, since the integral over density will diverge. If the surface density
-	is to be evaluated, one should always remove constant outer terms from the profile.
+	is to be evaluated, one should always remove constant outer terms from the profile. This 
+	class does overwrite the surface density function and issues a warning if it is called.
 	
 	In this implementation, the redshift is added to the profile options rather than parameters,
 	meaning it cannot be varied in a fit.
@@ -248,6 +249,16 @@ class OuterTermMeanDensity(OuterTerm):
 		rho = np.ones((len(r)), np.float) * cosmo.rho_m(z)
 		
 		return rho
+
+	###############################################################################################
+
+	# The surface density of this outer profile diverges, so we need to ignore it.
+
+	def surfaceDensity(self, r):
+		
+		print('WARNING: Ignoring surface density of mean-density outer profile. This term should be removed before evaluating the surface density.')
+		
+		return r * 0.0
 
 ###################################################################################################
 # OUTER TERM: HALO-MATTER CORRELATION FUNCTION

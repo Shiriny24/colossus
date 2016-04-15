@@ -329,7 +329,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	# Lokas & Mamon (2001), but in their notation the density at this radius looks somewhat 
 	# complicated. In the notation used here, Sigma(rs) = 2/3 * rhos * rs.
 	
-	def surfaceDensityInner(self, r):
+	def surfaceDensityInner(self, r, **kwargs):
 	
 		xx = r / self.par['rs']
 		x, is_array = utilities.getArray(xx)
@@ -358,6 +358,43 @@ class NFWProfile(profile_base.HaloDensityProfile):
 			surfaceDensity = surfaceDensity[0]
 	
 		return surfaceDensity
+	
+	###############################################################################################
+	
+	# The differential mass surface density DeltaSigma according to the analytical expression of 
+	# Wright & Brainerd 2000, Equation 13.
+	
+	def _deltaSigmaInner(self, r, **kwargs):
+	
+		xx = r / self.par['rs']
+		x, is_array = utilities.getArray(xx)
+		deltaSigma = np.ones_like(x) * 4.0 * self.par['rhos'] * self.par['rs']
+		
+		# Solve separately for r < rs, r > rs, r = rs
+		mask_rs = abs(x - 1.0) < 1E-4
+		mask_lt = (x < 1.0) & (np.logical_not(mask_rs))
+		mask_gt = (x > 1.0) & (np.logical_not(mask_rs))
+		
+		deltaSigma[mask_rs] *= 1.0 + np.log(0.5)
+
+		xi = x[mask_lt]
+		x2 = xi**2
+		x2m1 = x2 - 1.0
+		deltaSigma[mask_lt] *= 1.0 / x2 \
+			* (2.0 / np.sqrt(-x2m1) * np.arctanh(np.sqrt((1.0 - xi) / (xi + 1.0))) + np.log(0.5 * xi))
+
+		xi = x[mask_gt]
+		x2 = xi**2
+		x2m1 = x2 - 1.0
+		deltaSigma[mask_gt] *= 1.0 / x2 \
+			* (2.0 / np.sqrt(x2m1) * np.arctan(np.sqrt((xi - 1.0) / (xi + 1.0))) + np.log(0.5 * xi))
+
+		deltaSigma -= self.surfaceDensityInner(r)
+		
+		if not is_array:
+			deltaSigma = deltaSigma[0]
+	
+		return deltaSigma
 
 	###############################################################################################
 	

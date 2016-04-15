@@ -52,6 +52,12 @@ HALO_PROFILE_ENCLOSED_MASS_ACCURACY = 1E-6
 """Integration accuracy for enclosed mass."""
 HALO_PROFILE_SURFACE_DENSITY_ACCURACY = 1E-4
 """Integration accuracy for surface density."""
+HALO_PROFILE_SURFACE_DENSITY_MAX_R_INTERPOLATE = 1E8
+"""Radius to which the surface density is integrated when interpolating the density."""
+HALO_PROFILE_SURFACE_DENSITY_MAX_R_INTEGRATE = 1E20
+"""Radius to which the surface density is integrated when evaluating the density exactly."""
+HALO_PROFILE_DELTA_SIGMA_MIN_R_INTERPOLATE = 1E-6
+"""Radius from which the surface density is averaged to compute DeltaSigma."""
 
 ###################################################################################################
 # HALO PROFILE (SPECIFIC INNER PROFILES)
