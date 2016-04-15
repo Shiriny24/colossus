@@ -112,12 +112,40 @@ class SplineProfile(profile_base.HaloDensityProfile):
 	###############################################################################################
 
 	def densityInner(self, r):
+		"""
+		Density of the inner profile as a function of radius.
 		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		density: array_like
+			Density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions 
+			as r.
+		"""	
+				
 		return np.exp(self.rho_spline(np.log(r)))
 
 	###############################################################################################
 	
 	def densityDerivativeLinInner(self, r):
+		"""
+		The linear derivative of the inner density, :math:`d \\rho_{\\rm inner} / dr`. 
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		derivative: array_like
+			The linear derivative in physical :math:`M_{\odot} h / kpc^2`; has the same 
+			dimensions as r.
+		"""
 
 		log_deriv = self.rho_spline(np.log(r), nu = 1)
 		deriv = log_deriv * self.density(r) / r
@@ -127,17 +155,58 @@ class SplineProfile(profile_base.HaloDensityProfile):
 	###############################################################################################
 
 	def densityDerivativeLogInner(self, r):
+		"""
+		The logarithmic derivative of the inner density, :math:`d \log(\\rho_{\\rm inner}) / d \log(r)`. 
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		derivative: array_like
+			The dimensionless logarithmic derivative; has the same dimensions as r.
+		"""
 	
 		return self.rho_spline(np.log(r), nu = 1)
 	
 	###############################################################################################
 
 	def enclosedMass(self, r, accuracy = defaults.HALO_PROFILE_ENCLOSED_MASS_ACCURACY):
+		"""
+		The mass enclosed within radius r.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+		accuracy: float
+			The minimum accuracy of the integration.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		M: array_like
+			The mass enclosed within radius r, in :math:`M_{\odot}/h`; has the same dimensions as r.
+		"""		
 
 		return self.enclosedMassInner(r) + self.enclosedMassOuter(r, accuracy)
 
 	###############################################################################################
 
 	def enclosedMassInner(self, r):
+		"""
+		The mass enclosed within radius r due to the inner profile term.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		M: array_like
+			The mass enclosed within radius r, in :math:`M_{\odot}/h`; has the same dimensions as r.
+		"""		
 
 		return np.exp(self.M_spline(np.log(r)))

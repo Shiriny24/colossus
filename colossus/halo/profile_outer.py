@@ -252,9 +252,24 @@ class OuterTermMeanDensity(OuterTerm):
 
 	###############################################################################################
 
-	# The surface density of this outer profile diverges, so we need to ignore it.
-
 	def surfaceDensity(self, r):
+		"""
+		The projected surface density at radius r due to the outer profile.
+
+		This function is overwritten for the mean density outer profile because it is ill-defined:
+		as the mean density is constant out to infinite radii, the line-of-sight integral 
+		diverges. Thus, this function issues a warning and returns zero.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		Sigma: array_like
+			An array of zeros.
+		"""
 		
 		print('WARNING: Ignoring surface density of mean-density outer profile. This term should be removed before evaluating the surface density.')
 		
@@ -524,6 +539,20 @@ class OuterTermPowerLaw(OuterTerm):
 	###############################################################################################
 
 	def densityDerivativeLin(self, r):
+		"""
+		The linear derivative of the density due to the outer term, :math:`d \\rho / dr`. 
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		derivative: array_like
+			The linear derivative in physical :math:`M_{\odot} h / kpc^2`; has the same 
+			dimensions as r.
+		"""
 
 		norm, slope, r_pivot, max_rho, rho_m = self._getParameters()
 		t1 = (r / r_pivot)**slope

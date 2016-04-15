@@ -81,7 +81,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	The DK14 profile only makes sense if some description of the outer profile is added to this
 	inner term. Adding these terms is easy using the :func:`getDK14ProfileWithOuterTerms` 
 	function. Alternatively, the user can pass a list of OuterTerm objects (see documentation 
-	of the :class:`halo.profile_base.HaloDensityProfile` parent class).
+	of the :mod:`halo.profile_base` parent class).
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -352,6 +352,20 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	###############################################################################################
 	
 	def densityInner(self, r):
+		"""
+		Density of the inner profile as a function of radius.
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		density: array_like
+			Density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions 
+			as r.
+		"""		
 		
 		inner = self.par['rhos'] * np.exp(-2.0 / self.par['alpha'] * ((r / self.par['rs'])**self.par['alpha'] - 1.0))
 		fT = (1.0 + (r / self.par['rt'])**self.par['beta'])**(-self.par['gamma'] / self.par['beta'])
@@ -362,6 +376,20 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	###############################################################################################
 	
 	def densityDerivativeLinInner(self, r):
+		"""
+		The linear derivative of the inner density, :math:`d \\rho_{\\rm inner} / dr`. 
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		derivative: array_like
+			The linear derivative in physical :math:`M_{\odot} h / kpc^2`; has the same 
+			dimensions as r.
+		"""
 		
 		drho_dr = r * 0.0
 		

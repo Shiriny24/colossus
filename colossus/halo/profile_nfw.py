@@ -289,6 +289,20 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	###############################################################################################
 	
 	def densityInner(self, r):
+		"""
+		Density of the inner profile as a function of radius.
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		density: array_like
+			Density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions 
+			as r.
+		"""		
 	
 		x = r / self.par['rs']
 		density = self.rho(self.par['rhos'], x)
@@ -298,6 +312,20 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	###############################################################################################
 
 	def densityDerivativeLinInner(self, r):
+		"""
+		The linear derivative of the inner density, :math:`d \\rho_{\\rm inner} / dr`. 
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		derivative: array_like
+			The linear derivative in physical :math:`M_{\odot} h / kpc^2`; has the same 
+			dimensions as r.
+		"""
 
 		x = r / self.par['rs']
 		density_der = -self.par['rhos'] / self.par['rs'] * (1.0 / x**2 / (1.0 + x)**2 + 2.0 / x / (1.0 + x)**3)
@@ -307,6 +335,19 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	###############################################################################################
 
 	def densityDerivativeLogInner(self, r):
+		"""
+		The logarithmic derivative of the inner density, :math:`d \log(\\rho_{\\rm inner}) / d \log(r)`. 
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		derivative: array_like
+			The dimensionless logarithmic derivative; has the same dimensions as r.
+		"""
 
 		x = r / self.par['rs']
 		density_der = -(1.0 + 2.0 * x / (1.0 + x))
@@ -316,6 +357,21 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	###############################################################################################
 
 	def enclosedMassInner(self, r):
+		"""
+		The mass enclosed within radius r due to the inner profile term.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+		accuracy: float
+			The minimum accuracy of the integration.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		M: array_like
+			The mass enclosed within radius r, in :math:`M_{\odot}/h`; has the same dimensions as r.
+		"""		
 		
 		x = r / self.par['rs']
 		mass = self.M(self.par['rhos'], self.par['rs'], x)
@@ -330,6 +386,23 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	# complicated. In the notation used here, Sigma(rs) = 2/3 * rhos * rs.
 	
 	def surfaceDensityInner(self, r, **kwargs):
+		"""
+		The projected surface density at radius r due to the inner profile.
+		
+		This function uses the analytical formula of Lokas & Mamon 2001 rather than numerical 
+		integration.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		Sigma: array_like
+			The surface density at radius r, in physical :math:`M_{\odot} h/kpc^2`; has the same 
+			dimensions as r.
+		"""
 	
 		xx = r / self.par['rs']
 		x, is_array = utilities.getArray(xx)
@@ -402,6 +475,20 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	# where ln(1+x) = (2x**2 + x) / (1+x)**2
 	
 	def Vmax(self):
+		"""
+		The maximum circular velocity, and the radius where it occurs.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		vmax: float
+			The maximum circular velocity in km / s.
+		rmax: float
+			The radius where fmax occurs, in physical kpc/h.
+
+		See also
+		-------------------------------------------------------------------------------------------
+		circularVelocity: The circular velocity, :math:`v_c \\equiv \\sqrt{GM(<r)/r}`.
+		"""		
 		
 		rmax = 2.16258 * self.par['rs']
 		vmax = self.circularVelocity(rmax)
@@ -426,6 +513,26 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	# tion that is considered.
 
 	def RDelta(self, z, mdef):
+		"""
+		The spherical overdensity radius of a given mass definition.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		z: float
+			Redshift
+		mdef: str
+			The mass definition for which the spherical overdensity radius is computed.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		R: float
+			Spherical overdensity radius in physical kpc/h.
+
+		See also
+		-------------------------------------------------------------------------------------------
+		MDelta: The spherical overdensity mass of a given mass definition.
+		RMDelta: The spherical overdensity radius and mass of a given mass definition.
+		"""		
 	
 		density_threshold = mass_so.densityThreshold(z, mdef)
 		x = self.xDelta(self.par['rhos'], self.par['rs'], density_threshold)

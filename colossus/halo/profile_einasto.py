@@ -182,6 +182,14 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 	# later.
 	
 	def update(self):
+		"""
+		Update the profile object after a change in parameters.
+		
+		If the parameters dictionary has been changed (e.g. by the user or during fitting), this 
+		function must be called to ensure consistency within the profile object. This involves
+		deleting any pre-computed quantities (e.g., tabulated enclosed masses) and re-computing
+		profile properties that depend on the parameters.
+		"""
 		
 		profile_base.HaloDensityProfile.update(self)
 		self._computeMassTerms()
@@ -195,6 +203,24 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 	# which triggers an update of the parent class.
 	
 	def setParameterArray(self, pars, mask = None):
+		"""
+		Set the profile parameters from an array.
+		
+		The profile parameters are internally stored in an ordered dictionary. For some 
+		applications (e.g., fitting), setting them directly from an array might be necessary. If 
+		the profile contains values that depend on the parameters, the profile class must overwrite
+		this function and update according to the new parameters.
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		pars: array_like
+			The new parameter array.
+		mask: array_like
+			Optional; must be a numpy array (not a list) of booleans, with the same length as the
+			parameter vector of the profile class (profile.N_par). If passed, only those 
+			parameters that correspond to ``True`` values are set (meaning the pars parameter must
+			be shorter than profile.N_par).
+		"""
 		
 		profile_base.HaloDensityProfile.setParameterArray(self, pars, mask = mask)
 		self._computeMassTerms()
@@ -204,7 +230,21 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 	###############################################################################################
 
 	def densityInner(self, r):
+		"""
+		Density of the inner profile as a function of radius.
 		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		density: array_like
+			Density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions 
+			as r.
+		"""		
+				
 		rho = self.par['rhos'] * np.exp(-2.0 / self.par['alpha'] * \
 										((r / self.par['rs'])**self.par['alpha'] - 1.0))
 		
@@ -213,6 +253,20 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 	###############################################################################################
 	
 	def densityDerivativeLinInner(self, r):
+		"""
+		The linear derivative of the inner density, :math:`d \\rho_{\\rm inner} / dr`. 
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		derivative: array_like
+			The linear derivative in physical :math:`M_{\odot} h / kpc^2`; has the same 
+			dimensions as r.
+		"""
 
 		rho = self.density(r)
 		drho_dr = rho * (-2.0 / self.par['rs']) * (r / self.par['rs'])**(self.par['alpha'] - 1.0)	
@@ -222,6 +276,19 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 	###############################################################################################
 	
 	def densityDerivativeLogInner(self, r):
+		"""
+		The logarithmic derivative of the inner density, :math:`d \log(\\rho_{\\rm inner}) / d \log(r)`. 
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		derivative: array_like
+			The dimensionless logarithmic derivative; has the same dimensions as r.
+		"""
 
 		der = -2.0 * (r / self.par['rs'])**self.par['alpha']
 		
@@ -230,6 +297,21 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 	###############################################################################################
 
 	def enclosedMassInner(self, r):
+		"""
+		The mass enclosed within radius r.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+		accuracy: float
+			The minimum accuracy of the integration.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		M: array_like
+			The mass enclosed within radius r, in :math:`M_{\odot}/h`; has the same dimensions as r.
+		"""		
 		
 		mass = self.mass_norm * self.gamma_3alpha * scipy.special.gammainc(3.0 / self.par['alpha'],
 								2.0 / self.par['alpha'] * (r / self.par['rs'])**self.par['alpha'])
