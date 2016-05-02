@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name = 'colossus',
-	version = '1.0.2',
+	version = '1.0.3',
 	description = ' Cosmology, halo and large-scale structure tools',
 	url = 'https://bitbucket.org/bdiemer/colossus',
 	author = 'Benedikt Diemer',

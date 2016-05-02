@@ -258,7 +258,9 @@ class OuterTermMeanDensity(OuterTerm):
 
 		This function is overwritten for the mean density outer profile because it is ill-defined:
 		as the mean density is constant out to infinite radii, the line-of-sight integral 
-		diverges. Thus, this function issues a warning and returns zero.
+		diverges. In principle, this function could just return zero in order to ignore this 
+		spurious contribution, but that causes an inconsistency between the 3D (rho) and 2D 
+		(Sigma) density profiles.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
