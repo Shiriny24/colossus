@@ -107,6 +107,7 @@ WMAP3-ML       Spergel et al. 2007   Table 2     Max.likelihood, WMAP only
 WMAP3          Spergel et al. 2007   Table 5     Best fit, WMAP only 					
 WMAP1-ML       Spergel et al. 2005   Table 1/4   Max.likelihood, WMAP only 				
 WMAP1          Spergel et al. 2005   Table 7/4   Best fit, WMAP only 					
+illustris      Vogelsberger+ 2014    --          Cosmology of the Illustris simulation
 bolshoi	       Klypin et al. 2011    --          Cosmology of the Bolshoi simulation
 millennium     Springel et al. 2005	 --          Cosmology of the Millennium simulation 
 powerlaw       --                    --          Default settings for power-law cosms.
@@ -211,6 +212,7 @@ cosmologies['WMAP3-ML']      = {'flat': True, 'H0': 73.20, 'Om0': 0.2370, 'Ob0':
 cosmologies['WMAP3']         = {'flat': True, 'H0': 73.50, 'Om0': 0.2342, 'Ob0': 0.0413, 'sigma8': 0.7420, 'ns': 0.9510}
 cosmologies['WMAP1-ML']      = {'flat': True, 'H0': 68.00, 'Om0': 0.3136, 'Ob0': 0.0497, 'sigma8': 0.9000, 'ns': 0.9700}
 cosmologies['WMAP1']         = {'flat': True, 'H0': 72.00, 'Om0': 0.2700, 'Ob0': 0.0463, 'sigma8': 0.9000, 'ns': 0.9900}
+cosmologies['illustris']     = {'flat': True, 'H0': 70.40, 'Om0': 0.2726, 'Ob0': 0.0456, 'sigma8': 0.8090, 'ns': 0.9630, 'relspecies': False}
 cosmologies['bolshoi']       = {'flat': True, 'H0': 70.00, 'Om0': 0.2700, 'Ob0': 0.0469, 'sigma8': 0.8200, 'ns': 0.9500, 'relspecies': False}
 cosmologies['millennium']    = {'flat': True, 'H0': 73.00, 'Om0': 0.2500, 'Ob0': 0.0450, 'sigma8': 0.9000, 'ns': 1.0000, 'relspecies': False}
 cosmologies['powerlaw']      = {'flat': True, 'H0': 70.00, 'Om0': 1.0000, 'Ob0': 0.0000, 'sigma8': 0.8200, 'ns': 1.0000, 'relspecies': False}
