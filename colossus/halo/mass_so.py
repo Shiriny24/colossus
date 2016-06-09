@@ -258,3 +258,45 @@ def R_to_M(R, z, mdef):
 	return M
 
 ###################################################################################################
+
+def dynamicalTime(z, mdef, definition = 'crossing'):
+	"""
+	The dynamical time of a halo.
+	
+	The dynamical time can be estimated in multiple ways, but is almost always based on the ratio
+	of radius to circular velocity. This ratio is more succinctly expressed as a multiple of the
+	Hubble time which depends on the overdensity threshold and redshift.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	z: array_like
+		Redshift; can be a number or a numpy array.
+	mdef: str
+		The mass definition
+	definition: str
+		An identifier for a definition of the dynamical time. Valid definitions are ``crossing``
+		(the crossing time), ``peri`` (the time to reach the halo center, half the crossing time)
+		and ``orbit`` (the time to orbit around the halo, crossing time times pi).
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	t_dyn: array_like
+		Dynamical time in Gyr; has the same dimensions as z.
+	"""
+	
+	cosmo = cosmology.getCurrent()
+	t_cross = 2**1.5 * cosmo.hubbleTime(z) * (densityThreshold(z, mdef) / cosmo.rho_c(z))**-0.5
+
+	if definition == 'crossing':
+		t_dyn = t_cross
+	elif definition == 'peri':
+		t_dyn = t_cross / 2.0
+	elif definition == 'orbit':
+		t_dyn = t_cross * np.pi
+	else:
+		msg = 'Unknown definition of the dynamical time, %s.' % definition
+		raise Exception(msg)
+	
+	return t_dyn
+
+###################################################################################################
