@@ -152,7 +152,7 @@ def M4rs(M, z, mdef, c = None):
 
 ###################################################################################################
 
-def RspOverR200m(nu200m = None, z = None, Gamma = None):
+def RspOverR200m(nu200m = None, z = None, Gamma = None, statistic = 'median'):
 	"""
 	The ratio :math:`R_{sp} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or
 	the peak height, :math:`\\nu`.
@@ -170,6 +170,9 @@ def RspOverR200m(nu200m = None, z = None, Gamma = None):
 	Gamma: array_like
 		The mass accretion rate, as defined in Diemer & Kravtsov 2014; can be a number or a 
 		numpy array.
+	statistic: str
+		Can be ``mean`` or ``median``, determining whether the function returns the best fit to the 
+		mean or median profile of a halo sample.
 	
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -186,9 +189,21 @@ def RspOverR200m(nu200m = None, z = None, Gamma = None):
 
 	if (Gamma is not None) and (z is not None):
 		cosmo = cosmology.getCurrent()
-		ratio =  0.54 * (1 + 0.53 * cosmo.Om(z)) * (1 + 1.36 * np.exp(-Gamma / 3.04))
+		if statistic == 'median':
+			ratio = 0.54 * (1.0 + 0.53 * cosmo.Om(z)) * (1 + 1.36 * np.exp(-Gamma / 3.04))
+		elif statistic == 'mean':
+			ratio = 0.58 * (1.0 + 0.63 * cosmo.Om(z)) * (1 + 1.08 * np.exp(-Gamma / 2.26))
+		else:
+			msg = 'Unknown statistic, %s.' % statistic
+			raise Exception(msg)
 	elif nu200m is not None:
-		ratio = 0.81 * (1.0 + 0.97 * np.exp(-nu200m / 2.44))
+		if statistic == 'median':
+			ratio = 0.81 * (1.0 + 0.97 * np.exp(-nu200m / 2.44))
+		elif statistic == 'mean':
+			ratio = 0.88 * (1.0 + 0.77 * np.exp(-nu200m / 1.95))
+		else:
+			msg = 'Unknown statistic, %s.' % statistic
+			raise Exception(msg)
 	else:
 		msg = 'Need either Gamma and z, or nu.'
 		raise Exception(msg)
@@ -197,7 +212,7 @@ def RspOverR200m(nu200m = None, z = None, Gamma = None):
 
 ###################################################################################################
 
-def MspOverM200m(nu200m = None, z = None, Gamma = None):
+def MspOverM200m(nu200m = None, z = None, Gamma = None, statistic = 'median'):
 	"""
 	The ratio :math:`M_{sp} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or
 	the peak height, :math:`\\nu`.
@@ -215,6 +230,9 @@ def MspOverM200m(nu200m = None, z = None, Gamma = None):
 	Gamma: array_like
 		The mass accretion rate, as defined in Diemer & Kravtsov 2014; can be a number or a 
 		numpy array.
+	statistic: str
+		Can be ``mean`` or ``median``, determining whether the function returns the best fit to the 
+		mean or median profile of a halo sample.
 	
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -231,9 +249,21 @@ def MspOverM200m(nu200m = None, z = None, Gamma = None):
 	
 	if (Gamma is not None) and (z is not None):
 		cosmo = cosmology.getCurrent()
-		ratio =  0.59 * (1 + 0.35 * cosmo.Om(z)) * (1 + 0.92 * np.exp(-Gamma / 4.54))
+		if statistic == 'median':
+			ratio = 0.59 * (1.0 + 0.35 * cosmo.Om(z)) * (1 + 0.92 * np.exp(-Gamma / 4.54))
+		elif statistic == 'mean':
+			ratio = 0.70 * (1.0 + 0.37 * cosmo.Om(z)) * (1 + 0.62 * np.exp(-Gamma / 2.69))
+		else:
+			msg = 'Unknown statistic, %s.' % statistic
+			raise Exception(msg)
 	elif nu200m is not None:
-		ratio = 0.82 * (1.0 + 0.63 * np.exp(-nu200m / 3.52))
+		if statistic == 'median':
+			ratio = 0.82 * (1.0 + 0.63 * np.exp(-nu200m / 3.52))
+		elif statistic == 'mean':
+			ratio = 0.92 * (1.0 + 0.45 * np.exp(-nu200m / 2.26))
+		else:
+			msg = 'Unknown statistic, %s.' % statistic
+			raise Exception(msg)
 	else:
 		msg = 'Need either Gamma and z, or nu.'
 		raise Exception(msg)
