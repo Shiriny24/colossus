@@ -34,9 +34,9 @@ class ColosssusTestCase(unittest.TestCase):
 		if msg is not None:
 			msg_ += msg
 		
-		unittest.TestCase.assertLess(self, diff, 10**-TEST_N_DIGITS, msg = msg_)
+		unittest.TestCase.assertLess(self, diff, 10**-places, msg = msg_)
 	
-	def assertAlmostEqualArray(self, first, second, places = None, msg = None):
+	def assertAlmostEqualArray(self, first, second, places = TEST_N_DIGITS, msg = None):
 		N1 = len(first)
 		if N1 != len(second):
 			raise Exception('Length of arrays must be the same.')

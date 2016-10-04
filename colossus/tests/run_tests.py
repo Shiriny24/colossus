@@ -34,7 +34,7 @@ suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_mass.TCMassA
 
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_profile.TCBase))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_profile.TCInner))
-suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_profile.TCInner))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_profile.TCOuter))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_profile.TCFitting))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_profile.TCNFW))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_profile.TCDK14))

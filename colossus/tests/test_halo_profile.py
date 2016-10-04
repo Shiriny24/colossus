@@ -21,6 +21,15 @@ from colossus.halo import profile_spline
 from colossus.halo import concentration
 
 ###################################################################################################
+# CONSTANTS
+###################################################################################################
+
+# For some test cases in the profile unit, we cannot expect the results to agree to very high 
+# precision because numerical approximations are made.
+
+TEST_N_DIGITS_LOW = 4
+
+###################################################################################################
 # TEST CASE: BASE CLASS
 ###################################################################################################
 
@@ -287,31 +296,31 @@ class TCInner(test_colossus.ColosssusTestCase):
 		for i in range(len(self.p)):
 			
 			q = self.p[i].density(r)
-			self.assertAlmostEqual(q, correct_rho[i])
+			self.assertAlmostEqual(q, correct_rho[i], places = TEST_N_DIGITS_LOW)
 			
 			q = self.p[i].enclosedMass(r)
-			self.assertAlmostEqual(q, correct_Menc[i])
+			self.assertAlmostEqual(q, correct_Menc[i], places = TEST_N_DIGITS_LOW)
 
 			q = self.p[i].surfaceDensity(r)
-			self.assertAlmostEqual(q, correct_Sigma[i])
+			self.assertAlmostEqual(q, correct_Sigma[i], places = TEST_N_DIGITS_LOW)
 
 			q = self.p[i].deltaSigma(r)
-			self.assertAlmostEqual(q, correct_DeltaSigma[i])
+			self.assertAlmostEqual(q, correct_DeltaSigma[i], places = TEST_N_DIGITS_LOW)
 
 			q = self.p[i].densityDerivativeLin(r)
-			self.assertAlmostEqual(q, correct_derLin[i])
+			self.assertAlmostEqual(q, correct_derLin[i], places = TEST_N_DIGITS_LOW)
 
 			q = self.p[i].densityDerivativeLog(r)
-			self.assertAlmostEqual(q, correct_derLog[i])
+			self.assertAlmostEqual(q, correct_derLog[i], places = TEST_N_DIGITS_LOW)
 
 			q = self.p[i].circularVelocity(r)
-			self.assertAlmostEqual(q, correct_vcirc[i])
+			self.assertAlmostEqual(q, correct_vcirc[i], places = TEST_N_DIGITS_LOW)
 
 			q, _ = self.p[i].Vmax()
-			self.assertAlmostEqual(q, correct_vmax[i])
+			self.assertAlmostEqual(q, correct_vmax[i], places = TEST_N_DIGITS_LOW)
 
 			q = self.p[i].RDelta(0.7, mdef = 'vir')
-			self.assertAlmostEqual(q, correct_rdelta[i])
+			self.assertAlmostEqual(q, correct_rdelta[i], places = TEST_N_DIGITS_LOW)
 
 ###################################################################################################
 # TEST CASE: OUTER PROFILES
