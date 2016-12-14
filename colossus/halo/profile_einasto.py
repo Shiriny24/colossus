@@ -96,7 +96,7 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 			self.fundamentalParameters(M, c, z, mdef, alpha)
 					
 		else:
-			msg = 'An Einasto profile must be define either using rhos, rs, and alpha, or M, c, mdef, and z.'
+			msg = 'An Einasto profile must be defined either using rhos, rs, and alpha, or M, c, mdef, and z.'
 			raise Exception(msg)
 
 		# We need an initial radius to guess Rmax
