@@ -626,7 +626,11 @@ class HaloDensityProfile():
 
 		if interpolate:
 			table_log_r = np.arange(log_min_r, log_max_r + 0.01, 0.1)
-			table_log_rho = np.log(density_func(np.exp(table_log_r)))
+			rho = density_func(np.exp(table_log_r))
+			if np.min(rho) <= 0.0:
+				msg = 'Found negative or zero value in density, cannot create interpolation table. Try computing surface density with interpolate = False.'
+				raise Exception(msg)
+			table_log_rho = np.log(rho)
 			interp = scipy.interpolate.InterpolatedUnivariateSpline(table_log_r, table_log_rho)
 			integrand = integrand_interp
 		else:
