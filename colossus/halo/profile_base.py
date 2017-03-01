@@ -645,6 +645,9 @@ class HaloDensityProfile():
 										args = (r_use[i]**2, interp), epsrel = accuracy, limit = 1000)
 			surfaceDensity[i] *= 2.0
 
+		if np.count_nonzero(surfaceDensity < 0.0) > 0:
+			raise Exception('Found negative surface density. Please check the integration limits.')
+
 		if not is_array:
 			surfaceDensity = surfaceDensity[0]
 
@@ -778,7 +781,11 @@ class HaloDensityProfile():
 			dimensions as r.
 		"""
 
-		sigma_outer = np.zeros((len(r)), np.float)
+		if utilities.isArray(r):	
+			sigma_outer = np.zeros((len(r)), np.float)
+		else:
+			sigma_outer = 0.0
+			
 		for i in range(self.N_outer):
 			if 'surfaceDensity' in self._outer_terms[i].__class__.__dict__:
 				sigma_outer += self._outer_terms[i].surfaceDensity(r)
@@ -790,8 +797,8 @@ class HaloDensityProfile():
 
 	###############################################################################################
 
-	def _deltaSigma(self, r, surface_density_func, interpolate, accuracy, min_r_interpolate,
-					max_r_interpolate, max_r_integrate):
+	def _deltaSigma(self, r, surface_density_func, interpolate, interpolate_surface_density,
+					accuracy, min_r_interpolate, max_r_interpolate, max_r_integrate):
 
 		def integrand_interp(logr, interp):
 			r2 = np.exp(logr)**2
@@ -815,8 +822,8 @@ class HaloDensityProfile():
 		if interpolate:
 			table_log_r = np.arange(log_min_r, log_max_r + 0.01, 0.1)
 			table_log_Sigma = np.log(surface_density_func(np.exp(table_log_r), accuracy = accuracy, 
-										interpolate = True, max_r_interpolate = max_r_interpolate, 
-										max_r_integrate = max_r_integrate))
+					interpolate = interpolate_surface_density, 
+					max_r_interpolate = max_r_interpolate, max_r_integrate = max_r_integrate))
 			interp = scipy.interpolate.InterpolatedUnivariateSpline(table_log_r, table_log_Sigma)
 			integrand = integrand_interp
 		else:
@@ -829,7 +836,9 @@ class HaloDensityProfile():
 			deltaSigma[i], _ = scipy.integrate.quad(integrand, log_min_r, np.log(r_use[i]), 
 										args = (interp), epsrel = accuracy, limit = 1000)
 			
-		Sigma = surface_density_func(r_use, accuracy = accuracy, interpolate = interpolate)
+		Sigma = surface_density_func(r_use, accuracy = accuracy, 
+					interpolate = interpolate_surface_density, max_r_interpolate = max_r_interpolate, 
+					max_r_integrate = max_r_integrate)
 		deltaSigma = deltaSigma * 2.0 / r_use**2 - Sigma
 		
 		if not is_array:
@@ -840,7 +849,7 @@ class HaloDensityProfile():
 	###############################################################################################
 
 	def deltaSigma(self, r, 
-					interpolate = True,
+					interpolate = True, interpolate_surface_density = True,
 					accuracy = defaults.HALO_PROFILE_SURFACE_DENSITY_ACCURACY, 
 					min_r_interpolate = defaults.HALO_PROFILE_DELTA_SIGMA_MIN_R_INTERPOLATE,
 					max_r_interpolate = defaults.HALO_PROFILE_SURFACE_DENSITY_MAX_R_INTERPOLATE,
@@ -860,8 +869,13 @@ class HaloDensityProfile():
 		r: array_like
 			Radius in physical kpc/h; can be a number or a numpy array.
 		interpolate: bool
-			Use an interpolation table for density during the integration. This should make the
-			evaluation somewhat faster, depending on how large the radius array is. 
+			Use an interpolation table for the surface density during the integration. This 
+			can speed up the evaluation significantly, as the surface density can be expensive to
+			evaluate.
+		interpolate_surface_density: bool
+			Use an interpolation table for density during the computation of the surface density.
+			This should make the evaluation somewhat faster, but can fail for some density terms
+			which are negative at particular radii. 
 		accuracy: float
 			The minimum accuracy of the integration (used both to compute the surface density and
 			average it to get DeltaSigma).
@@ -882,20 +896,22 @@ class HaloDensityProfile():
 			:math:`M_{\odot} h/kpc^2`; has the same dimensions as r.
 		"""
 		
-		deltaSigma = self.deltaSigmaInner(r, interpolate = interpolate, accuracy = accuracy, 
-						min_r_interpolate = min_r_interpolate, max_r_interpolate = max_r_interpolate, 
-						max_r_integrate = max_r_integrate)
+		deltaSigma = self.deltaSigmaInner(r, 
+						interpolate = interpolate, interpolate_surface_density = interpolate_surface_density,
+						accuracy = accuracy, min_r_interpolate = min_r_interpolate, 
+						max_r_interpolate = max_r_interpolate, max_r_integrate = max_r_integrate)
 		if self.N_outer > 0:
-			deltaSigma += self.deltaSigmaOuter(r, interpolate = interpolate, accuracy = accuracy,
-						min_r_interpolate = min_r_interpolate, max_r_interpolate = max_r_interpolate, 
-						max_r_integrate = max_r_integrate)
+			deltaSigma += self.deltaSigmaOuter(r, 
+						interpolate = interpolate, interpolate_surface_density = interpolate_surface_density,
+						accuracy = accuracy, min_r_interpolate = min_r_interpolate, 
+						max_r_interpolate = max_r_interpolate, max_r_integrate = max_r_integrate)
 		
 		return deltaSigma
 
 	###############################################################################################
 
 	def deltaSigmaInner(self, r, 
-					interpolate = True,
+					interpolate = True, interpolate_surface_density = True,
 					accuracy = defaults.HALO_PROFILE_SURFACE_DENSITY_ACCURACY, 
 					min_r_interpolate = defaults.HALO_PROFILE_DELTA_SIGMA_MIN_R_INTERPOLATE,
 					max_r_interpolate = defaults.HALO_PROFILE_SURFACE_DENSITY_MAX_R_INTERPOLATE,
@@ -908,8 +924,13 @@ class HaloDensityProfile():
 		r: array_like
 			Radius in physical kpc/h; can be a number or a numpy array.
 		interpolate: bool
-			Use an interpolation table for density during the integration. This should make the
-			evaluation somewhat faster, depending on how large the radius array is. 
+			Use an interpolation table for the surface density during the integration. This 
+			can speed up the evaluation significantly, as the surface density can be expensive to
+			evaluate.
+		interpolate_surface_density: bool
+			Use an interpolation table for density during the computation of the surface density.
+			This should make the evaluation somewhat faster, but can fail for some density terms
+			which are negative at particular radii. 
 		accuracy: float
 			The minimum accuracy of the integration (used both to compute the surface density and
 			average it to get DeltaSigma).
@@ -930,13 +951,14 @@ class HaloDensityProfile():
 			:math:`M_{\odot} h/kpc^2`; has the same dimensions as r.
 		"""
 				
-		return self._deltaSigma(r, self.surfaceDensityInner, interpolate, accuracy, min_r_interpolate,
+		return self._deltaSigma(r, self.surfaceDensityInner, interpolate, 
+							interpolate_surface_density, accuracy, min_r_interpolate,
 							max_r_interpolate, max_r_integrate)	
 
 	###############################################################################################
 
 	def deltaSigmaOuter(self, r, 
-					interpolate = True,
+					interpolate = True, interpolate_surface_density = True,
 					accuracy = defaults.HALO_PROFILE_SURFACE_DENSITY_ACCURACY, 
 					min_r_interpolate = defaults.HALO_PROFILE_DELTA_SIGMA_MIN_R_INTERPOLATE,
 					max_r_interpolate = defaults.HALO_PROFILE_SURFACE_DENSITY_MAX_R_INTERPOLATE,
@@ -949,8 +971,13 @@ class HaloDensityProfile():
 		r: array_like
 			Radius in physical kpc/h; can be a number or a numpy array.
 		interpolate: bool
-			Use an interpolation table for density during the integration. This should make the
-			evaluation somewhat faster, depending on how large the radius array is. 
+			Use an interpolation table for the surface density during the integration. This 
+			can speed up the evaluation significantly, as the surface density can be expensive to
+			evaluate.
+		interpolate_surface_density: bool
+			Use an interpolation table for density during the computation of the surface density.
+			This should make the evaluation somewhat faster, but can fail for some density terms
+			which are negative at particular radii. 
 		accuracy: float
 			The minimum accuracy of the integration (used both to compute the surface density and
 			average it to get DeltaSigma).
@@ -971,7 +998,8 @@ class HaloDensityProfile():
 			:math:`M_{\odot} h/kpc^2`; has the same dimensions as r.
 		"""
 					
-		return self._deltaSigma(r, self.surfaceDensityOuter, interpolate, accuracy, min_r_interpolate,
+		return self._deltaSigma(r, self.surfaceDensityOuter, interpolate,
+							interpolate_surface_density, accuracy, min_r_interpolate,
 							max_r_interpolate, max_r_integrate)	
 
 	###############################################################################################

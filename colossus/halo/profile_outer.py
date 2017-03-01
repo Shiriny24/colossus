@@ -305,6 +305,14 @@ class OuterTermCorrelationFunction(OuterTerm):
 	meaning it cannot be varied in a fit. The halo bias (i.e., the normalization of this outer 
 	term) is a parameter though and can be varied in a fit. 
 	
+	Note that this outer term can be evaluated at radii outside the range where the correlation
+	function is defined by the cosmology module without throwing an error or warning. In such 
+	cases, the return value is the correlation function at the min/max radius. This behavior is
+	convenient when initializing profiles etc, where the outer term may be insignificant at 
+	some radii. However, when integrating this outer term (e.g., when evaluating the surface 
+	density), care must be taken to set the correct integration limits. See the documentation of 
+	the correlation function in the cosmology module for more information.
+	
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	z: float
