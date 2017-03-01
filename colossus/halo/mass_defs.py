@@ -109,7 +109,11 @@ def pseudoEvolve(M_i, c_i, z_i, mdef_i, z_f, mdef_f,
 	-----------------------------------------------------------------------------------------------
 	changeMassDefinition: Change the spherical overdensity mass definition.
 	"""
-	
+
+	if utilities.isArray(z_i):
+		raise Exception('Redshift z_i must be a float, not an array.')
+	if utilities.isArray(z_f):
+		raise Exception('Redshift z_f must be a float, not an array.')
 	M_i, is_array = utilities.getArray(M_i)
 	c_i, _ = utilities.getArray(c_i)
 	N = len(M_i)
