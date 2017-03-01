@@ -807,9 +807,9 @@ class HaloDensityProfile():
 
 		def integrand_exact(logr, interp):
 			r = np.exp(logr)
-			ret = r**2 * surface_density_func(r, accuracy = accuracy, interpolate = False, 
-										max_r_interpolate = max_r_interpolate, 
-										max_r_integrate = max_r_integrate)
+			ret = r**2 * surface_density_func(r, accuracy = accuracy, 
+					interpolate = interpolate_surface_density, 
+					max_r_interpolate = max_r_interpolate, max_r_integrate = max_r_integrate)
 			return ret
 
 		if np.max(r) > self.rmax:
@@ -835,10 +835,14 @@ class HaloDensityProfile():
 		for i in range(len(r_use)):
 			deltaSigma[i], _ = scipy.integrate.quad(integrand, log_min_r, np.log(r_use[i]), 
 										args = (interp), epsrel = accuracy, limit = 1000)
-			
-		Sigma = surface_density_func(r_use, accuracy = accuracy, 
+		
+		if interpolate:
+			Sigma = np.exp(interp(np.log(r_use)))
+		else:
+			Sigma = surface_density_func(r_use, accuracy = accuracy, 
 					interpolate = interpolate_surface_density, max_r_interpolate = max_r_interpolate, 
 					max_r_integrate = max_r_integrate)
+			
 		deltaSigma = deltaSigma * 2.0 / r_use**2 - Sigma
 		
 		if not is_array:
