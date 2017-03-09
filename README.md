@@ -2,7 +2,7 @@ Colossus
 ========
 
 Colossus is an acronym for **CO**smology, ha**LO** and large-**S**cale **S**tr**U**cture 
-tool**S**. Please see the [[Online Documentation](http://bdiemer.bitbucket.org/)] for details.
+tool**S**. Please see the [[Online Documentation](https://bdiemer.bitbucket.io/)] for details.
 
 Installation
 ------------
