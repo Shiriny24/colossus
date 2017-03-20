@@ -41,7 +41,8 @@ The functions in the halo.mass module are split into various sub-modules:
 * The :mod:`halo.mass_defs` module contains functions related to converting SO mass definitions into 
   one another, as well as computing pseudo-evolution. 
 * The :mod:`halo.mass_adv` module contains functions describing mass definitions beyond spherical 
-  overdensity, such as the splashback mass and radius.
+  overdensity, such as the mass within four scale radii.
+* The :mod:`halo.splashback` module contains functions related to the splashback radius and mass. 
 
 Please see the following pages for detailed information:
 
@@ -51,3 +52,4 @@ Please see the following pages for detailed information:
     halo_mass_so
     halo_mass_defs
     halo_mass_adv
+    halo_splashback

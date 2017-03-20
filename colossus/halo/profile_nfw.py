@@ -279,7 +279,8 @@ class NFWProfile(profile_base.HaloDensityProfile):
 				i += 1
 		
 		if x is None:
-			msg = 'Could not determine x where the density threshold is satisfied.'
+			msg = 'Could not determine x where the density threshold %.2f is satisfied.' \
+				% (density_threshold)
 			raise Exception(msg)
 		
 		return x
