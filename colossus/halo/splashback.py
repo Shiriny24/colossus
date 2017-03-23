@@ -6,25 +6,94 @@
 ###################################################################################################
 
 """
-This module represents a collection of routines related to the splashback radius.
+This module contains a collection of routines related to the splashback radius.
 
 ---------------------------------------------------------------------------------------------------
 Background
 ---------------------------------------------------------------------------------------------------
 
-:math:`M_{sp}`, the splashback mass that is contained within :math:`R_{sp}`, the splashback 
-  radius. The radius corresponds to the apocenter of particles on their first orbit after infall,
-  and thus physically separates matter that is orbiting in the halo potential and matter that has
-  not fallen in yet. Operationally, :math:`R_{sp}` is defined to be the radius where the logarithmic
-  slope of the 3D density profile is most negative.
+The radius, :math:`R_{\\rm sp}`, corresponds to the apocenter of particles on their first orbit after 
+falling into a halo. By analogy with the spherical collapse model, this radius represents a 
+physically motivated definition of the halo boundary because it separates infalling from orbiting
+material. The splashback mass, :math:`M_{\\rm sp}`, is defined as the mass within :math:`R_{\\rm sp}`.
 
-.. autosummary::	
-	splashback
-	Rsp
-	Msp
+In practice, there are several different definitions of the splashback radius, for example the 
+radius where the logarithmic slope of the density profile is steepest, or definitions derived from
+the actual distribution of particle apocenters. For more information, please see 
+`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_,
+`Adhikari et al. 2014 <http://adsabs.harvard.edu/abs/2014JCAP...11..019A>`_,
+and `More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`_, as well as any of the
+model papers listed below.
 
-For more information, please see Diemer & Kravtsov 2014, Adhikari et al. 2014, and More, Diemer & 
-Kravtsov 2015, and Diemer et al. 2017.
+This module implements a number of theoretical models and fitting functions for the splashback
+radius and several related quantities. The models can be evaluated using the generalized functions
+
+.. autosummary::
+	splashbackModel
+	splashbackRadius
+
+where :func:`splashbackRadius` provides a convenient wrapper for :func:`splashbackModel` if one 
+wants to evaluate the splashback radius or mass given another mass definition. The splashback 
+models can return a number of different quantities, identified by the following shorthand.
+
+- ``RspR200m``, the splashback radius in units of :math:`R_{\\rm 200m}`
+- ``MspM200m``, the splashback mass in units of :math:`M_{\\rm 200m}`
+- ``Deltasp``, the enclosed overdensity wrt. the mean density of the universe,
+  :math:`\\Delta_{\\rm sp} = M_{\\rm sp} / (4 \\pi R_{\\rm sp}^3 / 3) / \\rho_{\\rm m}`
+- ``RspR200m-1s``, the 68% scatter in :math:`R_{\\rm sp}/R_{\\rm 200m}`
+- ``MspM200m-1s``, the 68% scatter in :math:`M_{\\rm sp}/M_{\\rm 200m}`
+- ``Deltasp-1s``, the 68% scatter in :math:`\\Delta_{\\rm sp}`
+
+Not all models can return all of these quantities (see table below). Moreover, depending on the 
+model the quantities can be computed as a function of different input variables, namely
+
+- ``Gamma``, the mass accretion rate :math:`\\Gamma`
+- ``nu200m``, the peak height (a different way to express the halo mass :math:`M_{\\rm 200m}`,
+  see :mod:`cosmology.cosmology` for a converter function.
+
+Note that the mass accretion rate is defined in different ways depending on which model is used.
+In theoretical models, :math:`\\Gamma` typically stands for the instantaneous accretion rate
+:math:`s = d \\log(M) / d \\log(a)`. In other models it means the mass accretion rate measured
+over either a fixed time as in 
+`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_, or measured
+over a dynamical time. Please consult the model papers for details.
+
+The following code example shows how to calculate :math:`R_{\\rm sp}/R_{\\rm 200m}` when only 
+the mass of a halo is known::
+
+	z = 0.5
+	cosmo = cosmology.getCurrent()
+	nu200m = cosmo.peakHeight(1E12, z)
+	RspR200m, mask = splashback.splashbackModel('nu200m', 'RspR200m', nu200m, z = z)
+
+If the mass accretion rate is known, that constraint can also be used::
+
+	Gamma = 1.1
+	RspR200m, mask = splashback.splashbackModel('Gamma', 'RspR200m', Gamma, nu200m = nu200m, z = z)
+	
+All functions take numpy arrays as well as float values, though with certain restrictions (see 
+below). The ``mask`` return variable indicates whether the chosen model could be evaluated given 
+the input parameters. If not (e.g., because the redshift of peak height were outside a model's 
+range), ``mask`` will be False and ``RspR200m`` will be empty. Note that, in such cases, the user
+can overwrite the model limitations which are stored in a list of :class:`SplashbackModel`
+objects called ``models``. However, there is no guarantee that the results will be correct in that
+case.
+
+---------------------------------------------------------------------------------------------------
+Splashback models
+---------------------------------------------------------------------------------------------------
+
+The following models are supported in this module, and their ID can be passed as the ``model`` 
+parameter to the :func:`splashbackModel` and :func:`splashbackRadius` functions:
+
+============== ==================== =========================== =========================================
+ID             Predicts...          ...as a function of...      Reference
+============== ==================== =========================== =========================================
+diemer17       Rsp/Msp, Scatter     Gamma, z, M or M, z         Diemer et al. 2017
+shi16          Rsp/Msp              Gamma, z                    `Shi 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.459.3711S>`_
+more15         Rsp/Msp              Gamma, z, M or M, z         `More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`_
+adhikari14     Rsp/Msp              Gamma, z                    `Adhikari et al. 2014 <http://adsabs.harvard.edu/abs/2014JCAP...11..019A>`_
+============== ==================== =========================== =========================================
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -34,24 +103,31 @@ Module reference
 ###################################################################################################
 
 import numpy as np
+import scipy.interpolate
 
 from colossus import defaults
 from colossus.utils import utilities
 from colossus.cosmology import cosmology
 from colossus.halo import mass_so
 from colossus.halo import mass_defs
+from colossus.halo import mass_adv
+from colossus.halo import profile_nfw
 
 ###################################################################################################
 
-# A model can take a number of quantities as input (qx) and output a number of quantities (qy). 
-# The model may additionally depend on variabes depends_on. The label and style fields are empty,
-# but can be useful ...
-
 class SplashbackModel():
+	"""
+	This object contains certain characteristics of a model, most importantly the input quantities
+	``qx`` and output quantities ``qy`` the model is capable of processing. Additionally, the 
+	``depends_on`` field lists the quantities the model depends on. If, for example, nu200m is 
+	among these quantities, that variable needs to be passed to the :func:`splashbackModel`
+	function.
 	
+	The ``models`` variable is a dictionary of :class:`SplashbackModel` objects containing all 
+	available models. The user can overwrite the properties of these models at their own risk.
+	"""
 	def __init__(self):
 		
-		self.label = ''
 		self.qx = []
 		self.qy = []
 		self.depends_on = []
@@ -59,6 +135,10 @@ class SplashbackModel():
 		self.max_Gamma = np.inf
 		self.min_nu200m = 0.0
 		self.max_nu200m = np.inf
+		self.min_z = 0.0
+		self.max_z = np.inf
+
+		self.label = ''
 		self.style = {}
 		
 		return
@@ -66,6 +146,13 @@ class SplashbackModel():
 ###################################################################################################
 
 models = {}
+
+models['adhikari14'] = SplashbackModel()
+models['adhikari14'].qx = ['Gamma']
+models['adhikari14'].qy = ['RspR200m', 'MspM200m', 'Deltasp']
+models['adhikari14'].depends_on = ['Gamma', 'z']
+models['adhikari14'].min_Gamma = 0.2
+models['adhikari14'].max_Gamma = 5.9
 
 models['more15'] = SplashbackModel()
 models['more15'].qx = ['Gamma', 'nu200m']
@@ -83,10 +170,17 @@ models['diemer17'] = SplashbackModel()
 models['diemer17'].qx = ['Gamma', 'nu200m']
 models['diemer17'].qy = ['RspR200m', 'MspM200m', 'Deltasp', 'RspR200m-1s', 'MspM200m-1s', 'Deltasp-1s']
 models['diemer17'].depends_on = ['Gamma', 'z', 'nu', 'rspdef']
+models['diemer17'].min_nu200m = 0.0
+models['diemer17'].max_nu200m = 5.0
+models['diemer17'].min_z = 0.0
+models['diemer17'].max_z = 8.0
 
 ###################################################################################################
 
-def splashback(qx, qy, x, z = None, nu = None, rspdef = None, statistic = None, model = 'diemer17'):
+def splashbackModel(qx, qy, x, z = None, nu200m = None,
+				model = defaults.HALO_SPLASHBACK_MODEL,
+				statistic = defaults.HALO_SPLASHBACK_STATISTIC,
+				rspdef = defaults.HALO_SPLASHBACK_RSPDEF):
 	"""
 	The ratio :math:`R_{sp} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or
 	the peak height, :math:`\\nu`.
@@ -116,38 +210,52 @@ def splashback(qx, qy, x, z = None, nu = None, rspdef = None, statistic = None, 
 		
 	See also
 	-----------------------------------------------------------------------------------------------
-	MspOverM200m: The ratio :math:`M_{sp} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
-	Rsp: :math:`R_{sp}` as a function of spherical overdensity radius.
-	Msp: :math:`M_{sp}` as a function of spherical overdensity mass.
 	"""
 
 	# Check that this model exists, and that it can do what is requested
 	if not model in models:
 		raise Exception('Unknown model, %s.' % model)
 	m = models[model]
+
 	if not qx in m.qx:
 		raise Exception('Model %s cannot handle input quantity %s.' % (model, qx))
 	if not qy in m.qy:
 		raise Exception('Model %s cannot output quantity %s.' % (model, qy))
 
+	# Check for wrong input of additional parameters z and nu200m; if they are arrays, they must
+	# have the same length as x.
+	if utilities.isArray(x):
+		if z is not None and utilities.isArray(z) and len(z) != len(x):
+			raise Exception('If z is an array, it must have the same dimensions as x.')
+		if nu200m is not None and utilities.isArray(nu200m) and len(nu200m) != len(x):
+			raise Exception('If nu200m is an array, it must have the same dimensions as x.')
+	else:
+		if z is not None and utilities.isArray(z):
+			raise Exception('If x is not an array, z cannot be an array.')
+		if nu200m is not None and utilities.isArray(nu200m):
+			raise Exception('If x is not an array, nu200m cannot be an array.')
+
 	# Create a mask indicating where the results are valid
 	if qx == 'Gamma':
 		mask = (x >= m.min_Gamma) & (x <= m.max_Gamma)
+		if nu200m is not None:
+			mask = mask & (nu200m >= m.min_nu200m) & (nu200m <= m.max_nu200m)
 	elif qx == 'nu200m':
 		mask = (x >= m.min_nu200m) & (x <= m.max_nu200m)
 	else:
 		raise Exception('Unknown input quantity, %s.' % qx)
-		
-	if utilities.isArray(x):
-		x = x[mask]
-		if np.count_nonzero(mask) == 0:
-			print('WARNING: Found no input values within the limits of the model %s.' % model)
-			return None, False
-	else:
-		if not mask:
-			print('WARNING: Input value %.1f is not within the limits of the model %s.' % (x, model))
-			return None, False
+	if z is not None:
+		mask = mask & (z >= m.min_z) & (z <= m.max_z) 
+	
+	# Now apply the mask to the input array, and return if there are no valid entries.
+	x, is_array = utilities.getArray(x)
+	mask, _ = utilities.getArray(mask)
+	x = x[mask]
+	if np.count_nonzero(mask) == 0:
+		print('WARNING: Found no input values within the limits of model %s.' % model)
+		return np.array([]), mask
 
+	# Compute Om from z, but only if z is given. Some models use Om rather than z.
 	if z is None:
 		Om = None
 	else:
@@ -168,18 +276,18 @@ def splashback(qx, qy, x, z = None, nu = None, rspdef = None, statistic = None, 
 		if qx == 'Gamma':
 			Gamma = x
 		if qx == 'nu200m':
-			nu = x
-			Gamma = modelDiemer17Gamma(nu, z)
+			nu200m = x
+			Gamma = modelDiemer17Gamma(nu200m, z)
 		
 		if qy == 'RspR200m':
-			ret = modelDiemer17RspR200m('RspR200m', Gamma, nu, z, rspdef)
+			ret = modelDiemer17RspR200m('RspR200m', Gamma, nu200m, z, rspdef)
 		
 		elif qy == 'MspM200m':
-			ret = modelDiemer17RspR200m('MspM200m', Gamma, nu, z, rspdef)
+			ret = modelDiemer17RspR200m('MspM200m', Gamma, nu200m, z, rspdef)
 		
 		elif qy == 'Deltasp':
-			rsp200m = modelDiemer17RspR200m('RspR200m', Gamma, nu, z, rspdef)
-			msp200m = modelDiemer17RspR200m('MspM200m', Gamma, nu, z, rspdef)
+			rsp200m = modelDiemer17RspR200m('RspR200m', Gamma, nu200m, z, rspdef)
+			msp200m = modelDiemer17RspR200m('MspM200m', Gamma, nu200m, z, rspdef)
 			ret = 200.0 * msp200m / rsp200m**3
 		
 		else:
@@ -197,14 +305,14 @@ def splashback(qx, qy, x, z = None, nu = None, rspdef = None, statistic = None, 
 			else:
 		
 				if qy == 'RspR200m-1s':
-					ret = modelDiemer17Scatter('RspR200m-1s', Gamma, nu, z, rspdef)
+					ret = modelDiemer17Scatter('RspR200m-1s', Gamma, nu200m, z, rspdef)
 				
 				elif qy == 'MspM200m-1s':
-					ret = modelDiemer17Scatter('MspM200m-1s', Gamma, nu, z, rspdef)
+					ret = modelDiemer17Scatter('MspM200m-1s', Gamma, nu200m, z, rspdef)
 				
 				elif qy == 'Deltasp-1s':
-					rsp_1s = modelDiemer17Scatter('RspR200m-1s', Gamma, nu, z, rspdef)
-					msp_1s = modelDiemer17Scatter('MspM200m-1s', Gamma, nu, z, rspdef)
+					rsp_1s = modelDiemer17Scatter('RspR200m-1s', Gamma, nu200m, z, rspdef)
+					msp_1s = modelDiemer17Scatter('MspM200m-1s', Gamma, nu200m, z, rspdef)
 					ret = np.sqrt(msp_1s**2 + 3.0 * rsp_1s**2)
 
 				min_scatter = 0.02
@@ -246,8 +354,259 @@ def splashback(qx, qy, x, z = None, nu = None, rspdef = None, statistic = None, 
 			ret = delta / 200.0 * rspr200m**3
 		elif qy == 'Deltasp':
 			ret = modelShi16Delta(x, Om)
+	
+	elif model == 'adhikari14':
+		
+		Delta, c = modelAdhikari14Deltasp(x, Om)
+		if qy == 'Deltasp':
+			ret = Delta
+		elif qy == 'RspR200m':
+			ret, _ = modelAdhikari14RspR200m(Delta, c, Om, z)
+		elif qy == 'MspM200m':
+			_, ret = modelAdhikari14RspR200m(Delta, c, Om, z)
+
+	if not is_array:
+		ret = ret[0]
+		mask = mask[0]
 
 	return ret, mask
+
+###################################################################################################
+
+def splashbackRadius(z, mdef, R = None, M = None, c = None, Gamma = None,
+		model = defaults.HALO_SPLASHBACK_MODEL, 
+		statistic = defaults.HALO_SPLASHBACK_STATISTIC,
+		rspdef = defaults.HALO_SPLASHBACK_RSPDEF,
+		c_model = defaults.HALO_CONCENTRATION_MODEL,
+		profile = defaults.HALO_MASS_CONVERSION_PROFILE):
+	"""
+	:math:`R_{sp}` and :math:`M_{sp}` as a function of spherical overdensity radius or mass.
+	
+	This function represents a convenient wrapper for the :func:splashbackModel function, where
+	...
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	R: array_like
+		Spherical overdensity radius in physical :math:`kpc/h`; can be a number or a numpy array.
+	z: float
+		Redshift
+	mdef: str
+		Mass definition in which R and c are given.
+	c: array_like
+		Halo concentration; must have the same dimensions as R, or be ``None`` in which case the 
+		concentration is computed automatically.
+	profile: str
+		The functional form of the profile assumed in the conversion between mass definitions; 
+		can be ``nfw`` or ``dk14``.
+
+	Returns
+	-----------------------------------------------------------------------------------------------
+	Rsp: array_like
+		:math:`R_{sp}` in physical :math:`kpc/h`; has the same dimensions as R.
+		
+	See also
+	-----------------------------------------------------------------------------------------------
+	"""
+	
+	if R is None and M is None:
+		raise Exception('Either R or M must be passed.')
+	if R is not None and M is not None:
+		raise Exception('Only R or M can be passed, not both.')
+	
+	if R is not None:
+		R, is_array = utilities.getArray(R)
+	else:
+		M, is_array = utilities.getArray(M)
+	
+	if mdef == '200m':
+		if R is None:
+			M200m = M
+			R200m = mass_so.M_to_R(M200m, z, '200m')
+		else:
+			R200m = R
+			M200m = mass_so.R_to_M(R200m, z, '200m')
+	else:
+		if M is None:
+			M = mass_so.R_to_M(R, z, mdef)
+		if c is None:
+			M200m, R200m, _ = mass_adv.changeMassDefinitionCModel(M, z, mdef, '200m', 
+										profile = profile, c_model = c_model)
+		else:
+			M200m, R200m, _ = mass_defs.changeMassDefinition(M, c, z, mdef, '200m', 
+										profile = profile)
+			
+	cosmo = cosmology.getCurrent()
+	nu200m = cosmo.peakHeight(M200m, z)
+	
+	if Gamma is None:
+		qx = 'nu200m'
+		x = nu200m
+	else:
+		qx = 'Gamma'
+		x = Gamma
+	
+	RspR200m, mask1 = splashbackModel(qx, 'RspR200m', x, z = z, nu200m = nu200m, model = model,
+				statistic = statistic, rspdef = rspdef)
+	MspM200m, mask2 = splashbackModel(qx, 'MspM200m', x, z = z, nu200m = nu200m, model = model,
+				statistic = statistic, rspdef = rspdef)
+	mask = mask1 & mask2
+	
+	Rsp = R200m[mask] * RspR200m
+	Msp = M200m[mask] * MspM200m
+	
+	if not is_array:
+		Rsp = Rsp[0]
+		Msp = Msp[0]
+		mask = mask[0]
+	
+	return Rsp, Msp, mask
+
+###################################################################################################
+# FUNCTIONS FOR INDIVIDUAL SPLASHBACK MODELS
+###################################################################################################
+
+def modelAdhikari14Deltasp(s, Om):
+	
+	bins_Om = np.array([1.000e-02, 6.210e-02, 1.142e-01, 1.663e-01, 2.184e-01, 2.705e-01, 3.226e-01, 3.747e-01, 4.268e-01, 4.789e-01, 5.310e-01, 5.831e-01, 6.352e-01, 6.873e-01, 7.394e-01, 7.915e-01, 8.436e-01, 8.957e-01, 9.478e-01, 9.999e-01])
+	bins_s = np.array([2.000e-01, 2.392e-01, 2.860e-01, 3.421e-01, 4.091e-01, 4.893e-01, 5.851e-01, 6.998e-01, 8.369e-01, 1.001e+00, 1.197e+00, 1.431e+00, 1.712e+00, 2.047e+00, 2.449e+00, 2.928e+00, 3.502e+00, 4.188e+00, 5.009e+00, 5.990e+00])
+	c = np.array([5.503e+02, 2.370e+02, 1.152e+02, 6.164e+01, 3.562e+01, 2.188e+01, 1.410e+01, 9.431e+00, 6.495e+00, 4.571e+00, 3.266e+00, 2.354e+00, 1.701e+00, 1.223e+00, 8.671e-01, 5.971e-01, 3.896e-01, 2.283e-01, 1.014e-01, 8.349e-04])
+	Deltasp = np.array([
+		[8.131e+02, 8.277e+02, 8.450e+02, 8.673e+02, 8.967e+02, 9.357e+02, 9.860e+02, 1.049e+03, 1.098e+03, 1.191e+03, 1.295e+03, 1.410e+03, 1.532e+03, 1.662e+03, 1.799e+03, 1.947e+03, 2.114e+03, 2.315e+03, 2.573e+03, 2.923e+03],
+		[2.342e+02, 2.396e+02, 2.460e+02, 2.540e+02, 2.640e+02, 2.767e+02, 2.924e+02, 3.117e+02, 3.289e+02, 3.567e+02, 3.883e+02, 4.233e+02, 4.612e+02, 5.015e+02, 5.437e+02, 5.875e+02, 6.336e+02, 6.839e+02, 7.418e+02, 8.133e+02],
+		[1.633e+02, 1.672e+02, 1.719e+02, 1.777e+02, 1.849e+02, 1.940e+02, 2.051e+02, 2.187e+02, 2.312e+02, 2.507e+02, 2.728e+02, 2.975e+02, 3.243e+02, 3.528e+02, 3.827e+02, 4.136e+02, 4.456e+02, 4.796e+02, 5.173e+02, 5.619e+02],
+		[1.328e+02, 1.361e+02, 1.400e+02, 1.448e+02, 1.508e+02, 1.582e+02, 1.674e+02, 1.785e+02, 1.888e+02, 2.047e+02, 2.227e+02, 2.428e+02, 2.647e+02, 2.881e+02, 3.127e+02, 3.380e+02, 3.640e+02, 3.912e+02, 4.207e+02, 4.548e+02],
+		[1.152e+02, 1.182e+02, 1.216e+02, 1.258e+02, 1.311e+02, 1.376e+02, 1.455e+02, 1.552e+02, 1.643e+02, 1.780e+02, 1.937e+02, 2.111e+02, 2.302e+02, 2.506e+02, 2.720e+02, 2.941e+02, 3.167e+02, 3.401e+02, 3.651e+02, 3.934e+02],
+		[1.036e+02, 1.063e+02, 1.094e+02, 1.132e+02, 1.180e+02, 1.238e+02, 1.310e+02, 1.397e+02, 1.480e+02, 1.603e+02, 1.744e+02, 1.901e+02, 2.073e+02, 2.257e+02, 2.450e+02, 2.648e+02, 2.852e+02, 3.061e+02, 3.282e+02, 3.528e+02],
+		[9.521e+01, 9.768e+01, 1.006e+02, 1.042e+02, 1.085e+02, 1.139e+02, 1.205e+02, 1.285e+02, 1.362e+02, 1.475e+02, 1.604e+02, 1.749e+02, 1.907e+02, 2.076e+02, 2.254e+02, 2.437e+02, 2.624e+02, 2.816e+02, 3.016e+02, 3.237e+02],
+		[8.884e+01, 9.115e+01, 9.390e+01, 9.723e+01, 1.013e+02, 1.064e+02, 1.126e+02, 1.200e+02, 1.272e+02, 1.377e+02, 1.498e+02, 1.632e+02, 1.780e+02, 1.938e+02, 2.104e+02, 2.276e+02, 2.450e+02, 2.628e+02, 2.814e+02, 3.016e+02],
+		[8.378e+01, 8.598e+01, 8.858e+01, 9.174e+01, 9.562e+01, 1.004e+02, 1.062e+02, 1.133e+02, 1.201e+02, 1.300e+02, 1.413e+02, 1.540e+02, 1.680e+02, 1.829e+02, 1.986e+02, 2.148e+02, 2.313e+02, 2.480e+02, 2.653e+02, 2.841e+02],
+		[7.967e+01, 8.177e+01, 8.425e+01, 8.727e+01, 9.096e+01, 9.551e+01, 1.011e+02, 1.077e+02, 1.142e+02, 1.237e+02, 1.345e+02, 1.465e+02, 1.597e+02, 1.740e+02, 1.889e+02, 2.043e+02, 2.200e+02, 2.359e+02, 2.523e+02, 2.698e+02],
+		[7.623e+01, 7.825e+01, 8.064e+01, 8.353e+01, 8.708e+01, 9.143e+01, 9.674e+01, 1.031e+02, 1.094e+02, 1.184e+02, 1.287e+02, 1.402e+02, 1.529e+02, 1.665e+02, 1.808e+02, 1.956e+02, 2.106e+02, 2.258e+02, 2.414e+02, 2.580e+02],
+		[7.331e+01, 7.526e+01, 7.756e+01, 8.035e+01, 8.377e+01, 8.796e+01, 9.307e+01, 9.922e+01, 1.052e+02, 1.139e+02, 1.238e+02, 1.349e+02, 1.471e+02, 1.602e+02, 1.739e+02, 1.881e+02, 2.026e+02, 2.172e+02, 2.321e+02, 2.479e+02],
+		[7.080e+01, 7.268e+01, 7.491e+01, 7.761e+01, 8.092e+01, 8.497e+01, 8.990e+01, 9.584e+01, 1.017e+02, 1.100e+02, 1.196e+02, 1.303e+02, 1.420e+02, 1.547e+02, 1.680e+02, 1.817e+02, 1.957e+02, 2.097e+02, 2.241e+02, 2.392e+02],
+		[6.860e+01, 7.043e+01, 7.260e+01, 7.522e+01, 7.843e+01, 8.236e+01, 8.714e+01, 9.289e+01, 9.854e+01, 1.066e+02, 1.159e+02, 1.262e+02, 1.376e+02, 1.499e+02, 1.628e+02, 1.761e+02, 1.896e+02, 2.033e+02, 2.171e+02, 2.316e+02],
+		[6.666e+01, 6.844e+01, 7.055e+01, 7.310e+01, 7.623e+01, 8.005e+01, 8.469e+01, 9.028e+01, 9.578e+01, 1.036e+02, 1.126e+02, 1.227e+02, 1.337e+02, 1.456e+02, 1.582e+02, 1.711e+02, 1.843e+02, 1.975e+02, 2.109e+02, 2.249e+02],
+		[6.493e+01, 6.667e+01, 6.873e+01, 7.122e+01, 7.427e+01, 7.799e+01, 8.252e+01, 8.796e+01, 9.333e+01, 1.010e+02, 1.097e+02, 1.195e+02, 1.303e+02, 1.419e+02, 1.541e+02, 1.667e+02, 1.795e+02, 1.924e+02, 2.054e+02, 2.190e+02],
+		[6.338e+01, 6.508e+01, 6.710e+01, 6.953e+01, 7.250e+01, 7.614e+01, 8.056e+01, 8.587e+01, 9.112e+01, 9.858e+01, 1.071e+02, 1.167e+02, 1.272e+02, 1.385e+02, 1.504e+02, 1.628e+02, 1.753e+02, 1.878e+02, 2.005e+02, 2.137e+02],
+		[6.197e+01, 6.364e+01, 6.562e+01, 6.800e+01, 7.091e+01, 7.447e+01, 7.879e+01, 8.398e+01, 8.912e+01, 9.642e+01, 1.047e+02, 1.141e+02, 1.243e+02, 1.354e+02, 1.471e+02, 1.592e+02, 1.714e+02, 1.837e+02, 1.961e+02, 2.088e+02],
+		[6.070e+01, 6.233e+01, 6.427e+01, 6.661e+01, 6.947e+01, 7.295e+01, 7.719e+01, 8.227e+01, 8.731e+01, 9.444e+01, 1.026e+02, 1.117e+02, 1.218e+02, 1.326e+02, 1.441e+02, 1.559e+02, 1.679e+02, 1.799e+02, 1.920e+02, 2.045e+02],
+		[5.953e+01, 6.114e+01, 6.304e+01, 6.534e+01, 6.814e+01, 7.156e+01, 7.572e+01, 8.070e+01, 8.565e+01, 9.264e+01, 1.006e+02, 1.096e+02, 1.194e+02, 1.301e+02, 1.413e+02, 1.529e+02, 1.647e+02, 1.764e+02, 1.883e+02, 2.005e+02]])
+
+	#delta_ad = np.loadtxt('Data/deltasp_adhikari.txt', unpack = True)
+	#n_bin_ad = np.sqrt(len(delta_ad[0]))
+	#dd_om = np.array(delta_ad[0, ::n_bin_ad])
+	#dd_s = np.array(delta_ad[1, :n_bin_ad])
+	#dd = np.reshape(delta_ad, (4, n_bin_ad, n_bin_ad))
+	Om_ = np.ones((len(s)), np.float) * Om
+	interp = scipy.interpolate.RectBivariateSpline(bins_Om, bins_s, Deltasp)
+	Delta = interp(Om_, s, grid = False)
+	
+	if np.max(s) > np.max(bins_s):
+		msg = 'Found s = %.2f, greater than max %.2f.' % (np.max(s), np.max(bins_s))
+		raise Exception(msg)
+	
+	if np.min(s) < np.min(bins_s):
+		msg = 'Found s = %.2f, smaller than min %.2f.' % (np.min(s), np.min(bins_s))
+		raise Exception(msg)
+	
+	c = np.interp(s, bins_s, c)
+	
+	if np.count_nonzero(c < 0.0) > 0:
+		print(s)
+		print(c)
+		print(bins_s)
+		raise Exception('Found negative concentration values.')
+	
+	return Delta, c
+
+###################################################################################################
+
+# This function converts the Adhikari et al model overdensity into Rsp. The concentration
+# given by the Adhikari refers to R = r_ta / 2 = Rvir, so we create an NFW profile with 
+# that concentration. The mass doesn't matter since we're only after the ratio of Rsp and
+# R200m, i.e. the model does not depend on the absolute mass scale.
+
+def modelAdhikari14RspR200m(Delta, c, Om, z):
+
+	cosmo = cosmology.getCurrent()
+	RspR200m = Delta  * 0.0
+	rho_m = cosmo.rho_m(z)
+	for i in range(len(Delta)):
+		prof = profile_nfw.NFWProfile(M = 1E10, c = c[i], mdef = 'vir', z = z)
+		x = prof.xDelta(prof.par['rhos'], prof.par['rs'], Delta[i] * rho_m)
+		Rsp = x * prof.par['rs']
+		R200m = prof.RDelta(z, '200m')
+		RspR200m[i] = Rsp / R200m
+	MspM200m = Delta * RspR200m**3 / 200.0
+	
+	return RspR200m, MspM200m
+
+###################################################################################################
+
+def modelMore15RspR200m(nu200m = None, z = None, Gamma = None, statistic = 'median'):
+
+	if (Gamma is not None) and (z is not None):
+		cosmo = cosmology.getCurrent()
+		if statistic == 'median':
+			ratio = 0.54 * (1.0 + 0.53 * cosmo.Om(z)) * (1 + 1.36 * np.exp(-Gamma / 3.04))
+		elif statistic == 'mean':
+			ratio = 0.58 * (1.0 + 0.63 * cosmo.Om(z)) * (1 + 1.08 * np.exp(-Gamma / 2.26))
+		else:
+			msg = 'Unknown statistic, %s.' % statistic
+			raise Exception(msg)
+	elif nu200m is not None:
+		if statistic == 'median':
+			ratio = 0.81 * (1.0 + 0.97 * np.exp(-nu200m / 2.44))
+		elif statistic == 'mean':
+			ratio = 0.88 * (1.0 + 0.77 * np.exp(-nu200m / 1.95))
+		else:
+			msg = 'Unknown statistic, %s.' % statistic
+			raise Exception(msg)
+	else:
+		msg = 'Need either Gamma and z, or nu.'
+		raise Exception(msg)
+
+	return ratio
+
+###################################################################################################
+
+def modelMore15MspM200m(nu200m = None, z = None, Gamma = None, statistic = 'median'):
+
+	if (Gamma is not None) and (z is not None):
+		cosmo = cosmology.getCurrent()
+		if statistic == 'median':
+			ratio = 0.59 * (1.0 + 0.35 * cosmo.Om(z)) * (1 + 0.92 * np.exp(-Gamma / 4.54))
+		elif statistic == 'mean':
+			ratio = 0.70 * (1.0 + 0.37 * cosmo.Om(z)) * (1 + 0.62 * np.exp(-Gamma / 2.69))
+		else:
+			msg = 'Unknown statistic, %s.' % statistic
+			raise Exception(msg)
+	elif nu200m is not None:
+		if statistic == 'median':
+			ratio = 0.82 * (1.0 + 0.63 * np.exp(-nu200m / 3.52))
+		elif statistic == 'mean':
+			ratio = 0.92 * (1.0 + 0.45 * np.exp(-nu200m / 2.26))
+		else:
+			msg = 'Unknown statistic, %s.' % statistic
+			raise Exception(msg)
+	else:
+		msg = 'Need either Gamma and z, or nu.'
+		raise Exception(msg)
+	
+	return ratio
+
+###################################################################################################
+
+def modelShi16Delta(Gamma, Om):
+
+	return 33.0 * Om**-0.45 * np.exp((0.88 - 0.14 * np.log(Om)) * Gamma**0.6)
+
+###################################################################################################
+
+def modelShi16RspR200m(Gamma, Om):
+
+	return np.exp((0.24 + 0.074 * np.log(Gamma)) * np.log(Om) + 0.55 - 0.15 * Gamma)
 
 ###################################################################################################
 
@@ -262,7 +621,7 @@ def modelDiemer17PercentileValue(rspdef):
 
 ###################################################################################################
 
-def modelDiemer17Gamma(nu, z):
+def modelDiemer17Gamma(nu200m, z):
 	
 	a0 = 1.222190
 	a1 = 0.351460
@@ -273,13 +632,13 @@ def modelDiemer17Gamma(nu, z):
 
 	A = a0 + a1 * z
 	B = b0 + b1 * z + b2 * z**2 + b3 * z**3
-	Gamma = A * nu + B * nu**1.5
+	Gamma = A * nu200m + B * nu200m**1.5
 	
 	return Gamma
 
 ###################################################################################################
 
-def modelDiemer17RspR200m(qy, Gamma, nu, z, rspdef):
+def modelDiemer17RspR200m(qy, Gamma, nu200m, z, rspdef):
 
 	if rspdef == 'mean':
 		
@@ -387,8 +746,8 @@ def modelDiemer17RspR200m(qy, Gamma, nu, z, rspdef):
 	C_nu2 = c_nu2 + p * c_nu2_p
 	
 	A = A0
-	B = (B0 + B_om * Om) * (1.0 + B_nu * nu)
-	C = (C0 + C_om * Om + C_om2 * Om**2) * (1.0 + C_nu * nu + C_nu2 * nu**2)
+	B = (B0 + B_om * Om) * (1.0 + B_nu * nu200m)
+	C = (C0 + C_om * Om + C_om2 * Om**2) * (1.0 + C_nu * nu200m + C_nu2 * nu200m**2)
 	
 	if utilities.isArray(C):
 		C[C < 1E-4] = 1E-4
@@ -399,7 +758,7 @@ def modelDiemer17RspR200m(qy, Gamma, nu, z, rspdef):
 
 ###################################################################################################
 
-def modelDiemer17Scatter(qy, Gamma, nu, z, rspdef):
+def modelDiemer17Scatter(qy, Gamma, nu200m, z, rspdef):
 
 	if rspdef == 'mean':
 		if qy == 'RspR200m-1s':
@@ -425,170 +784,8 @@ def modelDiemer17Scatter(qy, Gamma, nu, z, rspdef):
 			sigma_p = 0.047344
 
 	p = modelDiemer17PercentileValue(rspdef)	
-	ret = sigma_0 + sigma_Gamma * Gamma + sigma_nu * nu + sigma_p * p
+	ret = sigma_0 + sigma_Gamma * Gamma + sigma_nu * nu200m + sigma_p * p
 
 	return ret
-
-###################################################################################################
-
-def modelShi16Delta(Gamma, Om):
-
-	return 33.0 * Om**-0.45 * np.exp((0.88 - 0.14 * np.log(Om)) * Gamma**0.6)
-
-###################################################################################################
-
-def modelShi16RspR200m(Gamma, Om):
-
-	return np.exp((0.24 + 0.074 * np.log(Gamma)) * np.log(Om) + 0.55 - 0.15 * Gamma)
-
-###################################################################################################
-
-def modelMore15RspR200m(nu200m = None, z = None, Gamma = None, statistic = 'median'):
-
-	if (Gamma is not None) and (z is not None):
-		cosmo = cosmology.getCurrent()
-		if statistic == 'median':
-			ratio = 0.54 * (1.0 + 0.53 * cosmo.Om(z)) * (1 + 1.36 * np.exp(-Gamma / 3.04))
-		elif statistic == 'mean':
-			ratio = 0.58 * (1.0 + 0.63 * cosmo.Om(z)) * (1 + 1.08 * np.exp(-Gamma / 2.26))
-		else:
-			msg = 'Unknown statistic, %s.' % statistic
-			raise Exception(msg)
-	elif nu200m is not None:
-		if statistic == 'median':
-			ratio = 0.81 * (1.0 + 0.97 * np.exp(-nu200m / 2.44))
-		elif statistic == 'mean':
-			ratio = 0.88 * (1.0 + 0.77 * np.exp(-nu200m / 1.95))
-		else:
-			msg = 'Unknown statistic, %s.' % statistic
-			raise Exception(msg)
-	else:
-		msg = 'Need either Gamma and z, or nu.'
-		raise Exception(msg)
-
-	return ratio
-
-###################################################################################################
-
-def modelMore15MspM200m(nu200m = None, z = None, Gamma = None, statistic = 'median'):
-
-	if (Gamma is not None) and (z is not None):
-		cosmo = cosmology.getCurrent()
-		if statistic == 'median':
-			ratio = 0.59 * (1.0 + 0.35 * cosmo.Om(z)) * (1 + 0.92 * np.exp(-Gamma / 4.54))
-		elif statistic == 'mean':
-			ratio = 0.70 * (1.0 + 0.37 * cosmo.Om(z)) * (1 + 0.62 * np.exp(-Gamma / 2.69))
-		else:
-			msg = 'Unknown statistic, %s.' % statistic
-			raise Exception(msg)
-	elif nu200m is not None:
-		if statistic == 'median':
-			ratio = 0.82 * (1.0 + 0.63 * np.exp(-nu200m / 3.52))
-		elif statistic == 'mean':
-			ratio = 0.92 * (1.0 + 0.45 * np.exp(-nu200m / 2.26))
-		else:
-			msg = 'Unknown statistic, %s.' % statistic
-			raise Exception(msg)
-	else:
-		msg = 'Need either Gamma and z, or nu.'
-		raise Exception(msg)
-	
-	return ratio
-
-###################################################################################################
-
-# def Rsp(R, z, mdef, c = None, profile = defaults.HALO_MASS_CONVERSION_PROFILE):
-# 	"""
-# 	:math:`R_{sp}` as a function of spherical overdensity radius.
-# 	
-# 	Parameters
-# 	-----------------------------------------------------------------------------------------------
-# 	R: array_like
-# 		Spherical overdensity radius in physical :math:`kpc/h`; can be a number or a numpy array.
-# 	z: float
-# 		Redshift
-# 	mdef: str
-# 		Mass definition in which R and c are given.
-# 	c: array_like
-# 		Halo concentration; must have the same dimensions as R, or be ``None`` in which case the 
-# 		concentration is computed automatically.
-# 	profile: str
-# 		The functional form of the profile assumed in the conversion between mass definitions; 
-# 		can be ``nfw`` or ``dk14``.
-# 
-# 	Returns
-# 	-----------------------------------------------------------------------------------------------
-# 	Rsp: array_like
-# 		:math:`R_{sp}` in physical :math:`kpc/h`; has the same dimensions as R.
-# 		
-# 	See also
-# 	-----------------------------------------------------------------------------------------------
-# 	RspOverR200m: The ratio :math:`R_{sp} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
-# 	MspOverM200m: The ratio :math:`M_{sp} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
-# 	Msp: :math:`M_{sp}` as a function of spherical overdensity mass.
-# 	"""
-# 	
-# 	if mdef == '200m':
-# 		R200m = R
-# 		M200m = mass_so.R_to_M(R200m, z, '200m')
-# 	else:
-# 		M = mass_so.R_to_M(R, z, mdef)
-# 		if c is None:
-# 			M200m, R200m, _ = mass_adv.changeMassDefinitionCModel(M, z, mdef, '200m', profile = profile)
-# 		else:
-# 			M200m, R200m, _ = mass_defs.changeMassDefinition(M, c, z, mdef, '200m', profile = profile)
-# 			
-# 	cosmo = cosmology.getCurrent()
-# 	nu200m = cosmo.peakHeight(M200m, z)
-# 	Rsp = R200m * RspOverR200m(nu200m = nu200m)
-# 	
-# 	return Rsp
-# 
-# ###################################################################################################
-# 
-# def Msp(M, z, mdef, c = None, profile = defaults.HALO_MASS_CONVERSION_PROFILE):
-# 	"""
-# 	:math:`M_{sp}` as a function of spherical overdensity mass.
-# 	
-# 	Parameters
-# 	-----------------------------------------------------------------------------------------------
-# 	M: array_like
-# 		Spherical overdensity mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
-# 	z: float
-# 		Redshift
-# 	mdef: str
-# 		Mass definition in which M and c are given.
-# 	c: array_like
-# 		Halo concentration; must have the same dimensions as M, or be ``None`` in which case the 
-# 		concentration is computed automatically.
-# 	profile: str
-# 		The functional form of the profile assumed in the conversion between mass definitions; 
-# 		can be ``nfw`` or ``dk14``.
-# 
-# 	Returns
-# 	-----------------------------------------------------------------------------------------------
-# 	Msp: array_like
-# 		:math:`M_{sp}` in :math:`M_{\odot}/h`; has the same dimensions as M.
-# 		
-# 	See also
-# 	-----------------------------------------------------------------------------------------------
-# 	RspOverR200m: The ratio :math:`R_{sp} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
-# 	MspOverM200m: The ratio :math:`M_{sp} / M_{200m}` from either the accretion rate, :math:`\\Gamma`, or the peak height, :math:`\\nu`.
-# 	Rsp: :math:`R_{sp}` as a function of spherical overdensity radius.
-# 	"""
-# 	
-# 	if mdef == '200m':
-# 		M200m = M
-# 	else:
-# 		if c is None:
-# 			M200m, _, _ = mass_adv.changeMassDefinitionCModel(M, z, mdef, '200m', profile = profile)
-# 		else:
-# 			M200m, _, _ = mass_defs.changeMassDefinition(M, c, z, mdef, '200m', profile = profile)
-# 	
-# 	cosmo = cosmology.getCurrent()
-# 	nu200m = cosmo.peakHeight(M200m, z)
-# 	Msp = M200m * MspOverM200m(nu200m = nu200m)
-# 	
-# 	return Msp
 
 ###################################################################################################

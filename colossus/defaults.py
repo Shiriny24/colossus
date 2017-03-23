@@ -19,15 +19,11 @@ COSMOLOGY_NEFF = 3.046
 """The default number of effective neutrino species."""
 
 ###################################################################################################
-# HALO BIAS
+# DEFAULT MODELS (HALO PROFILE, BIAS, CONCENTRATION, SPLASHBACK)
 ###################################################################################################
 
 HALO_BIAS_MODEL = 'tinker10'
 """The default halo bias model."""
-
-###################################################################################################
-# HALO CONCENTRATION
-###################################################################################################
 
 HALO_CONCENTRATION_MODEL = 'diemer15'
 """The default concentration model."""
@@ -35,14 +31,19 @@ HALO_CONCENTRATION_STATISTIC = 'median'
 """The default statistic used (mean or median). This only applies to those models that distinguish
 between mean and median statistics."""
 
-###################################################################################################
-# HALO MASS
-###################################################################################################
-
 HALO_MASS_CONVERSION_PROFILE = 'nfw'
 """The default profile used for mass conversions. Whenever spherical overdensity mass definitions
 are converted into one another, we have to assume a form of the density profile. The simplicity
 of the NFW profile makes this computation very fast."""
+
+HALO_SPLASHBACK_MODEL = 'diemer17'
+"""The default model for the splashback radius."""
+HALO_SPLASHBACK_STATISTIC = 'median'
+"""The default statistic used (mean or median). This only applies to splashback models that 
+distinguish between mean and median statistics."""
+HALO_SPLASHBACK_RSPDEF = 'mean'
+"""The default definition of Rsp used. This only applies to splashback models that distinguish 
+between different definitions."""
 
 ###################################################################################################
 # HALO PROFILE (BASE CLASS)

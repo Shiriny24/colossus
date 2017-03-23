@@ -159,20 +159,6 @@ class TCMassAdv(test_colossus.ColosssusTestCase):
 	
 	def test_M4rs(self):
 		self.assertAlmostEqual(mass_adv.M4rs(1E12, 0.7, '500c', 3.8), 1041815679897.7153)
-
-	def test_RspOverR200m(self):
-		self.assertAlmostEqual(mass_adv.RspOverR200m(nu200m = 2.4, z = None, Gamma = None), 1.1038203372651374)
-		self.assertAlmostEqual(mass_adv.RspOverR200m(nu200m = 2.4, z = 1.4, Gamma = 0.8), 1.6080082344281803)
-				
-	def test_MspOverM200m(self):
-		self.assertAlmostEqual(mass_adv.MspOverM200m(nu200m = 2.4, z = None, Gamma = None), 1.0812429190621984)
-		self.assertAlmostEqual(mass_adv.MspOverM200m(nu200m = 2.4, z = 1.4, Gamma = 0.8), 1.359753402031187)
-
-	def test_Rsp(self):
-		self.assertAlmostEqual(mass_adv.Rsp(450.2, 0.4, '200m'), 549.64492801853442)
-
-	def test_Msp(self):
-		self.assertAlmostEqual(mass_adv.Msp(1.1E12, 0.4, '200m'), 1330106019812.7119)
 	
 ###################################################################################################
 # TRIGGER
