@@ -95,6 +95,10 @@ more15         Rsp/Msp              Gamma, z, M or M, z         `More et al. 201
 adhikari14     Rsp/Msp              Gamma, z                    `Adhikari et al. 2014 <http://adsabs.harvard.edu/abs/2014JCAP...11..019A>`_
 ============== ==================== =========================== =========================================
 
+The individual functions for these models are documented towards the bottom of this page. Note that
+the ``diemer17`` model includes a fitting function for the mass accretion rate as a function of 
+peak height and redshift, :func:`modelDiemer17Gamma`.
+
 ---------------------------------------------------------------------------------------------------
 Module reference
 ---------------------------------------------------------------------------------------------------
@@ -182,34 +186,51 @@ def splashbackModel(qx, qy, x, z = None, nu200m = None,
 				statistic = defaults.HALO_SPLASHBACK_STATISTIC,
 				rspdef = defaults.HALO_SPLASHBACK_RSPDEF):
 	"""
-	The ratio :math:`R_{sp} / R_{200m}` from either the accretion rate, :math:`\\Gamma`, or
-	the peak height, :math:`\\nu`.
+	The splashback radius, mass, and other quantities as predicted by various models.
 	
-	This function implements the relations calibrated in More, Diemer & Kravtsov 2015. Either
-	the accretion rate :math:`\\Gamma` and redshift, or the peak height :math:`\\nu`, must not 
-	be ``None``. 
-
+	Depending on the model, this function can return quantities such as :math:`R_{sp} / R_{\\rm 200m}`,
+	:math:`M_{\\rm sp} / M_{\\rm 200m}`, the splashback overdensity, or the scatter in these 
+	quantities (see listing above). The input variable can be mass or accretion rate. 
+	
+	The function returns only valid predictions for the desired quantity. If any of the parameters
+	lies outside the range of validity of the chosen model, no output is returned for that input,
+	as indicated by the returned boolean mask. No warning is output in such cases unless there is
+	no valid output for any x.
+	
 	Parameters
 	-----------------------------------------------------------------------------------------------
+	qx: str
+		Identifier of the input quantity, either ``nu200m`` or ``Gamma``.
+	qy: str
+		Identifier of the output quantity (see listing above). 
+	x: array_like
+		Input; can be a number or a numpy array. 
 	nu200m: array_like
-		The peak height as computed from :math:`M_{200m}`; can be a number or a numpy array.
+		The peak height as computed from :math:`M_{\\rm 200m}`; can be a number or a numpy array. This
+		quantity only needs to be passed for models that depend on peak height. If an array, it 
+		must have the same dimensions as x.
 	z: array_like
-		Redshift; can be a number or a numpy array.
-	Gamma: array_like
-		The mass accretion rate, as defined in Diemer & Kravtsov 2014; can be a number or a 
-		numpy array.
+		Redshift; can be a number or a numpy array. If an array, it must have the same dimensions 
+		as x.
+	model: str
+		The splashback model to use for the prediction (see table above).
 	statistic: str
 		Can be ``mean`` or ``median``, determining whether the function returns the best fit to the 
-		mean or median profile of a halo sample.
+		mean or median profile of a halo sample. This parameter is ignored by most models.
+	rspdef: str
+		The definition of the splashback radius. This parameter is ignored by most models, but 
+		used by the ``diemer17`` model to distinguish the ``mean`` of the apocenter distribution
+		or higher percentiles (e.g. ``percentile75``). 
 	
 	Returns
 	-----------------------------------------------------------------------------------------------
-	ratio: array_like
-		:math:`R_{sp} / R_{200m}`; has the same dimensions as z, Gamma, or nu, depending
-		on which of those parameters is an array.
-		
-	See also
-	-----------------------------------------------------------------------------------------------
+	y: array_like
+		The desired quantity; if x is a number, this is a number, if x is a numpy array, this is an
+		array too.
+	mask: array_like
+		A boolean mask of the same dimensions as x, indicating whether a valid input was returned
+		for each x. Note that only the valid x are returned, meaning x can have fewer items than
+		mask.
 	"""
 
 	# Check that this model exists, and that it can do what is requested
@@ -380,22 +401,45 @@ def splashbackRadius(z, mdef, R = None, M = None, c = None, Gamma = None,
 		c_model = defaults.HALO_CONCENTRATION_MODEL,
 		profile = defaults.HALO_MASS_CONVERSION_PROFILE):
 	"""
-	:math:`R_{sp}` and :math:`M_{sp}` as a function of spherical overdensity radius or mass.
+	:math:`R_{\\rm sp}` and :math:`M_{\\rm sp}` as a function of spherical overdensity radius or 
+	mass.
 	
-	This function represents a convenient wrapper for the :func:splashbackModel function, where
-	...
+	This function represents a convenient wrapper for the :func:`splashbackModel` function, where
+	only a spherical overdensity mass or radius needs to be passed. Additionally, the user can 
+	pass any of the parameters to the :func:`splashbackModel` function. Note that the redshift
+	must be a number, not an array.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
-	R: array_like
-		Spherical overdensity radius in physical :math:`kpc/h`; can be a number or a numpy array.
 	z: float
 		Redshift
 	mdef: str
-		Mass definition in which R and c are given.
+		Mass definition in which any combination of R, M, and c is given.
+	R: array_like
+		Spherical overdensity radius in physical :math:`kpc/h`; can be a number or a numpy array.
+		Either R or M need to be passed, not both.
+	M: array_like
+		Spherical overdensity mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
+		Either R or M need to be passed, not both.
 	c: array_like
 		Halo concentration; must have the same dimensions as R, or be ``None`` in which case the 
 		concentration is computed automatically.
+	Gamma: array_like
+		The mass accretion rate that can be optionally passed to the splashback model. If this 
+		field is set, the splashback model is evaluated as a function of Gamma primarily, if not
+		as a function of peak height.
+	model: str
+		The splashback model to use for the prediction (see table above).
+	statistic: str
+		Can be ``mean`` or ``median``, determining whether the function returns the best fit to the 
+		mean or median profile of a halo sample. This parameter is ignored by most models.
+	rspdef: str
+		The definition of the splashback radius. This parameter is ignored by most models, but 
+		used by the ``diemer17`` model to distinguish the ``mean`` of the apocenter distribution
+		or higher percentiles (e.g. ``percentile75``). 
+	c_model: str
+		The concentration model used to compute c if it is not passed by the user. See the
+		:mod:`halo.concentration` module for details.
 	profile: str
 		The functional form of the profile assumed in the conversion between mass definitions; 
 		can be ``nfw`` or ``dk14``.
@@ -403,10 +447,13 @@ def splashbackRadius(z, mdef, R = None, M = None, c = None, Gamma = None,
 	Returns
 	-----------------------------------------------------------------------------------------------
 	Rsp: array_like
-		:math:`R_{sp}` in physical :math:`kpc/h`; has the same dimensions as R.
-		
-	See also
-	-----------------------------------------------------------------------------------------------
+		:math:`R_{\\rm sp}` in physical :math:`kpc/h`
+	Msp: array_like
+		:math:`M_{\\rm sp}` in :math:`M_{\odot}/h`
+	mask: array_like
+		A boolean mask of the same dimensions as R or M, indicating whether a valid input was 
+		returned for each input. Note that only the valid outputs are returned, meaning Rsp and Msp
+		can have fewer items than mask.
 	"""
 	
 	if R is None and M is None:
@@ -467,6 +514,9 @@ def splashbackRadius(z, mdef, R = None, M = None, c = None, Gamma = None,
 ###################################################################################################
 
 def modelAdhikari14Deltasp(s, Om):
+	"""
+	:math:`\\Delta_{\\rm sp}` and concentration for the ``adhikari14`` model.
+	"""
 	
 	bins_Om = np.array([1.000e-02, 6.210e-02, 1.142e-01, 1.663e-01, 2.184e-01, 2.705e-01, 3.226e-01, 3.747e-01, 4.268e-01, 4.789e-01, 5.310e-01, 5.831e-01, 6.352e-01, 6.873e-01, 7.394e-01, 7.915e-01, 8.436e-01, 8.957e-01, 9.478e-01, 9.999e-01])
 	bins_s = np.array([2.000e-01, 2.392e-01, 2.860e-01, 3.421e-01, 4.091e-01, 4.893e-01, 5.851e-01, 6.998e-01, 8.369e-01, 1.001e+00, 1.197e+00, 1.431e+00, 1.712e+00, 2.047e+00, 2.449e+00, 2.928e+00, 3.502e+00, 4.188e+00, 5.009e+00, 5.990e+00])
@@ -493,11 +543,6 @@ def modelAdhikari14Deltasp(s, Om):
 		[6.070e+01, 6.233e+01, 6.427e+01, 6.661e+01, 6.947e+01, 7.295e+01, 7.719e+01, 8.227e+01, 8.731e+01, 9.444e+01, 1.026e+02, 1.117e+02, 1.218e+02, 1.326e+02, 1.441e+02, 1.559e+02, 1.679e+02, 1.799e+02, 1.920e+02, 2.045e+02],
 		[5.953e+01, 6.114e+01, 6.304e+01, 6.534e+01, 6.814e+01, 7.156e+01, 7.572e+01, 8.070e+01, 8.565e+01, 9.264e+01, 1.006e+02, 1.096e+02, 1.194e+02, 1.301e+02, 1.413e+02, 1.529e+02, 1.647e+02, 1.764e+02, 1.883e+02, 2.005e+02]])
 
-	#delta_ad = np.loadtxt('Data/deltasp_adhikari.txt', unpack = True)
-	#n_bin_ad = np.sqrt(len(delta_ad[0]))
-	#dd_om = np.array(delta_ad[0, ::n_bin_ad])
-	#dd_s = np.array(delta_ad[1, :n_bin_ad])
-	#dd = np.reshape(delta_ad, (4, n_bin_ad, n_bin_ad))
 	Om_ = np.ones((len(s)), np.float) * Om
 	interp = scipy.interpolate.RectBivariateSpline(bins_Om, bins_s, Deltasp)
 	Delta = interp(Om_, s, grid = False)
@@ -505,17 +550,12 @@ def modelAdhikari14Deltasp(s, Om):
 	if np.max(s) > np.max(bins_s):
 		msg = 'Found s = %.2f, greater than max %.2f.' % (np.max(s), np.max(bins_s))
 		raise Exception(msg)
-	
 	if np.min(s) < np.min(bins_s):
 		msg = 'Found s = %.2f, smaller than min %.2f.' % (np.min(s), np.min(bins_s))
 		raise Exception(msg)
 	
 	c = np.interp(s, bins_s, c)
-	
 	if np.count_nonzero(c < 0.0) > 0:
-		print(s)
-		print(c)
-		print(bins_s)
 		raise Exception('Found negative concentration values.')
 	
 	return Delta, c
@@ -528,6 +568,9 @@ def modelAdhikari14Deltasp(s, Om):
 # R200m, i.e. the model does not depend on the absolute mass scale.
 
 def modelAdhikari14RspR200m(Delta, c, Om, z):
+	"""
+	:math:`R_{\\rm sp}` and :math:`M_{\\rm sp}` for the ``adhikari14`` model.
+	"""
 
 	cosmo = cosmology.getCurrent()
 	RspR200m = Delta  * 0.0
@@ -545,6 +588,9 @@ def modelAdhikari14RspR200m(Delta, c, Om, z):
 ###################################################################################################
 
 def modelMore15RspR200m(nu200m = None, z = None, Gamma = None, statistic = 'median'):
+	"""
+	:math:`R_{\\rm sp}` for the ``more15`` model.
+	"""
 
 	if (Gamma is not None) and (z is not None):
 		cosmo = cosmology.getCurrent()
@@ -572,6 +618,9 @@ def modelMore15RspR200m(nu200m = None, z = None, Gamma = None, statistic = 'medi
 ###################################################################################################
 
 def modelMore15MspM200m(nu200m = None, z = None, Gamma = None, statistic = 'median'):
+	"""
+	:math:`M_{\\rm sp}` for the ``more15`` model.
+	"""
 
 	if (Gamma is not None) and (z is not None):
 		cosmo = cosmology.getCurrent()
@@ -599,12 +648,18 @@ def modelMore15MspM200m(nu200m = None, z = None, Gamma = None, statistic = 'medi
 ###################################################################################################
 
 def modelShi16Delta(Gamma, Om):
+	"""
+	:math:`\\Delta_{\\rm sp}` for the ``adhikari14`` model.
+	"""
 
 	return 33.0 * Om**-0.45 * np.exp((0.88 - 0.14 * np.log(Om)) * Gamma**0.6)
 
 ###################################################################################################
 
 def modelShi16RspR200m(Gamma, Om):
+	"""
+	:math:`R_{\\rm sp}` for the ``shi16`` model.
+	"""
 
 	return np.exp((0.24 + 0.074 * np.log(Gamma)) * np.log(Om) + 0.55 - 0.15 * Gamma)
 
@@ -622,6 +677,12 @@ def modelDiemer17PercentileValue(rspdef):
 ###################################################################################################
 
 def modelDiemer17Gamma(nu200m, z):
+	"""
+	:math:`\\Gamma_{\\rm dyn}` as a function of peak height.
+	
+	This fit for the accretion rate is used as input to the ``diemer17`` splashback model when the
+	accretion rate is not known.
+	"""
 	
 	a0 = 1.222190
 	a1 = 0.351460
@@ -639,6 +700,9 @@ def modelDiemer17Gamma(nu200m, z):
 ###################################################################################################
 
 def modelDiemer17RspR200m(qy, Gamma, nu200m, z, rspdef):
+	"""
+	:math:`R_{\\rm sp}` and :math:`M_{\\rm sp}` for the ``diemer17`` model.
+	"""
 
 	if rspdef == 'mean':
 		
@@ -759,6 +823,9 @@ def modelDiemer17RspR200m(qy, Gamma, nu200m, z, rspdef):
 ###################################################################################################
 
 def modelDiemer17Scatter(qy, Gamma, nu200m, z, rspdef):
+	"""
+	The 68% scatter in any quantity for the ``diemer17`` model.
+	"""
 
 	if rspdef == 'mean':
 		if qy == 'RspR200m-1s':
