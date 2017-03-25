@@ -23,19 +23,19 @@ class TCSplashbackModel(test_colossus.ColosssusTestCase):
 		pass
 
 	def test_modelGamma(self):
-		rsp, mask = splashback.splashbackModel('Gamma', 'RspR200m', 1.2, z = 0.1, model = 'more15')
+		rsp, mask = splashback.splashbackModel('RspR200m', Gamma = 1.2, z = 0.1, model = 'more15')
 		self.assertEqual(mask, True)
 		self.assertAlmostEqual(rsp, 1.239462644843)
 	
 	def test_modelNu(self):
-		rsp, mask = splashback.splashbackModel('nu200m', 'RspR200m', 0.6, z = 0.1, model = 'more15')
+		rsp, mask = splashback.splashbackModel('RspR200m', nu200m = 0.6, z = 0.1, model = 'more15')
 		self.assertEqual(mask, True)
 		self.assertAlmostEqual(rsp, 1.424416723584)
 
 	def test_modelGammaArray(self):
 		Gamma = np.array([0.2, 1.2, 4.1])
 		correct_rsp = [1.470326774861, 1.239462644843, 8.750736226357e-01]
-		rsp, mask = splashback.splashbackModel('Gamma', 'RspR200m', Gamma, z = 0.1, model = 'more15')
+		rsp, mask = splashback.splashbackModel('RspR200m', Gamma = Gamma, z = 0.1, model = 'more15')
 		for i in range(len(Gamma)):
 			self.assertEqual(mask[i], True)
 			self.assertAlmostEqual(rsp[i], correct_rsp[i])

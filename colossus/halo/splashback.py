@@ -12,14 +12,17 @@ This module contains a collection of routines related to the splashback radius.
 Background
 ---------------------------------------------------------------------------------------------------
 
-The radius, :math:`R_{\\rm sp}`, corresponds to the apocenter of particles on their first orbit after 
-falling into a halo. By analogy with the spherical collapse model, this radius represents a 
-physically motivated definition of the halo boundary because it separates infalling from orbiting
-material. The splashback mass, :math:`M_{\\rm sp}`, is defined as the mass within :math:`R_{\\rm sp}`.
+The splashback radius, :math:`R_{\\rm sp}`, corresponds to the apocenter of particles on their 
+first orbit after falling into a halo. By analogy with the spherical collapse model, this radius 
+represents a physically motivated definition of the halo boundary because it separates infalling 
+from orbiting material. The splashback mass, :math:`M_{\\rm sp}`, is defined as the mass within 
+:math:`R_{\\rm sp}`.
 
-In practice, there are several different definitions of the splashback radius, for example the 
-radius where the logarithmic slope of the density profile is steepest, or definitions derived from
-the actual distribution of particle apocenters. For more information, please see 
+In practice, not all particles reach apocenter at the same radius, and the resulting drop in the
+density profile is less sharp than in spherical models. As a result, there are several different 
+definitions of the splashback radius, for example the radius where the logarithmic slope of the 
+density profile is steepest, or definitions derived from the actual distribution of particle 
+apocenters. For more information, please see 
 `Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_,
 `Adhikari et al. 2014 <http://adsabs.harvard.edu/abs/2014JCAP...11..019A>`_,
 and `More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`_, as well as any of the
@@ -34,7 +37,7 @@ radius and several related quantities. The models can be evaluated using the gen
 
 where :func:`splashbackRadius` provides a convenient wrapper for :func:`splashbackModel` if one 
 wants to evaluate the splashback radius or mass given another mass definition. The splashback 
-models can return a number of different quantities, identified by the following shorthand.
+models can return a number of different quantities, identified by the following shorthand:
 
 - ``RspR200m``, the splashback radius in units of :math:`R_{\\rm 200m}`
 - ``MspM200m``, the splashback mass in units of :math:`M_{\\rm 200m}`
@@ -50,34 +53,33 @@ model the quantities can be computed as a function of different input variables,
 - ``Gamma``, the mass accretion rate :math:`\\Gamma`
 - ``nu200m``, the peak height (a different way to express the halo mass :math:`M_{\\rm 200m}`,
   see :mod:`cosmology.cosmology` for a converter function.
+- ``z``, the redshift
 
 Note that the mass accretion rate is defined in different ways depending on which model is used.
 In theoretical models, :math:`\\Gamma` typically stands for the instantaneous accretion rate
 :math:`s = d \\log(M) / d \\log(a)`. In other models it means the mass accretion rate measured
 over either a fixed time as in 
 `Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_, or measured
-over a dynamical time. Please consult the model papers for details.
-
-The following code example shows how to calculate :math:`R_{\\rm sp}/R_{\\rm 200m}` when only 
-the mass of a halo is known::
+over a dynamical time. Please consult the model papers for details. The following code example 
+shows how to calculate :math:`R_{\\rm sp}/R_{\\rm 200m}` when only the mass of a halo is known::
 
 	z = 0.5
 	cosmo = cosmology.getCurrent()
 	nu200m = cosmo.peakHeight(1E12, z)
-	RspR200m, mask = splashback.splashbackModel('nu200m', 'RspR200m', nu200m, z = z)
+	RspR200m, mask = splashback.splashbackModel('RspR200m', nu200m = nu200m, z = z)
 
 If the mass accretion rate is known, that constraint can also be used::
 
 	Gamma = 1.1
-	RspR200m, mask = splashback.splashbackModel('Gamma', 'RspR200m', Gamma, nu200m = nu200m, z = z)
+	RspR200m, mask = splashback.splashbackModel('RspR200m', Gamma = Gamma, nu200m = nu200m, z = z)
 	
 All functions take numpy arrays as well as float values, though with certain restrictions (see 
 below). The ``mask`` return variable indicates whether the chosen model could be evaluated given 
 the input parameters. If not (e.g., because the redshift of peak height were outside a model's 
-range), ``mask`` will be False and ``RspR200m`` will be empty. Note that, in such cases, the user
-can overwrite the model limitations which are stored in a list of :class:`SplashbackModel`
-objects called ``models``. However, there is no guarantee that the results will be correct in that
-case.
+range), ``mask`` (or certain elements of it) will be False and the corresponding elements of 
+``RspR200m`` will be empty. Note that, in such cases, the user can overwrite the model limitations 
+which are stored in a list of :class:`SplashbackModel` objects called ``models``. However, there 
+is no guarantee that the results will be correct in that case.
 
 ---------------------------------------------------------------------------------------------------
 Splashback models
@@ -89,10 +91,10 @@ parameter to the :func:`splashbackModel` and :func:`splashbackRadius` functions:
 ============== ==================== =========================== =========================================
 ID             Predicts...          ...as a function of...      Reference
 ============== ==================== =========================== =========================================
-diemer17       Rsp/Msp, Scatter     Gamma, z, M or M, z         Diemer et al. 2017
-shi16          Rsp/Msp              Gamma, z                    `Shi 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.459.3711S>`_
-more15         Rsp/Msp              Gamma, z, M or M, z         `More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`_
-adhikari14     Rsp/Msp              Gamma, z                    `Adhikari et al. 2014 <http://adsabs.harvard.edu/abs/2014JCAP...11..019A>`_
+diemer17       Rsp/Msp, Scatter     (Gamma, z, M) or (z, M)     Diemer et al. 2017
+shi16          Rsp/Msp              (Gamma, z)                  `Shi 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.459.3711S>`_
+more15         Rsp/Msp              (Gamma, z, M) or (z, M)     `More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`_
+adhikari14     Rsp/Msp              (Gamma, z)                  `Adhikari et al. 2014 <http://adsabs.harvard.edu/abs/2014JCAP...11..019A>`_
 ============== ==================== =========================== =========================================
 
 The individual functions for these models are documented towards the bottom of this page. Note that
@@ -123,8 +125,8 @@ class SplashbackModel():
 	"""
 	This object contains certain characteristics of a model, most importantly the input quantities
 	``qx`` and output quantities ``qy`` the model is capable of processing. Additionally, the 
-	``depends_on`` field lists the quantities the model depends on. If, for example, nu200m is 
-	among these quantities, that variable needs to be passed to the :func:`splashbackModel`
+	``depends_on`` field lists the quantities the model depends on. If, for example, z is 
+	among these quantities, then the redshift needs to be passed to the :func:`splashbackModel`
 	function.
 	
 	The ``models`` variable is a dictionary of :class:`SplashbackModel` objects containing all 
@@ -181,37 +183,36 @@ models['diemer17'].max_z = 8.0
 
 ###################################################################################################
 
-def splashbackModel(qx, qy, x, z = None, nu200m = None,
+def splashbackModel(qy, Gamma = None, nu200m = None, z = None,
 				model = defaults.HALO_SPLASHBACK_MODEL,
 				statistic = defaults.HALO_SPLASHBACK_STATISTIC,
 				rspdef = defaults.HALO_SPLASHBACK_RSPDEF):
 	"""
-	The splashback radius, mass, and other quantities as predicted by various models.
+	The splashback radius and other quantities as predicted by various models.
 	
 	Depending on the model, this function can return quantities such as :math:`R_{sp} / R_{\\rm 200m}`,
 	:math:`M_{\\rm sp} / M_{\\rm 200m}`, the splashback overdensity, or the scatter in these 
-	quantities (see listing above). The input variable can be mass or accretion rate. 
+	quantities (see the table of models above). The primary input variable can be mass or accretion 
+	rate, and other quantities such as redshift may be required depending on which model is chosen. 
 	
 	The function returns only valid predictions for the desired quantity. If any of the parameters
-	lies outside the range of validity of the chosen model, no output is returned for that input,
+	lie outside the range of validity of the chosen model, no output is returned for that input,
 	as indicated by the returned boolean mask. No warning is output in such cases unless there is
-	no valid output for any x.
+	no valid output for any input.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
-	qx: str
-		Identifier of the input quantity, either ``nu200m`` or ``Gamma``.
 	qy: str
 		Identifier of the output quantity (see listing above). 
-	x: array_like
-		Input; can be a number or a numpy array. 
+	Gamma: array_like
+		Mass accretion rate; can be a number or a numpy array. This quantity only needs to be 
+		passed for models that depend on the mass accretion rate.
 	nu200m: array_like
 		The peak height as computed from :math:`M_{\\rm 200m}`; can be a number or a numpy array. This
-		quantity only needs to be passed for models that depend on peak height. If an array, it 
-		must have the same dimensions as x.
+		quantity only needs to be passed for models that depend on peak height.
 	z: array_like
-		Redshift; can be a number or a numpy array. If an array, it must have the same dimensions 
-		as x.
+		Redshift; can be a number or a numpy array. This quantity only needs to be passed for 
+		models that depend on redshift.
 	model: str
 		The splashback model to use for the prediction (see table above).
 	statistic: str
@@ -225,57 +226,72 @@ def splashbackModel(qx, qy, x, z = None, nu200m = None,
 	Returns
 	-----------------------------------------------------------------------------------------------
 	y: array_like
-		The desired quantity; if x is a number, this is a number, if x is a numpy array, this is an
-		array too.
+		The desired quantity; if the input (Gamma or nu200m) is a number, this is a number, 
+		otherwise a numpy array.
 	mask: array_like
-		A boolean mask of the same dimensions as x, indicating whether a valid input was returned
-		for each x. Note that only the valid x are returned, meaning x can have fewer items than
-		mask.
+		A boolean mask of the same dimensions as the input, indicating whether a valid input was 
+		returned for each input element (Gamma or nu200m). Note that only the valid values are 
+		returned, meaning y can contain fewer items than mask.
 	"""
 
-	# Check that this model exists, and that it can do what is requested
+	# Check that this model exists
 	if not model in models:
 		raise Exception('Unknown model, %s.' % model)
 	m = models[model]
 
+	# Check that this model can perform the requested operation in principle. For this purpose we
+	# determine the primary input quantity, either Gamma or nu200m
+	if Gamma is None and nu200m is None:
+		raise Exception('Either Gamma or nu200m must be passed.')
+	if Gamma is not None:
+		qx = 'Gamma'
+	else:
+		qx = 'nu200m'
 	if not qx in m.qx:
 		raise Exception('Model %s cannot handle input quantity %s.' % (model, qx))
 	if not qy in m.qy:
 		raise Exception('Model %s cannot output quantity %s.' % (model, qy))
 
-	# Check for wrong input of additional parameters z and nu200m; if they are arrays, they must
-	# have the same length as x.
-	if utilities.isArray(x):
-		if z is not None and utilities.isArray(z) and len(z) != len(x):
-			raise Exception('If z is an array, it must have the same dimensions as x.')
-		if nu200m is not None and utilities.isArray(nu200m) and len(nu200m) != len(x):
-			raise Exception('If nu200m is an array, it must have the same dimensions as x.')
-	else:
-		if z is not None and utilities.isArray(z):
-			raise Exception('If x is not an array, z cannot be an array.')
-		if nu200m is not None and utilities.isArray(nu200m):
-			raise Exception('If x is not an array, nu200m cannot be an array.')
-
-	# Create a mask indicating where the results are valid
+	# Check for wrong input of parameters. If multiple fields are given, they must either be 
+	# numbers of arrays of the same dimension as the primary input. Create a mask indicating
+	# where the results are valid.
 	if qx == 'Gamma':
-		mask = (x >= m.min_Gamma) & (x <= m.max_Gamma)
+		if utilities.isArray(Gamma):
+			if z is not None and utilities.isArray(z) and len(z) != len(Gamma):
+				raise Exception('If z is an array, it must have the same dimensions as Gamma.')
+			if nu200m is not None and utilities.isArray(nu200m) and len(nu200m) != len(Gamma):
+				raise Exception('If nu200m is an array, it must have the same dimensions as Gamma.')
+		mask = (Gamma >= m.min_Gamma) & (Gamma <= m.max_Gamma)
 		if nu200m is not None:
 			mask = mask & (nu200m >= m.min_nu200m) & (nu200m <= m.max_nu200m)
 	elif qx == 'nu200m':
-		mask = (x >= m.min_nu200m) & (x <= m.max_nu200m)
+		if utilities.isArray(nu200m):
+			if z is not None and utilities.isArray(z) and len(z) != len(nu200m):
+				raise Exception('If z is an array, it must have the same dimensions as nu200m.')
+		mask = (nu200m >= m.min_nu200m) & (nu200m <= m.max_nu200m)
 	else:
 		raise Exception('Unknown input quantity, %s.' % qx)
 	if z is not None:
 		mask = mask & (z >= m.min_z) & (z <= m.max_z) 
 	
 	# Now apply the mask to the input array, and return if there are no valid entries.
+	if qx == 'Gamma':
+		x = Gamma
+	elif qx == 'nu200m':
+		x = nu200m
 	x, is_array = utilities.getArray(x)
 	mask, _ = utilities.getArray(mask)
 	x = x[mask]
 	if np.count_nonzero(mask) == 0:
 		print('WARNING: Found no input values within the limits of model %s.' % model)
 		return np.array([]), mask
-
+	if qx == 'Gamma':
+		Gamma = x
+		if nu200m is not None and utilities.isArray(nu200m):
+			nu200m = nu200m[mask]
+	elif qx == 'nu200m':
+		nu200m = x
+	
 	# Compute Om from z, but only if z is given. Some models use Om rather than z.
 	if z is None:
 		Om = None
@@ -294,48 +310,34 @@ def splashbackModel(qx, qy, x, z = None, nu200m = None,
 			return ret, mask
 		
 		# If only nu200m is given, we compute Gamma from nu and z.
-		if qx == 'Gamma':
-			Gamma = x
 		if qx == 'nu200m':
-			nu200m = x
 			Gamma = modelDiemer17Gamma(nu200m, z)
 		
 		if qy == 'RspR200m':
 			ret = modelDiemer17RspR200m('RspR200m', Gamma, nu200m, z, rspdef)
-		
 		elif qy == 'MspM200m':
 			ret = modelDiemer17RspR200m('MspM200m', Gamma, nu200m, z, rspdef)
-		
 		elif qy == 'Deltasp':
 			rsp200m = modelDiemer17RspR200m('RspR200m', Gamma, nu200m, z, rspdef)
 			msp200m = modelDiemer17RspR200m('MspM200m', Gamma, nu200m, z, rspdef)
 			ret = 200.0 * msp200m / rsp200m**3
-		
 		else:
 			if qx == 'nu200m':
-
 				if qy == 'RspR200m-1s':
 					ret = np.ones((len(mask)), np.float) * 0.07
-				
 				elif qy == 'MspM200m-1s':
 					ret = np.ones((len(mask)), np.float) * 0.07
-				
 				elif qy == 'Deltasp-1s':
 					ret = np.ones((len(mask)), np.float) * 0.15
-				
 			else:
-		
 				if qy == 'RspR200m-1s':
 					ret = modelDiemer17Scatter('RspR200m-1s', Gamma, nu200m, z, rspdef)
-				
 				elif qy == 'MspM200m-1s':
 					ret = modelDiemer17Scatter('MspM200m-1s', Gamma, nu200m, z, rspdef)
-				
 				elif qy == 'Deltasp-1s':
 					rsp_1s = modelDiemer17Scatter('RspR200m-1s', Gamma, nu200m, z, rspdef)
 					msp_1s = modelDiemer17Scatter('MspM200m-1s', Gamma, nu200m, z, rspdef)
 					ret = np.sqrt(msp_1s**2 + 3.0 * rsp_1s**2)
-
 				min_scatter = 0.02
 				if utilities.isArray(ret):
 					ret[ret < min_scatter] = min_scatter
@@ -345,40 +347,28 @@ def splashbackModel(qx, qy, x, z = None, nu200m = None,
 	elif model == 'more15':
 
 		if qy == 'RspR200m':
-			if qx == 'Gamma':		
-				ret = modelMore15RspR200m(z = z, Gamma = x)
-			elif qx == 'nu200m':
-				ret = modelMore15RspR200m(z = z, Gamma = None, nu200m = x)
-		
+			ret = modelMore15RspR200m(z = z, Gamma = Gamma, nu200m = nu200m)
 		elif qy == 'MspM200m':
-			if qx == 'Gamma':		
-				ret = modelMore15MspM200m(z = z, Gamma = x)
-			elif qx == 'nu200m':
-				ret = modelMore15MspM200m(z = z, Gamma = None, nu200m = x)
-				
+			ret = modelMore15MspM200m(z = z, Gamma = Gamma, nu200m = nu200m)
 		elif qy == 'Deltasp':
-			if qx == 'Gamma':		
-				msp200m = modelMore15MspM200m(z = z, Gamma = x)
-				rsp200m = modelMore15RspR200m(z = z, Gamma = x)
-			elif qx == 'nu200m':
-				msp200m = modelMore15MspM200m(z = z, Gamma = None, nu200m = x)
-				rsp200m = modelMore15RspR200m(z = z, Gamma = None, nu200m = x)
+			msp200m = modelMore15MspM200m(z = z, Gamma = Gamma, nu200m = nu200m)
+			rsp200m = modelMore15RspR200m(z = z, Gamma = Gamma, nu200m = nu200m)
 			ret = 200.0 * msp200m / rsp200m**3
 
 	elif model == 'shi16':
 		
 		if qy == 'RspR200m':
-			ret = modelShi16RspR200m(x, Om)
+			ret = modelShi16RspR200m(Gamma, Om)
 		elif qy == 'MspM200m':
-			delta = modelShi16Delta(x, Om)
-			rspr200m = modelShi16RspR200m(x, Om)
+			delta = modelShi16Delta(Gamma, Om)
+			rspr200m = modelShi16RspR200m(Gamma, Om)
 			ret = delta / 200.0 * rspr200m**3
 		elif qy == 'Deltasp':
-			ret = modelShi16Delta(x, Om)
+			ret = modelShi16Delta(Gamma, Om)
 	
 	elif model == 'adhikari14':
 		
-		Delta, c = modelAdhikari14Deltasp(x, Om)
+		Delta, c = modelAdhikari14Deltasp(Gamma, Om)
 		if qy == 'Deltasp':
 			ret = Delta
 		elif qy == 'RspR200m':
@@ -401,8 +391,7 @@ def splashbackRadius(z, mdef, R = None, M = None, c = None, Gamma = None,
 		c_model = defaults.HALO_CONCENTRATION_MODEL,
 		profile = defaults.HALO_MASS_CONVERSION_PROFILE):
 	"""
-	:math:`R_{\\rm sp}` and :math:`M_{\\rm sp}` as a function of spherical overdensity radius or 
-	mass.
+	:math:`R_{\\rm sp}` and :math:`M_{\\rm sp}` as a function of spherical overdensity radius or mass.
 	
 	This function represents a convenient wrapper for the :func:`splashbackModel` function, where
 	only a spherical overdensity mass or radius needs to be passed. Additionally, the user can 
@@ -426,8 +415,8 @@ def splashbackRadius(z, mdef, R = None, M = None, c = None, Gamma = None,
 		concentration is computed automatically.
 	Gamma: array_like
 		The mass accretion rate that can be optionally passed to the splashback model. If this 
-		field is set, the splashback model is evaluated as a function of Gamma primarily, if not
-		as a function of peak height.
+		field is set, the splashback model is evaluated with Gamma as the primary input, otherwise
+		peak height is the primary input.
 	model: str
 		The splashback model to use for the prediction (see table above).
 	statistic: str
@@ -486,16 +475,9 @@ def splashbackRadius(z, mdef, R = None, M = None, c = None, Gamma = None,
 	cosmo = cosmology.getCurrent()
 	nu200m = cosmo.peakHeight(M200m, z)
 	
-	if Gamma is None:
-		qx = 'nu200m'
-		x = nu200m
-	else:
-		qx = 'Gamma'
-		x = Gamma
-	
-	RspR200m, mask1 = splashbackModel(qx, 'RspR200m', x, z = z, nu200m = nu200m, model = model,
+	RspR200m, mask1 = splashbackModel('RspR200m', Gamma = Gamma, nu200m = nu200m, z = z, model = model,
 				statistic = statistic, rspdef = rspdef)
-	MspM200m, mask2 = splashbackModel(qx, 'MspM200m', x, z = z, nu200m = nu200m, model = model,
+	MspM200m, mask2 = splashbackModel('MspM200m', Gamma = Gamma, nu200m = nu200m, z = z, model = model,
 				statistic = statistic, rspdef = rspdef)
 	mask = mask1 & mask2
 	
