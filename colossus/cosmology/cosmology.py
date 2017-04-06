@@ -2291,14 +2291,11 @@ class Cosmology(object):
 				else:
 					ret = interpolator(np.log10(R))
 					ret = 10**ret
-					if z > 1E-5:
-						ret *= self.growthFactor(z)
+					ret *= self.growthFactor(z)
 
 			else:
 				
-				sigma_ = R
-				if z > 1E-5:
-					sigma_ /= self.growthFactor(z)
+				sigma_ = R / self.growthFactor(z)
 
 				# Get the limits in sigma from storage, or compute and store them. Using the 
 				# storage mechanism seems like overkill, but these numbers should be erased if 
@@ -2343,8 +2340,7 @@ class Cosmology(object):
 					ret[i] = self._sigmaExact(R[i], j = j, filt = filt, Pk_source = Pk_source)
 			else:
 				ret = self._sigmaExact(R, j = j, filt = filt, Pk_source = Pk_source)
-			if z > 1E-5:
-				ret *= self.growthFactor(z)
+			ret *= self.growthFactor(z)
 		
 		return ret
 
@@ -2789,7 +2785,7 @@ class Cosmology(object):
 			else:
 				ret = self._correlationFunctionExact(R, Pk_source = Pk_source)
 
-		if not derivative and z > 1E-5:
+		if not derivative:
 			ret *= self.growthFactor(z)**2
 
 		return	ret
