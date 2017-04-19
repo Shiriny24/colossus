@@ -94,8 +94,8 @@ planck15-only  Planck Collab. 2015   Table 4     Best-fit, Planck only (column 2
 planck15       Planck Collab. 2015 	 Table 4     Best-fit with ext (column 6)			
 planck13-only  Planck Collab. 2013   Table 2     Best-fit, Planck only 					
 planck13       Planck Collab. 2013 	 Table 5     Best-fit with BAO etc. 					
-WMAP9-only     Hinshaw et al. 2013   Table 1     Max. likelihood, WMAP only 				
-WMAP9-ML       Hinshaw et al. 2013   Table 1     Max. likelihood, with eCMB, BAO and H0 	
+WMAP9-only     Hinshaw et al. 2013   Table 2     Max. likelihood, WMAP only 				
+WMAP9-ML       Hinshaw et al. 2013   Table 2     Max. likelihood, with eCMB, BAO and H0 	
 WMAP9          Hinshaw et al. 2013   Table 4     Best-fit, with eCMB, BAO and H0 		
 WMAP7-only     Komatsu et al. 2011   Table 1     Max. likelihood, WMAP only 				
 WMAP7-ML       Komatsu et al. 2011   Table 1     Max. likelihood, with BAO and H0 		
@@ -105,8 +105,8 @@ WMAP5-ML       Komatsu et al. 2009   Table 1     Max. likelihood, with BAO and S
 WMAP5 	       Komatsu et al. 2009   Table 1     Best-fit, with BAO and SN 			
 WMAP3-ML       Spergel et al. 2007   Table 2     Max.likelihood, WMAP only 				
 WMAP3          Spergel et al. 2007   Table 5     Best fit, WMAP only 					
-WMAP1-ML       Spergel et al. 2005   Table 1/4   Max.likelihood, WMAP only 				
-WMAP1          Spergel et al. 2005   Table 7/4   Best fit, WMAP only 					
+WMAP1-ML       Spergel et al. 2003   Table 1/4   Max.likelihood, WMAP only 				
+WMAP1          Spergel et al. 2003   Table 7/4   Best fit, WMAP only 					
 illustris      Vogelsberger+ 2014    --          Cosmology of the Illustris simulation
 bolshoi	       Klypin et al. 2011    --          Cosmology of the Bolshoi simulation
 millennium     Springel et al. 2005	 --          Cosmology of the Millennium simulation 
