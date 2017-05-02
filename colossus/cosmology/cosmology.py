@@ -958,11 +958,8 @@ class Cosmology(object):
 		return t
 	
 	###############################################################################################
-	
-	# This function does not use interpolation because both zmin and zmax are free, which would 
-	# lead to a more complicated 2D-interpolation.
-	
-	def comovingDistance(self, z_min = 0.0, z_max = 0.0):
+
+	def comovingDistance(self, z_min = 0.0, z_max = 0.0, transverse = True):
 		"""
 		The comoving distance between redshift :math:`z_{min}` and :math:`z_{max}`.
 		
@@ -970,6 +967,17 @@ class Cosmology(object):
 		applied to all values of the other. If both are numpy arrays, they need to have 
 		the same dimensions, and the comoving distance returned corresponds to a series of 
 		different z_min and z_max values. 
+		
+		The transverse parameter determines whether the line-of-sight or transverse comoving
+		distance is returned. For flat cosmologies, the two are the same, but for cosmologies with
+		curvature, the geometry of the spacetime influences the transverse comoving distance. The
+		transverse distance is the default because that distance forms the basis for the luminosity
+		and angular diameter distances.
+
+		This function does not use interpolation (unlike the other distance functions) because it
+		accepts both z_min and z_max parameters which would necessitate a 2D interpolation. Thus,
+		for fast evaluation, the luminosity and angular diameter distance functions should be used
+		directly.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -977,6 +985,9 @@ class Cosmology(object):
 			Redshift; can be a number or a numpy array.
 		zmax: array_like
 			Redshift; can be a number or a numpy array.
+		transverse: bool
+			Whether to return the transverse of line-of-sight comoving distance. The two are the 
+			same in flat cosmologies.
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -988,8 +999,18 @@ class Cosmology(object):
 		luminosityDistance: The luminosity distance to redshift z.
 		angularDiameterDistance: The angular diameter distance to redshift z.
 		"""
+
+		d = self._integral_oneOverEz(z_min = z_min, z_max = z_max)
 		
-		d = self._integral_oneOverEz(z_min = z_min, z_max = z_max) * constants.C * 1E-7
+		if not self.flat and transverse:
+			if self.Ok0 > 0.0:
+				sqrt_Ok0 = np.sqrt(self.Ok0)
+				d = np.sinh(sqrt_Ok0 * d) / sqrt_Ok0
+			else:
+				sqrt_Ok0 = np.sqrt(-self.Ok0)
+				d = np.sin(sqrt_Ok0 * d) / sqrt_Ok0
+			
+		d *= constants.C * 1E-7
 		
 		return d
 
@@ -997,8 +1018,8 @@ class Cosmology(object):
 
 	def _luminosityDistanceExact(self, z):
 		
-		d = self.comovingDistance(z_min = 0.0, z_max = z) * (1.0 + z)
-		
+		d = self.comovingDistance(z_min = 0.0, z_max = z, transverse = True) * (1.0 + z)
+
 		return d
 
 	###############################################################################################
@@ -1036,7 +1057,7 @@ class Cosmology(object):
 
 	def _angularDiameterDistanceExact(self, z):
 		
-		d = self.comovingDistance(z_min = 0.0, z_max = z) / (1.0 + z)
+		d = self.comovingDistance(z_min = 0.0, z_max = z, transverse = True) / (1.0 + z)
 		
 		return d
 
