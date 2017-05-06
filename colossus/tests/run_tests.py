@@ -21,7 +21,8 @@ suites = []
 
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCComp))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCInterp))
-suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCNotFlat))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCNotFlat1))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCNotFlat2))
 
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_utils.TCGen))
 

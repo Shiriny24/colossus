@@ -275,10 +275,10 @@ class TCInterp(CosmologyTestCase):
 		self.assertAlmostEqual(self.cosmo.nonLinearMass(1.1), 98435044937.058929)				
 
 ###################################################################################################
-# TEST CASE 3: NON-FLAT COSMOLOGY
+# TEST CASE 3: NON-FLAT COSMOLOGY WITH POSITIVE CURVATURE
 ###################################################################################################
 
-class TCNotFlat(CosmologyTestCase):
+class TCNotFlat1(CosmologyTestCase):
 
 	def setUp(self):
 		c = {'flat': False, 'H0': 70.00, 'Om0': 0.2700, 'OL0': 0.7, 'Ob0': 0.0469, 'sigma8': 0.8200, 'ns': 0.9500, 'relspecies': True}
@@ -290,6 +290,35 @@ class TCNotFlat(CosmologyTestCase):
 	def test_nonFlat(self):
 		self.assertAlmostEqual(self.cosmo.Ok0, 0.02991462406767552)
 		self.assertAlmostEqual(self.cosmo.Ok(4.5), 0.019417039615692584)
+
+	def test_distanceNonFlat(self):
+		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 1.0, transverse = True), 2.340299035494e+03)
+		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 10.0, transverse = True), 6.959070874045e+03)
+		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 1.0, transverse = False), 2.333246162862e+03)
+		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 10.0, transverse = False), 6.784500417672e+03)
+
+###################################################################################################
+# TEST CASE 4: NON-FLAT COSMOLOGY WITH NEGATIVE CURVATURE
+###################################################################################################
+
+class TCNotFlat2(CosmologyTestCase):
+
+	def setUp(self):
+		c = {'flat': False, 'H0': 70.00, 'Om0': 0.2700, 'OL0': 0.8, 'Ob0': 0.0469, 'sigma8': 0.8200, 'ns': 0.9500, 'relspecies': True}
+		cosmology.addCosmology('myCosmo', c)
+		self.assertTrue('myCosmo' in cosmology.cosmologies)
+		cosmology.setCosmology('myCosmo')
+		self.cosmo = cosmology.getCurrent()
+
+	def test_nonFlat(self):
+		self.assertAlmostEqual(self.cosmo.Ok0, -7.008537593232e-02)
+		self.assertAlmostEqual(self.cosmo.Ok(4.5), -4.853747713897e-02)
+
+	def test_distanceNonFlat(self):
+		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 1.0, transverse = True), 2.391423796721e+03)
+		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 10.0, transverse = True), 6.597189702919e+03)
+		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 1.0, transverse = False), 2.409565059911e+03)
+		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 10.0, transverse = False), 7.042437425006e+03)
 
 ###################################################################################################
 # TRIGGER
