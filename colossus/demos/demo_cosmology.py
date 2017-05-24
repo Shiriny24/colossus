@@ -24,11 +24,6 @@ def main():
 	# Basic operations: setting, getting and changing the cosmology
 	# ---------------------------------------------------------------------------------------------
 
-	cosmo = cosmology.setCosmology('bolshoi')
-	z = -0.2
-	print(cosmo.age(z))
-	print(cosmo.age(z) / cosmo.hubbleTime(z))
-
 	#demoSettingAndGetting()
 	#demoAdding()
 	#demoChanging()
