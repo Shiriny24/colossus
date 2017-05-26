@@ -25,7 +25,7 @@ parameter to the :func:`massFunction` function:
 ============== ================ ================== =========== ========== ======================================
 ID             Native mdefs     M range (z=0)      z range     Cosmology  Paper
 ============== ================ ================== =========== ========== ======================================
-tinker08       200c             Any                Any         Any        Diemer & Kravtsov 2015 (ApJ 799, 108)
+tinker08       200c             Any                Any         Any        
 ============== ================ ================== =========== ========== ======================================
 
 ---------------------------------------------------------------------------------------------------
@@ -36,24 +36,16 @@ Module reference
 ###################################################################################################
 
 import numpy as np
-import scipy.interpolate
-import scipy.optimize
-import warnings
 
-from colossus.utils import utilities
 from colossus.utils import constants
 from colossus import defaults
 from colossus.cosmology import cosmology
 from colossus.halo import mass_so
-from colossus.halo import mass_defs
 
 ###################################################################################################
 
-MODELS = ['tinker08']
-"""A list of all implemented concentration models."""
-
-#INVALID_CONCENTRATION = -1.0
-#"""The concentration value returned if the model routine fails to compute."""
+MODELS = ['tinker08', 'watson13_fof']
+"""A list of all implemented mass function models."""
 
 ###################################################################################################
 
@@ -79,18 +71,41 @@ def massFunction(M, mdef, z,
 		The halo mass function
 	"""
 
-	# ---------------------------------------------------------------------------------------------
-	# Distinguish between models
-	if model == 'tinker08':
-		func = modelTinker08
-		args = (z)
-		limited = False
+	# Compute peak height and sigma
+	cosmo = cosmology.getCurrent()
+	nu = cosmo.peakHeight(M, z)
+	sigma = constants.DELTA_COLLAPSE / nu
+
+	# Parse mass definition, convert to Delta_m equivalent
+	mdef_type, mdef_delta = mass_so.parseMassDefinition(mdef)
+	if mdef_type == 'c':
+		Delta_m = mdef_delta / cosmo.Om(z)
+	elif mdef_type == 'm':
+		Delta_m = mdef_delta
+	elif mdef_type == 'vir':
+		Delta_m = mass_so.deltaVir(z) / cosmo.Om(z)
+	else:
+		msg = 'Invalid mass definition, %s.' % mdef
+		raise Exception(msg)
+
+	# Evaluate model
+	if model == 'press74':	
+		f = 1.0
+		
+	elif model == 'tinker08':
+		f = modelTinker08(sigma, Delta_m, z)
+	
+	elif model == 'watson13_fof':
+		f = modelWatson13_fof(sigma)
+	
+	elif model == 'watson13_so':
+		f = modelWatson13_so(sigma, Delta_m, z)
 	
 	else:
 		msg = 'Unknown model, %s.' % (model)
 		raise Exception(msg)
 
-	return
+	return f
 
 ###################################################################################################
 
@@ -131,33 +146,58 @@ def convertMassFunction(mfunc, M, z, q_in, q_out):
 	return mfunc_out
 
 ###################################################################################################
-# TINKER 08 MODEL
+# FUNCTIONS FOR INDIVIDUAL MASS FUNCTION MODELS
 ###################################################################################################
 
-def modelTinker08(M, mdef, z):
+def modelJenkins01():
+	
+	return
+
+###################################################################################################
+
+# The AHF fit
+
+def modelWatson13_so(sigma, Delta_m, z):
+	
+	cosmo = cosmology.getCurrent()
+	
+	A = 0.194
+	alpha = 1.805
+	beta = 2.267
+	gamma = 1.287
+	
+	f_178 = A * ((beta / sigma)**alpha + 1.0) * np.exp(-gamma / sigma**2)
+	
+	Delta_178 = Delta_m / 178.0
+	C = np.exp(0.023 * (Delta_178 - 1.0))
+	d = -0.456 * cosmo.Om(z) - 0.139
+	Gamma = C * Delta_178**d * np.exp(0.072 * (1.0 - Delta_178) / sigma**2.130)
+	f = f_178 * Gamma
+	
+	return f
+
+###################################################################################################
+
+def modelWatson13_fof(sigma):
+	
+	A = 0.282
+	alpha = 2.163
+	beta = 1.406
+	gamma = 1.210
+	
+	f = A * ((beta / sigma)**alpha + 1.0) * np.exp(-gamma / sigma**2)
+	
+	return f
+
+###################################################################################################
+
+def modelTinker08(sigma, Delta_m, z):
 
 	fit_Delta = np.array([200, 300, 400, 600, 800, 1200, 1600, 2400, 3200])
 	fit_A0 = np.array([0.186, 0.200, 0.212, 0.218, 0.248, 0.255, 0.260, 0.260, 0.260])
 	fit_a0 = np.array([1.47, 1.52, 1.56, 1.61, 1.87, 2.13, 2.30, 2.53, 2.66])
 	fit_b0 = np.array([2.57, 2.25, 2.05, 1.87, 1.59, 1.51, 1.46, 1.44, 1.41])
 	fit_c0 = np.array([1.19, 1.27, 1.34, 1.45, 1.58, 1.80, 1.97, 2.24, 2.44])
-
-	# Compute peak height and sigma
-	cosmo = cosmology.getCurrent()
-	nu = cosmo.peakHeight(M, z)
-	sigma = constants.DELTA_COLLAPSE / nu
-
-	# Parse mass definition, convert to Delta_m equivalent
-	mdef_type, mdef_delta = mass_so.parseMassDefinition(mdef)
-	if mdef_type == 'c':
-		Delta_m = mdef_delta / cosmo.Om(z)
-	elif mdef_type == 'm':
-		Delta_m = mdef_delta
-	elif mdef_type == 'vir':
-		Delta_m = mass_so.deltaVir(z) / cosmo.Om(z)
-	else:
-		msg = 'Invalid mass definition, %s.' % mdef
-		raise Exception(msg)
 		
 	# Compute fit parameters and f-function
 	if Delta_m < fit_Delta[0]:

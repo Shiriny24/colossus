@@ -25,6 +25,9 @@ COSMOLOGY_NEFF = 3.046
 HALO_BIAS_MODEL = 'tinker10'
 """The default halo bias model."""
 
+HALO_MASS_FUNCTION_MODEL = 'watson13_fof'
+"""The default halo mass function model."""
+
 HALO_CONCENTRATION_MODEL = 'diemer15'
 """The default concentration model."""
 HALO_CONCENTRATION_STATISTIC = 'median'
