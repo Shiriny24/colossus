@@ -862,8 +862,7 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		tH: float
-			:math:`1/H` in units of Gyr; has the same dimensions as z. By default returns 
-			:math:`1/H_0`.
+			:math:`1/H` in units of Gyr; has the same dimensions as z.
 
 		See also
 		-------------------------------------------------------------------------------------------
