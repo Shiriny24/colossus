@@ -19,6 +19,8 @@ M_PROTON = 1.67262178e-24
 """The mass of a proton in gram."""
 KB = 1.38064852E-16
 """The Boltzmann constant in erg/K."""
+G_CGS = 6.67408E-8
+"""The gravitational constant G in :math:`cm^3 / g / s^2`."""
 
 ###################################################################################################
 # ASTRONOMY UNIT CONVERSIONS
