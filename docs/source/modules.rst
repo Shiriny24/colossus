@@ -6,5 +6,6 @@ Physics Modules
     :maxdepth: 4
 
     cosmology_cosmology
+    lss
     halo
     utils

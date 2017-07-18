@@ -49,6 +49,7 @@ Contents
 .. toctree::
     :maxdepth: 5
 
+    versions
     installation
     units
     global

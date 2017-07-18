@@ -1,6 +1,6 @@
 ###################################################################################################
 #
-# test_halo_bias.py     (c) Benedikt Diemer
+# test_lss_bias.py      (c) Benedikt Diemer
 #     				    	benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
@@ -10,7 +10,7 @@ import numpy as np
 
 from colossus.tests import test_colossus
 from colossus.cosmology import cosmology
-from colossus.halo import bias
+from colossus.lss import bias
 
 ###################################################################################################
 # TEST CASES

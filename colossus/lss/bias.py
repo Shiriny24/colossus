@@ -27,6 +27,7 @@ import numpy as np
 from colossus.utils import constants
 from colossus import defaults
 from colossus.cosmology import cosmology
+from colossus.lss import lss
 from colossus.halo import mass_so
 
 ###################################################################################################
@@ -103,8 +104,7 @@ def haloBias(M, z, mdef, model = defaults.HALO_BIAS_MODEL):
 	haloBiasFromNu: The halo bias at a given peak height. 
 	"""
 		
-	cosmo = cosmology.getCurrent()
-	nu = cosmo.peakHeight(M, z)
+	nu = lss.peakHeight(M, z)
 	bias = haloBiasFromNu(nu, z, mdef, model = model)
 	
 	return bias

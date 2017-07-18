@@ -1,6 +1,6 @@
 =====================================
-Bias
+Halo mass function
 =====================================
 
-.. automodule:: halo.bias
+.. automodule:: lss.halo_mass_function
     :members:

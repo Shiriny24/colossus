@@ -40,6 +40,7 @@ import numpy as np
 from colossus.utils import constants
 from colossus import defaults
 from colossus.cosmology import cosmology
+from colossus.lss import lss
 from colossus.halo import mass_so
 
 ###################################################################################################
@@ -73,7 +74,7 @@ def massFunction(M, mdef, z,
 
 	# Compute peak height and sigma
 	cosmo = cosmology.getCurrent()
-	nu = cosmo.peakHeight(M, z)
+	nu = lss.peakHeight(M, z)
 	sigma = constants.DELTA_COLLAPSE / nu
 
 	# Parse mass definition, convert to Delta_m equivalent

@@ -39,7 +39,7 @@ from colossus.utils import utilities
 from colossus import defaults
 from colossus.cosmology import cosmology
 from colossus.halo import mass_so
-from colossus.halo import bias as halo_bias
+from colossus.lss import bias as halo_bias
 
 ###################################################################################################
 # ABSTRACT BASE CLASS FOR OUTER PROFILE TERMS

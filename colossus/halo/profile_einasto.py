@@ -18,7 +18,7 @@ Module reference
 import numpy as np
 import scipy.special
 
-from colossus.cosmology import cosmology
+from colossus.lss import lss
 from colossus.halo import mass_so
 from colossus.halo import profile_base
 from colossus.halo import mass_defs
@@ -153,8 +153,7 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 				Mvir = M
 			else:
 				Mvir, _, _ = mass_defs.changeMassDefinition(M, c, z, mdef, 'vir')
-			cosmo = cosmology.getCurrent()
-			nu_vir = cosmo.peakHeight(Mvir, z)
+			nu_vir = lss.peakHeight(Mvir, z)
 			alpha = 0.155 + 0.0095 * nu_vir**2
 		
 		self.par['alpha'] = alpha

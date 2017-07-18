@@ -1450,56 +1450,26 @@ class Cosmology(object):
 	# Structure growth, power spectrum etc.
 	###############################################################################################
 	
+	#DEPRECATED
 	def lagrangianR(self, M):
 		"""
-		The lagrangian radius of a halo of mass M.
-
-		Converts the mass of a halo (in comoving :math:`M_{\odot} / h`) to the radius of its 
-		comoving Lagrangian volume (in comoving Mpc/h), that is the volume that encloses the halo's 
-		mass given the mean density of the universe at z = 0.
-
-		Parameters
-		-------------------------------------------------------------------------------------------
-		M: array_like
-			Halo mass in :math:`M_{\odot} / h`; can be a number or a numpy array.
-
-		Returns
-		-------------------------------------------------------------------------------------------
-		R: array_like
-			The lagrangian radius in comoving Mpc/h; has the same dimensions as M.
-
-		See also
-		-------------------------------------------------------------------------------------------
-		lagrangianM: The lagrangian mass of a halo of radius R.
+		Deprecated, please use :func:`lss.lss.lagrangianR`.
 		"""
+		
+		raise DeprecationWarning('This function is deprecated and will be removed. Please use lss.lss.lagrangianR.')
 		
 		return (3.0 * M / 4.0 / np.pi / self.rho_m(0.0) / 1E9)**(1.0 / 3.0)
 	
 	###############################################################################################
 	
+	#DEPRECATED
 	def lagrangianM(self, R):
 		"""
-		The lagrangian mass of a halo of radius R.
-
-		Converts the radius of a halo (in comoving Mpc/h) to the mass in its comoving Lagrangian 
-		volume (in :math:`M_{\odot} / h`), that is the volume that encloses the halo's mass given the 
-		mean density of the universe at z = 0.
-
-		Parameters
-		-------------------------------------------------------------------------------------------
-		R: array_like
-			Halo radius in comoving Mpc/h; can be a number or a numpy array.
-
-		Returns
-		-------------------------------------------------------------------------------------------
-		M: array_like
-			The lagrangian mass; has the same dimensions as R.
-
-		See also
-		-------------------------------------------------------------------------------------------
-		lagrangianR: The lagrangian radius of a halo of mass M.
+		Deprecated, please use :func:`lss.lss.`.
 		"""
-				
+
+		raise DeprecationWarning('This function is deprecated and will be removed. Please use lss.lss.lagrangianM.')
+	
 		return 4.0 / 3.0 * np.pi * R**3 * self.rho_m(0.0) * 1E9
 
 	###############################################################################################
@@ -1654,33 +1624,14 @@ class Cosmology(object):
 
 	###############################################################################################
 	
+	# DEPRECATED
 	def collapseOverdensity(self, deltac_const = True, sigma = None):
 		"""
-		The threshold overdensity for halo collapse.
-		
-		For most applications, ``deltac_const = True`` works fine; in that case, this function
-		simply returns the collapse overdensity predicted by the top-hat collapse model, 1.686. 
-		Alternatively, a correction for the ellipticity of peaks can be applied according to Sheth 
-		et al. 2001. In that case, the variance on the scale of a halo must also be passed.
-
-		Parameters
-		-------------------------------------------------------------------------------------------
-		deltac_const: bool
-			If True, the function returns the constant top-hat model collapse overdensity. If False,
-			a correction due to the ellipticity of halos is applied.
-		sigma: float
-			The rms variance on the scale of the halo; only necessary if ``deltac_const == False``.
-
-		Returns
-		-------------------------------------------------------------------------------------------
-		delta_c: float
-			The threshold overdensity for collapse.
-
-		See also
-		-------------------------------------------------------------------------------------------
-		sigma: The rms variance of the linear density field on a scale R, :math:`\\sigma(R)`.
+		Deprecated, please use :func:`lss.lss.`.
 		"""
-				
+
+		raise DeprecationWarning('This function is deprecated and will be removed. Please use lss.lss.collapseOverdensity.')
+						
 		if deltac_const:
 			delta_c = constants.DELTA_COLLAPSE
 		else:
@@ -2374,38 +2325,14 @@ class Cosmology(object):
 
 	###############################################################################################
 	
+	# DEPRECATED
 	def peakHeight(self, M, z, filt = 'tophat', Pk_source = 'eh98', deltac_const = True):
 		"""
-		Peak height, :math:`\\nu`, given a halo mass.
-		
-		Peak height is defined as :math:`\\nu \equiv \delta_c / \sigma(M)`. See the documentation 
-		of the :func:`sigma` function for details on filters, power spectrum source etc.
-		
-		Parameters
-		-------------------------------------------------------------------------------------------
-		M: array_like
-			Halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
-		z: float
-			Redshift.
-		filt: str
-			Either ``tophat`` or ``gaussian``.
-		Pk_source: str
-			Either ``eh98``, ``eh98smooth``, or the name of a user-supplied table.
-		deltac_const: bool
-			If True, the function returns the constant top-hat model collapse overdensity. If False,
-			a correction due to the ellipticity of halos is applied.
-
-		Returns
-		-------------------------------------------------------------------------------------------
-		nu: array_like
-			Peak height; has the same dimensions as M.
-
-		See also
-		-------------------------------------------------------------------------------------------
-		massFromPeakHeight: Halo mass from peak height, :math:`\\nu`.
-		sigma: The rms variance of the linear density field on a scale R, :math:`\sigma(R)`.
+		Deprecated, please use :func:`lss.lss.peakHeight`.
 		"""
-				
+
+		raise DeprecationWarning('This function is deprecated and will be removed. Please use lss.lss.peakHeight.')
+					
 		R = self.lagrangianR(M)
 		sigma = self.sigma(R, z, filt = filt, Pk_source = Pk_source)
 		nu = self.collapseOverdensity(deltac_const, sigma) / sigma
@@ -2414,38 +2341,14 @@ class Cosmology(object):
 	
 	###############################################################################################
 
+	# DEPRECATED
 	def massFromPeakHeight(self, nu, z, filt = 'tophat', Pk_source = 'eh98', deltac_const = True):
 		"""
-		Halo mass from peak height, :math:`\\nu`.
-		
-		Peak height is defined as :math:`\\nu \equiv \delta_c / \sigma(M)`. See the documentation 
-		of the :func:`sigma` function for details on filters, power spectrum source etc.
-		
-		Parameters
-		-------------------------------------------------------------------------------------------
-		nu: array_like
-			Peak height; can be a number or a numpy array.
-		z: float
-			Redshift.
-		filt: str
-			Either ``tophat`` or ``gaussian``.
-		Pk_source: str
-			Either ``eh98``, ``eh98smooth``, or the name of a user-supplied table.
-		deltac_const: bool
-			If True, the function returns the constant top-hat model collapse overdensity. If False,
-			a correction due to the ellipticity of halos is applied.
-
-		Returns
-		-------------------------------------------------------------------------------------------
-		M: array_like
-			Mass in :math:`M_{\odot}/h`; has the same dimensions as nu.
-
-		See also
-		-------------------------------------------------------------------------------------------
-		peakHeight: Peak height, :math:`\\nu`, given a halo mass.
-		sigma: The rms variance of the linear density field on a scale R, :math:`\sigma(R)`.
+		Deprecated, please use :func:`lss.lss.massFromPeakHeight`.
 		"""
-		
+
+		raise DeprecationWarning('This function is deprecated and will be removed. Please use lss.lss.massFromPeakHeight.')
+
 		sigma = self.collapseOverdensity(deltac_const = deltac_const) / nu
 		R = self.sigma(sigma, z, filt = filt, Pk_source = Pk_source, inverse = True)
 		M = self.lagrangianM(R)
@@ -2454,44 +2357,21 @@ class Cosmology(object):
 	
 	###############################################################################################
 	
+	# DEPRECATED
 	def nonLinearMass(self, z, filt = 'tophat', Pk_source = 'eh98'):
 		"""
-		The non-linear mass, :math:`M^*`.
-		
-		:math:`M^*` is the mass for which the variance is equal to the collapse threshold, i.e.
-		:math:`\sigma(M^*) = \delta_c` and thus :math:`\\nu(M^*) = 1`. See the documentation 
-		of the :func:`sigma` function for details on filters, power spectrum source etc.
-		
-		Parameters
-		-------------------------------------------------------------------------------------------
-		z: float
-			Redshift.
-		filt: str
-			Either ``tophat`` or ``gaussian``.
-		Pk_source: str
-			Either ``eh98``, ``eh98smooth``, or the name of a user-supplied table.
-
-		Returns
-		-------------------------------------------------------------------------------------------
-		Mstar: float
-			The non-linear mass in :math:`M_{\odot}/h`.
-
-		See also
-		-------------------------------------------------------------------------------------------
-		massFromPeakHeight: Halo mass from peak height, :math:`\\nu`.
-		sigma: The rms variance of the linear density field on a scale R, :math:`\sigma(R)`.
+		Deprecated, please use :func:`lss.lss.nonLinearMass`.
 		"""
-				
+
+		raise DeprecationWarning('This function is deprecated and will be removed. Please use lss.lss.nonLinearMass.')
+
 		return self.massFromPeakHeight(1.0, z = z, filt = filt, Pk_source = Pk_source, deltac_const = True)
 
 	###############################################################################################
 	# Peak curvature routines
 	###############################################################################################
 	
-	# Get the mean peak curvature, <x>, at fixed nu from the integral of Bardeen et al. 1986 
-	# (BBKS). Note that this function is approximated very well by the _peakCurvatureApprox() 
-	# function below.
-	
+	# DEPRECATED
 	def _peakCurvatureExact(self, nu, gamma):
 	
 		# Equation A15 in BBKS. 
@@ -2542,6 +2422,7 @@ class Cosmology(object):
 	# Wrapper for the function above which takes tables of sigmas. This form can be more convenient 
 	# when computing many different nu's. 
 	
+	# DEPRECATED
 	def _peakCurvatureExactFromSigma(self, sigma0, sigma1, sigma2, deltac_const = True):
 	
 		nu = self.collapseOverdensity(deltac_const, sigma0) / sigma0
@@ -2558,6 +2439,7 @@ class Cosmology(object):
 	# Get peak curvature from the approximate formula in BBKS. This approx. is excellent over the 
 	# relevant range of nu.
 	
+	# DEPRECATED
 	def _peakCurvatureApprox(self, nu, gamma):
 	
 		# Compute theta according to Equation 6.14 in BBKS
@@ -2581,6 +2463,7 @@ class Cosmology(object):
 	# when computing many different nu's. For convenience, various intermediate numbers are 
 	# returned as well.
 	
+	# DEPRECATED
 	def _peakCurvatureApproxFromSigma(self, sigma0, sigma1, sigma2, deltac_const = True):
 	
 		nu = self.collapseOverdensity(deltac_const, sigma0) / sigma0
@@ -2592,64 +2475,14 @@ class Cosmology(object):
 	
 	###############################################################################################
 	
+	# DEPRECATED
 	def peakCurvature(self, M, z, filt = 'gaussian', Pk_source = 'eh98',
 					deltac_const = True, exact = False):
 		"""
-		The average curvature of peaks for a halo mass M.
-		
-		In a Gaussian random field, :math:`\delta`, the peak height is defined as 
-		:math:`\delta / \\sigma` where :math:`\\sigma = \\sigma_0` is the rms variance. The 
-		curvature of the field is defined as :math:`x = -\\nabla^2 \delta / \\sigma_2` where 
-		:math:`\\sigma_2` is the second moment of the variance.
-		
-		This function computes the average curvature of peaks in a Gaussian random field, <x>,
-		according to Bardeen et al. 1986 (BBKS), for halos of a certain mass M. This mass is 
-		converted to a Lagrangian scale R, and thus the variance and its moments. The evaluation
-		can be performed by integration of Equation A14 in BBKS (if ``exact == True``), or using their
-		fitting function in Equation 6.13 (if ``exact == False``). The fitting function is excellent over
-		the relevant range of peak heights. 
-		
-		Parameters
-		-------------------------------------------------------------------------------------------
-		M: array_like
-			Mass in in :math:`M_{\odot}/h`; can be a number or a numpy array.
-		z: float
-			Redshift.
-		filt: str
-			Either ``tophat`` or ``gaussian``.
-		Pk_source: str
-			Either ``eh98``, ``eh98smooth``, or the name of a user-supplied table.
-		deltac_const: bool
-			If ``True``, the function returns the constant top-hat model collapse overdensity. If 
-			``False``, a correction due to the ellipticity of halos is applied.
-		exact: bool
-			If ``True``, evaluate the integral exactly; if ``False``, use the BBKS approximation.	
-
-		Returns
-		-------------------------------------------------------------------------------------------
-		nu: array_like
-			Peak height; has the same dimensions as M.
-		gamma: array_like
-			An intermediate parameter, :math:`\\gamma = \\sigma_1^2 / (\\sigma_0 \\sigma_2)` (see
-			Equation 4.6a in BBKS); has the same dimensions as M.
-		x: array_like
-			The mean peak curvature for halos of mass M (note the caveat discussed above); has the 
-			same dimensions as M.
-		theta: array_like
-			An intermediate parameter (see Equation 6.14 in BBKS; only returned if ``exact == False``); 
-			has the same dimensions as M.
-		nu_tilde: array_like
-			The modified peak height (see Equation 6.15 in BBKS; only returned if ``exact == False``); 
-			has the same dimensions as M.
-		
-		Warnings
-		-------------------------------------------------------------------------------------------		
-		While peak height quantifies how high a fluctuation over the background a halo is, peak
-		curvature tells us something about the shape of the initial peak. However, note the 
-		cloud-in-cloud problem (BBKS): not all peaks end up forming halos, particularly small
-		peaks will often get swallowed by other peaks. Thus, the average peak curvature is not
-		necessarily equal to the average curvature of peaks that form halos.		
+		Deprecated, please use :func:`lss.lss.`.
 		"""
+
+		raise DeprecationWarning('This function is deprecated and will be removed. Please use lss.lss..')
 
 		R = self.lagrangianR(M)
 		sigma0 = self.sigma(R, z, j = 0, filt = filt, Pk_source = Pk_source)

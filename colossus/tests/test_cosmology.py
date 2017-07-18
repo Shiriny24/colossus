@@ -18,11 +18,8 @@ from colossus.cosmology import cosmology
 
 TEST_Z = np.array([0.0, 1.283, 20.0])
 TEST_Z2 = 5.4
-TEST_M = 3E12
-TEST_R = 1.245
 TEST_K = np.array([1.2E-3, 1.1E3])
 TEST_RR = np.array([1.2E-3, 1.4, 1.1E3])
-TEST_NU = 0.89
 TEST_AGE = np.array([13.7, 0.1])
 
 ###################################################################################################
@@ -187,12 +184,6 @@ class TCComp(CosmologyTestCase):
 	# Structure growth, power spectrum etc.
 	###############################################################################################
 
-	def test_lagrangianR(self):
-		self.assertAlmostEqual(self.cosmo.lagrangianR(TEST_M), 2.0292015228231484)
-
-	def test_lagrangianM(self):
-		self.assertAlmostEqual(self.cosmo.lagrangianM(TEST_R), 692873211113.4847)
-
 	def test_growthFactor(self):
 		correct = [1.0, 0.54093225419799251, 0.060968602011373191]
 		self._testRedshiftArray(self.cosmo.growthFactor, correct)
@@ -214,19 +205,6 @@ class TCComp(CosmologyTestCase):
 		self._testRZArray(self.cosmo.sigma, 0.0, correct)
 		correct = [2.4016147068552129, 0.4216680645613225, 0.00025473429049883295]
 		self._testRZArray(self.cosmo.sigma, TEST_Z2, correct)
-
-	def test_peakHeight(self):
-		self.assertAlmostEqual(self.cosmo.peakHeight(TEST_M, 0.0), 0.94312293214221243)
-		self.assertAlmostEqual(self.cosmo.peakHeight(TEST_M, TEST_Z2), 4.7404825899781677)
-
-	def test_peakCurvature(self):
-		correct = [[1.7282851398751131, 0.64951660047324522, 2.3770980172992502, 1.2545481285991393, 0.31882292066585705], 
-				[8.6869965058389198, 0.64951660047324511, 5.9443788502296497, 0.30203041143419568, 8.3476707802933614]]
-		for j in range(2):
-			z = [0.0, TEST_Z2][j]
-			res = self.cosmo.peakCurvature(TEST_M, z)
-			for i in range(5):
-				self.assertAlmostEqual(res[i], correct[j][i])
 
 	def test_correlationFunction(self):
 		correct = [142.63237915313539, 3.9989807960025816, -2.7947065951546593e-07]
@@ -266,13 +244,6 @@ class TCInterp(CosmologyTestCase):
 	def test_ZInverseDerivative(self):
 		correct = [-0.069866754435913142, -204.97494464862859]
 		self.assertAlmostEqualArray(self.cosmo.age(TEST_AGE, inverse = True, derivative = 1), correct)		
-
-	def test_massFromPeakHeight(self):
-		self.assertAlmostEqual(self.cosmo.massFromPeakHeight(TEST_NU, 0.0), 2.077136472813e+12)
-		self.assertAlmostEqual(self.cosmo.massFromPeakHeight(TEST_NU, TEST_Z2), 59607.184484321471)
-
-	def test_nonLinearMass(self):
-		self.assertAlmostEqual(self.cosmo.nonLinearMass(1.1), 98435044937.058929)				
 
 ###################################################################################################
 # TEST CASE 3: NON-FLAT COSMOLOGY WITH POSITIVE CURVATURE
