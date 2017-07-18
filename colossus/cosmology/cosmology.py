@@ -110,13 +110,13 @@ WMAP1          Spergel et al. 2003   Table 7/4   Best fit, WMAP only
 illustris      Vogelsberger+ 2014    --          Cosmology of the Illustris simulation
 bolshoi	       Klypin et al. 2011    --          Cosmology of the Bolshoi simulation
 millennium     Springel et al. 2005	 --          Cosmology of the Millennium simulation 
-eds            --                    --          Einstein-de Sitter cosmology
+EdS            --                    --          Einstein-de Sitter cosmology
 powerlaw       --                    --          Default settings for power-law cosms.
 ============== ===================== =========== =======================================
 
 Those cosmologies that refer to particular simulations (such as bolshoi and millennium) are
 generally set to ignore relativistic species, i.e. photons and neutrinos, because they are not
-modeled in the simulations. The eds cosmology refers to an Einstein-de Sitter model, i.e. a flat
+modeled in the simulations. The EdS cosmology refers to an Einstein-de Sitter model, i.e. a flat
 cosmology with only dark matter.
 
 ---------------------------------------------------------------------------------------------------
@@ -218,7 +218,7 @@ cosmologies['WMAP1']         = {'flat': True, 'H0': 72.00, 'Om0': 0.2700, 'Ob0':
 cosmologies['illustris']     = {'flat': True, 'H0': 70.40, 'Om0': 0.2726, 'Ob0': 0.0456, 'sigma8': 0.8090, 'ns': 0.9630, 'relspecies': False}
 cosmologies['bolshoi']       = {'flat': True, 'H0': 70.00, 'Om0': 0.2700, 'Ob0': 0.0469, 'sigma8': 0.8200, 'ns': 0.9500, 'relspecies': False}
 cosmologies['millennium']    = {'flat': True, 'H0': 73.00, 'Om0': 0.2500, 'Ob0': 0.0450, 'sigma8': 0.9000, 'ns': 1.0000, 'relspecies': False}
-cosmologies['eds']           = {'flat': True, 'H0': 70.00, 'Om0': 1.0000, 'Ob0': 0.0000, 'sigma8': 0.8200, 'ns': 1.0000, 'relspecies': False}
+cosmologies['EdS']           = {'flat': True, 'H0': 70.00, 'Om0': 1.0000, 'Ob0': 0.0000, 'sigma8': 0.8200, 'ns': 1.0000, 'relspecies': False}
 cosmologies['powerlaw']      = {'flat': True, 'H0': 70.00, 'Om0': 1.0000, 'Ob0': 0.0000, 'sigma8': 0.8200, 'ns': 1.0000, 'relspecies': False}
 
 ###################################################################################################
