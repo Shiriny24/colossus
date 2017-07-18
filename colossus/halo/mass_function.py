@@ -90,8 +90,20 @@ def massFunction(M, mdef, z,
 
 	# Evaluate model
 	if model == 'press74':	
-		f = 1.0
+		f = modelPress74(sigma)
 		
+	elif model == 'sheth99':	
+		f = modelSheth99(sigma)
+
+	elif model == 'jenkins01':	
+		f = modelJenkins01(sigma)
+
+	elif model == 'sheth02':	
+		f = modelSheth02(sigma)
+
+	elif model == 'reed03':	
+		f = modelReed03(sigma)
+
 	elif model == 'tinker08':
 		f = modelTinker08(sigma, Delta_m, z)
 	
@@ -149,9 +161,62 @@ def convertMassFunction(mfunc, M, z, q_in, q_out):
 # FUNCTIONS FOR INDIVIDUAL MASS FUNCTION MODELS
 ###################################################################################################
 
-def modelJenkins01():
+def modelPress74(sigma):
 	
-	return
+	delta_c = constants.DELTA_COLLAPSE
+	f = np.sqrt(2.0 / np.pi) * delta_c / sigma * np.exp(-0.5 * delta_c**2 / sigma**2)
+	
+	return f
+
+###################################################################################################
+
+# TODO
+# Equation 10 in Sheth & Tormen 1999. The extra factor of two in front is due to the definition
+# according to which the PS-mass function would correspond to A = 0.5. ????
+
+def modelSheth99(sigma):
+	
+	delta_c = constants.DELTA_COLLAPSE
+	A = 0.3222
+	a = 0.707
+	p = 0.3
+	
+	nu_p = a * delta_c**2 / sigma**2
+	f = 2.0 * A * np.sqrt(nu_p / 2.0 / np.pi) * np.exp(-0.5 * nu_p) * (1.0 + nu_p**-p)
+	
+	return f
+
+###################################################################################################
+
+def modelJenkins01(sigma):
+	
+	f = 0.315 * np.exp(-np.abs(np.log(1.0 / sigma) + 0.61)**3.8)
+	
+	return f
+
+###################################################################################################
+
+def modelSheth02(sigma):
+	
+	delta_c = constants.DELTA_COLLAPSE
+	#A = 0.3222
+	a = 0.707
+	#p = 0.3
+	
+	nu_p = a * delta_c**2 / sigma**2
+	t1 = nu_p**-0.6
+	f = 2.0 * (1.0 + 0.094 * t1) * np.sqrt(nu_p / 2.0 / np.pi) * np.exp(-nu_p * (1.0 + 0.5 * t1)**2 / 2.0)
+	
+	return f
+
+###################################################################################################
+
+def modelReed03(sigma):
+	
+	f_ST = modelSheth99(sigma)
+	f = f_ST * np.exp(-0.7 / (sigma * np.cosh(2.0 * sigma)**5))
+	
+	return f
 
 ###################################################################################################
 

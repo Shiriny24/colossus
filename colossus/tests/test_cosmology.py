@@ -249,7 +249,7 @@ class TCInterp(CosmologyTestCase):
 	###############################################################################################
 
 	def test_sigma(self):
-		self.assertAlmostEqual(self.cosmo.sigma(12.5, 0.0), 0.5892735283988848)		
+		self.assertAlmostEqual(self.cosmo.sigma(12.5, 0.0), 5.892734771880e-01)		
 
 	def test_ZDerivative(self):
 		correct = [-14.431423683052429, -3.0331864799122887, -0.012861392030709832]
@@ -268,7 +268,7 @@ class TCInterp(CosmologyTestCase):
 		self.assertAlmostEqualArray(self.cosmo.age(TEST_AGE, inverse = True, derivative = 1), correct)		
 
 	def test_massFromPeakHeight(self):
-		self.assertAlmostEqual(self.cosmo.massFromPeakHeight(TEST_NU, 0.0), 2077137637380.1235)
+		self.assertAlmostEqual(self.cosmo.massFromPeakHeight(TEST_NU, 0.0), 2.077136472813e+12)
 		self.assertAlmostEqual(self.cosmo.massFromPeakHeight(TEST_NU, TEST_Z2), 59607.184484321471)
 
 	def test_nonLinearMass(self):
