@@ -118,7 +118,7 @@ def initWalkers(x_initial,
 		raise ValueError("The number of walkers must be divisible by 2.")
 
 	nparams = len(x_initial)
-	walkers = np.zeros([2, nwalkers / 2, nparams])
+	walkers = np.zeros([2, nwalkers // 2, nparams])
 	
 	if random_seed is not None:
 		np.random.seed(random_seed)
@@ -130,7 +130,7 @@ def initWalkers(x_initial,
 		
 	for i in range(nparams):
 		walkers[:, :, i] = np.reshape(np.random.normal(x_initial[i], step_array[i], nwalkers),
-										(2, nwalkers / 2))
+										(2, nwalkers // 2))
 
 	return walkers
 
@@ -238,7 +238,7 @@ def runChain(L_func, walkers, args = (),
 		taux.append([])
 		Rval.append([])
 	
-	gxo = np.zeros((2, nwalkers / 2))
+	gxo = np.zeros((2, nwalkers // 2))
 	gxo[0, :] = L_func(x[0, :, :], *args)
 	gxo[1, :] = L_func(x[1, :, :], *args)
 	
@@ -252,12 +252,12 @@ def runChain(L_func, walkers, args = (),
 			
 			# Vectorized inner loop of walkers stretch move in the Goodman & Weare sampling algorithm
 			xchunk = x[k, :, :]
-			jcompl = np.random.randint(0, nwalkers / 2, nwalkers / 2)
+			jcompl = np.random.randint(0, nwalkers // 2, nwalkers // 2)
 			xcompl = x[kd, jcompl, :]
 			gxold  = gxo[k, :]
 			
 			# The next few steps implement Goodman & Weare sampling algorithm
-			zf = np.random.rand(nwalkers / 2)   
+			zf = np.random.rand(nwalkers // 2)   
 			zf = zf * afact
 			zr = (1.0 + zf) * (1.0 + zf) * api
 			

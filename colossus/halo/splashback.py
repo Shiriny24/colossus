@@ -172,6 +172,13 @@ models['shi16'].depends_on = ['Gamma', 'z']
 models['shi16'].min_Gamma = 0.5
 models['shi16'].max_Gamma = 5.0
 
+models['mansfield17'] = SplashbackModel()
+models['mansfield17'].qx = ['Gamma']
+models['mansfield17'].qy = ['RspR200m', 'MspM200m', 'Deltasp', 'RspR200m-1s', 'MspM200m-1s']
+models['mansfield17'].depends_on = ['Gamma', 'z', 'nu']
+models['mansfield17'].min_Gamma = 0.5
+models['mansfield17'].max_Gamma = 7.0
+
 models['diemer17'] = SplashbackModel()
 models['diemer17'].qx = ['Gamma', 'nu200m']
 models['diemer17'].qy = ['RspR200m', 'MspM200m', 'Deltasp', 'RspR200m-1s', 'MspM200m-1s', 'Deltasp-1s']
@@ -299,7 +306,61 @@ def splashbackModel(qy, Gamma = None, nu200m = None, z = None,
 		cosmo = cosmology.getCurrent()
 		Om = cosmo.Om(z)
 	ret = None
+
+	if model == 'adhikari14':
+		
+		Delta, c = modelAdhikari14Deltasp(Gamma, Om)
+		if qy == 'Deltasp':
+			ret = Delta
+		elif qy == 'RspR200m':
+			ret, _ = modelAdhikari14RspR200m(Delta, c, Om, z)
+		elif qy == 'MspM200m':
+			_, ret = modelAdhikari14RspR200m(Delta, c, Om, z)
+			
+	elif model == 'more15':
+
+		if qy == 'RspR200m':
+			ret = modelMore15RspR200m(z = z, Gamma = Gamma, nu200m = nu200m)
+		elif qy == 'MspM200m':
+			ret = modelMore15MspM200m(z = z, Gamma = Gamma, nu200m = nu200m)
+		elif qy == 'Deltasp':
+			msp200m = modelMore15MspM200m(z = z, Gamma = Gamma, nu200m = nu200m)
+			rsp200m = modelMore15RspR200m(z = z, Gamma = Gamma, nu200m = nu200m)
+			ret = 200.0 * msp200m / rsp200m**3
+
+	elif model == 'shi16':
+		
+		if qy == 'RspR200m':
+			ret = modelShi16RspR200m(Gamma, Om)
+		elif qy == 'MspM200m':
+			delta = modelShi16Delta(Gamma, Om)
+			rspr200m = modelShi16RspR200m(Gamma, Om)
+			ret = delta / 200.0 * rspr200m**3
+		elif qy == 'Deltasp':
+			ret = modelShi16Delta(Gamma, Om)
 	
+	elif model == 'mansfield17':
+
+		if z < 2.0:
+			mask_new = (x <= 5.0)
+			mask[mask] = mask_new
+			x = x[mask_new]
+			nu200m = nu200m[mask_new]
+			Om = Om[mask_new]
+			
+		if qy == 'RspR200m':
+			ret = modelMansfield17RspR200m(x, Om, nu200m)
+		elif qy == 'MspM200m':
+			ret = modelMansfield17MspM200m(x, Om, nu200m)
+		elif qy == 'Deltasp':
+			rspr200m = modelMansfield17RspR200m(x, Om, nu200m)
+			mspm200m = modelMansfield17MspM200m(x, Om, nu200m)
+			ret = mspm200m * 200.0 / rspr200m**3
+		elif qy == 'RspR200m-1s':
+			ret = np.ones((len(x)), np.float) * 0.046
+		elif qy == 'MspM200m-1s':
+			ret = np.ones((len(x)), np.float) * 0.054
+			
 	if model == 'diemer17':
 		
 		# The model is only valid between the 50th and 87th percentile
@@ -343,38 +404,6 @@ def splashbackModel(qy, Gamma = None, nu200m = None, z = None,
 					ret[ret < min_scatter] = min_scatter
 				else:
 					ret = max(ret, min_scatter)
-			
-	elif model == 'more15':
-
-		if qy == 'RspR200m':
-			ret = modelMore15RspR200m(z = z, Gamma = Gamma, nu200m = nu200m)
-		elif qy == 'MspM200m':
-			ret = modelMore15MspM200m(z = z, Gamma = Gamma, nu200m = nu200m)
-		elif qy == 'Deltasp':
-			msp200m = modelMore15MspM200m(z = z, Gamma = Gamma, nu200m = nu200m)
-			rsp200m = modelMore15RspR200m(z = z, Gamma = Gamma, nu200m = nu200m)
-			ret = 200.0 * msp200m / rsp200m**3
-
-	elif model == 'shi16':
-		
-		if qy == 'RspR200m':
-			ret = modelShi16RspR200m(Gamma, Om)
-		elif qy == 'MspM200m':
-			delta = modelShi16Delta(Gamma, Om)
-			rspr200m = modelShi16RspR200m(Gamma, Om)
-			ret = delta / 200.0 * rspr200m**3
-		elif qy == 'Deltasp':
-			ret = modelShi16Delta(Gamma, Om)
-	
-	elif model == 'adhikari14':
-		
-		Delta, c = modelAdhikari14Deltasp(Gamma, Om)
-		if qy == 'Deltasp':
-			ret = Delta
-		elif qy == 'RspR200m':
-			ret, _ = modelAdhikari14RspR200m(Delta, c, Om, z)
-		elif qy == 'MspM200m':
-			_, ret = modelAdhikari14RspR200m(Delta, c, Om, z)
 
 	if not is_array:
 		ret = ret[0]
@@ -644,6 +673,37 @@ def modelShi16RspR200m(Gamma, Om):
 	"""
 
 	return np.exp((0.24 + 0.074 * np.log(Gamma)) * np.log(Om) + 0.55 - 0.15 * Gamma)
+
+###################################################################################################
+
+def modelMansfield17RspR200m(Gamma, Om, nu):
+
+	M0 = 0.2181
+	M1 = 0.4996
+	A = 0.8533
+	eta0 = -0.1742
+	eta1 = 0.3386
+	eta2 = -0.1929
+	xi = -0.04668
+	
+	M_Om = M0 * Om + M1
+	eta_Om = eta0 * Om**2 + eta1 * Om + eta2
+	ret = M_Om * np.exp(Gamma * (eta_Om + nu * xi)) + A
+	
+	return ret
+
+###################################################################################################
+
+def modelMansfield17MspM200m(Gamma, Om, nu):
+
+	A0 = 0.1925
+	A1 = 1.072
+	a0 = -0.0781
+	a1 = -0.02842
+	Gamma_pivot = 3.0
+	ret = (A0 * Om + A1) * (Gamma / Gamma_pivot)**(a0 * Om + a1)
+
+	return ret
 
 ###################################################################################################
 

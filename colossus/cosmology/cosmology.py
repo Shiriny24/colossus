@@ -110,11 +110,14 @@ WMAP1          Spergel et al. 2003   Table 7/4   Best fit, WMAP only
 illustris      Vogelsberger+ 2014    --          Cosmology of the Illustris simulation
 bolshoi	       Klypin et al. 2011    --          Cosmology of the Bolshoi simulation
 millennium     Springel et al. 2005	 --          Cosmology of the Millennium simulation 
+eds            --                    --          Einstein-de Sitter cosmology
 powerlaw       --                    --          Default settings for power-law cosms.
 ============== ===================== =========== =======================================
 
-Those cosmologies that refer to particular simulations (such as bolshoi and millennium) are set 
-to ignore relativistic species, i.e. photons and neutrinos.
+Those cosmologies that refer to particular simulations (such as bolshoi and millennium) are
+generally set to ignore relativistic species, i.e. photons and neutrinos, because they are not
+modeled in the simulations. The eds cosmology refers to an Einstein-de Sitter model, i.e. a flat
+cosmology with only dark matter.
 
 ---------------------------------------------------------------------------------------------------
 Derivatives and inverses
@@ -215,6 +218,7 @@ cosmologies['WMAP1']         = {'flat': True, 'H0': 72.00, 'Om0': 0.2700, 'Ob0':
 cosmologies['illustris']     = {'flat': True, 'H0': 70.40, 'Om0': 0.2726, 'Ob0': 0.0456, 'sigma8': 0.8090, 'ns': 0.9630, 'relspecies': False}
 cosmologies['bolshoi']       = {'flat': True, 'H0': 70.00, 'Om0': 0.2700, 'Ob0': 0.0469, 'sigma8': 0.8200, 'ns': 0.9500, 'relspecies': False}
 cosmologies['millennium']    = {'flat': True, 'H0': 73.00, 'Om0': 0.2500, 'Ob0': 0.0450, 'sigma8': 0.9000, 'ns': 1.0000, 'relspecies': False}
+cosmologies['eds']           = {'flat': True, 'H0': 70.00, 'Om0': 1.0000, 'Ob0': 0.0000, 'sigma8': 0.8200, 'ns': 1.0000, 'relspecies': False}
 cosmologies['powerlaw']      = {'flat': True, 'H0': 70.00, 'Om0': 1.0000, 'Ob0': 0.0000, 'sigma8': 0.8200, 'ns': 1.0000, 'relspecies': False}
 
 ###################################################################################################
@@ -318,6 +322,8 @@ class Cosmology(object):
 			raise Exception('For a power-law cosmology, power_law_n must be set.')
 		if not flat and OL0 is None:
 			raise Exception('OL0 must be set for non-flat cosmologies.')
+		if OL0 is not None and OL0 < 0.0:
+			raise Exception('OL0 cannot be negative.')
 	
 		# Copy the cosmological parameters into the class
 		self.name = name
@@ -467,6 +473,8 @@ class Cosmology(object):
 		if self.flat:
 			self.OL0 = 1.0 - self.Om0 - self.Or0
 			self.Ok0 = 0.0
+			if self.OL0 < 0.0:
+				raise Exception('OL0 cannot be less than zero. If Om = 1, relativistic species must be off.')
 		else:
 			self.Ok0 = 1.0 - self.OL0 - self.Om0 - self.Or0
 
@@ -957,11 +965,8 @@ class Cosmology(object):
 		return t
 	
 	###############################################################################################
-	
-	# This function does not use interpolation because both zmin and zmax are free, which would 
-	# lead to a more complicated 2D-interpolation.
-	
-	def comovingDistance(self, z_min = 0.0, z_max = 0.0):
+
+	def comovingDistance(self, z_min = 0.0, z_max = 0.0, transverse = True):
 		"""
 		The comoving distance between redshift :math:`z_{min}` and :math:`z_{max}`.
 		
@@ -969,6 +974,17 @@ class Cosmology(object):
 		applied to all values of the other. If both are numpy arrays, they need to have 
 		the same dimensions, and the comoving distance returned corresponds to a series of 
 		different z_min and z_max values. 
+		
+		The transverse parameter determines whether the line-of-sight or transverse comoving
+		distance is returned. For flat cosmologies, the two are the same, but for cosmologies with
+		curvature, the geometry of the spacetime influences the transverse comoving distance. The
+		transverse distance is the default because that distance forms the basis for the luminosity
+		and angular diameter distances.
+
+		This function does not use interpolation (unlike the other distance functions) because it
+		accepts both z_min and z_max parameters which would necessitate a 2D interpolation. Thus,
+		for fast evaluation, the luminosity and angular diameter distance functions should be used
+		directly.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -976,6 +992,9 @@ class Cosmology(object):
 			Redshift; can be a number or a numpy array.
 		zmax: array_like
 			Redshift; can be a number or a numpy array.
+		transverse: bool
+			Whether to return the transverse of line-of-sight comoving distance. The two are the 
+			same in flat cosmologies.
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -987,8 +1006,18 @@ class Cosmology(object):
 		luminosityDistance: The luminosity distance to redshift z.
 		angularDiameterDistance: The angular diameter distance to redshift z.
 		"""
+
+		d = self._integral_oneOverEz(z_min = z_min, z_max = z_max)
 		
-		d = self._integral_oneOverEz(z_min = z_min, z_max = z_max) * constants.C * 1E-7
+		if not self.flat and transverse:
+			if self.Ok0 > 0.0:
+				sqrt_Ok0 = np.sqrt(self.Ok0)
+				d = np.sinh(sqrt_Ok0 * d) / sqrt_Ok0
+			else:
+				sqrt_Ok0 = np.sqrt(-self.Ok0)
+				d = np.sin(sqrt_Ok0 * d) / sqrt_Ok0
+			
+		d *= constants.C * 1E-7
 		
 		return d
 
@@ -996,8 +1025,8 @@ class Cosmology(object):
 
 	def _luminosityDistanceExact(self, z):
 		
-		d = self.comovingDistance(z_min = 0.0, z_max = z) * (1.0 + z)
-		
+		d = self.comovingDistance(z_min = 0.0, z_max = z, transverse = True) * (1.0 + z)
+
 		return d
 
 	###############################################################################################
@@ -1035,7 +1064,7 @@ class Cosmology(object):
 
 	def _angularDiameterDistanceExact(self, z):
 		
-		d = self.comovingDistance(z_min = 0.0, z_max = z) / (1.0 + z)
+		d = self.comovingDistance(z_min = 0.0, z_max = z, transverse = True) / (1.0 + z)
 		
 		return d
 

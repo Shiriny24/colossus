@@ -84,6 +84,7 @@ class HaloDensityProfile():
 		self.quantities['rho'] = self.density
 		self.quantities['M'] = self.enclosedMass
 		self.quantities['Sigma'] = self.surfaceDensity
+		self.quantities['DeltaSigma'] = self.deltaSigma
 
 		# Now we also add any parameters for the 2-halo term(s)
 		self._outer_terms = copy.copy(outer_terms)
@@ -1407,8 +1408,8 @@ class HaloDensityProfile():
 		
 		This function represents a general interface for finding the best-fit parameters of a 
 		halo density profile given a set of data points. These points can represent a number of
-		different physical quantities: ``quantity`` can either be density, enclosed mass, or 
-		surface density (``rho``, ``M``, or ``Sigma``). 
+		different physical quantities: ``quantity`` can either be density, enclosed mass, 
+		surface density, or Delta Sigma (``rho``, ``M``, ``Sigma``, or ``DeltaSigma``). 
 		
 		The data points q at radii r can optionally have error bars, and the user can pass a full 
 		covariance matrix. Please note that not passing any estimate of the uncertainty, i.e. 
@@ -1436,7 +1437,8 @@ class HaloDensityProfile():
 			enclosed mass in :math:`M_{\odot} /h`, or surface density in physical 
 			:math:`M_{\odot} h/kpc^2`. Must have the same dimensions as r.
 		quantity: str
-			Indicates which quantity is given in the q input, can be ``rho``, ``M``, or ``Sigma``.
+			Indicates which quantity is given in the q input, can be ``rho``, ``M``, ``Sigma``,
+			or ``DeltaSigma``.
 		q_err: array_like
 			Optional; the uncertainty on the values in q in the same units. If ``method==mcmc``, 
 			either q_err or q_cov must be passed. If ``method==leastsq`` and neither q_err nor 
