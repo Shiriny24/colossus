@@ -34,6 +34,8 @@ MPC = 3.08568025E24
 """A megaparsec in centimeters."""
 YEAR = 31556926.0
 """A year in seconds."""
+GYR = 3.1556926E16
+"""A gigayear in seconds."""
 MSUN = 1.98892E33
 """A solar mass, :math:`M_{\odot}`, in grams."""
 G = 4.30172E-6
