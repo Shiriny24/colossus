@@ -523,6 +523,9 @@ class Cosmology(object):
 		# Check if there is a persistent object storage file. If so, load its contents into the
 		# storage dictionary. We only load from file if the user has not switched of storage, and
 		# if the user has not switched off interpolation.
+		#
+		# Loading the pickle can go wrong due to python version differences, so we generously
+		# catch any exceptions that may occur and simply delete the file in that case.
 		if self.storage_read and self.interpolation:
 			filename_pickle = self._getUniqueFilename()
 			if os.path.exists(filename_pickle):
@@ -530,9 +533,12 @@ class Cosmology(object):
 					input_file = open(filename_pickle, "rb")
 					self.storage_pers = pickle.load(input_file)
 					input_file.close()
-				except UnicodeDecodeError:
+				except Exception:
 					print('WARNING: Encountered file error while reading cache file. This usually happens when switching between python 2 and 3. Deleting cache file.')
-					os.remove(filename_pickle)
+					try:
+						os.remove(filename_pickle)
+					except Exception:
+						pass
 		
 		return
 	
