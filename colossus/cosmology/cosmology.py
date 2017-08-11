@@ -526,10 +526,14 @@ class Cosmology(object):
 		if self.storage_read and self.interpolation:
 			filename_pickle = self._getUniqueFilename()
 			if os.path.exists(filename_pickle):
-				input_file = open(filename_pickle, "rb")
-				self.storage_pers = pickle.load(input_file)
-				input_file.close()
-
+				try:
+					input_file = open(filename_pickle, "rb")
+					self.storage_pers = pickle.load(input_file)
+					input_file.close()
+				except UnicodeDecodeError:
+					print('WARNING: Encountered file error while reading cache file. This usually happens when switching between python 2 and 3. Deleting cache file.')
+					os.remove(filename_pickle)
+		
 		return
 	
 	###############################################################################################
