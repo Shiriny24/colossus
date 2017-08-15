@@ -1,8 +1,8 @@
 =====================================
-Demos
+Tutorials
 =====================================
 
-The easiest way to learn how to use colossus is by following the demo notebooks. Each notebook 
+The easiest way to learn how to use colossus is by following the tutorial notebooks. Each notebook 
 covers a colossus module. The Jupyter notebooks without output can be found in the demos folder.
 The links below point to the output of those notebooks:
 
