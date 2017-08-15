@@ -55,7 +55,6 @@ Contents
     units
     global
     modules
-    demos
 
 * :ref:`genindex`
 * :ref:`modindex`
