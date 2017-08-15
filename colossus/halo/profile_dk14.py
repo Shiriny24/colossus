@@ -7,8 +7,7 @@
 
 """
 This module implements the Diemer & Kravtsov 2014 form of the density profile. Please see 
-:doc:`halo_profile` for a general introduction to the colossus density profile module, and
-:doc:`demos` for example code.
+:doc:`halo_profile` for a general introduction to the colossus density profile module.
 
 Unlike other implementations of the density profile, the DK14 profile makes little sense without 
 the addition of a description of the outer profile. Thus, the module contains a convenient 

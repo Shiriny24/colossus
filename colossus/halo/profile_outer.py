@@ -7,8 +7,7 @@
 
 """
 This module implements terms that describe the outer halo density profile. Specific terms are 
-derived from the :class:`OuterTerm` base class. The :doc:`demos` contain example code that 
-demonstrates the usage of the outer profile.
+derived from the :class:`OuterTerm` base class.
 
 ---------------------------------------------------------------------------------------------------
 Specific outer terms

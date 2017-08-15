@@ -7,8 +7,7 @@
 
 """
 This module implements a general density profile using spline interpolation. Please see 
-:doc:`halo_profile` for a general introduction to the colossus density profile module, and
-:doc:`demos` for example code.
+:doc:`halo_profile` for a general introduction to the colossus density profile module.
 
 ---------------------------------------------------------------------------------------------------
 Module reference

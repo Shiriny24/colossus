@@ -2,5 +2,4 @@
 Quick Start & Demonstrations
 =====================================
 
-test link []
-[`demo <demo_cosmology.html>`_]
+`Demo: Cosmology <_static/demo_cosmology.html>`_
