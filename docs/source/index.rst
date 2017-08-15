@@ -51,7 +51,7 @@ Contents
 
     installation
     versions
-    quickstart
+    tutorials
     units
     global
     modules
