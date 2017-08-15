@@ -10,13 +10,6 @@ The code of the demo functions listed below contains comments and print statemen
 make it self-explanatory. For some demos, matplotlib must be installed.
 
 ---------------------------------------------------------------------------------------------------
-Cosmology
----------------------------------------------------------------------------------------------------
-
-.. automodule:: demos.demo_cosmology
-    :members:
-
----------------------------------------------------------------------------------------------------
 Halo concentration
 ---------------------------------------------------------------------------------------------------
 
