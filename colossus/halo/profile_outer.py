@@ -297,7 +297,7 @@ class OuterTermCorrelationFunction(OuterTerm):
 	
 	The bias should be initialized to a physically motivated value. This cannot be performed by 
 	this class itself because the bias depends on mass, which circularly depends on the value of
-	bias due to the inclusion of this outer term. See the :mod:`halo.bias` module for models of the
+	bias due to the inclusion of this outer term. See the :mod:`lss.bias` module for models of the
 	bias as a function of halo mass.
 
 	In this implementation, the redshift is added to the profile options rather than parameters,

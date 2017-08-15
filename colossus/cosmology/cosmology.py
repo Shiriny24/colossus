@@ -1475,7 +1475,7 @@ class Cosmology(object):
 	#DEPRECATED
 	def lagrangianM(self, R):
 		"""
-		Deprecated, please use :func:`lss.lss.`.
+		Deprecated, please use :func:`lss.lss.lagrangianM`.
 		"""
 
 		raise DeprecationWarning('This function is deprecated and will be removed. Please use lss.lss.lagrangianM.')
@@ -1637,7 +1637,7 @@ class Cosmology(object):
 	# DEPRECATED
 	def collapseOverdensity(self, deltac_const = True, sigma = None):
 		"""
-		Deprecated, please use :func:`lss.lss.`.
+		Deprecated, please use :func:`lss.lss.collapseOverdensity`.
 		"""
 
 		raise DeprecationWarning('This function is deprecated and will be removed. Please use lss.lss.collapseOverdensity.')
@@ -2489,10 +2489,10 @@ class Cosmology(object):
 	def peakCurvature(self, M, z, filt = 'gaussian', Pk_source = 'eh98',
 					deltac_const = True, exact = False):
 		"""
-		Deprecated, please use :func:`lss.lss.`.
+		Deprecated, please use :func:`lss.lss.peakCurvature`.
 		"""
 
-		raise DeprecationWarning('This function is deprecated and will be removed. Please use lss.lss..')
+		raise DeprecationWarning('This function is deprecated and will be removed. Please use lss.lss.peakCurvature.')
 
 		R = self.lagrangianR(M)
 		sigma0 = self.sigma(R, z, j = 0, filt = filt, Pk_source = Pk_source)

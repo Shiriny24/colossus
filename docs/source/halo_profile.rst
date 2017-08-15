@@ -63,8 +63,6 @@ Class                                        Explanation                     Pap
 :class:`halo.profile_dk14.DK14Profile`       Diemer & Kravtsov 2014 profile  Diemer & Kravtsov 2014    ApJ 789, 1
 ============================================ =============================== ========================= =============
 
-The :doc:`demos` code contains coding example for these profile classes.
-
 ---------------------------------------------------------------------------------------------------
 Adding an outer profile
 ---------------------------------------------------------------------------------------------------

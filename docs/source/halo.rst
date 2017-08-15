@@ -1,5 +1,5 @@
 =====================================
-Dark Matter Halos
+Halo
 =====================================
 
 This module contains all functions dealing with the size (mass or radius) and structure
