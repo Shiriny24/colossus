@@ -9,3 +9,4 @@ The links below point to the output of those notebooks:
 * `Cosmology <_static/tutorial_cosmology.html>`_
 * `Halo: spherical overdensity masses and radii <_static/tutorial_halo_so.html>`_
 * `Halo: density profiles <_static/tutorial_halo_profile.html>`_
+* `Halo: concentration <_static/tutorial_halo_concentration.html>`_
