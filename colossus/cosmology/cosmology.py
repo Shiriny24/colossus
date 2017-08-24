@@ -180,6 +180,7 @@ import scipy.special
 import scipy.interpolate
 import hashlib
 import pickle
+import warnings
 
 from colossus import defaults
 from colossus import settings
@@ -534,7 +535,8 @@ class Cosmology(object):
 					self.storage_pers = pickle.load(input_file)
 					input_file.close()
 				except Exception:
-					print('WARNING: Encountered file error while reading cache file. This usually happens when switching between python 2 and 3. Deleting cache file.')
+					warnings.warn('Encountered file error while reading cache file. This usually \
+						happens when switching between python 2 and 3. Deleting cache file.')
 					try:
 						os.remove(filename_pickle)
 					except Exception:
@@ -828,32 +830,26 @@ class Cosmology(object):
 			interpolator = self._zInterpolator(table_name, func, inverse = inverse, future = future)
 			
 			# Check limits of z array. If inverse == True, we need to check the limits on 
-			# the result function.
-			if inverse:
-				min_ = interpolator.get_knots()[0]
-				max_ = interpolator.get_knots()[-1]
+			# the result function. But even if we are evaluating a z-function it's good to check 
+			# the limits on the interpolator. For example, some functions can be evaluated in the
+			# future while others cannot.
+			min_ = interpolator.get_knots()[0]
+			max_ = interpolator.get_knots()[-1]
+			
+			if np.min(z) < min_:
+				if inverse:
+					msg = "Value f = %.3f outside range of interpolation table (min. %.3f)." % (np.min(z), min_)
+				else:
+					msg = "Redshift z = %.3f outside range of interpolation table (min. z is %.3f)." % (np.min(z), min_)
+				raise Exception(msg)
 				
-				if np.min(z) < min_:
-					msg = "f = %.3f outside range (min. f is %.3f)." \
-						% (np.min(z), min_)
-					raise Exception(msg)
-					
-				if np.max(z) > max_:
-					msg = "f = %.3f outside range (max. f is %.3f)." \
-						% (np.max(z), max_)
-					raise Exception(msg)
-				
-			else:
-				if np.min(z) < self.z_min:
-					msg = "z = %.2f outside range (min. z is %.2f)." \
-						% (np.min(z), self.z_min)
-					raise Exception(msg)
-					
-				if np.max(z) > self.z_max:
-					msg = "z = %.2f outside range (max. z is %.2f)." \
-						% (np.max(z), self.z_max)
-					raise Exception(msg)
-				
+			if np.max(z) > max_:
+				if inverse:
+					msg = "Value f = %.3f outside range of interpolation table (max. f is %.3f)." % (np.max(z), max_)
+				else:
+					msg = "Redshift z = %.3f outside range of interpolation table (max. z is %.3f)." % (np.max(z), max_)
+				raise Exception(msg)
+
 			ret = interpolator(z, nu = derivative)				
 			
 		else:
@@ -1466,7 +1462,7 @@ class Cosmology(object):
 		Deprecated, please use :func:`lss.lss.lagrangianR`.
 		"""
 		
-		raise DeprecationWarning('This function is deprecated and will be removed. Please use lss.lss.lagrangianR.')
+		warnings.warn('This function is deprecated and will be removed. Please use lss.lss.lagrangianR.')
 		
 		return (3.0 * M / 4.0 / np.pi / self.rho_m(0.0) / 1E9)**(1.0 / 3.0)
 	
@@ -1478,7 +1474,7 @@ class Cosmology(object):
 		Deprecated, please use :func:`lss.lss.lagrangianM`.
 		"""
 
-		raise DeprecationWarning('This function is deprecated and will be removed. Please use lss.lss.lagrangianM.')
+		warnings.warn('This function is deprecated and will be removed. Please use lss.lss.lagrangianM.')
 	
 		return 4.0 / 3.0 * np.pi * R**3 * self.rho_m(0.0) * 1E9
 
@@ -1640,7 +1636,7 @@ class Cosmology(object):
 		Deprecated, please use :func:`lss.lss.collapseOverdensity`.
 		"""
 
-		raise DeprecationWarning('This function is deprecated and will be removed. Please use lss.lss.collapseOverdensity.')
+		warnings.warn('This function is deprecated and will be removed. Please use lss.lss.collapseOverdensity.')
 						
 		if deltac_const:
 			delta_c = constants.DELTA_COLLAPSE
@@ -1900,11 +1896,9 @@ class Cosmology(object):
 		else:
 			table_name = 'matterpower_%s_%s' % (self.name, Pk_source)
 			table = self._getStoredObject(table_name)
-
 			if table is None:
 				msg = "Could not load data table, %s." % (table_name)
 				raise Exception(msg)
-	
 			k_min = table[0][0]
 			k_max = table[0][-1]
 		
@@ -1916,6 +1910,9 @@ class Cosmology(object):
 	# using the matterPowerSpectrum() function below, but for some performance-critical operations
 	# it is faster to obtain the interpolator directly from this function. Note that the lookup 
 	# table created here is complicated, with extra resolution around the BAO scale.
+	#
+	# We need to separately treat the cases of models that can cover the entire range of the 
+	# colossus P(k) lookup table, and user-supplied, tabulate 
 
 	def _matterPowerSpectrumInterpolator(self, Pk_source, inverse = False):
 		
@@ -1925,23 +1922,36 @@ class Cosmology(object):
 		if interpolator is None:
 			if self.print_info:
 				print("Cosmology.matterPowerSpectrum: Computing lookup table.")				
-			data_k = np.zeros((np.sum(self.k_Pk_Nbins) + 1), np.float)
-			n_regions = len(self.k_Pk_Nbins)
-			k_computed = 0
-			for i in range(n_regions):
-				log_min = np.log10(self.k_Pk[i])
-				log_max = np.log10(self.k_Pk[i + 1])
-				log_range = log_max - log_min
-				bin_width = log_range / self.k_Pk_Nbins[i]
-				if i == n_regions - 1:
-					data_k[k_computed:k_computed + self.k_Pk_Nbins[i] + 1] = \
-						10**np.arange(log_min, log_max + bin_width, bin_width)
-				else:
-					data_k[k_computed:k_computed + self.k_Pk_Nbins[i]] = \
-						10**np.arange(log_min, log_max, bin_width)
-				k_computed += self.k_Pk_Nbins[i]
 			
-			data_Pk = self._matterPowerSpectrumExact(data_k, Pk_source = Pk_source, ignore_norm = False)
+			if Pk_source in ['eh98', 'eh98smooth']:
+				
+				data_k = np.zeros((np.sum(self.k_Pk_Nbins) + 1), np.float)
+				n_regions = len(self.k_Pk_Nbins)
+				k_computed = 0
+				for i in range(n_regions):
+					log_min = np.log10(self.k_Pk[i])
+					log_max = np.log10(self.k_Pk[i + 1])
+					log_range = log_max - log_min
+					bin_width = log_range / self.k_Pk_Nbins[i]
+					if i == n_regions - 1:
+						data_k[k_computed:k_computed + self.k_Pk_Nbins[i] + 1] = \
+							10**np.arange(log_min, log_max + bin_width, bin_width)
+					else:
+						data_k[k_computed:k_computed + self.k_Pk_Nbins[i]] = \
+							10**np.arange(log_min, log_max, bin_width)
+					k_computed += self.k_Pk_Nbins[i]
+				data_Pk = self._matterPowerSpectrumExact(data_k, Pk_source = Pk_source, ignore_norm = False)
+					
+			else:
+
+				user_table_name = 'matterpower_%s_%s' % (self.name, Pk_source)
+				user_table = self._getStoredObject(user_table_name)
+				if user_table is None:
+					msg = "Could not load data table, %s." % (table_name)
+					raise Exception(msg)
+				data_k = user_table[0]
+				data_Pk = user_table[1]
+							
 			table_ = np.array([np.log10(data_k), np.log10(data_Pk)])
 			self._storeObject(table_name, table_)
 			if self.print_info:
@@ -2084,10 +2094,10 @@ class Cosmology(object):
 			k = np.exp(lnk)
 			W = self.filterFunction(filt, k, R, no_oscillation = test)
 			
-			if exact_Pk or (not self.interpolation):
-				Pk = self._matterPowerSpectrumExact(k, Pk_source = Pk_source, ignore_norm = ignore_norm)
-			else:
+			if Pk_interpolator is not None:
 				Pk = 10**Pk_interpolator(np.log10(k))
+			else:
+				Pk = self._matterPowerSpectrumExact(k, Pk_source = Pk_source, ignore_norm = ignore_norm)
 			
 			# One factor of k is due to the integration in log-k space
 			ret = Pk * W**2 * k**3
@@ -2125,36 +2135,49 @@ class Cosmology(object):
 				Pk_interpolator = self._matterPowerSpectrumInterpolator(Pk_source)
 			
 			# The infinite integral over k often causes trouble when the tophat filter is used. Thus,
-			# we determine sensible limits and integrate over a finite volume. For tabled power 
-			# spectra, we need to be careful not to exceed their limits.
-			test_integrand_min = 1E-6
+			# we determine sensible limits and integrate over a finite volume. The limits are
+			# determined by demanding that the integrand is some factor, 1E-6, smaller than at its
+			# maximum. For tabulated power spectra, we need to be careful not to exceed their 
+			# limits, even if the integrand has not reached the desired low value. Thus, we simply
+			# use the limits of the table.
 			test_k_min, test_k_max = self._matterPowerSpectrumLimits(Pk_source)
-			test_k_min = max(test_k_min * 1.0001, 1E-7)
-			test_k_max = min(test_k_max * 0.9999, 1E15)
-			test_k = np.arange(np.log(test_k_min), np.log(test_k_max), 2.0)
-			n_test = len(test_k)
-			test_k_integrand = test_k * 0.0
-			for i in range(n_test):
-				test_k_integrand[i] = logIntegrand(test_k[i], Pk_interpolator)
-			integrand_max = np.max(test_k_integrand)
-			
-			min_index = 0
-			while test_k_integrand[min_index] < integrand_max * test_integrand_min:
-				min_index += 1
-				if min_index > n_test - 2:
-					msg = "Could not find lower integration limit."
-					raise Exception(msg)
 
-			min_index -= 1
-			max_index = min_index + 1
-			while test_k_integrand[max_index] > integrand_max * test_integrand_min:
-				max_index += 1	
-				if max_index == n_test:
-					msg = "Could not find upper integration limit."
-					raise Exception(msg)
-	
+			if Pk_source in ['eh98', 'eh98smooth']:
+
+				test_integrand_min = 1E-6
+
+				test_k_min = max(test_k_min * 1.0001, 1E-7)
+				test_k_max = min(test_k_max * 0.9999, 1E15)
+				test_k = np.arange(np.log(test_k_min), np.log(test_k_max), 2.0)
+				n_test = len(test_k)
+				test_k_integrand = test_k * 0.0
+				for i in range(n_test):
+					test_k_integrand[i] = logIntegrand(test_k[i], Pk_interpolator)
+				integrand_max = np.max(test_k_integrand)
+			
+				min_index = 0
+				while test_k_integrand[min_index] < integrand_max * test_integrand_min:
+					min_index += 1
+					if min_index > n_test - 2:
+						msg = "Could not find lower integration limit."
+						raise Exception(msg)
+				min_k_use = test_k[min_index]
+				
+				min_index -= 1
+				max_index = min_index + 1
+				while test_k_integrand[max_index] > integrand_max * test_integrand_min:
+					max_index += 1	
+					if max_index == n_test:
+						msg = "Could not find upper integration limit."
+						raise Exception(msg)
+				max_k_use = test_k[max_index]
+						
+			else:
+				min_k_use = np.log(test_k_min * 1.0001)
+				max_k_use = np.log(test_k_max * 0.9999)
+						
 			args = Pk_interpolator
-			sigma2, _ = scipy.integrate.quad(logIntegrand, test_k[min_index], test_k[max_index],
+			sigma2, _ = scipy.integrate.quad(logIntegrand, min_k_use, max_k_use,
 						args = args, epsabs = 0.0, epsrel = self.accuracy_sigma, limit = 100)
 			sigma = np.sqrt(sigma2 / 2.0 / np.pi**2)
 		
@@ -2341,7 +2364,7 @@ class Cosmology(object):
 		Deprecated, please use :func:`lss.lss.peakHeight`.
 		"""
 
-		raise DeprecationWarning('This function is deprecated and will be removed. Please use lss.lss.peakHeight.')
+		warnings.warn('This function is deprecated and will be removed. Please use lss.lss.peakHeight.')
 					
 		R = self.lagrangianR(M)
 		sigma = self.sigma(R, z, filt = filt, Pk_source = Pk_source)
@@ -2357,7 +2380,7 @@ class Cosmology(object):
 		Deprecated, please use :func:`lss.lss.massFromPeakHeight`.
 		"""
 
-		raise DeprecationWarning('This function is deprecated and will be removed. Please use lss.lss.massFromPeakHeight.')
+		warnings.warn('This function is deprecated and will be removed. Please use lss.lss.massFromPeakHeight.')
 
 		sigma = self.collapseOverdensity(deltac_const = deltac_const) / nu
 		R = self.sigma(sigma, z, filt = filt, Pk_source = Pk_source, inverse = True)
@@ -2373,7 +2396,7 @@ class Cosmology(object):
 		Deprecated, please use :func:`lss.lss.nonLinearMass`.
 		"""
 
-		raise DeprecationWarning('This function is deprecated and will be removed. Please use lss.lss.nonLinearMass.')
+		warnings.warn('This function is deprecated and will be removed. Please use lss.lss.nonLinearMass.')
 
 		return self.massFromPeakHeight(1.0, z = z, filt = filt, Pk_source = Pk_source, deltac_const = True)
 
@@ -2492,7 +2515,7 @@ class Cosmology(object):
 		Deprecated, please use :func:`lss.lss.peakCurvature`.
 		"""
 
-		raise DeprecationWarning('This function is deprecated and will be removed. Please use lss.lss.peakCurvature.')
+		warnings.warn('This function is deprecated and will be removed. Please use lss.lss.peakCurvature.')
 
 		R = self.lagrangianR(M)
 		sigma0 = self.sigma(R, z, j = 0, filt = filt, Pk_source = Pk_source)
