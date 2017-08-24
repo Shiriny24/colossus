@@ -32,7 +32,7 @@ from colossus.halo import mass_so
 
 ###################################################################################################
 
-MODELS = ['tinker10']
+MODELS = ['sc', 'sheth01', 'tinker10']
 """A list of all implemented bias models."""
 
 ###################################################################################################
@@ -67,8 +67,12 @@ def haloBiasFromNu(nu, z, mdef, model = defaults.HALO_BIAS_MODEL):
 	haloBias: The halo bias at a given mass. 
 	"""
 	
-	if model == 'tinker10':
+	if model == 'sc':
+		bias = modelSC(nu, z)
+	elif model == 'tinker10':
 		bias = modelTinker10(nu, z, mdef)
+	elif model == 'sheth01':
+		bias = modelSheth01(nu, z)
 	else:
 		msg = 'Unkown model, %s.' % (model)
 		raise Exception(msg)
@@ -153,9 +157,67 @@ def twoHaloTerm(r, M, z, mdef, model = defaults.HALO_BIAS_MODEL):
 # SPECIFIC MODELS
 ###################################################################################################
 
+def modelSC(nu, z):
+	"""
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	nu: array_like
+		Peak height; can be a number or a numpy array.
+	z: array_like
+		Redshift; can be a number or a numpy array.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	bias: array_like
+		Halo bias; has the same dimensions as nu or z.
+	"""
+	
+	delta_c = lss.collapseOverdensity()
+
+	bias = 1.0 + (nu**2 - 1.0) / delta_c
+	
+	return bias
+
+###################################################################################################
+
+def modelSheth01(nu, z):
+	"""
+	The halo bias at a given peak height, according to Sheth et al. 2001. 
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	nu: array_like
+		Peak height; can be a number or a numpy array.
+	z: array_like
+		Redshift; can be a number or a numpy array.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	bias: array_like
+		Halo bias; has the same dimensions as nu or z.
+	"""
+	
+	a = 0.707
+	b = 0.5
+	c = 0.6
+	roota = np.sqrt(a)
+	anu2 = a * nu**2
+	anu2c = anu2**c
+	t1 = b * (1.0 - c) * (1.0 - 0.5 * c)
+	
+	# TODO: is this correct? growth factor multiplied in?
+	delta_sc = lss.collapseOverdensity()
+
+	bias = 1.0 +  1.0 / (roota * delta_sc) * (roota * anu2 + roota * b * anu2**(1.0 - c) - anu2c / (anu2c + t1))
+
+	return bias
+
+###################################################################################################
+
 def modelTinker10(nu, z, mdef):
 	"""
-	The halo bias at a given peak height. 
+	The halo bias at a given peak height according to Tinker et al. 2010. 
 
 	The halo bias, using the approximation of Tinker et al. 2010, ApJ 724, 878. The mass definition,
 	mdef, must correspond to the mass that was used to evaluate the peak height. Note that the 
