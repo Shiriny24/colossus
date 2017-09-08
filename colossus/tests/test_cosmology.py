@@ -197,19 +197,19 @@ class TCComp(CosmologyTestCase):
 		self._testKArray(self.cosmo.transferFunctionEH98Smooth, correct)
 
 	def test_matterPowerSpectrum(self):
-		correct = [4503.7076619825366, 5.9333659722974083e-07]
+		correct = [4.503657747484e+03, 5.933300212925e-07]
 		self._testKArray(self.cosmo.matterPowerSpectrum, correct)
 
 	def test_sigma(self):
-		correct = [12.071398454730772, 2.119458716015322, 0.0012803881954575054]
+		correct = [1.207145625229e+01, 2.119444226232e+00, 1.280494909616e-03]
 		self._testRZArray(self.cosmo.sigma, 0.0, correct)
-		correct = [2.4016147068552129, 0.4216680645613225, 0.00025473429049883295]
+		correct = [2.401626205727e+00, 4.216651818070e-01, 2.547555213689e-04]
 		self._testRZArray(self.cosmo.sigma, TEST_Z2, correct)
 
 	def test_correlationFunction(self):
-		correct = [142.63237915313539, 3.9989807960025816, -2.7947065951546593e-07]
+		correct = [1.426307983614e+02, 3.998936475381e+00, -2.794675621480e-07]
 		self._testRZArray(self.cosmo.correlationFunction, 0.0, correct)
-		correct = [5.6455937600879116, 0.15828538486611424, -1.1061848795175795e-08]
+		correct = [5.645531190089e+00, 1.582836305925e-01, -1.106172619694e-08]
 		self._testRZArray(self.cosmo.correlationFunction, TEST_Z2, correct)
 
 ###################################################################################################

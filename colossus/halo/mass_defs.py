@@ -78,9 +78,11 @@ def pseudoEvolve(M_i, c_i, z_i, mdef_i, z_f, mdef_f,
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	M_i: array_like
-		The initial halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
-	c_i: float
-		The initial halo concentration; must have the same dimensions as M_i.
+		The initial halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array. If both 
+		M_i and c_i are arrays, they must have the same dimensions.
+	c_i: array_like
+		The initial halo concentration; can be a number of a numpy array. If both M_i and c_i are 
+		arrays, they must have the same dimensions.
 	z_i: float
 		The initial redshift.
 	mdef_i: str
@@ -98,25 +100,45 @@ def pseudoEvolve(M_i, c_i, z_i, mdef_i, z_f, mdef_f,
 	Returns
 	-----------------------------------------------------------------------------------------------
 	Mnew: array_like
-		The new halo mass in :math:`M_{\odot}/h`; has the same dimensions as M_i.
+		The new halo mass in :math:`M_{\odot}/h`; has the same dimensions as M_i or c_i.
 	Rnew: array_like
-		The new halo radius in physical kpc/h; has the same dimensions as M_i.
+		The new halo radius in physical kpc/h; has the same dimensions as M_i or c_i.
 	cnew: array_like
 		The new concentration (now referring to the new mass definition); has the same dimensions 
-		as M_i.
+		as M_i or c_i.
 		
 	See also
 	-----------------------------------------------------------------------------------------------
 	changeMassDefinition: Change the spherical overdensity mass definition.
 	"""
 
+	# Redshift must always be a number, not an array
 	if utilities.isArray(z_i):
 		raise Exception('Redshift z_i must be a float, not an array.')
 	if utilities.isArray(z_f):
 		raise Exception('Redshift z_f must be a float, not an array.')
-	M_i, is_array = utilities.getArray(M_i)
-	c_i, _ = utilities.getArray(c_i)
-	N = len(M_i)
+	
+	# Both M and c can be numbers or arrays
+	M_i_array, M_is_array = utilities.getArray(M_i)
+	c_i_array, c_is_array = utilities.getArray(c_i)
+	if not M_is_array and not c_is_array:
+		M_i = M_i_array
+		c_i = c_i_array
+		N = 1
+	elif M_is_array and not c_is_array:
+		M_i = M_i_array
+		c_i = np.ones_like(M_i) * c_i
+		N = len(M_i_array)
+	elif c_is_array and not M_is_array:
+		c_i = c_i_array
+		M_i = np.ones_like(c_i) * M_i
+		N = len(c_i_array)
+	else:
+		if len(M_i_array) != len(c_i_array):
+			raise Exception('If both M_i and c_i are arrays, they must have the same dimensions.')
+		M_i = M_i_array
+		c_i = c_i_array
+		N = len(M_i_array)
 	Rnew = np.zeros_like(M_i)
 	cnew = np.zeros_like(M_i)
 
@@ -140,7 +162,7 @@ def pseudoEvolve(M_i, c_i, z_i, mdef_i, z_f, mdef_f,
 		msg = 'This function is not defined for profile %s.' % (profile)
 		raise Exception(msg)
 
-	if not is_array:
+	if not M_is_array and not c_is_array:
 		Rnew = Rnew[0]
 		cnew = cnew[0]
 
@@ -162,9 +184,11 @@ def changeMassDefinition(M, c, z, mdef_in, mdef_out,
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	M_i: array_like
-		The initial halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
+		The initial halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array. If both 
+		M_i and c_i are arrays, they must have the same dimensions.
 	c_i: array_like
-		The initial halo concentration; must have the same dimensions as M_i.
+		The initial halo concentration; can be a number of a numpy array. If both M_i and c_i are 
+		arrays, they must have the same dimensions.
 	z_i: float
 		The initial redshift.
 	mdef_i: str
@@ -177,12 +201,12 @@ def changeMassDefinition(M, c, z, mdef_in, mdef_out,
 	Returns
 	-----------------------------------------------------------------------------------------------
 	Mnew: array_like
-		The new halo mass in :math:`M_{\odot}/h`; has the same dimensions as M_i.
+		The new halo mass in :math:`M_{\odot}/h`; has the same dimensions as M_i or c_i.
 	Rnew: array_like
-		The new halo radius in physical kpc/h; has the same dimensions as M_i.
+		The new halo radius in physical kpc/h; has the same dimensions as M_i or c_i.
 	cnew: array_like
 		The new concentration (now referring to the new mass definition); has the same dimensions 
-		as M_i.
+		as M_i or c_i.
 		
 	See also
 	-----------------------------------------------------------------------------------------------
