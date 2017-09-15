@@ -23,3 +23,7 @@ Version 1.1
 
 * The lss module contains a new module to compute the halo mass function.
 * The demo scripts have been converted to Jupyter notebooks
+* The interface of the SO changing functions in :mod:`halo.mass_defs` has changed. The function
+  previously called pseudoEvolve is now called :func:`halo.mass_defs.evolveSO` to reflect its more
+  general nature. The :func:`halo.mass_defs.pseudoEvolve` function is a wrapper for evolveSO, and
+  has one fewer parameter than previously (no final mass definition).

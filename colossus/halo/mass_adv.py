@@ -93,7 +93,7 @@ def changeMassDefinitionCModel(M, z, mdef_in, mdef_out,
 	
 	c = concentration.concentration(M, mdef_in, z, model = c_model)
 	
-	return mass_defs.pseudoEvolve(M, c, z, mdef_in, z, mdef_out, profile = profile)
+	return mass_defs.changeMassDefinition(M, c, z, mdef_in, mdef_out, profile = profile)
 
 ###################################################################################################
 
