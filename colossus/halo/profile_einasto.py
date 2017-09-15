@@ -158,8 +158,7 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 		self.par['alpha'] = alpha
 		self.par['rhos'] = 1.0
 		self._computeMassTerms()
-		M_unnorm = self.enclosedMass(R)
-		self.par['rhos'] = M / M_unnorm
+		self.par['rhos'] = self._normalizeInner(R, M)
 		
 		return
 	
@@ -266,7 +265,7 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 			dimensions as r.
 		"""
 
-		rho = self.density(r)
+		rho = self.densityInner(r)
 		drho_dr = rho * (-2.0 / self.par['rs']) * (r / self.par['rs'])**(self.par['alpha'] - 1.0)	
 		
 		return drho_dr

@@ -56,9 +56,9 @@ def changeMassDefinitionCModel(M, z, mdef_in, mdef_out,
 	"""
 	Change the spherical overdensity mass definition, using a model for the concentration.
 	
-	This function is a wrapper for the :func:`halo.mass_defs.changeMassDefinition()` function. Instead of forcing 
-	the user to provide concentrations, they are computed from a model indicated by the ``c_model``
-	parameter.
+	This function is a wrapper for the :func:`halo.mass_defs.changeMassDefinition()` function. 
+	Instead of forcing the user to provide concentrations, they are computed from a model indicated 
+	by the ``c_model`` parameter.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
