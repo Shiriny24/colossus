@@ -341,13 +341,15 @@ def splashbackModel(qy, Gamma = None, nu200m = None, z = None,
 			ret = modelShi16Delta(Gamma, Om)
 	
 	elif model == 'mansfield17':
-
+		
 		if z < 2.0:
 			mask_new = (x <= 5.0)
 			mask[mask] = mask_new
 			x = x[mask_new]
-			nu200m = nu200m[mask_new]
-			Om = Om[mask_new]
+			if utilities.isArray(nu200m):
+				nu200m = nu200m[mask_new]
+			if utilities.isArray(Om):
+				Om = Om[mask_new]
 			
 		if qy == 'RspR200m':
 			ret = modelMansfield17RspR200m(x, Om, nu200m)

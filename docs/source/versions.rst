@@ -27,3 +27,4 @@ Version 1.1
   previously called pseudoEvolve is now called :func:`halo.mass_defs.evolveSO` to reflect its more
   general nature. The :func:`halo.mass_defs.pseudoEvolve` function is a wrapper for evolveSO, and
   has one fewer parameter than previously (no final mass definition).
+* concentration.MODELS is not concentration.models

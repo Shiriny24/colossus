@@ -92,7 +92,7 @@ from colossus.halo import mass_defs
 
 ###################################################################################################
 
-MODELS = ['diemer15', 'klypin15_nu', 'klypin15_m', 'dutton14', 'bhattacharya13', 'prada12', 
+models = ['diemer15', 'klypin15_nu', 'klypin15_m', 'dutton14', 'bhattacharya13', 'prada12', 
 		'klypin11', 'duffy08', 'bullock01']
 """A list of all implemented concentration models."""
 

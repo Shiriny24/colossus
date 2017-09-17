@@ -10,4 +10,5 @@ The links below point to the output of those notebooks:
 * `Halo: spherical overdensity masses and radii <_static/tutorial_halo_so.html>`_
 * `Halo: density profiles <_static/tutorial_halo_profile.html>`_
 * `Halo: concentration <_static/tutorial_halo_concentration.html>`_
+* `Halo: splashback <_static/tutorial_halo_splashback.html>`_
 * `Utilities: MCMC <_static/tutorial_utils_mcmc.html>`_
