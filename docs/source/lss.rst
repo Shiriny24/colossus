@@ -20,4 +20,4 @@ Module reference
 
     lss_lss
     lss_bias
-    lss_halo_mass_function
+    lss_mass_function

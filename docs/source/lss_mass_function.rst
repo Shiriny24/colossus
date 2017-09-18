@@ -2,5 +2,5 @@
 Halo mass function
 =====================================
 
-.. automodule:: lss.halo_mass_function
+.. automodule:: lss.mass_function
     :members:
