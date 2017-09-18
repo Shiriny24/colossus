@@ -54,14 +54,15 @@ reference of the functionality of the profile objects. For documentation on sphe
 mass definitions, please see the documentation of the :doc:`halo_mass` module. The following 
 functional forms for the density profile are currently implemented:
 
-============================================ =============================== ========================= =============
-Class                                        Explanation                     Paper                      Reference
-============================================ =============================== ========================= =============
-:class:`halo.profile_spline.SplineProfile`   An arbitrary density profile     ---                      ---
-:class:`halo.profile_einasto.EinastoProfile` Einasto profile                 Einasto 1965              TrAlm 5, 87
-:class:`halo.profile_nfw.NFWProfile`         Navarro-Frenk-White profile     Navarro et al. 1997       ApJ 490, 493
-:class:`halo.profile_dk14.DK14Profile`       Diemer & Kravtsov 2014 profile  Diemer & Kravtsov 2014    ApJ 789, 1
-============================================ =============================== ========================= =============
+=================================================== =============================== ========================= =============
+Class                                               Explanation                     Paper                      Reference
+=================================================== =============================== ========================= =============
+:class:`halo.profile_spline.SplineProfile`          An arbitrary density profile     ---                      ---
+:class:`halo.profile_einasto.EinastoProfile`        Einasto profile                 Einasto 1965              TrAlm 5, 87
+:class:`halo.profile_hernquist.HernquistProfile`    Hernquist profile               Hernquist 1990            ApJ 356, 359
+:class:`halo.profile_nfw.NFWProfile`                Navarro-Frenk-White profile     Navarro et al. 1997       ApJ 490, 493
+:class:`halo.profile_dk14.DK14Profile`              Diemer & Kravtsov 2014 profile  Diemer & Kravtsov 2014    ApJ 789, 1
+=================================================== =============================== ========================= =============
 
 ---------------------------------------------------------------------------------------------------
 Adding an outer profile
@@ -158,5 +159,6 @@ Specific forms of the density profile
 
     halo_profile_spline
     halo_profile_einasto
+    halo_profile_hernquist
     halo_profile_nfw
     halo_profile_dk14
