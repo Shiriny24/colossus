@@ -45,7 +45,7 @@ from colossus.halo import mass_so
 
 ###################################################################################################
 
-MODELS = ['tinker08', 'watson13_fof']
+models = ['tinker08', 'watson13_fof']
 """A list of all implemented mass function models."""
 
 ###################################################################################################
