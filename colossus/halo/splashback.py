@@ -43,9 +43,9 @@ models can return a number of different quantities, identified by the following 
 - ``MspM200m``, the splashback mass in units of :math:`M_{\\rm 200m}`
 - ``Deltasp``, the enclosed overdensity wrt. the mean density of the universe,
   :math:`\\Delta_{\\rm sp} = M_{\\rm sp} / (4 \\pi R_{\\rm sp}^3 / 3) / \\rho_{\\rm m}`
-- ``RspR200m-1s``, the 68% scatter in :math:`R_{\\rm sp}/R_{\\rm 200m}`
-- ``MspM200m-1s``, the 68% scatter in :math:`M_{\\rm sp}/M_{\\rm 200m}`
-- ``Deltasp-1s``, the 68% scatter in :math:`\\Delta_{\\rm sp}`
+- ``RspR200m-1s``, the 68% scatter in :math:`R_{\\rm sp}/R_{\\rm 200m}` in dex
+- ``MspM200m-1s``, the 68% scatter in :math:`M_{\\rm sp}/M_{\\rm 200m}` in dex
+- ``Deltasp-1s``, the 68% scatter in :math:`\\Delta_{\\rm sp}` in dex
 
 Not all models can return all of these quantities (see table below). Moreover, depending on the 
 model the quantities can be computed as a function of different input variables, namely
@@ -269,6 +269,8 @@ def splashbackModel(qy, Gamma = None, nu200m = None, z = None,
 				raise Exception('If z is an array, it must have the same dimensions as Gamma.')
 			if nu200m is not None and utilities.isArray(nu200m) and len(nu200m) != len(Gamma):
 				raise Exception('If nu200m is an array, it must have the same dimensions as Gamma.')
+		elif utilities.isArray(nu200m):
+			Gamma = np.ones_like(nu200m) * Gamma
 		mask = (Gamma >= m.min_Gamma) & (Gamma <= m.max_Gamma)
 		if nu200m is not None:
 			mask = mask & (nu200m >= m.min_nu200m) & (nu200m <= m.max_nu200m)
