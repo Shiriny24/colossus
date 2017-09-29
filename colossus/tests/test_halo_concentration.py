@@ -33,7 +33,7 @@ class TCConcentration(test_colossus.ColosssusTestCase):
 		N_array = len(M_many)
 		mdefs = ['200c', 'vir', '200m', '345m']
 		z = 0.0
-		models = concentration.MODELS
+		models = concentration.models
 		
 		for i in range(len(models)):
 			for j in range(len(mdefs)):
@@ -72,15 +72,15 @@ class TCConcentration(test_colossus.ColosssusTestCase):
 		M = 1E12
 		z = 0.5
 		mdef = '257m'
-		models = concentration.MODELS
+		models = concentration.models
 		for i in range(len(models)):
 			msg = 'Failure in model = %s' % (models[i])
 			c = concentration.concentration(M, mdef, z = z, model = models[i], range_return = False, range_warning = False)
 			if models[i] == 'diemer15':
 				self.assertAlmostEqual(c, 6.6521444198414388, msg = msg)
-			elif models[i] == 'klypin15_nu':
+			elif models[i] == 'klypin16_nu':
 				self.assertAlmostEqual(c, 6.4588364940434486, msg = msg)
-			elif models[i] == 'klypin15_m':
+			elif models[i] == 'klypin16_m':
 				self.assertAlmostEqual(c, 6.2107920072554768, msg = msg)
 			elif models[i] == 'dutton14':
 				self.assertAlmostEqual(c, 7.5907186889384706, msg = msg)

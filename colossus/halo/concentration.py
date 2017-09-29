@@ -59,9 +59,9 @@ parameter to the :func:`concentration` function:
 ============== ================ ================== =========== ========== ======================================
 ID             Native mdefs     M range (z=0)      z range     Cosmology  Paper
 ============== ================ ================== =========== ========== ======================================
+klypin16_nu    200c, vir        M > 1E10           0 < z < 5   Pl1        Klypin et al. 2016 (MNRAS 457, 4340)
+klypin16_m     200c, vir        M > 1E10           0 < z < 5   Pl1/WMAP7  Klypin et al. 2016 (MNRAS 457, 4340)
 diemer15       200c             Any                Any         Any        Diemer & Kravtsov 2015 (ApJ 799, 108)
-klypin15_nu    200c, vir        M > 1E10           0 < z < 5   Pl1        Klypin et al. 2014 (arXiv 1411.4001)
-klypin15_m     200c, vir        M > 1E10           0 < z < 5   Pl1/WMAP7  Klypin et al. 2014 (arXiv 1411.4001)
 dutton14       200c, vir        M > 1E10           0 < z < 5   Pl1        Dutton & Maccio 2014 (MNRAS 441, 3359)
 bhattacharya13 200c, vir, 200m  2E12 < M < 2E15    0 < z < 2   WMAP7      Bhattacharya et al. 2013 (ApJ 766, 32)
 prada12        200c             Any                Any         Any        Prada et al. 2012 (MNRAS 423, 3018)
@@ -92,7 +92,7 @@ from colossus.halo import mass_defs
 
 ###################################################################################################
 
-models = ['diemer15', 'klypin15_nu', 'klypin15_m', 'dutton14', 'bhattacharya13', 'prada12', 
+models = ['klypin16_nu', 'klypin16_m', 'diemer15', 'dutton14', 'bhattacharya13', 'prada12', 
 		'klypin11', 'duffy08', 'bullock01']
 """A list of all implemented concentration models."""
 
@@ -180,23 +180,24 @@ def concentration(M, mdef, z,
 
 	# ---------------------------------------------------------------------------------------------
 	# Distinguish between models
-	if model == 'diemer15':
+		
+	if model == 'klypin16_nu':
+		mdefs_model = ['200c', 'vir']
+		func = modelKlypin16fromNu
+		args = (z,)
+		limited = True
+
+	elif model == 'klypin16_m':
+		mdefs_model = ['200c', 'vir']
+		func = modelKlypin16fromM
+		args = (z,)
+		limited = True
+	
+	elif model == 'diemer15':
 		mdefs_model = ['200c']
 		func = modelDiemer15fromM
 		args = (z, statistic)
 		limited = False
-		
-	elif model == 'klypin15_nu':
-		mdefs_model = ['200c', 'vir']
-		func = modelKlypin15fromNu
-		args = (z,)
-		limited = True
-
-	elif model == 'klypin15_m':
-		mdefs_model = ['200c', 'vir']
-		func = modelKlypin15fromM
-		args = (z,)
-		limited = True
 
 	elif model == 'dutton14':
 		mdefs_model = ['200c', 'vir']
@@ -329,7 +330,148 @@ def concentration(M, mdef, z,
 		return c
 
 ###################################################################################################
-# DIEMER & KRAVTSOV 2014 MODEL
+# KLYPIN ET AL 2015 MODELS
+###################################################################################################
+
+def modelKlypin16fromNu(M, z, mdef):
+	"""
+	The peak height-based fits of Klypin et al. 2016.
+	
+	Klypin et al. 2016 suggest both peak height-based and mass-based fitting functions for 
+	concentration; this function implements the peak height-based version. For this version, the 
+	fits are only given for the ``planck13`` cosmology. Thus, the user must set this cosmology
+	before evaluating this model. The best-fit parameters refer to the mass-selected samples of 
+	all halos (as opposed to :math:`v_{max}`-selected samples, or relaxed halos).
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	M: array_like
+		Halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
+	z: float
+		Redshift
+	mdef: str
+		The mass definition in which the mass is given, and in which concentration is returned.
+		Can be ``200c`` or ``vir``.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	c: array_like
+		Halo concentration; has the same dimensions as M.
+	mask: array_like
+		Boolean, has the same dimensions as M. Where ``False``, one or more input parameters were
+		outside the range where the model was calibrated, and the returned concentration may not 
+		be reliable.
+	
+	See also
+	-----------------------------------------------------------------------------------------------
+	modelKlypin16fromM: An alternative fitting function suggested in the same paper.
+	"""
+
+	if mdef == '200c':
+		z_bins = [0.0, 0.38, 0.5, 1.0, 1.44, 2.5, 2.89, 5.41]
+		a0_bins = [0.4, 0.65, 0.82, 1.08, 1.23, 1.6, 1.68, 1.7]
+		b0_bins = [0.278, 0.375, 0.411, 0.436, 0.426, 0.375, 0.360, 0.351]
+	elif mdef == 'vir':
+		z_bins = [0.0, 0.38, 0.5, 1.0, 1.44, 2.5, 5.5]
+		a0_bins = [0.75, 0.9, 0.97, 1.12, 1.28, 1.52, 1.62]
+		b0_bins = [0.567, 0.541, 0.529, 0.496, 0.474, 0.421, 0.393]
+	else:
+		msg = 'Invalid mass definition for Klypin et al 2016 peak height-based model, %s.' % mdef
+		raise Exception(msg)
+
+	nu = lss.peakHeight(M, z)
+	sigma = constants.DELTA_COLLAPSE / nu
+	a0 = np.interp(z, z_bins, a0_bins)
+	b0 = np.interp(z, z_bins, b0_bins)
+
+	sigma_a0 = sigma / a0
+	c = b0 * (1.0 + 7.37 * sigma_a0**0.75) * (1.0 + 0.14 * sigma_a0**-2.0)
+	
+	mask = (M > 1E10) & (z <= z_bins[-1])
+
+	return c, mask
+
+###################################################################################################
+
+def modelKlypin16fromM(M, z, mdef):
+	"""
+	The mass-based fits of Klypin et al. 2016.
+	
+	Klypin et al. 2016 suggest both peak height-based and mass-based fitting functions for 
+	concentration; this function implements the mass-based version. For this version, the 
+	fits are only given for the ``planck13`` and ``bolshoi`` cosmologies. Thus, the user must set 
+	one of those cosmologies before evaluating this model. The best-fit parameters refer to the 
+	mass-selected samples of all halos (as opposed to :math:`v_{max}`-selected samples, or relaxed 
+	halos).
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	M: array_like
+		Halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
+	z: float
+		Redshift
+	mdef: str
+		The mass definition in which the mass(es) are given, and in which concentration is returned.
+		Can be ``200c`` or ``vir``.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	c: array_like
+		Halo concentration; has the same dimensions as M.
+	mask: array_like
+		Boolean, has the same dimensions as M. Where ``False``, one or more input parameters were
+		outside the range where the model was calibrated, and the returned concentration may not 
+		be reliable.
+	
+	See also
+	-----------------------------------------------------------------------------------------------
+	modelKlypin16fromNu: An alternative fitting function suggested in the same paper.
+	"""
+	if not mdef in ['200c', 'vir']:
+		msg = 'Invalid mass definition for Klypin et al 2016 m-based model, %s.' % mdef
+		raise Exception(msg)
+
+	cosmo = cosmology.getCurrent()
+
+	if cosmo.name == 'planck13':
+		z_bins = [0.0, 0.35, 0.5, 1.0, 1.44, 2.15, 2.5, 2.9, 4.1, 5.4]
+		if mdef == '200c':
+			C0_bins = [7.4, 6.25, 5.65, 4.3, 3.53, 2.7, 2.42, 2.2, 1.92, 1.65]
+			gamma_bins = [0.120, 0.117, 0.115, 0.110, 0.095, 0.085, 0.08, 0.08, 0.08, 0.08]
+			M0_bins = [5.5E5, 1E5, 2E4, 900.0, 300.0, 42.0, 17.0, 8.5, 2.0, 0.3]
+		elif mdef == 'vir':
+			C0_bins = [9.75, 7.25, 6.5, 4.75, 3.8, 3.0, 2.65, 2.42, 2.1, 1.86]
+			gamma_bins = [0.110, 0.107, 0.105, 0.1, 0.095, 0.085, 0.08, 0.08, 0.08, 0.08]
+			M0_bins = [5E5, 2.2E4, 1E4, 1000.0, 210.0, 43.0, 18.0, 9.0, 1.9, 0.42]
+			
+	elif cosmo.name == 'bolshoi':
+		z_bins = [0.0, 0.5, 1.0, 1.44, 2.15, 2.5, 2.9, 4.1]
+		if mdef == '200c':
+			C0_bins = [6.6, 5.25, 3.85, 3.0, 2.1, 1.8, 1.6, 1.4]
+			gamma_bins = [0.110, 0.105, 0.103, 0.097, 0.095, 0.095, 0.095, 0.095]
+			M0_bins = [2E6, 6E4, 800.0, 110.0, 13.0, 6.0, 3.0, 1.0]
+		elif mdef == 'vir':
+			C0_bins = [9.0, 6.0, 4.3, 3.3, 2.3, 2.1, 1.85, 1.7]
+			gamma_bins = [0.1, 0.1, 0.1, 0.1, 0.095, 0.095, 0.095, 0.095]
+			M0_bins = [2E6, 7E3, 550.0, 90.0, 11.0, 6.0, 2.5, 1.0]
+		
+	else:
+		msg = 'Invalid cosmology for Klypin et al 2016 m-based model, %s.' % cosmo.name
+		raise Exception(msg)
+
+	C0 = np.interp(z, z_bins, C0_bins)
+	gamma = np.interp(z, z_bins, gamma_bins)
+	M0 = np.interp(z, z_bins, M0_bins)
+	M0 *= 1E12
+
+	c = C0 * (M / 1E12)**-gamma * (1.0 + (M / M0)**0.4)
+	
+	mask = (M > 1E10) & (z <= z_bins[-1])
+
+	return c, mask
+
+###################################################################################################
+# DIEMER & KRAVTSOV 2015 MODEL
 ###################################################################################################
 
 DIEMER15_KAPPA = 0.69
@@ -514,147 +656,6 @@ def _diemer15_n_fromnu(nu, z):
 	n = _diemer15_n_fromM(M)
 	
 	return n
-
-###################################################################################################
-# KLYPIN ET AL 2015 MODELS
-###################################################################################################
-
-def modelKlypin15fromNu(M, z, mdef):
-	"""
-	The peak height-based fits of Klypin et al. 2015.
-	
-	Klypin et al. 2015 suggest both peak height-based and mass-based fitting functions for 
-	concentration; this function implements the peak height-based version. For this version, the 
-	fits are only given for the ``planck13`` cosmology. Thus, the user must set this cosmology
-	before evaluating this model. The best-fit parameters refer to the mass-selected samples of 
-	all halos (as opposed to :math:`v_{max}`-selected samples, or relaxed halos).
-
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	M: array_like
-		Halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
-	z: float
-		Redshift
-	mdef: str
-		The mass definition in which the mass is given, and in which concentration is returned.
-		Can be ``200c`` or ``vir``.
-		
-	Returns
-	-----------------------------------------------------------------------------------------------
-	c: array_like
-		Halo concentration; has the same dimensions as M.
-	mask: array_like
-		Boolean, has the same dimensions as M. Where ``False``, one or more input parameters were
-		outside the range where the model was calibrated, and the returned concentration may not 
-		be reliable.
-	
-	See also
-	-----------------------------------------------------------------------------------------------
-	modelKlypin15fromM: An alternative fitting function suggested in the same paper.
-	"""
-
-	if mdef == '200c':
-		z_bins = [0.0, 0.38, 0.5, 1.0, 1.44, 2.5, 2.89, 5.41]
-		a0_bins = [0.4, 0.65, 0.82, 1.08, 1.23, 1.6, 1.68, 1.7]
-		b0_bins = [0.278, 0.375, 0.411, 0.436, 0.426, 0.375, 0.360, 0.351]
-	elif mdef == 'vir':
-		z_bins = [0.0, 0.38, 0.5, 1.0, 1.44, 2.5, 5.5]
-		a0_bins = [0.75, 0.9, 0.97, 1.12, 1.28, 1.52, 1.62]
-		b0_bins = [0.567, 0.541, 0.529, 0.496, 0.474, 0.421, 0.393]
-	else:
-		msg = 'Invalid mass definition for Klypin et al 2015 peak height-based model, %s.' % mdef
-		raise Exception(msg)
-
-	nu = lss.peakHeight(M, z)
-	sigma = constants.DELTA_COLLAPSE / nu
-	a0 = np.interp(z, z_bins, a0_bins)
-	b0 = np.interp(z, z_bins, b0_bins)
-
-	sigma_a0 = sigma / a0
-	c = b0 * (1.0 + 7.37 * sigma_a0**0.75) * (1.0 + 0.14 * sigma_a0**-2.0)
-	
-	mask = (M > 1E10) & (z <= z_bins[-1])
-
-	return c, mask
-
-###################################################################################################
-
-def modelKlypin15fromM(M, z, mdef):
-	"""
-	The mass-based fits of Klypin et al. 2015.
-	
-	Klypin et al. 2015 suggest both peak height-based and mass-based fitting functions for 
-	concentration; this function implements the mass-based version. For this version, the 
-	fits are only given for the ``planck13`` and ``bolshoi`` cosmologies. Thus, the user must set 
-	one of those cosmologies before evaluating this model. The best-fit parameters refer to the 
-	mass-selected samples of all halos (as opposed to :math:`v_{max}`-selected samples, or relaxed 
-	halos).
-
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	M: array_like
-		Halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
-	z: float
-		Redshift
-	mdef: str
-		The mass definition in which the mass(es) are given, and in which concentration is returned.
-		Can be ``200c`` or ``vir``.
-		
-	Returns
-	-----------------------------------------------------------------------------------------------
-	c: array_like
-		Halo concentration; has the same dimensions as M.
-	mask: array_like
-		Boolean, has the same dimensions as M. Where ``False``, one or more input parameters were
-		outside the range where the model was calibrated, and the returned concentration may not 
-		be reliable.
-	
-	See also
-	-----------------------------------------------------------------------------------------------
-	modelKlypin15fromNu: An alternative fitting function suggested in the same paper.
-	"""
-	if not mdef in ['200c', 'vir']:
-		msg = 'Invalid mass definition for Klypin et al 2015 m-based model, %s.' % mdef
-		raise Exception(msg)
-
-	cosmo = cosmology.getCurrent()
-
-	if cosmo.name == 'planck13':
-		z_bins = [0.0, 0.35, 0.5, 1.0, 1.44, 2.15, 2.5, 2.9, 4.1, 5.4]
-		if mdef == '200c':
-			C0_bins = [7.4, 6.25, 5.65, 4.3, 3.53, 2.7, 2.42, 2.2, 1.92, 1.65]
-			gamma_bins = [0.120, 0.117, 0.115, 0.110, 0.095, 0.085, 0.08, 0.08, 0.08, 0.08]
-			M0_bins = [5.5E5, 1E5, 2E4, 900.0, 300.0, 42.0, 17.0, 8.5, 2.0, 0.3]
-		elif mdef == 'vir':
-			C0_bins = [9.75, 7.25, 6.5, 4.75, 3.8, 3.0, 2.65, 2.42, 2.1, 1.86]
-			gamma_bins = [0.110, 0.107, 0.105, 0.1, 0.095, 0.085, 0.08, 0.08, 0.08, 0.08]
-			M0_bins = [5E5, 2.2E4, 1E4, 1000.0, 210.0, 43.0, 18.0, 9.0, 1.9, 0.42]
-			
-	elif cosmo.name == 'bolshoi':
-		z_bins = [0.0, 0.5, 1.0, 1.44, 2.15, 2.5, 2.9, 4.1]
-		if mdef == '200c':
-			C0_bins = [6.6, 5.25, 3.85, 3.0, 2.1, 1.8, 1.6, 1.4]
-			gamma_bins = [0.110, 0.105, 0.103, 0.097, 0.095, 0.095, 0.095, 0.095]
-			M0_bins = [2E6, 6E4, 800.0, 110.0, 13.0, 6.0, 3.0, 1.0]
-		elif mdef == 'vir':
-			C0_bins = [9.0, 6.0, 4.3, 3.3, 2.3, 2.1, 1.85, 1.7]
-			gamma_bins = [0.1, 0.1, 0.1, 0.1, 0.095, 0.095, 0.095, 0.095]
-			M0_bins = [2E6, 7E3, 550.0, 90.0, 11.0, 6.0, 2.5, 1.0]
-		
-	else:
-		msg = 'Invalid cosmology for Klypin et al 2015 m-based model, %s.' % cosmo.name
-		raise Exception(msg)
-
-	C0 = np.interp(z, z_bins, C0_bins)
-	gamma = np.interp(z, z_bins, gamma_bins)
-	M0 = np.interp(z, z_bins, M0_bins)
-	M0 *= 1E12
-
-	c = C0 * (M / 1E12)**-gamma * (1.0 + (M / M0)**0.4)
-	
-	mask = (M > 1E10) & (z <= z_bins[-1])
-
-	return c, mask
 
 ###################################################################################################
 # DUTTON & MACCIO 2014 MODEL

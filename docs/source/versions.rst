@@ -30,3 +30,6 @@ Version 1.1
 * Some modules contain a MODELS dictionary or list naming all implemented fitting functions. For
   consistency, all occurrences of MODELS have been renamed to "models", affecting the concentration,
   splashback, and bias modules.
+* The klypin14_nu and klypin14_m concentration models were renamed to klypin16_nu and klypin16_m
+  to maintain compatibility with the publication of their paper.
+
