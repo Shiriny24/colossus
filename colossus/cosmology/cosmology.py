@@ -182,7 +182,7 @@ from colossus import defaults
 from colossus import settings
 from colossus.utils import utilities
 from colossus.utils import constants
-from colossus.utils import storage_unit
+from colossus.utils import storage as storage_unit
 
 ###################################################################################################
 # Global variables for cosmology object and pre-set cosmologies
