@@ -62,10 +62,6 @@ from colossus.utils import utilities
 
 ###################################################################################################
 
-# name = name for this user, doesn't have to be unique but makes file id easier
-# func_hashstring = return string that identifies the user uniquely
-# func_changed = execute when change in hash detected
-
 class StorageUser():
 	"""
 	A storage user object allows access to persistent and non-persistent storage.
@@ -75,10 +71,18 @@ class StorageUser():
 	module: str
 		The name of the module to which this user belongs. This name determines the cache sub-
 		directory where files will be stored.
-	storage: str
+	persistence: str
 		A combination of 'r' and 'w', e.g. 'rw' or '', indicating whether the storage is read 
 		and/or written from and to disk.
-		
+	func_name: function
+		A function that takes no parameters and returns the name of the user class.
+	func_hashstring: function
+		A function that takes no parameters and returns a unique string identifying the user class
+		and any of its properties that, if changed, should trigger a resetting of the storage. If 
+		the hash string changes, the storage is emptied.
+	func_changed: function
+		A function that takes no parameters and will be called if the hash string has been found to
+		have changed (see above).
 	"""
 	
 	def __init__(self, module, persistence, func_name, func_hashstring, func_changed):
@@ -107,7 +111,16 @@ class StorageUser():
 	###############################################################################################
 
 	def getHash(self):
+		"""
+		Get a unique string from the user class and convert it to a hash.
 		
+		Returns
+		-------------------------------------------------------------------------------------------
+		hash: str
+			A string that changes if the input string is changed, but can be much shorter than the 
+			input string.
+		"""
+			
 		hashable_string = self.func_hashstring()
 		hash = hashlib.md5(hashable_string.encode()).hexdigest()
 		
@@ -115,18 +128,31 @@ class StorageUser():
 
 	###############################################################################################
 
-	# Create a file name that is unique to this StorageUser. The hash must encode all necessary
-	# information, but a name for the user is added to make it easier to identify the files with a 
-	# user.
-
 	def getUniqueFilename(self):
+		"""
+		Create a unique filename for this storage user.
 		
+		Returns
+		-------------------------------------------------------------------------------------------
+		filename: str
+			A filename that is unique to this module, storage user name, and the properties of the 
+			user as encapsulated in its hashable string.
+		"""
+					
 		return self.cache_dir + self.func_name() + '_' + self.getHash()
 	
 	###############################################################################################
 	
 	def checkForChangedHash(self):
-
+		"""
+		Check whether the properties of the user class have changed.
+		
+		Returns
+		-------------------------------------------------------------------------------------------
+		has_changed: bool
+			Returns True if the hash has changed compared to the last stored hash.
+		"""
+			
 		hash_new = self.getHash()
 		has_changed = (hash_new != self.hash_current)
 		
@@ -134,11 +160,11 @@ class StorageUser():
 	
 	###############################################################################################
 
-	# Load stored objects. This function is called during the __init__() routine, and if a change
-	# in the storage user is detected.
-
 	def resetStorage(self):
-
+		"""
+		Reset the storage arrays and load persistent storage from file.
+		"""
+			
 		# Reset the test hash and storage containers. There are two containes, one for objects
 		# that are stored in a pickle file, and one for those that will be discarded when the 
 		# class is destroyed.
@@ -171,17 +197,60 @@ class StorageUser():
 	
 	###############################################################################################
 
-	# Permanent storage system for objects such as 2-dimensional data tables. If an object is 
-	# already stored in memory, return it. If not, try to load it from file, otherwise return None.
-	# Certain operations can already be performed on certain objects, so that they do not need to 
-	# be repeated unnecessarily, for example:
-	#
-	# interpolator = True	Instead of a 2-dimensional table, return a spline interpolator that can
-	#                       be used to evaluate the table.
-	# inverse = True        Return an interpolator that gives x(y) instead of y(x)
-	
-	def getStoredObject(self, object_name, interpolator = False, inverse = False):
+	def storeObject(self, object_name, object_data, persistent = True):
+		"""
+		Save an object in memory and/or file storage.
 
+		The object is written to a dictionary in memory, and also to file if persistent == True
+		(unless persistence does not contain 'w'). 
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		object_name: str
+			The name of the object by which it can be retrieved later.
+		object_data: any
+			The object; can be any picklable data type.
+		persistent: bool
+			If true, store this object on disk (if persistence is activated globally).
+		"""
+	
+		if persistent:
+			self.storage_pers[object_name] = object_data
+			
+			if self.persistence_write:
+				filename_pickle = self.getUniqueFilename()
+				output_file = open(filename_pickle, "wb")
+				pickle.dump(self.storage_pers, output_file, pickle.HIGHEST_PROTOCOL)
+				output_file.close()  
+
+		else:
+			self.storage_temp[object_name] = object_data
+
+		return
+		
+	###############################################################################################
+
+	def getStoredObject(self, object_name, interpolator = False, inverse = False):
+		"""
+		Retrieve a stored object from memory or file.
+
+		If an object is already stored in memory, return it. If not, try to load it from file, 
+		otherwise return None. If the object is a 2-dimensional table, this function can also 
+		return an interpolator.
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		interpolator: bool
+			If True, return a spline interpolator instead of the underlying table.
+		inverse: bool
+			Return an interpolator that gives x(y) instead of y(x).
+	
+		Returns
+		-------------------------------------------------------------------------------------------
+		object_data: any
+			Returns the loaded object, and interpolator, or None if no object was found.
+		"""
+			
 		# First, check for changes in the hash. If changes are detected, first call the user's 
 		# change callback function and then reset the storage.
 		if self.checkForChangedHash():
@@ -263,34 +332,7 @@ class StorageUser():
 				object_data = None
 				
 		return object_data
-	
-	###############################################################################################
 
-	# Save an object in memory and file storage. If persistent == True, this object is written to 
-	# file storage (unless persistence != 'w'), and will be loaded the next time the same cosmology
-	# is loaded. If persistent == False, the object is stored non-persistently.
-	#
-	# Note that all objects are reset if the cosmology changes. Thus, this function should be used
-	# for ALL data that depend on cosmological parameters.
-	
-	def storeObject(self, object_name, object_data, persistent = True):
-
-		if persistent:
-			self.storage_pers[object_name] = object_data
-			
-			if self.persistence_write:
-				# Store in file. We do not wish to save the entire storage dictionary, as there might be
-				# user-defined objects in it.
-				filename_pickle = self.getUniqueFilename()
-				output_file = open(filename_pickle, "wb")
-				pickle.dump(self.storage_pers, output_file, pickle.HIGHEST_PROTOCOL)
-				output_file.close()  
-
-		else:
-			self.storage_temp[object_name] = object_data
-
-		return
-	
 ###################################################################################################
 
 def getCacheDir(module = None):

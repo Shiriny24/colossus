@@ -33,4 +33,5 @@ Version 1.1
 * The klypin14_nu and klypin14_m concentration models were renamed to klypin16_nu and klypin16_m
   to maintain compatibility with the publication of their paper.
 * The text_output option was removed from the cosmology object.
-* There is a new storage_unit module as part of utilities.
+* There is a new storage_unit module as part of utilities. The storage parameter in the cosmology
+  module was renamed to persistence, as was the global setting STORAGE (renamed to PERSISTENCE).

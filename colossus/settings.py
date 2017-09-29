@@ -22,9 +22,9 @@ case), the code directory is used."""
 # PERSISTENT STORAGE
 ###################################################################################################
 
-STORAGE = 'rw'
+PERSISTENCE = 'rw'
 """This parameter determines whether colossus stores persistent files such as the cosmology cache.
 The parameter can take on any combination of read ('r') and write ('w'), such as 'rw' (read and 
-write, the default), 'r' (read only), 'w' (write only), or '' (no storage). Note that this 
+write, the default), 'r' (read only), 'w' (write only), or '' (no persistence). Note that this 
 parameter is used as a default, but can still be changed for individual colossus modules or 
 objects, such as cosmology objects."""

@@ -2,5 +2,5 @@
 Storage
 =====================================
 
-.. automodule:: utils.storage_unit
+.. automodule:: utils.storage
     :members:

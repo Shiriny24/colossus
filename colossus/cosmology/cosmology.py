@@ -148,23 +148,24 @@ Performance optimization and accuracy
 
 This module is optimized for fast performance, particularly in computationally intensive
 functions such as the correlation function. Almost all quantities are, by 
-default, tabulated, stored in files, and re-loaded when the same cosmology is set again. For 
-some rare applications (for example, MCMC chains where functions are evaluated few times, but for 
-a large number of cosmologies), the user can turn this behavior off::
+default, tabulated, stored in files, and re-loaded when the same cosmology is set again (see the 
+:mod:`utils.storage` module for details). For some rare applications (for example, MCMC chains 
+where functions are evaluated few times, but for a large number of cosmologies), the user can turn 
+this behavior off::
 
-	cosmo = Cosmology.setCosmology('WMAP9', {"interpolation": False, "storage": ''})
+	cosmo = Cosmology.setCosmology('WMAP9', {'interpolation': False, 'persistence': ''})
 
-For more details, please see the documentation of the ``interpolation`` and ``storage`` parameters.
-In order to turn off the interpolation temporarily, the user can simply switch the ``interpolation``
-parameter off::
+For more details, please see the documentation of the ``interpolation`` and ``persistence`` 
+parameters. In order to turn off the interpolation temporarily, the user can simply switch the 
+``interpolation`` parameter off::
 	
 	cosmo.interpolation = False
 	Pk = cosmo.matterPowerSpectrum(k)
 	cosmo.interpolation = True
 	
 In this example, the power spectrum is evaluated directly without interpolation. The 
-interpolation is accurate to better than 0.2% unless specifically noted in the function 
-documentation, meaning that it is very rarely necessary to use the exact routines. 
+interpolation is fairly accurate (see specific notes in the function documentation), meaning that 
+it is very rarely necessary to use the exact routines. 
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -292,7 +293,7 @@ class Cosmology(object):
 		Tcmb0 = defaults.COSMOLOGY_TCMB0, Neff = defaults.COSMOLOGY_NEFF,
 		power_law = False, power_law_n = 0.0,
 		print_info = False, print_warnings = True,
-		interpolation = True, persistence = settings.STORAGE, storage = None):
+		interpolation = True, persistence = settings.PERSISTENCE, storage = None):
 		
 		if name is None:
 			raise Exception('A name for the cosmology must be set.')
@@ -369,7 +370,7 @@ class Cosmology(object):
 		# Make sure flatness is obeyed
 		self._ensureConsistency()
 		
-		# Flag for interpolation tables, storage, printing etc
+		# Flag for interpolation tables, printing etc
 		self.interpolation = interpolation
 		self.print_info = print_info
 		self.print_warnings = print_warnings
