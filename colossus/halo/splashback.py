@@ -91,7 +91,8 @@ parameter to the :func:`splashbackModel` and :func:`splashbackRadius` functions:
 ============== ==================== =========================== =========================================
 ID             Predicts...          ...as a function of...      Reference
 ============== ==================== =========================== =========================================
-diemer17       Rsp/Msp, Scatter     (Gamma, z, M) or (z, M)     Diemer et al. 2017
+diemer17       Rsp/Msp, Scatter     (Gamma, z, M) or (z, M)     `Diemer et al. 2017 <http://adsabs.harvard.edu/abs/2017ApJ...843..140D>`_
+mansfield17    Rsp/Msp, Scatter     (Gamma, z, M)               `Mansfield et al. 2017 <http://adsabs.harvard.edu/abs/2017ApJ...841...34M>`_
 shi16          Rsp/Msp              (Gamma, z)                  `Shi 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.459.3711S>`_
 more15         Rsp/Msp              (Gamma, z, M) or (z, M)     `More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`_
 adhikari14     Rsp/Msp              (Gamma, z)                  `Adhikari et al. 2014 <http://adsabs.harvard.edu/abs/2014JCAP...11..019A>`_
