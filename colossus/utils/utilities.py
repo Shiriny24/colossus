@@ -14,8 +14,6 @@ import numpy as np
 import sys
 import six
 
-from colossus import settings
-
 ###################################################################################################
 
 def printLine():
@@ -26,43 +24,6 @@ def printLine():
 	print('-------------------------------------------------------------------------------------')
 
 	return
-
-###################################################################################################
-
-def getCacheDir(module = None):
-	"""
-	Get a directory for the persistent caching of data. The function attempts to locate the home 
-	directory and (if necessary) create a .colossus sub-directory. In the rare case where that 
-	fails, the location of this code file is used as a base directory.
-
-	Parameters
-	---------------------------
-	module: string
-		The name of the module that is requesting this cache directory. Each module has its own
-		directory in order to avoid name conflicts.
-	
-	Returns
-	-------
-	path : string
-		The cache directory.
-	"""
-	
-	if settings.BASE_DIR is None:
-		base_dir = getHomeDir()
-		if base_dir is None:
-			base_dir = getCodeDir()
-	else:
-		base_dir = settings.BASE_DIR
-		
-	cache_dir = base_dir + '/.colossus/cache/'
-	
-	if module is not None:
-		cache_dir += module + '/'
-
-	if not os.path.exists(cache_dir):
-		os.makedirs(cache_dir)
-	
-	return cache_dir
 
 ###################################################################################################
 

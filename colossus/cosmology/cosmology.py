@@ -173,19 +173,16 @@ Module reference
 
 ###################################################################################################
 
-import os
 import numpy as np
 import scipy.integrate
 import scipy.special
-import scipy.interpolate
-import hashlib
-import pickle
 import warnings
 
 from colossus import defaults
 from colossus import settings
 from colossus.utils import utilities
 from colossus.utils import constants
+from colossus.utils import storage_unit
 
 ###################################################################################################
 # Global variables for cosmology object and pre-set cosmologies
@@ -276,23 +273,17 @@ class Cosmology(object):
 		However, many functions will be *much* slower if this setting is False, please use it only 
 		if absolutely necessary. Furthermore, the derivative functions of :math:`P(k)`, 
 		:math:`\sigma(R)` etc will not work if ``interpolation == False``.
-	storage: str 
+	persistence: str 
 		By default, interpolation tables and other data are stored in a permanent file for
 		each cosmology. This avoids re-computing the tables when the same cosmology is set again. 
 		However, if either read or write file access is to be avoided (for example in MCMC chains),
 		the user can set this parameter to any combination of read ('r') and write ('w'), such as 
-		'rw' (read and write, the default), 'r' (read only), 'w' (write only), or '' (no storage).
+		'rw' (read and write, the default), 'r' (read only), 'w' (write only), or '' (no 
+		persistence).
 	print_info: bool
 		Output information to the console.
 	print_warnings: bool
 		Output warnings to the console.
-	text_output:
-		If True, all persistent data (such as lookup tables for :math:`\sigma(R)` etc) is written 
-		into named text files in addition to the default storage system. This feature allows the 
-		use of these tables outside of this module. *Warning*: Be careful with the text_output 
-		feature. Changes in cosmology are not necessarily reflected in the text file names, and 
-		they can thus overwrite the correct values. Always remove the text files from the directory 
-		after use. 
 	"""
 	
 	def __init__(self, name = None,
@@ -301,7 +292,7 @@ class Cosmology(object):
 		Tcmb0 = defaults.COSMOLOGY_TCMB0, Neff = defaults.COSMOLOGY_NEFF,
 		power_law = False, power_law_n = 0.0,
 		print_info = False, print_warnings = True,
-		interpolation = True, storage = settings.STORAGE, text_output = False):
+		interpolation = True, persistence = settings.STORAGE, storage = None):
 		
 		if name is None:
 			raise Exception('A name for the cosmology must be set.')
@@ -380,18 +371,15 @@ class Cosmology(object):
 		
 		# Flag for interpolation tables, storage, printing etc
 		self.interpolation = interpolation
-		self.text_output = text_output
 		self.print_info = print_info
 		self.print_warnings = print_warnings
 		
-		if storage in [True, False]:
-			raise DeprecationWarning('The storage parameter is no longer boolean, but a combination of r and w, such as "rw".')
-		for l in storage:
-			if not l in ['r', 'w']:
-				raise Exception('The storage parameter contains an unknown letter %c.' % l)
-		self.storage_read = ('r' in storage)
-		self.storage_write = ('w' in storage)
-		
+		# Create a storage object
+		if storage is not None:
+			warnings.warn('The storage parameter is deprecated, it was renamed to persistence.')
+		self.storageUser = storage_unit.StorageUser('cosmology', persistence, self.getName, 
+									self._getHashableString, self._ensureConsistency)
+				
 		# Lookup table for functions of z. This table runs from the future (a = 200.0) to 
 		# a = 0.005. Due to some interpolation errors at the extrema of the range, the table 
 		# runs to slightly lower and higher z than the interpolation is allowed for.
@@ -420,15 +408,6 @@ class Cosmology(object):
 		self.R_xi = [1E-3, 5E1, 5E2]
 		self.R_xi_Nbins = [30, 40]
 		self.accuracy_xi = 1E-5
-		
-		# Some functions permanently store lookup tables for faster execution. For this purpose,
-		# we compute and save the storage path. 
-		if self.storage_read or self.storage_write:
-			self.cache_dir = utilities.getCacheDir(module = 'cosmology')
-		
-		# Note that the storage is active even if interpolation == False or storage == '', 
-		# since fields can still be stored non-persistently (without writing to file).
-		self._resetStorage()
 
 		return
 
@@ -447,6 +426,15 @@ class Cosmology(object):
 
 	###############################################################################################
 
+	def getName(self):
+		"""
+		Return the name of this cosmology.
+		"""
+		
+		return self.name
+
+	###############################################################################################
+
 	def checkForChangedCosmology(self):
 		"""
 		Check whether the cosmological parameters have been changed by the user. If there are 
@@ -454,12 +442,11 @@ class Cosmology(object):
 		re-computed if necessary.
 		"""
 		
-		hash_new = self._getHash()
-		if hash_new != self.hash_current:
+		if self.storageUser.checkForChangedHash():
 			if self.print_warnings:
 				print("Cosmology: Detected change in cosmological parameters.")
 			self._ensureConsistency()
-			self._resetStorage()
+			self.storageUser.resetStorage()
 			
 		return
 	
@@ -486,193 +473,15 @@ class Cosmology(object):
 	# Compute a unique hash for the current cosmology name and parameters. If any of them change,
 	# the hash will change, causing an update of stored quantities.
 		
-	def _getHash(self):
+	def _getHashableString(self):
 	
 		param_string = "Name_%s_Flat_%s_relspecies_%s_Om0_%.4f_OL0_%.4f_Ob0_%.4f_H0_%.4f_sigma8_%.4f_ns_%.4f_Tcmb0_%.4f_Neff_%.4f_PL_%s_PLn_%.4f" \
 			% (self.name, str(self.flat), str(self.relspecies),
 			self.Om0, self.OL0, self.Ob0, self.H0, self.sigma8, self.ns, self.Tcmb0, self.Neff,
 			str(self.power_law), self.power_law_n)
-
-		hash_new = hashlib.md5(param_string.encode()).hexdigest()
 	
-		return hash_new
-	
-	###############################################################################################
+		return param_string
 
-	# Create a file name that is unique to this cosmology. While the hash encodes all necessary
-	# information, the cosmology name is added to make it easier to identify the files with a 
-	# cosmology.
-
-	def _getUniqueFilename(self):
-		
-		return self.cache_dir + self.name + '_' + self._getHash()
-	
-	###############################################################################################
-
-	# Load stored objects. This function is called during the __init__() routine, and if a change
-	# in cosmological parameters is detected.
-
-	def _resetStorage(self):
-
-		# Reset the test hash and storage containers. There are two containes, one for objects
-		# that are stored in a pickle file, and one for those that will be discarded when the 
-		# class is destroyed.
-		self.hash_current = self._getHash()
-		self.storage_pers = {}
-		self.storage_temp = {}
-		
-		# Check if there is a persistent object storage file. If so, load its contents into the
-		# storage dictionary. We only load from file if the user has not switched of storage, and
-		# if the user has not switched off interpolation.
-		#
-		# Loading the pickle can go wrong due to python version differences, so we generously
-		# catch any exceptions that may occur and simply delete the file in that case.
-		if self.storage_read and self.interpolation:
-			filename_pickle = self._getUniqueFilename()
-			if os.path.exists(filename_pickle):
-				try:
-					input_file = open(filename_pickle, "rb")
-					self.storage_pers = pickle.load(input_file)
-					input_file.close()
-				except Exception:
-					warnings.warn('Encountered file error while reading cache file. This usually \
-						happens when switching between python 2 and 3. Deleting cache file.')
-					try:
-						os.remove(filename_pickle)
-					except Exception:
-						pass
-		
-		return
-	
-	###############################################################################################
-
-	# Permanent storage system for objects such as 2-dimensional data tables. If an object is 
-	# already stored in memory, return it. If not, try to load it from file, otherwise return None.
-	# Certain operations can already be performed on certain objects, so that they do not need to 
-	# be repeated unnecessarily, for example:
-	#
-	# interpolator = True	Instead of a 2-dimensional table, return a spline interpolator that can
-	#                       be used to evaluate the table.
-	# inverse = True        Return an interpolator that gives x(y) instead of y(x)
-	
-	def _getStoredObject(self, object_name, interpolator = False, inverse = False):
-		
-		# Check for cosmology change
-		self.checkForChangedCosmology()
-
-		# Compute object name
-		object_id = object_name
-		if interpolator:
-			object_id += '_interpolator'
-		if inverse:
-			object_id += '_inverse'
-
-		# Find the object. There are multiple possibilities:
-		# - Check for the exact object the user requested (the object_id)
-		#   - Check in persistent storage
-		#   - Check in temporary storage (where interpolator / inverse objects live)
-		#   - Check in user text files
-		# - Check for the raw object (the object_name)
-		#   - Check in persistent storage
-		#   - Check in user text files
-		#   - Convert to the exact object, store in temporary storage
-		# - If all fail, return None
-
-		if object_id in self.storage_pers:	
-			object_data = self.storage_pers[object_id]
-		
-		elif object_id in self.storage_temp:	
-			object_data = self.storage_temp[object_id]
-
-		elif self.storage_read and os.path.exists(self.cache_dir + object_id):
-			object_data = np.loadtxt(self.cache_dir + object_id, usecols = (0, 1),
-									skiprows = 0, unpack = True)
-			self.storage_temp[object_id] = object_data
-			
-		else:
-
-			# We could not find the object ID anywhere. This can have two reasons: the object does
-			# not exist, or we must transform an existing object.
-			
-			if interpolator:
-				
-				# First, a safety check; no interpolation objects should ever be requested if 
-				# the user has switched off interpolation.
-				if not self.interpolation:
-					raise Exception('An interpolator object was requested even though interpolation is off.')
-				
-				# Try to find the object to transform. This object CANNOT be in temporary storage,
-				# but it can be in persistent or user storage.
-				object_raw = None
-				
-				if object_name in self.storage_pers:	
-					object_raw = self.storage_pers[object_name]
-		
-				elif self.storage_read and os.path.exists(self.cache_dir + object_name):
-					object_raw = np.loadtxt(self.cache_dir + object_name, usecols = (0, 1),
-									skiprows = 0, unpack = True)
-
-				if object_raw is None:
-					
-					# We cannot find an object to convert, return none.
-					object_data = None
-				
-				else:
-					
-					# Convert and store in temporary storage.
-					if inverse: 
-						
-						# There is a subtlety: the spline interpolator can't deal with decreasing 
-						# x-values, so if the y-values are decreasing, we reverse their order.
-						if object_raw[1][-1] < object_raw[1][0]:
-							object_raw = object_raw[:,::-1]
-						
-						object_data = scipy.interpolate.InterpolatedUnivariateSpline(object_raw[1],
-																					object_raw[0])
-					else:
-						object_data = scipy.interpolate.InterpolatedUnivariateSpline(object_raw[0],
-																					object_raw[1])
-					self.storage_temp[object_id] = object_data
-						
-			else:
-							
-				# The object is not in storage at all, and cannot be generated; return none.
-				object_data = None
-				
-		return object_data
-	
-	###############################################################################################
-
-	# Save an object in memory and file storage. If persistent == True, this object is written to 
-	# file storage (unless storage != 'w'), and will be loaded the next time the same cosmology
-	# is loaded. If persistent == False, the object is stored non-persistently.
-	#
-	# Note that all objects are reset if the cosmology changes. Thus, this function should be used
-	# for ALL data that depend on cosmological parameters.
-	
-	def _storeObject(self, object_name, object_data, persistent = True):
-
-		if persistent:
-			self.storage_pers[object_name] = object_data
-			
-			if self.storage_write:
-				# If the user has chosen text output, write a text file.
-				if self.text_output:
-					filename_text =  self.cache_dir + object_name
-					np.savetxt(filename_text, np.transpose(object_data), fmt = "%.8e")
-			
-				# Store in file. We do not wish to save the entire storage dictionary, as there might be
-				# user-defined objects in it.
-				filename_pickle = self._getUniqueFilename()
-				output_file = open(filename_pickle, "wb")
-				pickle.dump(self.storage_pers, output_file, pickle.HIGHEST_PROTOCOL)
-				output_file.close()  
-
-		else:
-			self.storage_temp[object_name] = object_data
-
-		return
-	
 	###############################################################################################
 	# Basic cosmology calculations
 	###############################################################################################
@@ -796,7 +605,7 @@ class Cosmology(object):
 	def _zInterpolator(self, table_name, func, inverse = False, future = True):
 
 		table_name = table_name + '_%s' % (self.name) 
-		interpolator = self._getStoredObject(table_name, interpolator = True, inverse = inverse)
+		interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, inverse = inverse)
 		
 		if interpolator is None:
 			if self.print_info:
@@ -811,10 +620,10 @@ class Cosmology(object):
 			z_table = 10**np.arange(log_min, log_max + bin_width, bin_width) - 1.0
 			x_table = func(z_table)
 			
-			self._storeObject(table_name, np.array([z_table, x_table]))
+			self.storageUser.storeObject(table_name, np.array([z_table, x_table]))
 			if self.print_info:
 				print("Lookup table completed.")
-			interpolator = self._getStoredObject(table_name, interpolator = True, inverse = inverse)
+			interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, inverse = inverse)
 		
 		return interpolator
 
@@ -1854,7 +1663,7 @@ class Cosmology(object):
 		else:
 			
 			table_name = 'matterpower_%s_%s' % (self.name, Pk_source)
-			table = self._getStoredObject(table_name)
+			table = self.storageUser.getStoredObject(table_name)
 
 			if table is None:
 				msg = "Could not load data table, %s." % (table_name)
@@ -1873,12 +1682,12 @@ class Cosmology(object):
 		# sigma8 etc.
 		if not ignore_norm:
 			norm_name = 'Pk_norm_%s_%s' % (self.name, Pk_source)
-			norm = self._getStoredObject(norm_name)
+			norm = self.storageUser.getStoredObject(norm_name)
 			if norm is None:
 				sigma_8Mpc = self._sigmaExact(8.0, filt = 'tophat', Pk_source = Pk_source,
 											exact_Pk = True, ignore_norm = True)
 				norm = (self.sigma8 / sigma_8Mpc)**2
-				self._storeObject(norm_name, norm, persistent = False)
+				self.storageUser.storeObject(norm_name, norm, persistent = False)
 
 			Pk *= norm
 
@@ -1895,7 +1704,7 @@ class Cosmology(object):
 			k_max = self.k_Pk[-1]
 		else:
 			table_name = 'matterpower_%s_%s' % (self.name, Pk_source)
-			table = self._getStoredObject(table_name)
+			table = self.storageUser.getStoredObject(table_name)
 			if table is None:
 				msg = "Could not load data table, %s." % (table_name)
 				raise Exception(msg)
@@ -1917,7 +1726,7 @@ class Cosmology(object):
 	def _matterPowerSpectrumInterpolator(self, Pk_source, inverse = False):
 		
 		table_name = 'Pk_%s_%s' % (self.name, Pk_source)
-		interpolator = self._getStoredObject(table_name, interpolator = True, inverse = inverse)
+		interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, inverse = inverse)
 	
 		if interpolator is None:
 			if self.print_info:
@@ -1945,7 +1754,7 @@ class Cosmology(object):
 			else:
 
 				user_table_name = 'matterpower_%s_%s' % (self.name, Pk_source)
-				user_table = self._getStoredObject(user_table_name)
+				user_table = self.storageUser.getStoredObject(user_table_name)
 				if user_table is None:
 					msg = "Could not load data table, %s." % (table_name)
 					raise Exception(msg)
@@ -1953,11 +1762,11 @@ class Cosmology(object):
 				data_Pk = user_table[1]
 							
 			table_ = np.array([np.log10(data_k), np.log10(data_Pk)])
-			self._storeObject(table_name, table_)
+			self.storageUser.storeObject(table_name, table_)
 			if self.print_info:
 				print("Cosmology.matterPowerSpectrum: Lookup table completed.")	
 			
-			interpolator = self._getStoredObject(table_name, interpolator = True, inverse = inverse)
+			interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, inverse = inverse)
 
 		return interpolator
 
@@ -2200,7 +2009,7 @@ class Cosmology(object):
 	def _sigmaInterpolator(self, j, Pk_source, filt, inverse):
 		
 		table_name = 'sigma%d_%s_%s_%s' % (j, self.name, Pk_source, filt)
-		interpolator = self._getStoredObject(table_name, interpolator = True, inverse = inverse)
+		interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, inverse = inverse)
 		
 		if interpolator is None:
 			if self.print_info:
@@ -2216,11 +2025,11 @@ class Cosmology(object):
 			for i in range(len(data_R)):
 				data_sigma[i] = self._sigmaExact(data_R[i], j = j, filt = filt, Pk_source = Pk_source)
 			table_ = np.array([np.log10(data_R), np.log10(data_sigma)])
-			self._storeObject(table_name, table_)
+			self.storageUser.storeObject(table_name, table_)
 			if self.print_info:
 				print("Cosmology.sigma: Lookup table completed.")
 
-			interpolator = self._getStoredObject(table_name, interpolator = True, inverse = inverse)
+			interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, inverse = inverse)
 	
 		return interpolator
 
@@ -2312,14 +2121,14 @@ class Cosmology(object):
 				# Get the limits in sigma from storage, or compute and store them. Using the 
 				# storage mechanism seems like overkill, but these numbers should be erased if 
 				# the cosmology changes and sigma is re-computed.
-				sigma_min = self._getStoredObject('sigma_min')
-				sigma_max = self._getStoredObject('sigma_max')
+				sigma_min = self.storageUser.getStoredObject('sigma_min')
+				sigma_max = self.storageUser.getStoredObject('sigma_max')
 				if sigma_min is None or sigma_min is None:
 					knots = interpolator.get_knots()
 					sigma_min = 10**np.min(knots)
 					sigma_max = 10**np.max(knots)
-					self._storeObject('sigma_min', sigma_min, persistent = False)
-					self._storeObject('sigma_max', sigma_max, persistent = False)
+					self.storageUser.storeObject('sigma_min', sigma_min, persistent = False)
+					self.storageUser.storeObject('sigma_max', sigma_max, persistent = False)
 				
 				# If the requested sigma is outside the range, give a detailed error message.
 				sigma_req = np.max(sigma_)
@@ -2576,7 +2385,7 @@ class Cosmology(object):
 	def _correlationFunctionInterpolator(self, Pk_source):
 
 		table_name = 'correlation_%s_%s' % (self.name, Pk_source)
-		interpolator = self._getStoredObject(table_name, interpolator = True)
+		interpolator = self.storageUser.getStoredObject(table_name, interpolator = True)
 		
 		if interpolator is None:
 			if self.print_info:
@@ -2602,10 +2411,10 @@ class Cosmology(object):
 			for i in range(len(data_R)):
 				data_xi[i] = self._correlationFunctionExact(data_R[i], Pk_source = Pk_source)
 			table_ = np.array([data_R, data_xi])
-			self._storeObject(table_name, table_)
+			self.storageUser.storeObject(table_name, table_)
 			if self.print_info:
 				print("correlationFunction: Lookup table completed.")
-			interpolator = self._getStoredObject(table_name, interpolator = True)
+			interpolator = self.storageUser.getStoredObject(table_name, interpolator = True)
 		
 		return interpolator
 
