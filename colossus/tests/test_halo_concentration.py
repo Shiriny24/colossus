@@ -77,23 +77,23 @@ class TCConcentration(test_colossus.ColosssusTestCase):
 			msg = 'Failure in model = %s' % (models[i])
 			c = concentration.concentration(M, mdef, z = z, model = models[i], range_return = False, range_warning = False)
 			if models[i] == 'diemer15':
-				self.assertAlmostEqual(c, 6.6521444198414388, msg = msg)
+				self.assertAlmostEqual(c, 6.650562036478e+00, msg = msg)
 			elif models[i] == 'klypin16_nu':
-				self.assertAlmostEqual(c, 6.4588364940434486, msg = msg)
+				self.assertAlmostEqual(c, 6.458981284624e+00, msg = msg)
 			elif models[i] == 'klypin16_m':
 				self.assertAlmostEqual(c, 6.2107920072554768, msg = msg)
 			elif models[i] == 'dutton14':
 				self.assertAlmostEqual(c, 7.5907186889384706, msg = msg)
 			elif models[i] == 'bhattacharya13':
-				self.assertAlmostEqual(c, 5.8630201567079006, msg = msg)
+				self.assertAlmostEqual(c, 5.862533568539e+00, msg = msg)
 			elif models[i] == 'prada12':
-				self.assertAlmostEqual(c, 7.5547918752086218, msg = msg)
+				self.assertAlmostEqual(c, 7.553864916569e+00, msg = msg)
 			elif models[i] == 'klypin11':
 				self.assertAlmostEqual(c, 9.3289793383381223, msg = msg)
 			elif models[i] == 'duffy08':
 				self.assertAlmostEqual(c, 5.8441337918319354, msg = msg)
 			elif models[i] == 'bullock01':
-				self.assertAlmostEqual(c, 6.840093964214e+00, msg = msg)
+				self.assertAlmostEqual(c, 6.835711916570e+00, msg = msg)
 			else:
 				msg = 'Unknown model, %s.' % models[i]
 				raise Exception(msg)

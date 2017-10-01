@@ -45,7 +45,8 @@ class TCComp(CosmologyTestCase):
 
 	def setUp(self):
 		self.cosmo_name = 'planck15'
-		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 'storage': ''})
+		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 
+															'persistence': ''})
 
 	###############################################################################################
 	# BASICS
@@ -71,7 +72,8 @@ class TCComp(CosmologyTestCase):
 		self.assertAlmostEqual(self.cosmo.Or0, 9.116773280347645e-05)
 	
 	def test_initNoRel(self):
-		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 'storage': '', 'relspecies': False})
+		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 
+												'persistence': '', 'relspecies': False})
 		c_dict = cosmology.cosmologies[self.cosmo_name]
 		self.assertAlmostEqual(self.cosmo.Om0, c_dict['Om0'])
 		self.assertAlmostEqual(self.cosmo.OL0, 1.0 - c_dict['Om0'])
@@ -80,7 +82,8 @@ class TCComp(CosmologyTestCase):
 		self.assertAlmostEqual(self.cosmo.ns, c_dict['ns'])
 		self.assertAlmostEqual(self.cosmo.Tcmb0, defaults.COSMOLOGY_TCMB0)
 		self.assertAlmostEqual(self.cosmo.Neff, defaults.COSMOLOGY_NEFF)
-		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 'storage': ''})
+		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 
+															'persistence': ''})
 
 	###############################################################################################
 	# Basic cosmology calculations
@@ -220,14 +223,15 @@ class TCInterp(CosmologyTestCase):
 
 	def setUp(self):
 		self.cosmo_name = 'planck15'
-		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': True, 'storage': 'rw'})
+		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': True, 
+															'persistence': 'rw'})
 
 	###############################################################################################
 	# Function tests
 	###############################################################################################
 
 	def test_sigma(self):
-		self.assertAlmostEqual(self.cosmo.sigma(12.5, 0.0), 5.892734771880e-01)		
+		self.assertAlmostEqual(self.cosmo.sigma(12.5, 0.0), 5.892447988477e-01)		
 
 	def test_ZDerivative(self):
 		correct = [-14.431423683052429, -3.0331864799122887, -0.012861392030709832]

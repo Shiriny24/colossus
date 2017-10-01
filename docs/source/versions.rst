@@ -35,3 +35,11 @@ Version 1.1
 * The text_output option was removed from the cosmology object.
 * There is a new storage_unit module as part of utilities. The storage parameter in the cosmology
   module was renamed to persistence, as was the global setting STORAGE (renamed to PERSISTENCE).
+* The collapseOverdensity() function has been completely reworked. By default, it still returns
+  the constant collapse overdensity threshold in an Einstein-de Sitter universe. If a redshift
+  is passed, it applies small corrections based on the underlying cosmology. The previous 
+  parameters to this function will now cause an error. This change also affects all functions that
+  rely on the collapse overdensity, such as peakHeight(), massFromPeakHeight(), nonLinearMass(),
+  and peakCurvature(). These functions now take dictionaries of parameters that are passed to the
+  collapse overdensity and sigma functions.
+  

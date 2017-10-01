@@ -23,18 +23,18 @@ class TCBias(test_colossus.ColosssusTestCase):
 		pass
 	
 	def test_haloBiasFromNu(self):
-		self.assertAlmostEqual(bias.haloBiasFromNu(3.0, 1.0, '200c'), 5.2906151991178554)
+		self.assertAlmostEqual(bias.haloBiasFromNu(3.0, 1.0, '200c'), 5.290627688108e+00)
 	
 	def test_haloBias(self):
-		self.assertAlmostEqual(bias.haloBias(2.3E12, 1.0, '200c'), 1.5522875685982045)
+		self.assertAlmostEqual(bias.haloBias(2.3E12, 1.0, '200c'), 1.552991796791e+00)
 		
 	def test_twoHaloTerm(self):
 		r = np.array([1.2, 10.8, 101.0])
-		correct = np.array([45715.732274087895, 20723.281476352931, 6736.342811423111])
+		correct = np.array([4.573596528967e+04, 2.073245325281e+04, 6.739324203655e+03])
 		self.assertAlmostEqualArray(bias.twoHaloTerm(r, 2.3E12, 1.0, '200c'), correct)
 		
 	def test_modelTinker10(self):
-		self.assertAlmostEqual(bias.modelTinker10(3.0, 1.0, '200c'), 5.2906151991178554)
+		self.assertAlmostEqual(bias.modelTinker10(3.0, 1.0, '200c'), 5.290627688108e+00)
 		
 ###################################################################################################
 # TRIGGER

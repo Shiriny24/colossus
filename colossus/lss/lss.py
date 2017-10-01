@@ -33,6 +33,7 @@ Module reference
 import numpy as np
 import scipy.integrate
 import scipy.special
+import warnings
 
 from colossus.utils import constants
 from colossus.cosmology import cosmology
@@ -99,39 +100,53 @@ def lagrangianM(R):
 
 ###################################################################################################
 
-def collapseOverdensity(deltac_const = True, sigma = None):
+def collapseOverdensity(corrections = False, z = None):
 	"""
-	The threshold overdensity for halo collapse.
+	The linear overdensity threshold for halo collapse.
 	
-	For most applications, ``deltac_const = True`` works fine; in that case, this function
-	simply returns the collapse overdensity predicted by the top-hat collapse model, 1.686. 
-	Alternatively, a correction for the ellipticity of peaks can be applied according to Sheth 
-	et al. 2001. In that case, the variance on the scale of a halo must also be passed.
+	The linear overdensity threshold for halo collapse according to the spherical top-hat collapse 
+	model (`Gunn & Gott 1972 <http://adsabs.harvard.edu/abs/1972ApJ...176....1G>`_). In an EdS
+	universe, this number is :math:`3/5 (3\pi/2)^{2/3}=1.686`.
+	
+	This value is modified very slightly in a non-EdS universe (by less than 3% for any realistic
+	cosmology). Such corrections are applied if desired, by default this function returns the 
+	constant value (see, e.g., `Mo, van den Bosch & White <http://adsabs.harvard.edu/abs/2010gfe..book.....M>`_ 
+	for a derivation of the corrections).
 
 	Parameters
 	-------------------------------------------------------------------------------------------
-	deltac_const: bool
-		If True, the function returns the constant top-hat model collapse overdensity. If False,
-		a correction due to the ellipticity of halos is applied.
-	sigma: float
-		The rms variance on the scale of the halo; only necessary if ``deltac_const == False``.
-
+	corrections: bool
+		If True, corrections to the collapse overdensity are applied in a non-EdS cosmology. In
+		this case, a redshift must be passed.
+	z: float
+		Redshift where the collapse density is evaluated. Only necessary if corrections == True.
+	
 	Returns
 	-------------------------------------------------------------------------------------------
 	delta_c: float
 		The threshold overdensity for collapse.
 	"""
-			
-	if deltac_const:
-		delta_c = constants.DELTA_COLLAPSE
-	else:
-		delta_c = constants.DELTA_COLLAPSE * (1.0 + 0.47 * (sigma / constants.DELTA_COLLAPSE)**1.23)
+	
+	delta_c = constants.DELTA_COLLAPSE
+	
+	if corrections:
+		
+		if z is None:
+			raise Exception('If corrections == True, a redshift must be passed.')
+		
+		cosmo = cosmology.getCurrent()
+		Om = cosmo.Om(z)
+		if cosmo.flat:
+			delta_c *= Om**0.0055
+		elif cosmo.OL == 0.0:
+			delta_c *= Om**0.0185
 	
 	return delta_c
 
 ###################################################################################################
 
-def peakHeight(M, z, filt = 'tophat', Pk_source = 'eh98', deltac_const = True):
+def peakHeight(M, z, sigma_args = {}, deltac_args = {}, 
+			filt = None, Pk_source = None, deltac_const = None):
 	"""
 	Peak height, :math:`\\nu`, given a halo mass.
 	
@@ -145,14 +160,14 @@ def peakHeight(M, z, filt = 'tophat', Pk_source = 'eh98', deltac_const = True):
 		Halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
 	z: float
 		Redshift.
-	filt: str
-		Either ``tophat`` or ``gaussian``.
-	Pk_source: str
-		Either ``eh98``, ``eh98smooth``, or the name of a user-supplied table.
-	deltac_const: bool
-		If True, the function returns the constant top-hat model collapse overdensity. If False,
-		a correction due to the ellipticity of halos is applied.
-
+	sigma_args: kwargs
+		Arguments passed to the :func:`cosmology.cosmology.Cosmology.sigma` function.
+	deltac_args: kwargs
+		Arguments passed to the :func:`collapseOverdensity` function.
+	filt: deprecated
+	Pk_source: deprecated
+	deltac_const: deprecated
+	
 	Returns
 	-------------------------------------------------------------------------------------------
 	nu: array_like
@@ -163,16 +178,25 @@ def peakHeight(M, z, filt = 'tophat', Pk_source = 'eh98', deltac_const = True):
 	massFromPeakHeight: Halo mass from peak height, :math:`\\nu`.
 	"""
 			
+	# Compatibility warnings
+	if filt is not None:
+		warnings.warn('The filt parameter has been deprecated. Please see documentation.')
+	if Pk_source is not None:
+		warnings.warn('The Pk_source parameter has been deprecated. Please see documentation.')
+	if deltac_const is not None:
+		warnings.warn('The deltac_const parameter has been deprecated. Please see documentation.')
+	
 	cosmo = cosmology.getCurrent()
 	R = lagrangianR(M)
-	sigma = cosmo.sigma(R, z, filt = filt, Pk_source = Pk_source)
-	nu = collapseOverdensity(deltac_const, sigma) / sigma
+	sigma = cosmo.sigma(R, z, **sigma_args)
+	nu = collapseOverdensity(z = z, **deltac_args) / sigma
 
 	return nu
 
 ###################################################################################################
 
-def massFromPeakHeight(nu, z, filt = 'tophat', Pk_source = 'eh98', deltac_const = True):
+def massFromPeakHeight(nu, z, sigma_args = {}, deltac_args = {}, 
+			filt = None, Pk_source = None, deltac_const = None):
 	"""
 	Halo mass from peak height, :math:`\\nu`.
 	
@@ -186,13 +210,13 @@ def massFromPeakHeight(nu, z, filt = 'tophat', Pk_source = 'eh98', deltac_const 
 		Peak height; can be a number or a numpy array.
 	z: float
 		Redshift.
-	filt: str
-		Either ``tophat`` or ``gaussian``.
-	Pk_source: str
-		Either ``eh98``, ``eh98smooth``, or the name of a user-supplied table.
-	deltac_const: bool
-		If True, the function returns the constant top-hat model collapse overdensity. If False,
-		a correction due to the ellipticity of halos is applied.
+	sigma_args: kwargs
+		Arguments passed to the :func:`cosmology.cosmology.Cosmology.sigma` function.
+	deltac_args: kwargs
+		Arguments passed to the :func:`collapseOverdensity` function.
+	filt: deprecated
+	Pk_source: deprecated
+	deltac_const: deprecated
 
 	Returns
 	-------------------------------------------------------------------------------------------
@@ -203,17 +227,26 @@ def massFromPeakHeight(nu, z, filt = 'tophat', Pk_source = 'eh98', deltac_const 
 	-------------------------------------------------------------------------------------------
 	peakHeight: Peak height, :math:`\\nu`, given a halo mass.
 	"""
-	
+
+	# Compatibility warnings
+	if filt is not None:
+		warnings.warn('The filt parameter has been deprecated. Please see documentation.')
+	if Pk_source is not None:
+		warnings.warn('The Pk_source parameter has been deprecated. Please see documentation.')
+	if deltac_const is not None:
+		warnings.warn('The deltac_const parameter has been deprecated. Please see documentation.')
+
 	cosmo = cosmology.getCurrent()
-	sigma = collapseOverdensity(deltac_const = deltac_const) / nu
-	R = cosmo.sigma(sigma, z, filt = filt, Pk_source = Pk_source, inverse = True)
+	sigma = collapseOverdensity(z = z, **deltac_args) / nu
+	R = cosmo.sigma(sigma, z, inverse = True, **sigma_args)
 	M = lagrangianM(R)
 	
 	return M
 
 ###################################################################################################
 
-def nonLinearMass(z, filt = 'tophat', Pk_source = 'eh98'):
+def nonLinearMass(z, sigma_args = {}, deltac_args = {}, 
+			filt = None, Pk_source = None):
 	"""
 	The non-linear mass, :math:`M^*`.
 	
@@ -226,10 +259,12 @@ def nonLinearMass(z, filt = 'tophat', Pk_source = 'eh98'):
 	-------------------------------------------------------------------------------------------
 	z: float
 		Redshift.
-	filt: str
-		Either ``tophat`` or ``gaussian``.
-	Pk_source: str
-		Either ``eh98``, ``eh98smooth``, or the name of a user-supplied table.
+	sigma_args: kwargs
+		Arguments passed to the :func:`cosmology.cosmology.Cosmology.sigma` function.
+	deltac_args: kwargs
+		Arguments passed to the :func:`collapseOverdensity` function.
+	filt: deprecated
+	Pk_source: deprecated
 
 	Returns
 	-------------------------------------------------------------------------------------------
@@ -240,8 +275,14 @@ def nonLinearMass(z, filt = 'tophat', Pk_source = 'eh98'):
 	-------------------------------------------------------------------------------------------
 	massFromPeakHeight: Halo mass from peak height, :math:`\\nu`.
 	"""
+
+	# Compatibility warnings
+	if filt is not None:
+		warnings.warn('The filt parameter has been deprecated. Please see documentation.')
+	if Pk_source is not None:
+		warnings.warn('The Pk_source parameter has been deprecated. Please see documentation.')
 	
-	return massFromPeakHeight(1.0, z = z, filt = filt, Pk_source = Pk_source, deltac_const = True)
+	return massFromPeakHeight(1.0, z, sigma_args = sigma_args, deltac_args = deltac_args)
 
 ###################################################################################################
 # Peak curvature routines
@@ -301,10 +342,10 @@ def _peakCurvatureExact(nu, gamma):
 # Wrapper for the function above which takes tables of sigmas. This form can be more convenient 
 # when computing many different nu's. 
 
-def _peakCurvatureExactFromSigma(sigma0, sigma1, sigma2, deltac_const = True):
+def _peakCurvatureExactFromSigma(sigma0, sigma1, sigma2, z, deltac_args = {}):
 
-	nu = collapseOverdensity(deltac_const, sigma0) / sigma0
-	gamma = sigma1 ** 2 / sigma0 / sigma2
+	nu = collapseOverdensity(z = z, **deltac_args) / sigma0
+	gamma = sigma1**2 / sigma0 / sigma2
 
 	x = nu * 0.0
 	for i in range(len(nu)):
@@ -340,9 +381,9 @@ def _peakCurvatureApprox(nu, gamma):
 # when computing many different nu's. For convenience, various intermediate numbers are 
 # returned as well.
 
-def _peakCurvatureApproxFromSigma(sigma0, sigma1, sigma2, deltac_const = True):
+def _peakCurvatureApproxFromSigma(sigma0, sigma1, sigma2, z, deltac_args = {}):
 
-	nu = collapseOverdensity(deltac_const, sigma0) / sigma0
+	nu = collapseOverdensity(z = z, **deltac_args) / sigma0
 	gamma = sigma1**2 / sigma0 / sigma2
 	
 	theta, x, nu_tilde = _peakCurvatureApprox(nu, gamma)
@@ -351,8 +392,8 @@ def _peakCurvatureApproxFromSigma(sigma0, sigma1, sigma2, deltac_const = True):
 
 ###############################################################################################
 
-def peakCurvature(M, z, filt = 'gaussian', Pk_source = 'eh98',
-				deltac_const = True, exact = False):
+def peakCurvature(M, z, exact = False, sigma_args = {'filt': 'gaussian'}, deltac_args = {}, 
+				filt = None, Pk_source = None, deltac_const = None):
 	"""
 	The average curvature of peaks for a halo mass M.
 	
@@ -374,15 +415,15 @@ def peakCurvature(M, z, filt = 'gaussian', Pk_source = 'eh98',
 		Mass in in :math:`M_{\odot}/h`; can be a number or a numpy array.
 	z: float
 		Redshift.
-	filt: str
-		Either ``tophat`` or ``gaussian``.
-	Pk_source: str
-		Either ``eh98``, ``eh98smooth``, or the name of a user-supplied table.
-	deltac_const: bool
-		If ``True``, the function returns the constant top-hat model collapse overdensity. If 
-		``False``, a correction due to the ellipticity of halos is applied.
 	exact: bool
 		If ``True``, evaluate the integral exactly; if ``False``, use the BBKS approximation.	
+	sigma_args: kwargs
+		Arguments passed to the :func:`cosmology.cosmology.Cosmology.sigma` function.
+	deltac_args: kwargs
+		Arguments passed to the :func:`collapseOverdensity` function.
+	filt: deprecated
+	Pk_source: deprecated
+	deltac_const: deprecated
 
 	Returns
 	-------------------------------------------------------------------------------------------
@@ -413,13 +454,13 @@ def peakCurvature(M, z, filt = 'gaussian', Pk_source = 'eh98',
 	cosmo = cosmology.getCurrent()
 
 	R = lagrangianR(M)
-	sigma0 = cosmo.sigma(R, z, j = 0, filt = filt, Pk_source = Pk_source)
-	sigma1 = cosmo.sigma(R, z, j = 1, filt = filt, Pk_source = Pk_source)
-	sigma2 = cosmo.sigma(R, z, j = 2, filt = filt, Pk_source = Pk_source)
+	sigma0 = cosmo.sigma(R, z, j = 0, **sigma_args)
+	sigma1 = cosmo.sigma(R, z, j = 1, **sigma_args)
+	sigma2 = cosmo.sigma(R, z, j = 2, **sigma_args)
 
 	if exact:
-		return _peakCurvatureExactFromSigma(sigma0, sigma1, sigma2, deltac_const = deltac_const)
+		return _peakCurvatureExactFromSigma(sigma0, sigma1, sigma2, z, deltac_args = deltac_args)
 	else:
-		return _peakCurvatureApproxFromSigma(sigma0, sigma1, sigma2, deltac_const = deltac_const)
+		return _peakCurvatureApproxFromSigma(sigma0, sigma1, sigma2, z, deltac_args = deltac_args)
 
 ###################################################################################################

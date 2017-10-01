@@ -49,5 +49,7 @@ RHO_CRIT_0_KPC3 = 2.774848e+02
 """The critical density of the universe at z = 0 in units of :math:`M_{\odot} h^2 / kpc^3`."""
 RHO_CRIT_0_MPC3 = 2.774848e+11
 """The critical density of the universe at z = 0 in units of :math:`M_{\odot} h^2 / Mpc^3`."""
-DELTA_COLLAPSE = 1.686
-"""The threshold overdensity for halo collapse according to the top-hat collapse model."""
+DELTA_COLLAPSE = 1.68647
+"""The linear overdensity threshold for halo collapse according to the spherical top-hat collapse 
+model (`Gunn & Gott 1972 <http://adsabs.harvard.edu/abs/1972ApJ...176....1G>`_). This number 
+corresponds to :math:`3/5 (3\pi/2)^{2/3}` and is modified very slightly in a non-EdS universe."""

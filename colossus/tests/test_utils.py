@@ -8,7 +8,7 @@
 import unittest
 
 from colossus.tests import test_colossus
-from colossus.utils import utilities
+from colossus.utils import storage
 
 ###################################################################################################
 # TEST CASES
@@ -20,7 +20,7 @@ class TCGen(test_colossus.ColosssusTestCase):
 		pass
 	
 	def test_home_dir(self):
-		self.assertNotEqual(utilities.getCacheDir(), None)
+		self.assertNotEqual(storage.getCacheDir(), None)
 		
 ###################################################################################################
 # TRIGGER

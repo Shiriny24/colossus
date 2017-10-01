@@ -28,7 +28,8 @@ class TCLss(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
 		self.cosmo_name = 'planck15'
-		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 'storage': ''})
+		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 
+															'persistence': ''})
 		pass
 	
 	def test_lagrangianR(self):
@@ -38,12 +39,12 @@ class TCLss(test_colossus.ColosssusTestCase):
 		self.assertAlmostEqual(lss.lagrangianM(TEST_R), 692873211113.4847)
 
 	def test_peakHeight(self):
-		self.assertAlmostEqual(lss.peakHeight(TEST_M, 0.0), 9.431430836525e-01)
-		self.assertAlmostEqual(lss.peakHeight(TEST_M, TEST_Z2), 4.740583878878e+00)
+		self.assertAlmostEqual(lss.peakHeight(TEST_M, 0.0), 9.434060001705e-01)
+		self.assertAlmostEqual(lss.peakHeight(TEST_M, TEST_Z2), 4.741905393957e+00)
 
 	def test_peakCurvature(self):
-		correct = [[1.728295409748e+00, 6.498395946425e-01, 2.376881414525e+00, 1.253766626032e+00, 3.179869335955e-01], 
-				[8.687048125995e+00, 6.498395946425e-01, 5.946828630668e+00, 3.016407978311e-01, 8.347745288368e+00]]
+		correct = [[1.728777200283e+00, 6.498395946425e-01, 2.377044934137e+00, 1.253617059077e+00, 3.186369656037e-01], 
+				[8.689469782353e+00, 6.498395946425e-01, 5.948308808583e+00, 3.015472875606e-01, 8.350272130432e+00]]
 		for j in range(2):
 			z = [0.0, TEST_Z2][j]
 			res = lss.peakCurvature(TEST_M, z)
@@ -58,15 +59,16 @@ class TCLssInterp(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
 		self.cosmo_name = 'planck15'
-		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': True, 'storage': ''})
+		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': True, 
+															'persistence': ''})
 		pass
 
 	def test_massFromPeakHeight(self):
-		self.assertAlmostEqual(lss.massFromPeakHeight(TEST_NU, 0.0), 2.076094075382e+12)
-		self.assertAlmostEqual(lss.massFromPeakHeight(TEST_NU, TEST_Z2), 5.961576593638e+04)
+		self.assertAlmostEqual(lss.massFromPeakHeight(TEST_NU, 0.0), 2.072363740368e+12)
+		self.assertAlmostEqual(lss.massFromPeakHeight(TEST_NU, TEST_Z2), 5.932394446473e+04)
 
 	def test_nonLinearMass(self):
-		self.assertAlmostEqual(lss.nonLinearMass(1.1), 9.853011711832e+10)
+		self.assertAlmostEqual(lss.nonLinearMass(1.1), 9.830911710403e+10)
 
 ###################################################################################################
 # TRIGGER

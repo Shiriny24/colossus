@@ -1846,7 +1846,7 @@ class Cosmology(object):
 	
 	###############################################################################################
 
-	def filterFunction(self, filt, k, R, no_oscillation = False):
+	def filterFunction(self, filt, k, R):
 		"""
 		The filter function for the variance in Fourier space. 
 		
@@ -1856,13 +1856,11 @@ class Cosmology(object):
 		Parameters
 		-------------------------------------------------------------------------------------------
 		filt: str
-			Either ``tophat`` or ``gaussian``.
+			Either ``tophat``, ``sharp-k``, or ``gaussian``.
 		k: float
 			A wavenumber k (in comoving h/Mpc).
 		R: float
 			A radius R (in comoving Mpc/h).
-		no_oscillation: bool
-			If True, omit the sine / cosine part of the tophat filter; for internal use only.
 			
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -1874,17 +1872,14 @@ class Cosmology(object):
 		
 		if filt == 'tophat':
 			
-			if no_oscillation:
-				if x < 1.0:
-					ret = 1.0
-				else:
-					ret = x**-2
+			if x < 1E-3:
+				ret = 1.0
 			else:
-				if x < 1E-3:
-					ret = 1.0
-				else:
-					ret = 3.0 / x**3 * (np.sin(x) - x * np.cos(x))
-				
+				ret = 3.0 / x**3 * (np.sin(x) - x * np.cos(x))
+
+		elif filt == 'sharp-k':
+			ret = np.heaviside(1.0 - x, 1.0)
+			
 		elif filt == 'gaussian':
 			ret = np.exp(-x**2)
 		
@@ -1899,10 +1894,10 @@ class Cosmology(object):
 	def _sigmaExact(self, R, j = 0, filt = 'tophat', Pk_source = 'eh98', exact_Pk = False, ignore_norm = False):
 
 		# -----------------------------------------------------------------------------------------
-		def logIntegrand(lnk, Pk_interpolator, test = False):
+		def logIntegrand(lnk, Pk_interpolator):
 			
 			k = np.exp(lnk)
-			W = self.filterFunction(filt, k, R, no_oscillation = test)
+			W = self.filterFunction(filt, k, R)
 			
 			if Pk_interpolator is not None:
 				Pk = 10**Pk_interpolator(np.log10(k))
@@ -2036,7 +2031,8 @@ class Cosmology(object):
 
 	###############################################################################################
 	
-	def sigma(self, R, z, j = 0, inverse = False, derivative = False, Pk_source = 'eh98', filt = 'tophat'):
+	def sigma(self, R, z, j = 0, inverse = False, derivative = False, 
+							Pk_source = 'eh98', filt = 'tophat'):
 		"""
 		The rms variance of the linear density field on a scale R, :math:`\\sigma(R)`.
 		
@@ -2066,8 +2062,8 @@ class Cosmology(object):
 			The order of the integral. j = 0 corresponds to the variance, j = 1 to the same integral 
 			with an extra :math:`k^2` term etc; see Bardeen et al. 1986 for mathematical details.
 		filt: str
-			Either ``tophat`` or ``gaussian``. Higher moments (j > 0) can only be computed for the 
-			gaussian filter.
+			Either ``tophat``, ``sharp-k`` or ``gaussian``. Higher moments (j > 0) can only be 
+			computed for the gaussian filter.
 		Pk_source: str
 			Either ``eh98``, ``eh98smooth``, or the name of a user-supplied table.
 		inverse: bool
