@@ -37,7 +37,6 @@ Module reference
 
 import numpy as np
 
-from colossus.utils import constants
 from colossus import defaults
 from colossus.cosmology import cosmology
 from colossus.lss import lss
@@ -45,13 +44,14 @@ from colossus.halo import mass_so
 
 ###################################################################################################
 
-models = ['tinker08', 'watson13_fof']
+models = ['press74', 'sheth99', 'jenkins01', 'reed03', 'warren06', 'tinker08', 'courtin11',
+		'bhattacharya11', 'watson13_fof']
 """A list of all implemented mass function models."""
 
 ###################################################################################################
 
-def massFunction(M, mdef, z,
-				model = defaults.HALO_MASS_FUNCTION_MODEL):
+def massFunction(M, mdef, z, 
+				q_out = 'f', model = defaults.HALO_MASS_FUNCTION_MODEL):
 	"""
 	The abundance of halos as a function of mass and redshift.
 	
@@ -75,7 +75,8 @@ def massFunction(M, mdef, z,
 	# Compute peak height and sigma
 	cosmo = cosmology.getCurrent()
 	nu = lss.peakHeight(M, z)
-	sigma = constants.DELTA_COLLAPSE / nu
+	delta_c = lss.collapseOverdensity(corrections = False, z = z)
+	sigma = delta_c / nu
 
 	# Parse mass definition, convert to Delta_m equivalent
 	mdef_type, mdef_delta = mass_so.parseMassDefinition(mdef)
@@ -91,34 +92,41 @@ def massFunction(M, mdef, z,
 
 	# Evaluate model
 	if model == 'press74':	
-		f = modelPress74(sigma)
+		f = modelPress74(sigma, z)
 		
 	elif model == 'sheth99':	
-		f = modelSheth99(sigma)
+		f = modelSheth99(sigma, z)
 
 	elif model == 'jenkins01':	
 		f = modelJenkins01(sigma)
 
-	elif model == 'sheth02':	
-		f = modelSheth02(sigma)
-
 	elif model == 'reed03':	
-		f = modelReed03(sigma)
+		f = modelReed03(sigma, z)
+
+	elif model == 'warren06':	
+		f = modelWarren06(sigma)
 
 	elif model == 'tinker08':
 		f = modelTinker08(sigma, Delta_m, z)
 	
+	elif model == 'courtin11':	
+		f = modelCourtin11(sigma)
+
+	elif model == 'bhattacharya11':	
+		f = modelBhattacharya11(sigma, z)
+
 	elif model == 'watson13_fof':
 		f = modelWatson13_fof(sigma)
-	
-	elif model == 'watson13_so':
-		f = modelWatson13_so(sigma, Delta_m, z)
 	
 	else:
 		msg = 'Unknown model, %s.' % (model)
 		raise Exception(msg)
 
-	return f
+	mfunc = f
+	if q_out != 'f':
+		mfunc = convertMassFunction(f, M, z, 'f', q_out)
+
+	return mfunc
 
 ###################################################################################################
 
@@ -162,9 +170,11 @@ def convertMassFunction(mfunc, M, z, q_in, q_out):
 # FUNCTIONS FOR INDIVIDUAL MASS FUNCTION MODELS
 ###################################################################################################
 
-def modelPress74(sigma):
+# TODO z dependence
+
+def modelPress74(sigma, z):
 	
-	delta_c = constants.DELTA_COLLAPSE
+	delta_c = lss.collapseOverdensity(corrections = True, z = z)
 	f = np.sqrt(2.0 / np.pi) * delta_c / sigma * np.exp(-0.5 * delta_c**2 / sigma**2)
 	
 	return f
@@ -175,9 +185,9 @@ def modelPress74(sigma):
 # Equation 10 in Sheth & Tormen 1999. The extra factor of two in front is due to the definition
 # according to which the PS-mass function would correspond to A = 0.5. ????
 
-def modelSheth99(sigma):
+def modelSheth99(sigma, z):
 	
-	delta_c = constants.DELTA_COLLAPSE
+	delta_c = lss.collapseOverdensity(corrections = True, z = z)
 	A = 0.3222
 	a = 0.707
 	p = 0.3
@@ -197,61 +207,23 @@ def modelJenkins01(sigma):
 
 ###################################################################################################
 
-def modelSheth02(sigma):
+def modelReed03(sigma, z):
 	
-	delta_c = constants.DELTA_COLLAPSE
-	#A = 0.3222
-	a = 0.707
-	#p = 0.3
-	
-	nu_p = a * delta_c**2 / sigma**2
-	t1 = nu_p**-0.6
-	f = 2.0 * (1.0 + 0.094 * t1) * np.sqrt(nu_p / 2.0 / np.pi) * np.exp(-nu_p * (1.0 + 0.5 * t1)**2 / 2.0)
-	
-	return f
-
-###################################################################################################
-
-def modelReed03(sigma):
-	
-	f_ST = modelSheth99(sigma)
+	f_ST = modelSheth99(sigma, z)
 	f = f_ST * np.exp(-0.7 / (sigma * np.cosh(2.0 * sigma)**5))
 	
 	return f
 
 ###################################################################################################
 
-# The AHF fit
-
-def modelWatson13_so(sigma, Delta_m, z):
+def modelWarren06(sigma):
 	
-	cosmo = cosmology.getCurrent()
+	A = 0.7234
+	a = 1.625
+	b = 0.2538
+	c = 1.1982
 	
-	A = 0.194
-	alpha = 1.805
-	beta = 2.267
-	gamma = 1.287
-	
-	f_178 = A * ((beta / sigma)**alpha + 1.0) * np.exp(-gamma / sigma**2)
-	
-	Delta_178 = Delta_m / 178.0
-	C = np.exp(0.023 * (Delta_178 - 1.0))
-	d = -0.456 * cosmo.Om(z) - 0.139
-	Gamma = C * Delta_178**d * np.exp(0.072 * (1.0 - Delta_178) / sigma**2.130)
-	f = f_178 * Gamma
-	
-	return f
-
-###################################################################################################
-
-def modelWatson13_fof(sigma):
-	
-	A = 0.282
-	alpha = 2.163
-	beta = 1.406
-	gamma = 1.210
-	
-	f = A * ((beta / sigma)**alpha + 1.0) * np.exp(-gamma / sigma**2)
+	f = A * (sigma**-a + b) * np.exp(-c / sigma**2)
 	
 	return f
 
@@ -282,6 +254,53 @@ def modelTinker08(sigma, Delta_m, z):
 	b = b0 * (1.0 + z)**-alpha
 	c = c0
 	f = A * ((sigma / b)**-a + 1.0) * np.exp(-c / sigma**2)
+	
+	return f
+
+###################################################################################################
+
+def modelCourtin11(sigma):
+	
+	#delta_c = lss.collapseOverdensity(corrections = True, z = z)
+	delta_c = 1.673
+	A = 0.348
+	a = 0.695
+	p = 0.1
+	
+	f = A * np.sqrt(2 * a / np.pi) * delta_c / sigma * (1.0 + (delta_c / sigma / np.sqrt(a))**(-2 * p)) * np.exp(-delta_c**2 * a / (2 * sigma**2))
+
+	return f
+
+###################################################################################################
+
+def modelBhattacharya11(sigma, z):
+	
+	# TODO why no corrections?
+	delta_c = lss.collapseOverdensity(corrections = False, z = z)
+	
+	#A0 = 0.333
+	a0 = 0.788
+	A = 0.333 / (1.0 + z)**0.11
+	a = a0 / (1.0 + z)**0.01
+	p0 = 0.807
+	q0 = 1.795
+	
+	# TODO A or A0?
+	f = A * np.sqrt(2  / np.pi) * np.exp(-a0 * delta_c**2 / (2 * sigma**2)) \
+		* (1.0 + (sigma**2 / a0 / delta_c**2)**p0) * (delta_c * np.sqrt(a) / sigma)**q0
+	
+	return f
+
+###################################################################################################
+
+def modelWatson13_fof(sigma):
+	
+	A = 0.282
+	alpha = 2.163
+	beta = 1.406
+	gamma = 1.210
+	
+	f = A * ((beta / sigma)**alpha + 1.0) * np.exp(-gamma / sigma**2)
 	
 	return f
 
