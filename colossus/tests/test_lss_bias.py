@@ -24,6 +24,8 @@ class TCBias(test_colossus.ColosssusTestCase):
 	
 	def test_haloBiasFromNu(self):
 		self.assertAlmostEqual(bias.haloBiasFromNu(3.0, 1.0, '200c'), 5.290627688108e+00)
+		self.assertAlmostEqual(bias.haloBiasFromNu(3.0, 1.0, '200c', model = 'sc'), 5.743636115674e+00)
+		self.assertAlmostEqual(bias.haloBiasFromNu(3.0, 1.0, '200c', model = 'sheth01'), 4.720384850956e+00)
 	
 	def test_haloBias(self):
 		self.assertAlmostEqual(bias.haloBias(2.3E12, 1.0, '200c'), 1.552991796791e+00)
@@ -32,6 +34,12 @@ class TCBias(test_colossus.ColosssusTestCase):
 		r = np.array([1.2, 10.8, 101.0])
 		correct = np.array([4.573596528967e+04, 2.073245325281e+04, 6.739324203655e+03])
 		self.assertAlmostEqualArray(bias.twoHaloTerm(r, 2.3E12, 1.0, '200c'), correct)
+
+	def test_modelSC(self):
+		self.assertAlmostEqual(bias.modelSC(3.0), 5.743636115674e+00)
+
+	def test_modelSheth01(self):
+		self.assertAlmostEqual(bias.modelSheth01(3.0), 4.720384850956e+00)
 		
 	def test_modelTinker10(self):
 		self.assertAlmostEqual(bias.modelTinker10(3.0, 1.0, '200c'), 5.290627688108e+00)

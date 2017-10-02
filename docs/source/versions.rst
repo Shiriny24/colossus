@@ -42,4 +42,6 @@ Version 1.1
   rely on the collapse overdensity, such as peakHeight(), massFromPeakHeight(), nonLinearMass(),
   and peakCurvature(). These functions now take dictionaries of parameters that are passed to the
   collapse overdensity and sigma functions.
+* The halo bias module was improved, with two new models for halo bais (spherical collapse and
+  Sheth et al. 2001.
   

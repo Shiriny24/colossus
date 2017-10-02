@@ -7,6 +7,8 @@ covers a colossus module. The Jupyter notebooks without output can be found in t
 The links below point to the output of those notebooks:
 
 * `Cosmology <_static/tutorial_cosmology.html>`_
+* `LSS: basics and peak height <_static/tutorial_lss_lss.html>`_
+* `LSS: halo bias <_static/tutorial_lss_bias.html>`_
 * `Halo: spherical overdensity masses and radii <_static/tutorial_halo_so.html>`_
 * `Halo: density profiles <_static/tutorial_halo_profile.html>`_
 * `Halo: concentration <_static/tutorial_halo_concentration.html>`_
