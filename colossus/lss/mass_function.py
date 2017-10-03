@@ -236,7 +236,7 @@ def convertMassFunction(mfunc, M, z, q_in, q_out):
 		return mfunc
 
 	cosmo = cosmology.getCurrent()
-	R = cosmo.lagrangianR(M)
+	R = lss.lagrangianR(M)
 	d_ln_sigma_d_ln_R = cosmo.sigma(R, z, derivative = True)
 	rho_Mpc = cosmo.rho_m(0.0) * 1E9
 	
@@ -437,7 +437,7 @@ def modelTinker08(sigma, z, mdef):
 		raise Exception('Cannot use mass definition fof for Tinker 08 model, need an SO definition.')
 	
 	cosmo = cosmology.getCurrent()
-	Delta_m = mass_so.densityThreshold(z, mdef) / cosmo.rho_m(z)
+	Delta_m = round(mass_so.densityThreshold(z, mdef) / cosmo.rho_m(z))
 
 	fit_Delta = np.array([200, 300, 400, 600, 800, 1200, 1600, 2400, 3200])
 	fit_A0 = np.array([0.186, 0.200, 0.212, 0.218, 0.248, 0.255, 0.260, 0.260, 0.260])
