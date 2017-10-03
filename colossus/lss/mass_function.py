@@ -21,8 +21,17 @@ models::
 	mfunc_so = massFunction(1E12, 0.0, mdef = 'vir', model = 'tinker08')
 	mfunc_fof = massFunction(1E12, 0.0, mdef = 'fof', model = 'watson13')
 
-Of course, the function accepts numpy arrays for the mass parameter. By default, the function 
-returns f, but it can also return other units.
+Of course, the function accepts numpy arrays for the mass parameter. By default, the mass function 
+is returned as :math:`f(\\sigma)`, the natural units in Press-Schechter theory, where
+
+.. math::
+	\\frac{dn}{d \\ln(M)} = f(\\sigma) \\frac{\\rho_0}{M} \\frac{d \\ln(\\sigma^{-1})}{d \\ln(M)} 
+
+where :math:`\\sigma` is the variance on the lagrangian size scale of the halo mass in question
+(see :mod:`cosmology.cosmology`). The function can also return the mass function in other units,
+namely :math:`dn/d\\ln(M)` (indicated by q_out = ``dndlnM``) and :math:`M^2 dn/dM` (indicated by 
+q_out = ``M2dndM``). These conversions can be performed separately using the 
+:func:`convertMassFunction` function.
 
 ---------------------------------------------------------------------------------------------------
 Mass function models
@@ -45,6 +54,16 @@ courtin11      fof        No	      `Courtin et al. 2011 <http://adsabs.harvard.e
 bhattacharya11 fof        Yes         `Bhattacharya et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...732..122B>`_
 watson13       fof        No (FOF)    `Watson et al. 2013 <http://adsabs.harvard.edu/abs/2013MNRAS.433.1230W>`_
 ============== ========== =========== ======================================
+
+Note that the mass definition (set to ``fof`` by default) needs to match one of the allowed mass 
+definitions of the chosen model. For most models, only ``fof`` is allowed, but some SO models are 
+calibrated to various mass definitions. The ``tinker08`` model can handle any overdensity between 
+200m and 3200m (though they can be expressed as critical and virial overdensities as well).
+
+There are two different types of redshift depdence listed above: some models explicitly depend on 
+redshift (e.g., ``bhattacharya11``), some models only change through the small variation of the 
+collapse overdensity :math:`\\delta_{\\rm c}` (see :func:`lss.lss.collapseOverdensity`). The 
+``tinker08`` model depends on redshift only through the conversion of the overdensity threshold.
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -75,10 +94,9 @@ def massFunction(M, z,
 	The abundance of halos as a function of mass and redshift.
 	
 	This function is a wrapper for all individual models implemented in this module. It needs mass
-	and redshift, as well as a mass definition which is set to 'fof' by default (see the model 
-	table for valid redshifts). See the documentation of the :func:`convertMassFunction` function
-	for the units in which the mass function can be returned, as controlled by the ``q_out`` 
-	parameter.
+	and redshift, as well as a mass definition which is set to ``fof`` by default (see the model 
+	table for valid redshifts). The output units are controlled by the ``q_out`` parameter, see 
+	the basic usage section for details.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -91,7 +109,7 @@ def massFunction(M, z,
 		refers to. Please see the model table for the mass definitions for which each model is 
 		valid.
 	q_out: str
-		The units in which the mass function is returned; see :func:`convertMassFunction`.
+		The units in which the mass function is returned.
 	model: str
 		The model of the mass function used.
 	sigma_args: dict
@@ -185,7 +203,9 @@ def convertMassFunction(mfunc, M, z, q_in, q_out):
 	"""
 	Convert different units of the mass function.
 	
-	The mass function is typically given in ...
+	Virtually all models parameterize the mass function in the natural Press-Schechter units, 
+	:math:`f(\\sigma)`. This function convert any allowed units into any other units. See the 
+	basic usage section for details.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -245,13 +265,11 @@ def convertMassFunction(mfunc, M, z, q_in, q_out):
 # FUNCTIONS FOR INDIVIDUAL MASS FUNCTION MODELS
 ###################################################################################################
 
-# TODO z dependence
-
 def modelPress74(sigma, z):
 	"""
 	The mass function model of Press & Schechter 1974.
 	
-	...
+	This model depends on redshift only through the collapse overdensity :math:`\\delta_{\\rm c}`.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
