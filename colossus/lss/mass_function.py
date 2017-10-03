@@ -60,10 +60,15 @@ definitions of the chosen model. For most models, only ``fof`` is allowed, but s
 calibrated to various mass definitions. The ``tinker08`` model can handle any overdensity between 
 200m and 3200m (though they can be expressed as critical and virial overdensities as well).
 
-There are two different types of redshift depdence listed above: some models explicitly depend on 
-redshift (e.g., ``bhattacharya11``), some models only change through the small variation of the 
-collapse overdensity :math:`\\delta_{\\rm c}` (see :func:`lss.lss.collapseOverdensity`). The 
-``tinker08`` model depends on redshift only through the conversion of the overdensity threshold.
+There are two different types of redshift dependence of :math:`f(\\sigma)` listed above: some 
+models explicitly depend on redshift (e.g., ``bhattacharya11``), some models only change through 
+the small variation of the collapse overdensity :math:`\\delta_{\\rm c}` 
+(see :func:`lss.lss.collapseOverdensity`). The ``tinker08`` model depends on redshift only through 
+the conversion of the overdensity threshold.
+
+The mass functions predicted by the models are, in principle, supposed to be valid across redshifts
+and cosmologies. However, it has been shown that this is true only approximately. The functions in
+this module do not check whether a model is used outside the range where it was calibrated.
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -163,7 +168,7 @@ def massFunction(M, z,
 	
 	elif model == 'crocce10':
 		func = modelCrocce10
-		args = (sigma,)
+		args = (sigma, z)
 		mdefs = ['fof']
 	
 	elif model == 'courtin11':	
@@ -291,15 +296,13 @@ def modelPress74(sigma, z):
 
 ###################################################################################################
 
-# TODO
-# Equation 10 in Sheth & Tormen 1999. The extra factor of two in front is due to the definition
-# according to which the PS-mass function would correspond to A = 0.5. ????
-
 def modelSheth99(sigma, z):
 	"""
 	The mass function model of Sheth & Tormen 1999.
 	
-	...
+	This model was created to account for the differences between the classic Press-Schechter model
+	and measurements of the halo abundance in numerical simulations. The model is given in Equation 
+	10. Note that the collapse overdensity is computed including corrections due to dark energy. 
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -330,7 +333,8 @@ def modelJenkins01(sigma):
 	"""
 	The mass function model of Jenkins et al. 2001.
 	
-	... equation 9
+	The model is given in Equation 9. It does not explicitly rely on the collapse overdensity and
+	thus has no redshift evolution.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -353,7 +357,8 @@ def modelReed03(sigma, z):
 	"""
 	The mass function model of Reed et al. 2003.
 	
-	... equ 9
+	This model corrects the Sheth & Tormen 1999 model at high masses, the functional form is given
+	in Equation 9.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -379,7 +384,8 @@ def modelWarren06(sigma):
 	"""
 	The mass function model of Warren et al. 2006.
 	
-	... equ 5
+	This model does not explicitly rely on the collapse overdenisty and thus has no redshift 
+	dependence. The functional form is given in Equation 5. 
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -407,7 +413,10 @@ def modelTinker08(sigma, z, mdef):
 	"""
 	The mass function model of Tinker et al. 2008.
 	
-	...
+	This model was the first calibrated for SO rather than FOF masses, and can predict the mass 
+	function for a large range of overdensities (:math:`200 \\leq \\Delta_{\\rm m} \\leq 3200`).
+	The authors found that the SO mass function is not universal with redshift and took this 
+	dependence into account explicitly (Equations 3-8).
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -458,13 +467,11 @@ def modelTinker08(sigma, z, mdef):
 
 ###################################################################################################
 
-# Their model is given for z = 0 and 0.5; not clear how to apply this, so this is only z = 0
-
-def modelCrocce10(sigma):
+def modelCrocce10(sigma, z):
 	"""
 	The mass function model of Crocce et al. 2010.
 	
-	... equ 5, table 2
+	This function was calibrated between z = 0 and 1, and is given in Equation 22.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -477,10 +484,11 @@ def modelCrocce10(sigma):
 		The halo mass function.
 	"""
 		
-	A = 0.58
-	a = 1.37
-	b = 0.30
-	c = 1.036
+	zp1 = 1.0 + z
+	A = 0.58 * zp1**-0.13
+	a = 1.37 * zp1**-0.15
+	b = 0.30 * zp1**-0.084
+	c = 1.036 * zp1**-0.024
 	
 	f = A * (sigma**-a + b) * np.exp(-c / sigma**2)
 	
@@ -492,7 +500,8 @@ def modelCourtin11(sigma):
 	"""
 	The mass function model of Courtin et al. 2011.
 	
-	... equ 22
+	The model is specified in Equation 22. It uses a fixed collapse overdensity 
+	:math:`\\delta_{\\rm c} = 1.673` and thus does not evolve with redshift.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -505,7 +514,6 @@ def modelCourtin11(sigma):
 		The halo mass function.
 	"""
 		
-	#delta_c = lss.collapseOverdensity(corrections = True, z = z)
 	delta_c = 1.673
 	A = 0.348
 	a = 0.695
@@ -521,7 +529,10 @@ def modelBhattacharya11(sigma, z):
 	"""
 	The mass function model of Bhattacharya et al. 2011.
 	
-	... equ 12
+	This model was calibrated between redshift 0 and 2. The authors found that varying 
+	:math:`\\delta_{\\rm c}` does not account for the redshift dependence. Thus, they keep it 
+	fixed and added an explicit redshift dependence into the model. The functional form is given 
+	in Table 4.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -536,19 +547,16 @@ def modelBhattacharya11(sigma, z):
 		The halo mass function.
 	"""
 		
-	# TODO why no corrections?
 	delta_c = lss.collapseOverdensity(corrections = False, z = z)
-	
-	#A0 = 0.333
-	a0 = 0.788
-	A = 0.333 / (1.0 + z)**0.11
-	a = a0 / (1.0 + z)**0.01
-	p0 = 0.807
-	q0 = 1.795
-	
-	# TODO A or A0?
-	f = A * np.sqrt(2  / np.pi) * np.exp(-a0 * delta_c**2 / (2 * sigma**2)) \
-		* (1.0 + (sigma**2 / a0 / delta_c**2)**p0) * (delta_c * np.sqrt(a) / sigma)**q0
+
+	zp1 = 1.0 + z
+	A = 0.333 * zp1**-0.11
+	a = 0.788 * zp1**-0.01
+	p = 0.807
+	q = 1.795
+
+	f = A * np.sqrt(2  / np.pi) * np.exp(-a * delta_c**2 / (2 * sigma**2)) \
+		* (1.0 + (sigma**2 / a / delta_c**2)**p) * (delta_c * np.sqrt(a) / sigma)**q
 	
 	return f
 
@@ -558,7 +566,8 @@ def modelWatson13(sigma):
 	"""
 	The mass function model of Watson et al. 2013.
 	
-	...
+	This function currently only contains the model for the FOF mass function as given in 
+	Equation 12.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
