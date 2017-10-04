@@ -1,5 +1,5 @@
 =====================================
-Large-scale Structure
+Large-scale structure
 =====================================
 
 This module implements functions related to large-scale structure. The scope includes the non-
@@ -19,5 +19,5 @@ Module reference
     :maxdepth: 3
 
     lss_lss
-    lss_bias
     lss_mass_function
+    lss_bias

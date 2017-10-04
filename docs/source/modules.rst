@@ -1,5 +1,5 @@
 ***************************************************************************************************
-Full Documentation of Physics Modules
+Physics modules
 ***************************************************************************************************
 
 .. toctree::
@@ -8,4 +8,3 @@ Full Documentation of Physics Modules
     cosmology_cosmology
     lss
     halo
-    utils
