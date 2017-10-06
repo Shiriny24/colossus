@@ -794,7 +794,7 @@ def modelPrada12(M200c, z):
 	nu = lss.peakHeight(M200c, z)
 
 	a = 1.0 / (1.0 + z)
-	x = (cosmo.OL0 / cosmo.Om0) ** (1.0 / 3.0) * a
+	x = (cosmo.Ode0 / cosmo.Om0) ** (1.0 / 3.0) * a
 	B0 = cmin(x) / cmin(1.393)
 	B1 = smin(x) / smin(1.393)
 	temp_sig = 1.686 / nu

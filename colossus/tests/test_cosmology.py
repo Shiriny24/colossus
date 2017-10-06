@@ -76,7 +76,7 @@ class TCComp(CosmologyTestCase):
 												'persistence': '', 'relspecies': False})
 		c_dict = cosmology.cosmologies[self.cosmo_name]
 		self.assertAlmostEqual(self.cosmo.Om0, c_dict['Om0'])
-		self.assertAlmostEqual(self.cosmo.OL0, 1.0 - c_dict['Om0'])
+		self.assertAlmostEqual(self.cosmo.Ode0, 1.0 - c_dict['Om0'])
 		self.assertAlmostEqual(self.cosmo.Ob0, c_dict['Ob0'])
 		self.assertAlmostEqual(self.cosmo.sigma8, c_dict['sigma8'])
 		self.assertAlmostEqual(self.cosmo.ns, c_dict['ns'])
@@ -144,8 +144,8 @@ class TCComp(CosmologyTestCase):
 		correct = [85.715054719999998, 1019.9405094378844, 793807.12176191993]
 		self._testRedshiftArray(self.cosmo.rho_m, correct)
 	
-	def test_rho_L(self):
-		self.assertAlmostEqual(self.cosmo.rho_L(), 191.7444476198966)
+	def test_rho_de(self):
+		self.assertAlmostEqual(self.cosmo.rho_de(0.0), 191.7444476198966)
 	
 	def test_rho_gamma(self):
 		correct = [0.014953378241588128, 0.40622155544932192, 2908.1479538023009]
@@ -163,9 +163,9 @@ class TCComp(CosmologyTestCase):
 		correct = [0.3089, 0.84127672822803978, 0.99360177929557136]
 		self._testRedshiftArray(self.cosmo.Om, correct)
 	
-	def test_OL(self):
+	def test_Ode(self):
 		correct = [0.69100883226719656, 0.15815642192549204, 0.00024000493205743255]
-		self._testRedshiftArray(self.cosmo.OL, correct)
+		self._testRedshiftArray(self.cosmo.Ode, correct)
 	
 	def test_Ok(self):
 		correct = [0.0, 0.0, 0.0]
@@ -256,7 +256,7 @@ class TCInterp(CosmologyTestCase):
 class TCNotFlat1(CosmologyTestCase):
 
 	def setUp(self):
-		c = {'flat': False, 'H0': 70.00, 'Om0': 0.2700, 'OL0': 0.7, 'Ob0': 0.0469, 'sigma8': 0.8200, 'ns': 0.9500, 'relspecies': True}
+		c = {'flat': False, 'H0': 70.00, 'Om0': 0.2700, 'Ode0': 0.7, 'Ob0': 0.0469, 'sigma8': 0.8200, 'ns': 0.9500, 'relspecies': True}
 		cosmology.addCosmology('myCosmo', c)
 		self.assertTrue('myCosmo' in cosmology.cosmologies)
 		cosmology.setCosmology('myCosmo')
@@ -279,7 +279,7 @@ class TCNotFlat1(CosmologyTestCase):
 class TCNotFlat2(CosmologyTestCase):
 
 	def setUp(self):
-		c = {'flat': False, 'H0': 70.00, 'Om0': 0.2700, 'OL0': 0.8, 'Ob0': 0.0469, 'sigma8': 0.8200, 'ns': 0.9500, 'relspecies': True}
+		c = {'flat': False, 'H0': 70.00, 'Om0': 0.2700, 'Ode0': 0.8, 'Ob0': 0.0469, 'sigma8': 0.8200, 'ns': 0.9500, 'relspecies': True}
 		cosmology.addCosmology('myCosmo', c)
 		self.assertTrue('myCosmo' in cosmology.cosmologies)
 		cosmology.setCosmology('myCosmo')

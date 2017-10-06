@@ -139,7 +139,7 @@ def collapseOverdensity(corrections = False, z = None):
 		Om = cosmo.Om(z)
 		if cosmo.flat:
 			delta_c *= Om**0.0055
-		elif cosmo.OL == 0.0:
+		elif cosmo.Ode0 == 0.0:
 			delta_c *= Om**0.0185
 	
 	return delta_c

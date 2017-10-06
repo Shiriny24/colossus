@@ -7,9 +7,8 @@
 
 """
 This module is an implementation of the standard :math:`\Lambda CDM` cosmology, with a focus on 
-structure formation applications. It assumes a fixed dark energy equation of state, w = -1, and 
-includes the contributions from dark matter, dark energy, baryons, curvature, photons, and
-neutrinos.
+structure formation applications. It includes the contributions from dark matter, baryons, 
+curvature, photons, neutrinos, and dark energy with a variety of equations of state.
 
 ---------------------------------------------------------------------------------------------------
 Basic usage
@@ -62,7 +61,7 @@ The current cosmology can also be set to an already existing cosmology object, f
 switching between cosmologies::
 
 	cosmo1 = setCosmology('WMAP9')
-	cosmo2 = setCosmology('planck13')
+	cosmo2 = setCosmology('planck15')
 	setCurrent(cosmo1)
 
 The user can change the cosmological parameters of an existing cosmology object at run-time, but 
@@ -153,7 +152,7 @@ default, tabulated, stored in files, and re-loaded when the same cosmology is se
 where functions are evaluated few times, but for a large number of cosmologies), the user can turn 
 this behavior off::
 
-	cosmo = Cosmology.setCosmology('WMAP9', {'interpolation': False, 'persistence': ''})
+	cosmo = Cosmology.setCosmology('planck15', {'interpolation': False, 'persistence': ''})
 
 For more details, please see the documentation of the ``interpolation`` and ``persistence`` 
 parameters. In order to turn off the interpolation temporarily, the user can simply switch the 
@@ -162,7 +161,7 @@ parameters. In order to turn off the interpolation temporarily, the user can sim
 	cosmo.interpolation = False
 	Pk = cosmo.matterPowerSpectrum(k)
 	cosmo.interpolation = True
-	
+
 In this example, the power spectrum is evaluated directly without interpolation. The 
 interpolation is fairly accurate (see specific notes in the function documentation), meaning that 
 it is very rarely necessary to use the exact routines. 
@@ -231,10 +230,13 @@ class Cosmology(object):
 	:func:`setCosmology()` function with one of the pre-defined sets of cosmological parameters 
 	listed above. 
 	
+	The user can choose between different equations of state for dark energy, including an 
+	arbitrary :math:`w(z)` function.
+	
 	Some parameters that are well constrained and have a sub-dominant impact on the computations
 	have pre-set default values, such as the CMB temperature (T = 2.7255 K) and the effective number 
 	of neutrino species (Neff = 3.046). These values are compatible with the most recent 
-	measurements and can be changed by the user. 
+	measurements and can be changed by the user.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -242,15 +244,12 @@ class Cosmology(object):
 		A name for the cosmology, e.g. ``WMAP9``.
 	flat: bool
 		If flat, there is no curvature, :math:`\Omega_k = 0`, and :math:`\Omega_{\Lambda} = 1 - \Omega_m`.
-	relspecies: bool
-		If False, all relativistic contributions to the energy density of the universe (such as 
-		photons and neutrinos) are ignored.
 	Om0: float
 		:math:`\Omega_m` at z = 0.
-	OL0: float
-		:math:`\Omega_{\Lambda}` at z = 0. This parameter is ignored if ``flat == True``.
 	Ob0: float
 		:math:`\Omega_{baryon}` at z = 0.
+	Ode0: float
+		:math:`\Omega_{DE}` at z = 0. This parameter is ignored if ``flat == True``.
 	H0: float
 		The Hubble constant in km/s/Mpc.
 	sigma8: float
@@ -258,6 +257,26 @@ class Cosmology(object):
 		top hat filter of radius 8 Mpc/h.
 	ns: float
 		The tilt of the primordial power spectrum.
+	de_type: str
+		An identifier indicating which dark energy equation of state is to be used. The DE equation
+		of state can either be a cosmological constant (``lambda``), a constant w (``w0``, the w0
+		parameter must be set), a linear function of the scale factor according to the 
+		parameterization of Linder 2003 where :math:`w(z) = w_0 + w_a (1 - a)`  (``w0wa``, the w0
+		and wa parameters must be set), or a function supplied by the user (``user``). In the latter 
+		case the w(z) function must be passed using the wz_function parameter.
+	w0: float
+		If de_type == ``w0``, this variable gives the constant dark energy equation of state 
+		parameter w. If de_type == ``w0wa``, this variable gives the constant component w (see
+		de_type parameter).
+	wa: float
+		If de_type == ``w0wa``, this variable gives the varying component of w (see de_type 
+		parameter).
+	wz_function: function
+		A dark energy equation of state (if de_type == ``user``). This function must take z as the
+		only input variable and return w(z).
+	relspecies: bool
+		If False, all relativistic contributions to the energy density of the universe (such as 
+		photons and neutrinos) are ignored.
 	Tcmb0: float
 		The temperature of the CMB today in Kelvin.
 	Neff: float
@@ -288,12 +307,14 @@ class Cosmology(object):
 	"""
 	
 	def __init__(self, name = None,
-		Om0 = None, OL0 = None, Ob0 = None, H0 = None, sigma8 = None, ns = None,
-		flat = True, relspecies = True, 
-		Tcmb0 = defaults.COSMOLOGY_TCMB0, Neff = defaults.COSMOLOGY_NEFF,
+		flat = True, Om0 = None, Ode0 = None, Ob0 = None, H0 = None, sigma8 = None, ns = None,
+		de_type = 'lambda', w0 = None, wa = None, wz_function = None,
+		relspecies = True, Tcmb0 = defaults.COSMOLOGY_TCMB0, Neff = defaults.COSMOLOGY_NEFF,
 		power_law = False, power_law_n = 0.0,
 		print_info = False, print_warnings = True,
-		interpolation = True, persistence = settings.PERSISTENCE, storage = None):
+		interpolation = True, persistence = settings.PERSISTENCE, 
+		#deprecated parameters
+		OL0 = None, storage = None):
 		
 		if name is None:
 			raise Exception('A name for the cosmology must be set.')
@@ -313,25 +334,40 @@ class Cosmology(object):
 			raise Exception('Parameter Neff must be set.')
 		if power_law and power_law_n is None:
 			raise Exception('For a power-law cosmology, power_law_n must be set.')
-		if not flat and OL0 is None:
-			raise Exception('OL0 must be set for non-flat cosmologies.')
-		if OL0 is not None and OL0 < 0.0:
-			raise Exception('OL0 cannot be negative.')
+		
+		if not flat and Ode0 is None:
+			raise Exception('Ode0 must be set for non-flat cosmologies.')
+		if Ode0 is not None and Ode0 < 0.0:
+			raise Exception('Ode0 cannot be negative.')
+		if not de_type in ['lambda', 'w0', 'w0wa', 'user']:
+			raise Exception('Unknown dark energy type, %s. Valid types include lambda, w0, w0wa, and user.' % (de_type))
+		if de_type == 'user' and wz_function is None:
+			raise Exception('If de_type is user, a function must be passed for wz_function.')
+		if de_type == 'lambda':
+			w0 = -1
+			wa = None
+		
+		if OL0 is not None:
+			warnings.warn('The OL0 parameter is deprecated, please use Ode0 instead.')
 	
 		# Copy the cosmological parameters into the class
 		self.name = name
 		self.flat = flat
-		self.relspecies = relspecies
-		self.power_law = power_law
-		self.power_law_n = power_law_n
 		self.Om0 = Om0
-		self.OL0 = OL0
+		self.Ode0 = Ode0
 		self.Ob0 = Ob0
 		self.H0 = H0
 		self.sigma8 = sigma8
 		self.ns = ns
+		self.de_type = de_type
+		self.w0 = w0
+		self.wa = wa
+		self.wz_function = wz_function
+		self.relspecies = relspecies
 		self.Tcmb0 = Tcmb0
 		self.Neff = Neff
+		self.power_law = power_law
+		self.power_law_n = power_law_n
 
 		# Compute some derived cosmological variables
 		self.h = H0 / 100.0
@@ -417,10 +453,10 @@ class Cosmology(object):
 	def __str__(self):
 		
 		s = 'Cosmology "%s", flat = %s, relspecies = %s, \n' \
-			'    Om0 = %.4f, OL0 = %.4f, Ob0 = %.4f, H0 = %.2f, sigma8 = %.4f, ns = %.4f, \n' \
+			'    Om0 = %.4f, Ode0 = %.4f, Ob0 = %.4f, H0 = %.2f, sigma8 = %.4f, ns = %.4f, \n' \
 			'    Tcmb0 = %.4f, Neff = %.4f, PL = %s, PLn = %.4f' \
 			% (self.name, str(self.flat), str(self.relspecies),
-			self.Om0, self.OL0, self.Ob0, self.H0, self.sigma8, self.ns, self.Tcmb0, self.Neff,
+			self.Om0, self.Ode0, self.Ob0, self.H0, self.sigma8, self.ns, self.Tcmb0, self.Neff,
 			str(self.power_law), self.power_law_n)
 		
 		return s
@@ -455,17 +491,17 @@ class Cosmology(object):
 	# Utilities for internal use
 	###############################################################################################
 	
-	# Depending on whether the cosmology is flat or not, OL0 and Ok0 take on certain values.
+	# Depending on whether the cosmology is flat or not, Ode0 and Ok0 take on certain values.
 
 	def _ensureConsistency(self):
 		
 		if self.flat:
-			self.OL0 = 1.0 - self.Om0 - self.Or0
+			self.Ode0 = 1.0 - self.Om0 - self.Or0
 			self.Ok0 = 0.0
-			if self.OL0 < 0.0:
-				raise Exception('OL0 cannot be less than zero. If Om = 1, relativistic species must be off.')
+			if self.Ode0 < 0.0:
+				raise Exception('Ode0 cannot be less than zero. If Om = 1, relativistic species must be off.')
 		else:
-			self.Ok0 = 1.0 - self.OL0 - self.Om0 - self.Or0
+			self.Ok0 = 1.0 - self.Ode0 - self.Om0 - self.Or0
 
 		return
 
@@ -476,15 +512,57 @@ class Cosmology(object):
 		
 	def _getHashableString(self):
 	
-		param_string = "Name_%s_Flat_%s_relspecies_%s_Om0_%.4f_OL0_%.4f_Ob0_%.4f_H0_%.4f_sigma8_%.4f_ns_%.4f_Tcmb0_%.4f_Neff_%.4f_PL_%s_PLn_%.4f" \
+		param_string = "Name_%s_Flat_%s_relspecies_%s_Om0_%.4f_Ode0_%.4f_Ob0_%.4f_H0_%.4f_sigma8_%.4f_ns_%.4f_Tcmb0_%.4f_Neff_%.4f_PL_%s_PLn_%.4f" \
 			% (self.name, str(self.flat), str(self.relspecies),
-			self.Om0, self.OL0, self.Ob0, self.H0, self.sigma8, self.ns, self.Tcmb0, self.Neff,
+			self.Om0, self.Ode0, self.Ob0, self.H0, self.sigma8, self.ns, self.Tcmb0, self.Neff,
 			str(self.power_law), self.power_law_n)
 	
 		return param_string
 
 	###############################################################################################
 	# Basic cosmology calculations
+	###############################################################################################
+	
+	# The redshift scaling of dark energy. This function should not be used directly but goes into
+	# the results of Ez(), rho_de(), and Ode(). The general case of a user-defined function is
+	# given in Linder 2003 Equation 5. For the w0-wa parameterization, this integral evaluates to
+	# an analytical expression.
+	
+	def _rho_de_z(self, z):
+		
+		def _de_integrand(ln_zp1):
+			z = np.exp(ln_zp1) -  1.0
+			ret = 1.0 + self.de_wz(z)
+			return ret
+		
+		if self.de_type == 'lambda':
+			
+			de_z = 1.0
+		
+		elif self.de_type == 'w0':
+			
+			de_z = (1.0 + z)**(3.0 * (1.0 + self.w0))
+		
+		elif self.de_type == 'w0wa':
+			
+			a = 1.0 / (1.0 + z)
+			de_z = a**(-3.0 * (1.0 + self.w0 + self.wa)) * np.exp(-3.0 * self.wa * (1.0 - a))
+		
+		elif self.de_type == 'user':
+			
+			z_array, is_array = utilities.getArray(z)
+			de_z = np.zeros_like(z_array)
+			for i in range(len(z)):
+				integral = scipy.integrate.quad(_de_integrand, 0, np.log(1.0 + z_array[i]))
+				de_z[i] = np.exp(3.0 * integral)
+			if not is_array:
+				de_z = de_z[0]
+
+		else:
+			raise Exception('Unknown de_type, %s.' % (self.de_type))
+		
+		return de_z
+
 	###############################################################################################
 	
 	def Ez(self, z):
@@ -506,8 +584,9 @@ class Cosmology(object):
 		Hz: The Hubble parameter as a function of redshift.
 		"""
 		
+		# TODO add DE
 		zp1 = (1.0 + z)
-		sum = self.Om0 * zp1**3 + self.OL0
+		sum = self.Om0 * zp1**3 + self.Ode0 * self._rho_de_z(z)
 		if not self.flat:
 			sum += self.Ok0 * zp1**2
 		if self.relspecies:
@@ -540,6 +619,40 @@ class Cosmology(object):
 		H = self.Ez(z) * self.H0
 					
 		return H
+
+	###############################################################################################
+
+	def wz(self, z):
+		"""
+		The dark energy equation of state parameter.
+		
+		The EOS parameter is defined as :math:`w(z) = P(z) / \\rho(z)`. Depending on its chosen 
+		functional form (see the de_type parameter to the constructor), w(z) can be -1, another
+		constant, a linear function of a, or an arbitrary function chosen by the user.
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		z: array_like
+			Redshift; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		w: array_like
+			:math:`w(z)`, has the same dimensions as z.
+		"""
+	
+		if self.de_type == 'lambda':
+			w = np.ones_like(z) * -1.0
+		elif self.de_type == 'w0':
+			w = np.ones_like(z) * self.w0
+		elif self.de_type == 'w0wa':
+			w = self.w0 + self.wa * z / (1.0 + z)
+		elif self.de_type == 'user':
+			w = self.wz_function(z)
+		else:
+			raise Exception('Unknown de_type, %s.' % (self.de_type))
+				
+		return w
 
 	###############################################################################################
 
@@ -1026,24 +1139,39 @@ class Cosmology(object):
 
 	###############################################################################################
 	
+	#DEPRECATED
 	def rho_L(self):
 		"""
-		The dark energy density of the universe at redshift z.
+		Deprecated, please use :func:`rho_de`.
+		"""
+				
+		warnings.warn('The rho_L function is deprecated, please use rho_de instead.')
 		
-		In this module, dark energy is assumed to be a cosmological constant, meaning the density
-		of dark energy does not depend on redshift.
+		return self.rho_de()
+
+	###############################################################################################
+	
+	def rho_de(self, z):
+		"""
+		The dark energy density of the universe at redshift z.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		z: array_like
+			Redshift; can be a number or a numpy array.
 
 		Returns
 		-------------------------------------------------------------------------------------------
-		rho_Lambda: float
-			The dark energy density in units of physical :math:`M_{\odot} h^2 / kpc^3`.
+		rho_de: float
+			The dark energy density in units of physical :math:`M_{\odot} h^2 / kpc^3`; has the 
+			same dimensions as z.
 	
 		See also
 		-------------------------------------------------------------------------------------------
-		OL: The dark energy density of the universe, in units of the critical density. 
+		Ode: The dark energy density of the universe, in units of the critical density. 
 		"""
-			
-		return constants.RHO_CRIT_0_KPC3 * self.OL0
+		
+		return constants.RHO_CRIT_0_KPC3 * self.Ode0 * self._rho_de_z(z)
 
 	###############################################################################################
 	
@@ -1076,9 +1204,9 @@ class Cosmology(object):
 	def rho_nu(self, z):
 		"""
 		The neutrino density of the universe at redshift z.
-
+		
 		If ``relspecies == False``, this function returns 0.
-
+		
 		Parameters
 		-------------------------------------------------------------------------------------------
 		z: array_like
@@ -1094,7 +1222,7 @@ class Cosmology(object):
 		-------------------------------------------------------------------------------------------
 		Onu: The density of neutrinos in the universe, in units of the critical density.
 		"""
-			
+
 		return constants.RHO_CRIT_0_KPC3 * self.Onu0 * (1.0 + z)**4
 
 	###############################################################################################
@@ -1149,11 +1277,23 @@ class Cosmology(object):
 
 	###############################################################################################
 
+	#DEPRECATED
 	def OL(self, z):
+		"""
+		Deprecated, please use :func:`Ode`.
+		"""
+
+		warnings.warn('The OL function is deprecated, please use Ode instead.')
+
+		return self.Ode(z)
+
+	###############################################################################################
+
+	def Ode(self, z):
 		"""
 		The dark energy density of the universe, in units of the critical density. 
 		
-		In a flat universe, :math:`\Omega_{\Lambda} = 1 - \Omega_m - \Omega_r`.
+		In a flat universe, :math:`\Omega_{\rm DE} = 1 - \Omega_m - \Omega_r`.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -1162,15 +1302,15 @@ class Cosmology(object):
 
 		Returns
 		-------------------------------------------------------------------------------------------
-		Omega_Lambda: array_like
+		Omega_de: array_like
 			Has the same dimensions as z.
 
 		See also
 		-------------------------------------------------------------------------------------------
-		rho_L: The dark energy density of the universe at redshift z.
+		rho_de: The dark energy density of the universe at redshift z.
 		"""
 
-		return self.OL0 / (self.Ez(z))**2
+		return self.Ode0 / (self.Ez(z))**2 * self._rho_de_z(z)
 
 	###############################################################################################
 
@@ -1337,9 +1477,10 @@ class Cosmology(object):
 		# into account. Thus, using the standard E(z) leads to wrong results. Instead, we pretend
 		# that the small radiation content at low z behaves like dark energy which leads to a very
 		# small error but means that the formula converges to a at high z.
+		
 		def Ez_D(z):
 			ai = (1.0 + z)
-			sum = self.Om0 * ai**3 + self.OL0
+			sum = self.Om0 * ai**3 + self.Ode0 * self._rho_de_z(z)
 			if self.relspecies:
 				sum += self.Or0
 			if not self.flat:

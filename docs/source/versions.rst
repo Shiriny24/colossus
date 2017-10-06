@@ -9,8 +9,23 @@ with version 1.1.
 Version 1.1
 ***************************************************************************************************
 
-* A separate module for large-scale structure, lss, has been added. Some functions that were 
-  previously located in the cosmology and halo modules were shifted into this new module, namely:
+A separate module for large-scale structure, lss, has been added, including functions previously
+housed in the cosmology module, the halo bias module, and a new module for the halo mass function.
+A list of the changes in detail:
+
+* The module halo.bias is now :mod:`lss.bias`
+* The :func:`lss.lss.collapseOverdensity()` function has been completely reworked. By default, it 
+  still returns the constant collapse overdensity threshold in an Einstein-de Sitter universe. If a 
+  redshift is passed, it applies small corrections based on the underlying cosmology. The previous 
+  parameters to this function will now cause an error. This change also affects all functions that
+  rely on the collapse overdensity, such as :func:`lss.lss.peakHeight()`, 
+  :func:`lss.lss.massFromPeakHeight()`, :func:`lss.lss.nonLinearMass()`, and 
+  :func:`lss.lss.peakCurvature()`. These functions now take dictionaries of parameters that are 
+  passed to the collapse overdensity and sigma functions.
+* The halo bias module was improved, with two new models for halo bais (spherical collapse and
+  Sheth et al. 2001).
+* The lss module contains a new module to compute the halo mass function.
+* The following functions were shifted from the cosmology module into the lss module:
 
     * Cosmology.lagrangianR() is now :func:`lss.lss.lagrangianR`
     * Cosmology.lagrangianM() is now :func:`lss.lss.lagrangianM`
@@ -19,10 +34,15 @@ Version 1.1
     * Cosmology.massFromPeakHeight() is now :func:`lss.lss.massFromPeakHeight`
     * Cosmology.nonLinearMass() is now :func:`lss.lss.nonLinearMass`
     * Cosmology.peakCurvature() is now :func:`lss.lss.peakCurvature`
-    * halo.bias is now :mod:`lss.bias`
 
-* The lss module contains a new module to compute the halo mass function.
-* The demo scripts have been converted to Jupyter notebooks
+Changes in the cosmology module:
+
+* Cosmology now allows non-constant dark energy equations of state. 
+* The OL0, OL(), and rho_L() parameters and functions were renamed to Ode0, Ode(), and rho_de().
+* The text_output option was removed from the cosmology object.
+
+Changes in the halo module: 
+
 * The interface of the SO changing functions in :mod:`halo.mass_defs` has changed. The function
   previously called pseudoEvolve is now called :func:`halo.mass_defs.evolveSO` to reflect its more
   general nature. The :func:`halo.mass_defs.pseudoEvolve` function is a wrapper for evolveSO, and
@@ -32,16 +52,9 @@ Version 1.1
   splashback, and bias modules.
 * The klypin14_nu and klypin14_m concentration models were renamed to klypin16_nu and klypin16_m
   to maintain compatibility with the publication of their paper.
-* The text_output option was removed from the cosmology object.
+
+Other changes:
+
+* The demo scripts have been converted to Jupyter notebooks
 * There is a new storage_unit module as part of utilities. The storage parameter in the cosmology
   module was renamed to persistence, as was the global setting STORAGE (renamed to PERSISTENCE).
-* The collapseOverdensity() function has been completely reworked. By default, it still returns
-  the constant collapse overdensity threshold in an Einstein-de Sitter universe. If a redshift
-  is passed, it applies small corrections based on the underlying cosmology. The previous 
-  parameters to this function will now cause an error. This change also affects all functions that
-  rely on the collapse overdensity, such as peakHeight(), massFromPeakHeight(), nonLinearMass(),
-  and peakCurvature(). These functions now take dictionaries of parameters that are passed to the
-  collapse overdensity and sigma functions.
-* The halo bias module was improved, with two new models for halo bais (spherical collapse and
-  Sheth et al. 2001.
-  
