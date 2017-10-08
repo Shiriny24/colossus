@@ -6,29 +6,32 @@
 ###################################################################################################
 
 """
-This module is an implementation of the standard :math:`\Lambda CDM` cosmology, with a focus on 
-structure formation applications. It includes the contributions from dark matter, baryons, 
-curvature, photons, neutrinos, and dark energy with a variety of equations of state.
-
+This module is an implementation of the standard FLRW cosmology with a number of dark energy models
+include :math:`\Lambda CDM` and varying dark energy equations of state. The module includes the 
+contributions from dark matter, baryons, curvature, photons, neutrinos, and dark energy.
+ 
 ---------------------------------------------------------------------------------------------------
 Basic usage
 ---------------------------------------------------------------------------------------------------
+
+In Colossus, the cosmology is set globally, and all Colossus functions must respect that global
+cosmology. Colossus does not set a default cosmology, meaning the user must set a cosmology before 
+using any cosmological functions or any other functions that rely on the Cosmology module.
 
 ***************************************************************************************************
 Setting and getting cosmologies
 ***************************************************************************************************
 
-Colossus does not set a default cosmology. Thus, before using any cosmological functions, or any 
-other Colossus functions that use the Cosmology module, a cosmology needs to be set. This is almost 
-always done with the :func:`setCosmology` function, which can be used in multiple ways:
+Setting a cosmology is almost always achieved with the :func:`setCosmology` function, which can be 
+used in multiple ways:
 
 * Set one of the pre-defined cosmologies::
 	
-	setCosmology('WMAP9')
+	setCosmology('planck15')
 
 * Set one of the pre-defined cosmologies, but overwrite certain parameters::
 	
-	setCosmology('WMAP9', {'print_warnings': False})
+	setCosmology('planck15', {'print_warnings': False})
 
 * Add a new cosmology to the global list of available cosmologies. This has the advantage that the 
   new cosmology can be set from anywhere in the code. Only the main cosmological parameters are 
@@ -117,6 +120,41 @@ Those cosmologies that refer to particular simulations (such as bolshoi and mill
 generally set to ignore relativistic species, i.e. photons and neutrinos, because they are not
 modeled in the simulations. The EdS cosmology refers to an Einstein-de Sitter model, i.e. a flat
 cosmology with only dark matter.
+
+---------------------------------------------------------------------------------------------------
+Dark energy and curvature
+---------------------------------------------------------------------------------------------------
+
+All the default parameter sets above represent flat :math:`\Lambda CDM` cosmologies, i.e. model 
+dark energy as a cosmological constant and contain no curvature. To add curvature, the default for
+flatness must be overwritten, and the dark energy content of the universe must be set (which is 
+otherwise computed from the matter and relativistic contributions)::
+
+	params = cosmologies['planck15']
+	params['flat'] = False
+	params['Ode0'] = 0.75
+	cosmo = setCosmology('planck_curvature', params)
+	
+Multiple models for the dark energy equation of state parameter :math:`w(z)` are implemented, 
+namely a cosmological constant (:math:`w=-1`), a constant :math:`w`, a linearly varying 
+:math:`w(z) = w_0 + w_a (1 - a)`, and arbitrary user-supplied functions for :math:`w(z)`. To set, 
+for example, a linearly varying EOS, we change the ``de_type`` parameter::
+
+	params = cosmologies['planck15']
+	params['de_type'] = 'w0wa'
+	params['w0'] = -0.8
+	params['wa'] = 0.1
+	cosmo = setCosmology('planck_w0wa', params)
+
+We can implement more exotic models by supplying an arbitrary function::
+
+	def wz_func(z):
+		return -1.0 + 0.1 * z
+		
+	params = cosmologies['planck15']
+	params['de_type'] = 'user'
+	params['wz_function'] = wz_func
+	cosmo = setCosmology('planck_wz', params)
 
 ---------------------------------------------------------------------------------------------------
 Derivatives and inverses
@@ -225,7 +263,7 @@ cosmologies['powerlaw']      = {'flat': True, 'H0': 70.00, 'Om0': 1.0000, 'Ob0':
 
 class Cosmology(object):
 	"""
-	A cosmology is set through the parameters passed to the constructor. Any parameter whose default
+	A cosmology is set via the parameters passed to the constructor. Any parameter whose default
 	value is ``None`` must be set by the user. This can easily be done using the 
 	:func:`setCosmology()` function with one of the pre-defined sets of cosmological parameters 
 	listed above. 
@@ -243,13 +281,17 @@ class Cosmology(object):
 	name: str		
 		A name for the cosmology, e.g. ``WMAP9``.
 	flat: bool
-		If flat, there is no curvature, :math:`\Omega_k = 0`, and :math:`\Omega_{\Lambda} = 1 - \Omega_m`.
+		If flat, there is no curvature, :math:`\Omega_k = 0`, and the dark energy content of the 
+		universe is computed as
+		:math:`\Omega_{de} = 1 - \Omega_m - \Omega_{\\gamma} - \Omega_{\\nu}`.
 	Om0: float
-		:math:`\Omega_m` at z = 0.
+		:math:`\Omega_{m}`, the matter density in units of the critical density at z = 0 (includes 
+		all non-relativistic matter, i.e., dark matter and baryons but not neutrinos).
 	Ob0: float
-		:math:`\Omega_{baryon}` at z = 0.
+		:math:`\Omega_{b}`, the baryon density in units of the critical density at z = 0.
 	Ode0: float
-		:math:`\Omega_{DE}` at z = 0. This parameter is ignored if ``flat == True``.
+		:math:`\Omega_{de}`, the dark energy density in units of the critical density at z = 0. 
+		This parameter is ignored if ``flat == True``.
 	H0: float
 		The Hubble constant in km/s/Mpc.
 	sigma8: float
@@ -265,14 +307,14 @@ class Cosmology(object):
 		and wa parameters must be set), or a function supplied by the user (``user``). In the latter 
 		case the w(z) function must be passed using the wz_function parameter.
 	w0: float
-		If de_type == ``w0``, this variable gives the constant dark energy equation of state 
-		parameter w. If de_type == ``w0wa``, this variable gives the constant component w (see
+		If ``de_type == w0``, this variable gives the constant dark energy equation of state 
+		parameter w. If ``de_type == w0wa``, this variable gives the constant component w (see
 		de_type parameter).
 	wa: float
 		If de_type == ``w0wa``, this variable gives the varying component of w (see de_type 
 		parameter).
 	wz_function: function
-		A dark energy equation of state (if de_type == ``user``). This function must take z as the
+		A dark energy equation of state (if ``de_type == user``). This function must take z as the
 		only input variable and return w(z).
 	relspecies: bool
 		If False, all relativistic contributions to the energy density of the universe (such as 
@@ -297,9 +339,9 @@ class Cosmology(object):
 		By default, interpolation tables and other data are stored in a permanent file for
 		each cosmology. This avoids re-computing the tables when the same cosmology is set again. 
 		However, if either read or write file access is to be avoided (for example in MCMC chains),
-		the user can set this parameter to any combination of read ('r') and write ('w'), such as 
-		'rw' (read and write, the default), 'r' (read only), 'w' (write only), or '' (no 
-		persistence).
+		the user can set this parameter to any combination of read (``'r'``) and write (``'w'``), 
+		such as ``'rw'`` (read and write, the default), ``'r'`` (read only), ``'w'`` (write only), 
+		or ``''`` (no persistence).
 	print_info: bool
 		Output information to the console.
 	print_warnings: bool
@@ -532,7 +574,7 @@ class Cosmology(object):
 		
 		def _de_integrand(ln_zp1):
 			z = np.exp(ln_zp1) -  1.0
-			ret = 1.0 + self.de_wz(z)
+			ret = 1.0 + self.wz_function(z)
 			return ret
 		
 		if self.de_type == 'lambda':
@@ -552,8 +594,8 @@ class Cosmology(object):
 			
 			z_array, is_array = utilities.getArray(z)
 			de_z = np.zeros_like(z_array)
-			for i in range(len(z)):
-				integral = scipy.integrate.quad(_de_integrand, 0, np.log(1.0 + z_array[i]))
+			for i in range(len(z_array)):
+				integral, _ = scipy.integrate.quad(_de_integrand, 0, np.log(1.0 + z_array[i]))
 				de_z[i] = np.exp(3.0 * integral)
 			if not is_array:
 				de_z = de_z[0]
@@ -584,7 +626,6 @@ class Cosmology(object):
 		Hz: The Hubble parameter as a function of redshift.
 		"""
 		
-		# TODO add DE
 		zp1 = (1.0 + z)
 		sum = self.Om0 * zp1**3 + self.Ode0 * self._rho_de_z(z)
 		if not self.flat:
@@ -1475,8 +1516,8 @@ class Cosmology(object):
 
 		# The growth factor integral uses E(z), but is not designed to take relativistic species
 		# into account. Thus, using the standard E(z) leads to wrong results. Instead, we pretend
-		# that the small radiation content at low z behaves like dark energy which leads to a very
-		# small error but means that the formula converges to a at high z.
+		# that the small radiation content at low z behaves like a cosmological constant which 
+		# leads to a very small error but means that the formula converges to a at high z.
 		
 		def Ez_D(z):
 			ai = (1.0 + z)

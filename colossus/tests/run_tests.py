@@ -28,6 +28,9 @@ suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCComp)
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCInterp))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCNotFlat1))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCNotFlat2))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCDarkEnergy1))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCDarkEnergy2))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCDarkEnergy3))
 
 # Large-scale structure
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_lss_lss.TCLss))

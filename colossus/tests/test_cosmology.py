@@ -296,6 +296,64 @@ class TCNotFlat2(CosmologyTestCase):
 		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 10.0, transverse = False), 7.042437425006e+03)
 
 ###################################################################################################
+# TEST CASE 5: VARYING DARK ENERGY EQUATION OF STATE 1
+###################################################################################################
+
+class TCDarkEnergy1(CosmologyTestCase):
+
+	def setUp(self):
+		c = {'flat': True, 'H0': 70.00, 'Om0': 0.2700, 'Ob0': 0.0469, 'sigma8': 0.8200, 
+			'ns': 0.9500, 'relspecies': True, 'de_type': 'w0wa', 'w0': -0.7, 'wa': 0.2}
+		cosmology.addCosmology('myCosmo', c)
+		self.assertTrue('myCosmo' in cosmology.cosmologies)
+		cosmology.setCosmology('myCosmo')
+		self.cosmo = cosmology.getCurrent()
+
+	def test_Ez(self):
+		self.assertAlmostEqual(self.cosmo.wz(0.5), -6.333333333333e-01)
+		self.assertAlmostEqual(self.cosmo.Ez(1.2), 2.143355324420e+00)
+
+###################################################################################################
+# TEST CASE 6: VARYING DARK ENERGY EQUATION OF STATE 2
+###################################################################################################
+
+class TCDarkEnergy2(CosmologyTestCase):
+
+	def setUp(self):
+		c = {'flat': True, 'H0': 70.00, 'Om0': 0.2700, 'Ob0': 0.0469, 'sigma8': 0.8200, 
+			'ns': 0.9500, 'relspecies': True, 'de_type': 'w0', 'w0': -0.7}
+		cosmology.addCosmology('myCosmo', c)
+		self.assertTrue('myCosmo' in cosmology.cosmologies)
+		cosmology.setCosmology('myCosmo')
+		self.cosmo = cosmology.getCurrent()
+
+	def test_Ez(self):
+		self.assertAlmostEqual(self.cosmo.wz(0.5), -0.7)
+		self.assertAlmostEqual(self.cosmo.Ez(1.2), 2.088306361926e+00)
+
+###################################################################################################
+# TEST CASE 7: VARYING DARK ENERGY EQUATION OF STATE 2
+###################################################################################################
+
+# Dark energy equation of state test function
+def wz_func(z):
+	return -0.7 + 0.2 * (1.0 - 1.0 / (1.0 + z))
+
+class TCDarkEnergy3(CosmologyTestCase):
+
+	def setUp(self):
+		c = {'flat': True, 'H0': 70.00, 'Om0': 0.2700, 'Ob0': 0.0469, 'sigma8': 0.8200, 
+			'ns': 0.9500, 'relspecies': True, 'de_type': 'user', 'wz_function': wz_func}
+		cosmology.addCosmology('myCosmo', c)
+		self.assertTrue('myCosmo' in cosmology.cosmologies)
+		cosmology.setCosmology('myCosmo')
+		self.cosmo = cosmology.getCurrent()
+
+	def test_Ez(self):
+		self.assertAlmostEqual(self.cosmo.wz(0.5), -6.333333333333e-01)
+		self.assertAlmostEqual(self.cosmo.Ez(1.2), 2.143355324420e+00)
+
+###################################################################################################
 # TRIGGER
 ###################################################################################################
 
