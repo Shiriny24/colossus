@@ -218,6 +218,7 @@ import warnings
 
 from colossus import defaults
 from colossus import settings
+from colossus.cosmology import power_spectrum
 from colossus.utils import utilities
 from colossus.utils import constants
 from colossus.utils import storage as storage_unit
@@ -320,7 +321,7 @@ class Cosmology(object):
 		If False, all relativistic contributions to the energy density of the universe (such as 
 		photons and neutrinos) are ignored.
 	Tcmb0: float
-		The temperature of the CMB today in Kelvin.
+		The temperature of the CMB at z = 0 in Kelvin.
 	Neff: float
 		The effective number of neutrino species.
 	power_law: bool
@@ -1642,214 +1643,22 @@ class Cosmology(object):
 		return delta_c
 	
 	###############################################################################################
-	
-	def transferFunctionEH98(self, k):
-		"""
-		The transfer function according to Eisenstein & Hu 1998.
-		
-		The transfer function transforms the spectrum of primordial fluctuations into the
-		power spectrum of the initial matter density fluctuations. The primordial power spectrum is 
-		usually described as a power law, leading to a power spectrum
-		
-		.. math::
-			P(k) = T(k)^2 k^{n_s}
-			
-		where P(k) is the matter power spectrum, T(k) is the transfer function, and :math:`n_s` is 
-		the tilt of the primordial power spectrum. This function computes the Eisenstein & Hu 1998 
-		approximation to the transfer function at a scale k, and is based on Matt Becker's 
-		cosmocalc code.
-	
-		Parameters
-		-------------------------------------------------------------------------------------------
-		k: array_like
-			The wavenumber k (in comoving h/Mpc); can be a number or a numpy array.
 
-		Returns
-		-------------------------------------------------------------------------------------------
-		Tk: array_like
-			The transfer function; has the same dimensions as k.
-
-		See also
-		-------------------------------------------------------------------------------------------
-		transferFunctionEH98Smooth: The transfer function according to Eisenstein & Hu 1998, without the BAO features.
-		"""
-
-		# Define shorter expressions
-		omb = self.Ob0
-		om0 = self.Om0
-		omc = om0 - omb
-		ombom0 = omb / om0
-		h = self.h
-		h2 = h**2
-		om0h2 = om0 * h2
-		ombh2 = omb * h2
-		theta2p7 = self.Tcmb0 / 2.7
-		theta2p72 = theta2p7**2
-		theta2p74 = theta2p72**2
-		
-		# Convert kh from h/Mpc to 1/Mpc
-		kh = k * h
-	
-		# Equation 2
-		zeq = 2.50e4 * om0h2 / theta2p74
-	
-		# Equation 3
-		keq = 7.46e-2 * om0h2 / theta2p72
-	
-		# Equation 4
-		b1d = 0.313 * om0h2**-0.419 * (1.0 + 0.607 * om0h2**0.674)
-		b2d = 0.238 * om0h2**0.223
-		zd = 1291.0 * om0h2**0.251 / (1.0 + 0.659 * om0h2**0.828) * (1.0 + b1d * ombh2**b2d)
-	
-		# Equation 5
-		Rd = 31.5 * ombh2 / theta2p74 / (zd / 1e3)
-		Req = 31.5 * ombh2 / theta2p74 / (zeq / 1e3)
-	
-		# Equation 6
-		s = 2.0 / 3.0 / keq * np.sqrt(6.0 / Req) * np.log((np.sqrt(1.0 + Rd) + \
-			np.sqrt(Rd + Req)) / (1.0 + np.sqrt(Req)))
-	
-		# Equation 7
-		ksilk = 1.6 * ombh2**0.52 * om0h2**0.73 * (1.0 + (10.4 * om0h2)**-0.95)
-	
-		# Equation 10
-		q = kh / 13.41 / keq
-	
-		# Equation 11
-		a1 = (46.9 * om0h2)**0.670 * (1.0 + (32.1 * om0h2)**-0.532)
-		a2 = (12.0 * om0h2)**0.424 * (1.0 + (45.0 * om0h2)**-0.582)
-		ac = a1**(-ombom0) * a2**(-ombom0**3)
-	
-		# Equation 12
-		b1 = 0.944 / (1.0 + (458.0 * om0h2)**-0.708)
-		b2 = (0.395 * om0h2)**-0.0266
-		bc = 1.0 / (1.0 + b1 * ((omc / om0)**b2 - 1.0))
-	
-		# Equation 15
-		y = (1.0 + zeq) / (1.0 + zd)
-		Gy = y * (-6.0 * np.sqrt(1.0 + y) + (2.0 + 3.0 * y) \
-			* np.log((np.sqrt(1.0 + y) + 1.0) / (np.sqrt(1.0 + y) - 1.0)))
-	
-		# Equation 14
-		ab = 2.07 * keq * s * (1.0 + Rd)**(-3.0 / 4.0) * Gy
-	
-		# Get CDM part of transfer function
-	
-		# Equation 18
-		f = 1.0 / (1.0 + (kh * s / 5.4)**4)
-	
-		# Equation 20
-		C = 14.2 / ac + 386.0 / (1.0 + 69.9 * q**1.08)
-	
-		# Equation 19
-		T0t = np.log(np.e + 1.8 * bc * q) / (np.log(np.e + 1.8 * bc * q) + C * q * q)
-	
-		# Equation 17
-		C1bc = 14.2 + 386.0 / (1.0 + 69.9 * q**1.08)
-		T0t1bc = np.log(np.e + 1.8 * bc * q) / (np.log(np.e + 1.8 * bc * q) + C1bc * q * q)
-		Tc = f * T0t1bc + (1.0 - f) * T0t
-	
-		# Get baryon part of transfer function
-	
-		# Equation 24
-		bb = 0.5 + ombom0 + (3.0 - 2.0 * ombom0) * np.sqrt((17.2 * om0h2) * (17.2 * om0h2) + 1.0)
-	
-		# Equation 23
-		bnode = 8.41 * om0h2**0.435
-	
-		# Equation 22
-		st = s / (1.0 + (bnode / kh / s) * (bnode / kh / s) * (bnode / kh / s))**(1.0 / 3.0)
-	
-		# Equation 21
-		C11 = 14.2 + 386.0 / (1.0 + 69.9 * q**1.08)
-		T0t11 = np.log(np.e + 1.8 * q) / (np.log(np.e + 1.8 * q) + C11 * q * q)
-		Tb = (T0t11 / (1.0 + (kh * s / 5.2)**2) + ab / (1.0 + (bb / kh / s)**3) * np.exp(-(kh / ksilk)**1.4)) \
-			* np.sin(kh * st) / (kh * st)
-	
-		# Total transfer function
-		Tk = ombom0 * Tb + omc / om0 * Tc
-	
-		return Tk
-
-	###############################################################################################
-	
-	# The Eisenstein & Hu 1998 transfer function at a scale k (h / Mpc) but without the BAO wiggles.
-	
-	def transferFunctionEH98Smooth(self, k):
-		"""
-		The transfer function according to Eisenstein & Hu 1998, without the BAO features.
-		
-		Same as the :func:`transferFunctionEH98` function, but in a simplified version
-		without the baryon acoustic oscillation (BAO) features.
-	
-		Parameters
-		-------------------------------------------------------------------------------------------
-		k: array_like
-			The wavenumber k (in comoving h/Mpc); can be a number or a numpy array.
-
-		Returns
-		-------------------------------------------------------------------------------------------
-		Tk: array_like
-			The transfer function; has the same dimensions as k.
-
-		See also
-		-------------------------------------------------------------------------------------------
-		transferFunctionEH98: The transfer function according to Eisenstein & Hu 1998.
-		"""
-		
-		omb = self.Ob0
-		om0 = self.Om0
-		ombom0 = omb / om0
-		h = self.h
-		h2 = h**2
-		om0h2 = om0 * h2
-		ombh2 = omb * h2
-		theta2p7 = self.Tcmb0 / 2.7
-
-		# Convert kh from hMpc^-1 to Mpc^-1
-		kh = k * h
-	
-		# Equation 26
-		s = 44.5 * np.log(9.83 / om0h2) / np.sqrt(1.0 + 10.0 * ombh2**0.75)
-	
-		# Equation 31
-		alphaGamma = 1.0 - 0.328 * np.log(431.0 * om0h2) * ombom0 + 0.38 * np.log(22.3 * om0h2) * ombom0**2
-	
-		# Equation 30
-		Gamma = om0 * h * (alphaGamma + (1.0 - alphaGamma) / (1.0 + (0.43 * kh * s)**4))
-	
-		# Equation 28
-		q = k * theta2p7 * theta2p7 / Gamma
-	
-		# Equation 29
-		C0 = 14.2 + 731.0 / (1.0 + 62.5 * q)
-		L0 = np.log(2.0 * np.exp(1.0) + 1.8 * q)
-		Tk = L0 / (L0 + C0 * q * q)
-	
-		return Tk	
-
-	###############################################################################################
-
-	def _matterPowerSpectrumExact(self, k, Pk_source = 'eh98', ignore_norm = False):
+	def _matterPowerSpectrumExact(self, k, model = defaults.POWER_SPECTRUM_MODEL, ignore_norm = False):
 
 		if self.power_law:
 			
-			Pk_source = 'powerlaw'
+			model = 'powerlaw'
 			Pk = k**self.power_law_n
+		
+		elif model in power_spectrum.models:
 			
-		elif Pk_source == 'eh98':
-
-			T = self.transferFunctionEH98(k)
-			Pk = T * T * k**self.ns
-
-		elif Pk_source == 'eh98smooth':
-
-			T = self.transferFunctionEH98Smooth(k)
+			T = power_spectrum.transferFunction(k, self.h, self.Om0, self.Ob0, self.Tcmb0, model = model)
 			Pk = T * T * k**self.ns
 
 		else:
 			
-			table_name = 'matterpower_%s_%s' % (self.name, Pk_source)
+			table_name = 'matterpower_%s_%s' % (self.name, model)
 			table = self.storageUser.getStoredObject(table_name)
 
 			if table is None:
@@ -1868,11 +1677,11 @@ class Cosmology(object):
 		# interpolation = False; otherwise, we get into an infinite loop of computing sigma8, P(k), 
 		# sigma8 etc.
 		if not ignore_norm:
-			norm_name = 'Pk_norm_%s_%s' % (self.name, Pk_source)
+			norm_name = 'Pk_norm_%s_%s' % (self.name, model)
 			norm = self.storageUser.getStoredObject(norm_name)
 			if norm is None:
-				sigma_8Mpc = self._sigmaExact(8.0, filt = 'tophat', Pk_source = Pk_source,
-											exact_Pk = True, ignore_norm = True)
+				sigma_8Mpc = self._sigmaExact(8.0, filt = 'tophat', ps_model = model,
+											exact_ps = True, ignore_norm = True)
 				norm = (self.sigma8 / sigma_8Mpc)**2
 				self.storageUser.storeObject(norm_name, norm, persistent = False)
 
@@ -1884,13 +1693,13 @@ class Cosmology(object):
 
 	# Utility to get the min and max k for which a power spectrum is valid. Only for internal use.
 
-	def _matterPowerSpectrumLimits(self, Pk_source):
+	def _matterPowerSpectrumLimits(self, model):
 		
-		if self.power_law or Pk_source == 'eh98' or Pk_source == 'eh98smooth':
+		if self.power_law or model in power_spectrum.models:
 			k_min = self.k_Pk[0]
 			k_max = self.k_Pk[-1]
 		else:
-			table_name = 'matterpower_%s_%s' % (self.name, Pk_source)
+			table_name = 'matterpower_%s_%s' % (self.name, model)
 			table = self.storageUser.getStoredObject(table_name)
 			if table is None:
 				msg = "Could not load data table, %s." % (table_name)
@@ -1910,16 +1719,16 @@ class Cosmology(object):
 	# We need to separately treat the cases of models that can cover the entire range of the 
 	# colossus P(k) lookup table, and user-supplied, tabulate 
 
-	def _matterPowerSpectrumInterpolator(self, Pk_source, inverse = False):
+	def _matterPowerSpectrumInterpolator(self, model, inverse = False):
 		
-		table_name = 'Pk_%s_%s' % (self.name, Pk_source)
+		table_name = 'Pk_%s_%s' % (self.name, model)
 		interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, inverse = inverse)
 	
 		if interpolator is None:
 			if self.print_info:
 				print("Cosmology.matterPowerSpectrum: Computing lookup table.")				
 			
-			if Pk_source in ['eh98', 'eh98smooth']:
+			if model in power_spectrum.models:
 				
 				data_k = np.zeros((np.sum(self.k_Pk_Nbins) + 1), np.float)
 				n_regions = len(self.k_Pk_Nbins)
@@ -1936,11 +1745,11 @@ class Cosmology(object):
 						data_k[k_computed:k_computed + self.k_Pk_Nbins[i]] = \
 							10**np.arange(log_min, log_max, bin_width)
 					k_computed += self.k_Pk_Nbins[i]
-				data_Pk = self._matterPowerSpectrumExact(data_k, Pk_source = Pk_source, ignore_norm = False)
+				data_Pk = self._matterPowerSpectrumExact(data_k, model = model, ignore_norm = False)
 					
 			else:
 
-				user_table_name = 'matterpower_%s_%s' % (self.name, Pk_source)
+				user_table_name = 'matterpower_%s_%s' % (self.name, model)
 				user_table = self.storageUser.getStoredObject(user_table_name)
 				if user_table is None:
 					msg = "Could not load data table, %s." % (table_name)
@@ -1959,28 +1768,29 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	def matterPowerSpectrum(self, k, Pk_source = 'eh98', derivative = False):
+	def matterPowerSpectrum(self, k, model = defaults.POWER_SPECTRUM_MODEL, derivative = False,
+						Pk_source = None):
 		"""
 		The matter power spectrum at a scale k.
 		
-		By default, the power spectrum is computed using the transfer function approximation of 
-		Eisenstein & Hu 1998 (``eh98``). Alternatively, the user can choose their version 
-		without BAO (``eh98smooth``), or a user-submitted file with an arbitrary name. In that case,
-		a file with two columns (k, P(k)) must be placed in the storage directory, and be named
-		``matterpower_<cosmology_name>_<Pk_source>``, e.g. ``matterpower_planck13_camb``.
+		By default, the power spectrum is computed using a model for the transfer function 
+		(see :mod:`power_spectrum` module). Alternatively, the user can supply a file with an 
+		arbitrary name. In that case, a file with two columns (k, P(k)) must be placed in the storage directory, and be named
+		``matterpower_<cosmology_name>_<model>``, e.g. ``matterpower_planck13_camb``.
 		
-		The Eisenstein & Hu 1998 approximation is accurate to about 1%, and the interpolation 
-		introduces errors significantly smaller than that.
+		The default Eisenstein & Hu 1998 approximation is accurate to about 1%, and the 
+		interpolation introduces errors significantly smaller than that.
 		
 		Parameters
 		-------------------------------------------------------------------------------------------
 		k: array_like
 			The wavenumber k (in comoving h/Mpc), where :math:`10^{-20} < k < 10^{20}`; can be a 
 			number or a numpy array.
-		Pk_source: str
+		model: str
 			Either ``eh98``, ``eh98smooth``, or the name of a user-defined table.
 		derivative: bool
 			If False, return P(k). If True, return :math:`d \log(P) / d \log(k)`.
+		Pk_source: deprecated
 			
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -1993,11 +1803,14 @@ class Cosmology(object):
 		transferFunctionEH98: The transfer function according to Eisenstein & Hu 1998.
 		transferFunctionEH98Smooth: The transfer function according to Eisenstein & Hu 1998, without the BAO features.
 		"""
-			
-		if self.interpolation and (Pk_source == 'eh98' or Pk_source == 'eh98smooth'):
+
+		if Pk_source is not None:
+			warnings.warn('The Pk_source parameter has been deprecated. Please see documentation.')
+
+		if self.interpolation and model in power_spectrum.models:
 			
 			# Load lookup-table
-			interpolator = self._matterPowerSpectrumInterpolator(Pk_source)
+			interpolator = self._matterPowerSpectrumInterpolator(model)
 			
 			# If the requested radius is outside the range, give a detailed error message.
 			k_req = np.min(k)
@@ -2024,9 +1837,9 @@ class Cosmology(object):
 			if utilities.isArray(k):
 				Pk = k * 0.0
 				for i in range(len(k)):
-					Pk[i] = self._matterPowerSpectrumExact(k[i], Pk_source = Pk_source, ignore_norm = False)
+					Pk[i] = self._matterPowerSpectrumExact(k[i], model = model, ignore_norm = False)
 			else:
-				Pk = self._matterPowerSpectrumExact(k, Pk_source = Pk_source, ignore_norm = False)
+				Pk = self._matterPowerSpectrumExact(k, model = model, ignore_norm = False)
 
 		return Pk
 	
@@ -2077,7 +1890,8 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	def _sigmaExact(self, R, j = 0, filt = 'tophat', Pk_source = 'eh98', exact_Pk = False, ignore_norm = False):
+	def _sigmaExact(self, R, j = 0, filt = 'tophat', ps_model = defaults.POWER_SPECTRUM_MODEL, 
+				exact_ps = False, ignore_norm = False):
 
 		# -----------------------------------------------------------------------------------------
 		def logIntegrand(lnk, Pk_interpolator):
@@ -2088,7 +1902,7 @@ class Cosmology(object):
 			if Pk_interpolator is not None:
 				Pk = 10**Pk_interpolator(np.log10(k))
 			else:
-				Pk = self._matterPowerSpectrumExact(k, Pk_source = Pk_source, ignore_norm = ignore_norm)
+				Pk = self._matterPowerSpectrumExact(k, model = ps_model, ignore_norm = ignore_norm)
 			
 			# One factor of k is due to the integration in log-k space
 			ret = Pk * W**2 * k**3
@@ -2122,8 +1936,8 @@ class Cosmology(object):
 			# If we are getting P(k) from a look-up table, it is a little more efficient to 
 			# get the interpolator object and use it directly, rather than using the P(k) function.
 			Pk_interpolator = None
-			if (not exact_Pk) and self.interpolation:
-				Pk_interpolator = self._matterPowerSpectrumInterpolator(Pk_source)
+			if (not exact_ps) and self.interpolation:
+				Pk_interpolator = self._matterPowerSpectrumInterpolator(ps_model)
 			
 			# The infinite integral over k often causes trouble when the tophat filter is used. Thus,
 			# we determine sensible limits and integrate over a finite volume. The limits are
@@ -2131,9 +1945,9 @@ class Cosmology(object):
 			# maximum. For tabulated power spectra, we need to be careful not to exceed their 
 			# limits, even if the integrand has not reached the desired low value. Thus, we simply
 			# use the limits of the table.
-			test_k_min, test_k_max = self._matterPowerSpectrumLimits(Pk_source)
+			test_k_min, test_k_max = self._matterPowerSpectrumLimits(ps_model)
 
-			if Pk_source in ['eh98', 'eh98smooth']:
+			if ps_model in power_spectrum.models:
 
 				test_integrand_min = 1E-6
 
@@ -2188,9 +2002,9 @@ class Cosmology(object):
 	# between few points. Around the BAO scale, we need a higher resolution. Thus, the bins are 
 	# assigned in reverse log(log) space.
 
-	def _sigmaInterpolator(self, j, Pk_source, filt, inverse):
+	def _sigmaInterpolator(self, j, ps_model, filt, inverse):
 		
-		table_name = 'sigma%d_%s_%s_%s' % (j, self.name, Pk_source, filt)
+		table_name = 'sigma%d_%s_%s_%s' % (j, self.name, ps_model, filt)
 		interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, inverse = inverse)
 		
 		if interpolator is None:
@@ -2205,7 +2019,7 @@ class Cosmology(object):
 			data_R = 10**log_R
 			data_sigma = data_R * 0.0
 			for i in range(len(data_R)):
-				data_sigma[i] = self._sigmaExact(data_R[i], j = j, filt = filt, Pk_source = Pk_source)
+				data_sigma[i] = self._sigmaExact(data_R[i], j = j, filt = filt, ps_model = ps_model)
 			table_ = np.array([np.log10(data_R), np.log10(data_sigma)])
 			self.storageUser.storeObject(table_name, table_)
 			if self.print_info:
@@ -2218,7 +2032,8 @@ class Cosmology(object):
 	###############################################################################################
 	
 	def sigma(self, R, z, j = 0, inverse = False, derivative = False, 
-							Pk_source = 'eh98', filt = 'tophat'):
+							ps_model = defaults.POWER_SPECTRUM_MODEL, filt = 'tophat',
+							Pk_source = None):
 		"""
 		The rms variance of the linear density field on a scale R, :math:`\\sigma(R)`.
 		
@@ -2250,14 +2065,15 @@ class Cosmology(object):
 		filt: str
 			Either ``tophat``, ``sharp-k`` or ``gaussian``. Higher moments (j > 0) can only be 
 			computed for the gaussian filter.
-		Pk_source: str
+		ps_model: str
 			Either ``eh98``, ``eh98smooth``, or the name of a user-supplied table.
 		inverse: bool
 			If True, compute :math:`R(\sigma)` rather than :math:`\sigma(R)`. For internal use.
 		derivative: bool
 			If True, return the logarithmic derivative, :math:`d \log(\sigma) / d \log(R)`, or its
 			inverse, :math:`d \log(R) / d \log(\sigma)` if ``inverse == True``.
-			
+		Pk_source: deprecated
+		
 		Returns
 		-------------------------------------------------------------------------------------------
 		sigma: array_like
@@ -2269,9 +2085,12 @@ class Cosmology(object):
 		-------------------------------------------------------------------------------------------
 		matterPowerSpectrum: The matter power spectrum at a scale k.
 		"""
-		
+
+		if Pk_source is not None:
+			warnings.warn('The Pk_source parameter has been deprecated. Please see documentation.')
+
 		if self.interpolation:
-			interpolator = self._sigmaInterpolator(j, Pk_source, filt, inverse)
+			interpolator = self._sigmaInterpolator(j, ps_model, filt, inverse)
 			
 			if not inverse:
 	
@@ -2341,9 +2160,9 @@ class Cosmology(object):
 			if utilities.isArray(R):
 				ret = R * 0.0
 				for i in range(len(R)):
-					ret[i] = self._sigmaExact(R[i], j = j, filt = filt, Pk_source = Pk_source)
+					ret[i] = self._sigmaExact(R[i], j = j, filt = filt, ps_model = ps_model)
 			else:
-				ret = self._sigmaExact(R, j = j, filt = filt, Pk_source = Pk_source)
+				ret = self._sigmaExact(R, j = j, filt = filt, ps_model = ps_model)
 			ret *= self.growthFactor(z)
 		
 		return ret
@@ -2351,7 +2170,7 @@ class Cosmology(object):
 	###############################################################################################
 	
 	# DEPRECATED
-	def peakHeight(self, M, z, filt = 'tophat', Pk_source = 'eh98', deltac_const = True):
+	def peakHeight(self, M, z, filt = 'tophat', ps_model = defaults.POWER_SPECTRUM_MODEL, deltac_const = True):
 		"""
 		Deprecated, please use :func:`lss.lss.peakHeight`.
 		"""
@@ -2359,7 +2178,7 @@ class Cosmology(object):
 		warnings.warn('This function is deprecated and will be removed. Please use lss.lss.peakHeight.')
 					
 		R = self.lagrangianR(M)
-		sigma = self.sigma(R, z, filt = filt, Pk_source = Pk_source)
+		sigma = self.sigma(R, z, filt = filt, ps_model = ps_model)
 		nu = self.collapseOverdensity(deltac_const, sigma) / sigma
 
 		return nu
@@ -2367,7 +2186,7 @@ class Cosmology(object):
 	###############################################################################################
 
 	# DEPRECATED
-	def massFromPeakHeight(self, nu, z, filt = 'tophat', Pk_source = 'eh98', deltac_const = True):
+	def massFromPeakHeight(self, nu, z, filt = 'tophat', ps_model = defaults.POWER_SPECTRUM_MODEL, deltac_const = True):
 		"""
 		Deprecated, please use :func:`lss.lss.massFromPeakHeight`.
 		"""
@@ -2375,7 +2194,7 @@ class Cosmology(object):
 		warnings.warn('This function is deprecated and will be removed. Please use lss.lss.massFromPeakHeight.')
 
 		sigma = self.collapseOverdensity(deltac_const = deltac_const) / nu
-		R = self.sigma(sigma, z, filt = filt, Pk_source = Pk_source, inverse = True)
+		R = self.sigma(sigma, z, filt = filt, ps_model = ps_model, inverse = True)
 		M = self.lagrangianM(R)
 		
 		return M
@@ -2383,14 +2202,14 @@ class Cosmology(object):
 	###############################################################################################
 	
 	# DEPRECATED
-	def nonLinearMass(self, z, filt = 'tophat', Pk_source = 'eh98'):
+	def nonLinearMass(self, z, filt = 'tophat', ps_model = defaults.POWER_SPECTRUM_MODEL):
 		"""
 		Deprecated, please use :func:`lss.lss.nonLinearMass`.
 		"""
 
 		warnings.warn('This function is deprecated and will be removed. Please use lss.lss.nonLinearMass.')
 
-		return self.massFromPeakHeight(1.0, z = z, filt = filt, Pk_source = Pk_source, deltac_const = True)
+		return self.massFromPeakHeight(1.0, z = z, filt = filt, ps_model = ps_model, deltac_const = True)
 
 	###############################################################################################
 	# Peak curvature routines
@@ -2501,7 +2320,7 @@ class Cosmology(object):
 	###############################################################################################
 	
 	# DEPRECATED
-	def peakCurvature(self, M, z, filt = 'gaussian', Pk_source = 'eh98',
+	def peakCurvature(self, M, z, filt = 'gaussian', ps_model = defaults.POWER_SPECTRUM_MODEL,
 					deltac_const = True, exact = False):
 		"""
 		Deprecated, please use :func:`lss.lss.peakCurvature`.
@@ -2510,9 +2329,9 @@ class Cosmology(object):
 		warnings.warn('This function is deprecated and will be removed. Please use lss.lss.peakCurvature.')
 
 		R = self.lagrangianR(M)
-		sigma0 = self.sigma(R, z, j = 0, filt = filt, Pk_source = Pk_source)
-		sigma1 = self.sigma(R, z, j = 1, filt = filt, Pk_source = Pk_source)
-		sigma2 = self.sigma(R, z, j = 2, filt = filt, Pk_source = Pk_source)
+		sigma0 = self.sigma(R, z, j = 0, filt = filt, ps_model = ps_model)
+		sigma1 = self.sigma(R, z, j = 1, filt = filt, ps_model = ps_model)
+		sigma2 = self.sigma(R, z, j = 2, filt = filt, ps_model = ps_model)
 	
 		if exact:
 			return self._peakCurvatureExactFromSigma(sigma0, sigma1, sigma2, deltac_const = deltac_const)
@@ -2521,18 +2340,18 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	def _correlationFunctionExact(self, R, Pk_source = 'eh98'):
+	def _correlationFunctionExact(self, R, ps_model = defaults.POWER_SPECTRUM_MODEL):
 		
 		f_cut = 0.001
 
 		# -----------------------------------------------------------------------------------------
 		# The integrand is exponentially cut off at a scale 1000 * R.
-		def integrand(k, R, Pk_source, Pk_interpolator):
+		def integrand(k, R, ps_model, Pk_interpolator):
 			
 			if self.interpolation:
 				Pk = 10**Pk_interpolator(np.log10(k))
 			else:
-				Pk = self._matterPowerSpectrumExact(k, Pk_source)
+				Pk = self._matterPowerSpectrumExact(k, ps_model)
 
 			ret = Pk * k / R * np.exp(-(k * R * f_cut)**2)
 			
@@ -2543,12 +2362,12 @@ class Cosmology(object):
 		# get the interpolator object and use it directly, rather than using the P(k) function.
 		Pk_interpolator = None
 		if self.interpolation:
-			Pk_interpolator = self._matterPowerSpectrumInterpolator(Pk_source)
+			Pk_interpolator = self._matterPowerSpectrumInterpolator(ps_model)
 
 		# Use a Clenshaw-Curtis integration, i.e. an integral weighted by sin(kR). 
 		k_min = 1E-6 / R
 		k_max = 10.0 / f_cut / R
-		args = R, Pk_source, Pk_interpolator
+		args = R, ps_model, Pk_interpolator
 		xi, _ = scipy.integrate.quad(integrand, k_min, k_max, args = args, epsabs = 0.0,
 					epsrel = self.accuracy_xi, limit = 100, weight = 'sin', wvar = R)
 		xi /= 2.0 * np.pi**2
@@ -2565,9 +2384,9 @@ class Cosmology(object):
 	# evaluated using the correlationFunction() function below, but for some performance-critical 
 	# operations it is faster to obtain the interpolator directly from this function.
 
-	def _correlationFunctionInterpolator(self, Pk_source):
+	def _correlationFunctionInterpolator(self, ps_model):
 
-		table_name = 'correlation_%s_%s' % (self.name, Pk_source)
+		table_name = 'correlation_%s_%s' % (self.name, ps_model)
 		interpolator = self.storageUser.getStoredObject(table_name, interpolator = True)
 		
 		if interpolator is None:
@@ -2592,7 +2411,7 @@ class Cosmology(object):
 			
 			data_xi = data_R * 0.0
 			for i in range(len(data_R)):
-				data_xi[i] = self._correlationFunctionExact(data_R[i], Pk_source = Pk_source)
+				data_xi[i] = self._correlationFunctionExact(data_R[i], ps_model = ps_model)
 			table_ = np.array([data_R, data_xi])
 			self.storageUser.storeObject(table_name, table_)
 			if self.print_info:
@@ -2603,7 +2422,8 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	def correlationFunction(self, R, z, derivative = False, Pk_source = 'eh98'):
+	def correlationFunction(self, R, z, derivative = False, ps_model = defaults.POWER_SPECTRUM_MODEL,
+						Pk_source = None):
 		"""
 		The linear matter-matter correlation function at radius R.
 		
@@ -2623,8 +2443,9 @@ class Cosmology(object):
 			Redshift
 		derivative: bool
 			If ``derivative == True``, the linear derivative :math:`d \\xi / d R` is returned.
-		Pk_source: str
+		ps_model: str
 			Either ``eh98``, ``eh98smooth``, or the name of a user-supplied table.
+		Pk_source: deprecated
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -2635,11 +2456,14 @@ class Cosmology(object):
 		-------------------------------------------------------------------------------------------
 		matterPowerSpectrum: The matter power spectrum at a scale k.
 		"""
-		
+	
+		if Pk_source is not None:
+			warnings.warn('The Pk_source parameter has been deprecated. Please see documentation.')
+	
 		if self.interpolation:
 			
 			# Load lookup-table
-			interpolator = self._correlationFunctionInterpolator(Pk_source)
+			interpolator = self._correlationFunctionInterpolator(ps_model)
 				
 			# If the requested radius is outside the range, give a detailed error message.
 			R_req = np.min(R)
@@ -2667,9 +2491,9 @@ class Cosmology(object):
 			if utilities.isArray(R):
 				ret = R * 0.0
 				for i in range(len(R)):
-					ret[i] = self._correlationFunctionExact(R[i], Pk_source = Pk_source)
+					ret[i] = self._correlationFunctionExact(R[i], ps_model = ps_model)
 			else:
-				ret = self._correlationFunctionExact(R, Pk_source = Pk_source)
+				ret = self._correlationFunctionExact(R, ps_model = ps_model)
 
 		if not derivative:
 			ret *= self.growthFactor(z)**2

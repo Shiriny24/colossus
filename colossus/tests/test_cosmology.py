@@ -32,7 +32,7 @@ class CosmologyTestCase(test_colossus.ColosssusTestCase):
 		self.assertAlmostEqualArray(f(TEST_Z), correct)		
 
 	def _testKArray(self, f, correct):
-		self.assertAlmostEqualArray(f(TEST_K), correct)		
+		self.assertAlmostEqualArray(f(TEST_K), correct)
 
 	def _testRZArray(self, f, z, correct):
 		self.assertAlmostEqualArray(f(TEST_RR, z), correct)		
@@ -190,14 +190,6 @@ class TCComp(CosmologyTestCase):
 	def test_growthFactor(self):
 		correct = [1.0, 0.54093225419799251, 0.060968602011373191]
 		self._testRedshiftArray(self.cosmo.growthFactor, correct)
-
-	def test_transferFunctionEH98(self):
-		correct = [0.98922569294539697, 1.4904793404415855e-08]
-		self._testKArray(self.cosmo.transferFunctionEH98, correct)
-
-	def test_transferFunctionEH98Smooth(self):
-		correct = [0.98904847897413184, 1.4710454246122299e-08]
-		self._testKArray(self.cosmo.transferFunctionEH98Smooth, correct)
 
 	def test_matterPowerSpectrum(self):
 		correct = [4.503657747484e+03, 5.933300212925e-07]

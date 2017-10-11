@@ -9,6 +9,7 @@ import unittest
 
 from colossus.tests import test_utils
 from colossus.tests import test_cosmology
+from colossus.tests import test_cosmology_power_spectrum
 from colossus.tests import test_lss_bias
 from colossus.tests import test_lss_lss
 from colossus.tests import test_halo_concentration
@@ -31,6 +32,7 @@ suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCNotFl
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCDarkEnergy1))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCDarkEnergy2))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCDarkEnergy3))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology_power_spectrum.TCTransferFunction))
 
 # Large-scale structure
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_lss_lss.TCLss))

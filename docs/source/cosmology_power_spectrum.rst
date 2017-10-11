@@ -1,10 +1,6 @@
 =====================================
-Cosmology
+Power spectrum
 =====================================
 
-.. automodule:: cosmology.cosmology
-    :members:
-    
 .. automodule:: cosmology.power_spectrum
     :members:
-    

@@ -35,6 +35,10 @@ A list of the changes in detail:
     * Cosmology.nonLinearMass() is now :func:`lss.lss.nonLinearMass`
     * Cosmology.peakCurvature() is now :func:`lss.lss.peakCurvature`
 
+* The power spectrum models were extracted into a separate module, :mod:`cosmology.power_spectrum`.
+* The ``Pk_source`` parameter was renamed to ``model`` in the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum`
+  function, and to ``ps_model`` in all other functions that rely on the power spectrum. 
+
 Changes in the cosmology module:
 
 * Cosmology now allows non-constant dark energy equations of state. 

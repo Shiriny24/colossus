@@ -22,6 +22,9 @@ COSMOLOGY_NEFF = 3.046
 # DEFAULT MODELS (HALO PROFILE, BIAS, CONCENTRATION, SPLASHBACK)
 ###################################################################################################
 
+POWER_SPECTRUM_MODEL = 'eisenstein98'
+"""The default power spectrum model."""
+
 HALO_BIAS_MODEL = 'tinker10'
 """The default halo bias model."""
 

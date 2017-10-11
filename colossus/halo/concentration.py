@@ -621,7 +621,7 @@ def _diemer15_n(k_R):
 	# tables are used, we can compute the slope directly from the spline interpolation which is
 	# very fast. If not, we need to compute the slope manually.
 	if cosmo.interpolation:
-		n = cosmo.matterPowerSpectrum(k_R, Pk_source = 'eh98smooth', derivative = True)
+		n = cosmo.matterPowerSpectrum(k_R, model = 'eisenstein98_zb', derivative = True)
 		
 	else:
 		# We need coverage to compute the local slope at kR, which can be an array. Thus, central
@@ -629,7 +629,7 @@ def _diemer15_n(k_R):
 		k_min = np.min(k_R) * 0.9
 		k_max = np.max(k_R) * 1.1
 		logk = np.arange(np.log10(k_min), np.log10(k_max), 0.01)
-		Pk = cosmo.matterPowerSpectrum(10**logk, Pk_source = 'eh98smooth')
+		Pk = cosmo.matterPowerSpectrum(10**logk, model = 'eisenstein98_zb')
 		interp = scipy.interpolate.InterpolatedUnivariateSpline(logk, np.log10(Pk))
 		n = interp(np.log10(k_R), nu = 1)
 	
