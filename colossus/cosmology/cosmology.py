@@ -160,17 +160,9 @@ We can implement more exotic models by supplying an arbitrary function::
 Power spectrum models
 ---------------------------------------------------------------------------------------------------
 
-The following models for the matter power spectrum are implemented in Colossus:
-
-================== ======================================
-ID                 Paper
-================== ======================================
-eisenstein98       
-eisenstein98_zb    
-================== ======================================
-
-These models are implemented in the :mod:`cosmology.power_spectrum` module, documented at the 
-bottom of this file.
+By default, Colossus relies on fitting functions for the matter power spectrum which, in turn,
+is the basis for the variance and correlation function. These models are implemented in the 
+:mod:`cosmology.power_spectrum` module, documented at the bottom of this file.
 
 ---------------------------------------------------------------------------------------------------
 Derivatives and inverses
@@ -1813,7 +1805,8 @@ class Cosmology(object):
 		z: float
 			The redshift at which the power spectrum is evaluated, zero by default.
 		model: str
-			Either ``eh98``, ``eh98smooth``, or the name of a user-defined table.
+			A model for the power spectrum (see the :mod:`cosmology.power_spectrum` module), 
+			or the name of a user-defined table.
 		derivative: bool
 			If False, return P(k). If True, return :math:`d \log(P) / d \log(k)`.
 		Pk_source: deprecated
@@ -2066,14 +2059,16 @@ class Cosmology(object):
 			\\sigma^2(R,z) = \\frac{1}{2 \\pi^2} \\int_0^{\\infty} k^2 k^{2j} P(k,z) |\\tilde{W}(kR)|^2 dk
 
 		where :math:`\\tilde{W}(kR)$` is the Fourier transform of the :func:`filterFunction`, and 
-		:math:`P(k,z) = D_+^2(z)P(k,0)` is the :func:`matterPowerSpectrum`. By default, the power 
-		spectrum is computed using the transfer function approximation of Eisenstein & Hu 1998 
-		(``eh98``) which is accurate to about 1%. The integration and interpolation introduce errors 
-		smaller than that. Higher moments of the variance (such as :math:`\sigma_1`, 
-		:math:`\sigma_2` etc) can be computed by setting j > 0 (see Bardeen et al. 1986). For the
-		higher moments, the interpolation error increases to up to ~0.5%.
-		Furthermore, the logarithmic derivative of :math:`\sigma(R)` can be evaluated by setting 
-		``derivative == True``.
+		:math:`P(k,z) = D_+^2(z)P(k,0)` is the :func:`matterPowerSpectrum`. 
+		
+		By default, the power spectrum is computed using the transfer function approximation of 
+		Eisenstein & Hu 1998 which is accurate to about 1% (see the :mod:`cosmology.power_spectrum` 
+		module). The integration and interpolation introduce errors smaller than that. 
+		
+		Higher moments of the variance (such as :math:`\sigma_1`, :math:`\sigma_2` etc) can be 
+		computed by setting j > 0 (see Bardeen et al. 1986). For the higher moments, the 
+		interpolation error increases to up to ~0.5%. Furthermore, the logarithmic derivative of 
+		:math:`\sigma(R)` can be evaluated by setting ``derivative == True``.
 		
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -2089,7 +2084,8 @@ class Cosmology(object):
 			Either ``tophat``, ``sharp-k`` or ``gaussian``. Higher moments (j > 0) can only be 
 			computed for the gaussian filter.
 		ps_model: str
-			Either ``eh98``, ``eh98smooth``, or the name of a user-supplied table.
+			A model for the power spectrum (see :mod:`cosmology.power_spectrum` module and the 
+			:func:`matterPowerSpectrum` function.
 		inverse: bool
 			If True, compute :math:`R(\sigma)` rather than :math:`\sigma(R)`. For internal use.
 		derivative: bool
@@ -2467,7 +2463,8 @@ class Cosmology(object):
 		derivative: bool
 			If ``derivative == True``, the linear derivative :math:`d \\xi / d R` is returned.
 		ps_model: str
-			Either ``eh98``, ``eh98smooth``, or the name of a user-supplied table.
+			A model for the power spectrum (see :mod:`cosmology.power_spectrum` module and the 
+			:func:`matterPowerSpectrum` function.
 		Pk_source: deprecated
 
 		Returns
