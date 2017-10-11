@@ -1043,6 +1043,9 @@ class Cosmology(object):
 	def angularDiameterDistance(self, z, derivative = 0, inverse = False):
 		"""
 		The angular diameter distance to redshift z.
+		
+		The angular diameter distance is the transverse distance that, at redshift z, corresponds 
+		to an angle of one radian.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -1056,7 +1059,8 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		d: array_like
-			The angular diameter distance (or its derivative) in Mpc/h; has the same dimensions as z.
+			The angular diameter distance (or its derivative) in Mpc/h; has the same dimensions as 
+			z.
 
 		See also
 		-------------------------------------------------------------------------------------------
