@@ -29,13 +29,13 @@ mass needs to be converted to peak height first::
 	b = bias.haloBiasFromNu(nu, model = 'sheth01')
 	b = bias.haloBias(M, model = 'tinker10', z = z, mdef = 'vir')
 
-The simplest bias model is based on the spherical collapse (sc) model and was derived in a number
-of different papers. The rest of the models was calibrated using numerical simulations:
+The simplest bias model (cole89) is based on the peak-background split model and was derived in a 
+number of different papers. The rest of the models was calibrated using numerical simulations:
 
 ============== =========================== =========================== =========================================
 ID             Parameters                  z-dependence                Reference
 ============== =========================== =========================== =========================================
-sc             M/nu                        None                        `Cole & Kaiser 1989 <http://adsabs.harvard.edu/abs/1989MNRAS.237.1127C>`_
+cole89         M/nu                        None                        `Cole & Kaiser 1989 <http://adsabs.harvard.edu/abs/1989MNRAS.237.1127C>`_
 sheth01        M/nu                        None                        `Sheth et al. 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.323....1S>`_
 tinker10       M/nu, z, mdef               Through mass definition     `Tinker et al. 2010 <http://adsabs.harvard.edu/abs/2010ApJ...724..878T>`_       
 ============== =========================== =========================== =========================================
@@ -61,7 +61,7 @@ from colossus.halo import mass_so
 
 ###################################################################################################
 
-models = ['sc', 'sheth01', 'tinker10']
+models = ['cole89', 'sheth01', 'tinker10']
 """A list of all implemented bias models."""
 
 ###################################################################################################
@@ -96,8 +96,8 @@ def haloBiasFromNu(nu, z = None, mdef = None, model = defaults.HALO_BIAS_MODEL):
 	haloBias: The halo bias at a given mass. 
 	"""
 	
-	if model == 'sc':
-		bias = modelSC(nu)
+	if model == 'cole89':
+		bias = modelCole89(nu)
 	elif model == 'sheth01':
 		bias = modelSheth01(nu)
 	elif model == 'tinker10':
@@ -190,9 +190,9 @@ def twoHaloTerm(r, M, z, mdef, model = defaults.HALO_BIAS_MODEL):
 # SPECIFIC MODELS
 ###################################################################################################
 
-def modelSC(nu):
+def modelCole89(nu):
 	"""
-	The spherical collapse prediction for halo bias.
+	The peak-background split prediction for halo bias 
 	
 	For a derivation of this model, see e.g. Cole & Kaiser 1989 or Mo & White 1996.
 
