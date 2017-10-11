@@ -11,7 +11,17 @@ Version 1.1
 
 A separate module for large-scale structure, lss, has been added, including functions previously
 housed in the cosmology module, the halo bias module, and a new module for the halo mass function.
-A list of the changes in detail:
+The following functions were shifted from the cosmology module into the lss module:
+
+* Cosmology.lagrangianR() is now :func:`lss.lss.lagrangianR`
+* Cosmology.lagrangianM() is now :func:`lss.lss.lagrangianM`
+* Cosmology.collapseOverdensity() is now :func:`lss.lss.collapseOverdensity`
+* Cosmology.peakHeight() is now :func:`lss.lss.peakHeight`
+* Cosmology.massFromPeakHeight() is now :func:`lss.lss.massFromPeakHeight`
+* Cosmology.nonLinearMass() is now :func:`lss.lss.nonLinearMass`
+* Cosmology.peakCurvature() is now :func:`lss.lss.peakCurvature`
+
+The new LSS module has led to the following other changes:
 
 * The module halo.bias is now :mod:`lss.bias`
 * The :func:`lss.lss.collapseOverdensity()` function has been completely reworked. By default, it 
@@ -25,22 +35,16 @@ A list of the changes in detail:
 * The halo bias module was improved, with two new models for halo bais (spherical collapse and
   Sheth et al. 2001).
 * The lss module contains a new module to compute the halo mass function.
-* The following functions were shifted from the cosmology module into the lss module:
-
-    * Cosmology.lagrangianR() is now :func:`lss.lss.lagrangianR`
-    * Cosmology.lagrangianM() is now :func:`lss.lss.lagrangianM`
-    * Cosmology.collapseOverdensity() is now :func:`lss.lss.collapseOverdensity`
-    * Cosmology.peakHeight() is now :func:`lss.lss.peakHeight`
-    * Cosmology.massFromPeakHeight() is now :func:`lss.lss.massFromPeakHeight`
-    * Cosmology.nonLinearMass() is now :func:`lss.lss.nonLinearMass`
-    * Cosmology.peakCurvature() is now :func:`lss.lss.peakCurvature`
-
-* The power spectrum models were extracted into a separate module, :mod:`cosmology.power_spectrum`.
-* The ``Pk_source`` parameter was renamed to ``model`` in the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum`
-  function, and to ``ps_model`` in all other functions that rely on the power spectrum. 
 
 Changes in the cosmology module:
 
+* The power spectrum models were extracted into a separate module, :mod:`cosmology.power_spectrum`.
+  The names of the available models were changed from ``eh98`` to ``eisenstein98`` and from 
+  ``eh98_smooth`` to ``eisenstein98_zb`` to conform with other colossus modules.
+* The ``Pk_source`` parameter was renamed to ``model`` in the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum`
+  function, and to ``ps_model`` in all other functions that rely on the power spectrum.
+* The :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` function now takes redshift as
+  an optional parameter.
 * Cosmology now allows non-constant dark energy equations of state. 
 * The OL0, OL(), and rho_L() parameters and functions were renamed to Ode0, Ode(), and rho_de().
 * The text_output option was removed from the cosmology object.

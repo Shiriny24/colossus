@@ -157,6 +157,22 @@ We can implement more exotic models by supplying an arbitrary function::
 	cosmo = setCosmology('planck_wz', params)
 
 ---------------------------------------------------------------------------------------------------
+Power spectrum models
+---------------------------------------------------------------------------------------------------
+
+The following models for the matter power spectrum are implemented in Colossus:
+
+================== ======================================
+ID                 Paper
+================== ======================================
+eisenstein98       
+eisenstein98_zb    
+================== ======================================
+
+These models are implemented in the :mod:`cosmology.power_spectrum` module, documented at the 
+bottom of this file.
+
+---------------------------------------------------------------------------------------------------
 Derivatives and inverses
 ---------------------------------------------------------------------------------------------------
 
@@ -1620,7 +1636,13 @@ class Cosmology(object):
 		growthFactorUnnormalized: The linear growth factor, :math:`D_+(z)`.
 		"""
 
-		D = self._zFunction('growthfactor', self._growthFactorExact, z, derivative = derivative,
+		# The check for z = 0 is worthwhile as this is a common case, and the interpolation can 
+		# give a very slight error for D(0), leading to a value slightly different from unity.
+		
+		if derivative == 0 and np.max(np.abs(z)) < 1E-10:
+			D = np.ones_like(z)
+		else:
+			D = self._zFunction('growthfactor', self._growthFactorExact, z, derivative = derivative,
 						inverse = inverse)
 
 		return D
@@ -1768,14 +1790,16 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	def matterPowerSpectrum(self, k, model = defaults.POWER_SPECTRUM_MODEL, derivative = False,
+	def matterPowerSpectrum(self, k, z = 0.0, model = defaults.POWER_SPECTRUM_MODEL, 
+						derivative = False,
 						Pk_source = None):
 		"""
 		The matter power spectrum at a scale k.
 		
 		By default, the power spectrum is computed using a model for the transfer function 
-		(see :mod:`power_spectrum` module). Alternatively, the user can supply a file with an 
-		arbitrary name. In that case, a file with two columns (k, P(k)) must be placed in the storage directory, and be named
+		(see :func:`cosmology.power_spectrum.transferFunction` function). Alternatively, the user 
+		can supply a file with an arbitrary name. In that case, a file with two columns (k, P(k)) 
+		must be placed in the storage directory, and be named
 		``matterpower_<cosmology_name>_<model>``, e.g. ``matterpower_planck13_camb``.
 		
 		The default Eisenstein & Hu 1998 approximation is accurate to about 1%, and the 
@@ -1786,6 +1810,8 @@ class Cosmology(object):
 		k: array_like
 			The wavenumber k (in comoving h/Mpc), where :math:`10^{-20} < k < 10^{20}`; can be a 
 			number or a numpy array.
+		z: float
+			The redshift at which the power spectrum is evaluated, zero by default.
 		model: str
 			Either ``eh98``, ``eh98smooth``, or the name of a user-defined table.
 		derivative: bool
@@ -1797,11 +1823,6 @@ class Cosmology(object):
 		Pk: array_like
 			The matter power spectrum (or its logarithmic derivative if ``derivative == True``); has 
 			the same dimensions as k.
-
-		See also
-		-------------------------------------------------------------------------------------------
-		transferFunctionEH98: The transfer function according to Eisenstein & Hu 1998.
-		transferFunctionEH98Smooth: The transfer function according to Eisenstein & Hu 1998, without the BAO features.
 		"""
 
 		if Pk_source is not None:
@@ -1840,6 +1861,8 @@ class Cosmology(object):
 					Pk[i] = self._matterPowerSpectrumExact(k[i], model = model, ignore_norm = False)
 			else:
 				Pk = self._matterPowerSpectrumExact(k, model = model, ignore_norm = False)
+
+		Pk *= self.growthFactor(z)**2
 
 		return Pk
 	

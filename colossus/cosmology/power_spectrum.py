@@ -6,12 +6,9 @@
 ###################################################################################################
 
 """
-This module implements models for the matter power spectrum, or more exaclty, for the transfer 
-function.
- 
----------------------------------------------------------------------------------------------------
-Basic usage
----------------------------------------------------------------------------------------------------
+This module implements models for the matter power spectrum, or more exactly, for the transfer 
+function. Generally speaking, the transfer function should be evaluated using the 
+:func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` function.
 
 ---------------------------------------------------------------------------------------------------
 Module reference

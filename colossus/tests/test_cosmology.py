@@ -195,6 +195,11 @@ class TCComp(CosmologyTestCase):
 		correct = [4.503657747484e+03, 5.933300212925e-07]
 		self._testKArray(self.cosmo.matterPowerSpectrum, correct)
 
+	def test_matterPowerSpectrumZ(self):
+		correct = [1.824043465475e+03, 2.403068369957e-07]
+		Pk = self.cosmo.matterPowerSpectrum(TEST_K, z = 0.9)
+		self.assertAlmostEqualArray(Pk, correct)
+
 	def test_sigma(self):
 		correct = [1.207145625229e+01, 2.119444226232e+00, 1.280494909616e-03]
 		self._testRZArray(self.cosmo.sigma, 0.0, correct)
@@ -223,7 +228,7 @@ class TCInterp(CosmologyTestCase):
 	###############################################################################################
 
 	def test_sigma(self):
-		self.assertAlmostEqual(self.cosmo.sigma(12.5, 0.0), 5.892447988477e-01)		
+		self.assertAlmostEqual(self.cosmo.sigma(12.5, 0.0), 5.892448500561e-01)
 
 	def test_ZDerivative(self):
 		correct = [-14.431423683052429, -3.0331864799122887, -0.012861392030709832]

@@ -64,7 +64,7 @@ class TCLssInterp(test_colossus.ColosssusTestCase):
 		pass
 
 	def test_massFromPeakHeight(self):
-		self.assertAlmostEqual(lss.massFromPeakHeight(TEST_NU, 0.0), 2.072363740368e+12)
+		self.assertAlmostEqual(lss.massFromPeakHeight(TEST_NU, 0.0), 2.072364902494e+12)
 		self.assertAlmostEqual(lss.massFromPeakHeight(TEST_NU, TEST_Z2), 5.932394446473e+04)
 
 	def test_nonLinearMass(self):
