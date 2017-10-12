@@ -223,6 +223,7 @@ import numpy as np
 import scipy.integrate
 import scipy.special
 import warnings
+import os
 
 from colossus import defaults
 from colossus import settings
@@ -1658,6 +1659,21 @@ class Cosmology(object):
 	
 	###############################################################################################
 
+	def _matterPowerSpectrumUser(self, model):
+		
+		if utilities.isPath(model):
+			model_name = os.path.basename(model)
+			read_path = model
+		else:
+			model_name = model
+			read_path = None		
+		table_name = 'matterpower_%s_%s' % (self.name, model_name)
+		table = self.storageUser.getStoredObject(table_name, path = read_path)
+		
+		return table_name, table
+	
+	###############################################################################################
+
 	def _matterPowerSpectrumExact(self, k, model = defaults.POWER_SPECTRUM_MODEL, ignore_norm = False):
 
 		if self.power_law:
@@ -1672,9 +1688,7 @@ class Cosmology(object):
 
 		else:
 			
-			table_name = 'matterpower_%s_%s' % (self.name, model)
-			table = self.storageUser.getStoredObject(table_name)
-
+			table_name, table = self._matterPowerSpectrumUser(model)
 			if table is None:
 				msg = "Could not load data table, %s." % (table_name)
 				raise Exception(msg)
@@ -1685,6 +1699,7 @@ class Cosmology(object):
 				msg = "k (%.2e) is smaller than min. k (%.2e)." % (np.min(k), np.min(table[0]))
 				raise Exception(msg)
 
+			# TODO: should we get an interpolator instead?
 			Pk = np.interp(k, table[0], table[1])
 		
 		# This is a little tricky. We need to store the normalization factor somewhere, even if 
@@ -1713,8 +1728,7 @@ class Cosmology(object):
 			k_min = self.k_Pk[0]
 			k_max = self.k_Pk[-1]
 		else:
-			table_name = 'matterpower_%s_%s' % (self.name, model)
-			table = self.storageUser.getStoredObject(table_name)
+			table_name, table = self._matterPowerSpectrumUser(model)
 			if table is None:
 				msg = "Could not load data table, %s." % (table_name)
 				raise Exception(msg)
@@ -1763,8 +1777,7 @@ class Cosmology(object):
 					
 			else:
 
-				user_table_name = 'matterpower_%s_%s' % (self.name, model)
-				user_table = self.storageUser.getStoredObject(user_table_name)
+				table_name, user_table = self._matterPowerSpectrumUser(model)
 				if user_table is None:
 					msg = "Could not load data table, %s." % (table_name)
 					raise Exception(msg)
@@ -1776,7 +1789,8 @@ class Cosmology(object):
 			if self.print_info:
 				print("Cosmology.matterPowerSpectrum: Lookup table completed.")	
 			
-			interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, inverse = inverse)
+			interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, 
+														inverse = inverse)
 
 		return interpolator
 

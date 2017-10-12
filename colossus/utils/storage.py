@@ -230,7 +230,7 @@ class StorageUser():
 		
 	###############################################################################################
 
-	def getStoredObject(self, object_name, interpolator = False, inverse = False, read_path = None):
+	def getStoredObject(self, object_name, interpolator = False, inverse = False, path = None):
 		"""
 		Retrieve a stored object from memory or file.
 
@@ -238,14 +238,17 @@ class StorageUser():
 		otherwise return None. If the object is a 2-dimensional table, this function can also 
 		return an interpolator.
 		
+		If the ``path`` parameter is passed, the file is loaded from that file path. If not, the 
+		function looks for a file with name object_name in the cache directory.
+		
 		Parameters
 		-------------------------------------------------------------------------------------------
 		interpolator: bool
 			If True, return a spline interpolator instead of the underlying table.
 		inverse: bool
 			Return an interpolator that gives x(y) instead of y(x).
-		read_path: str
-			Return an interpolator that gives x(y) instead of y(x).
+		path: str
+			If not None, data is loaded from this file path (unless it is found in memory).
 	
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -258,15 +261,17 @@ class StorageUser():
 		def tryTxtLoad(self, load_id, read_path):
 			
 			object_data = None
+			if not self.persistence_read:
+				return None
 	
-			if self.persistence_read and read_path is not None:
+			if read_path is not None:
 				if os.path.exists(read_path):
 					object_data = np.loadtxt(read_path, usecols = (0, 1),
 										skiprows = 0, comments = '#', unpack = True)
 				else:
 					raise Exception('File %s not found.' % (read_path))
 					
-			elif self.persistence_read and os.path.exists(self.cache_dir + object_id):
+			elif os.path.exists(self.cache_dir + object_id):
 				object_data = np.loadtxt(self.cache_dir + object_id, usecols = (0, 1),
 										skiprows = 0, comments = '#', unpack = True)
 							
@@ -306,72 +311,46 @@ class StorageUser():
 		elif object_id in self.storage_temp:
 			object_data = self.storage_temp[object_id]
 
-		#elif tryTxtLoad(self, object_id, read_path) is not None:
-		#	self.storage_temp[object_id] = object_data
-
-		elif self.persistence_read and read_path is not None:
-			if os.path.exists(read_path):
-				object_data = np.loadtxt(read_path, usecols = (0, 1),
-									skiprows = 0, comments = '#', unpack = True)
-				self.storage_temp[object_id] = object_data
-			else:
-				raise Exception('File %s not found.' % (read_path))
-				
-		elif self.persistence_read and os.path.exists(self.cache_dir + object_id):
-			object_data = np.loadtxt(self.cache_dir + object_id, usecols = (0, 1),
-									skiprows = 0, comments = '#', unpack = True)
-			self.storage_temp[object_id] = object_data
-			
 		else:
+			object_data = tryTxtLoad(self, object_id, path)
+			if object_data is not None:
+				self.storage_temp[object_id] = object_data
 
-			# We could not find the object ID anywhere. This can have two reasons: the object does
-			# not exist, or we must transform an existing object.
+		# We could not find the object ID anywhere. This can have two reasons: the object does
+		# not exist, or we must transform an existing object.
+		if object_data is None and interpolator:
 			
-			if interpolator:
-				
-				# Try to find the object to transform. This object CANNOT be in temporary storage,
-				# but it can be in persistent or user storage.
-				object_raw = None
-				
-				if object_name in self.storage_pers:	
-					object_raw = self.storage_pers[object_name]
-		
-				elif self.persistence_read:
-					path = None
-					path1 = self.cache_dir + object_name
-					if os.path.exists(path):
-						path = path1
-					#elif os.path.exists()
-					if path is not None:
-						object_raw = np.loadtxt(self.cache_dir + object_name, usecols = (0, 1),
-									skiprows = 0, unpack = True)
-
-				if object_raw is None:
-					
-					# We cannot find an object to convert, return none.
-					object_data = None
-				
-				else:
-					
-					# Convert and store in temporary storage.
-					if inverse: 
-						
-						# There is a subtlety: the spline interpolator can't deal with decreasing 
-						# x-values, so if the y-values are decreasing, we reverse their order.
-						if object_raw[1][-1] < object_raw[1][0]:
-							object_raw = object_raw[:, ::-1]
-						
-						object_data = scipy.interpolate.InterpolatedUnivariateSpline(object_raw[1],
-																					object_raw[0])
-					else:
-						object_data = scipy.interpolate.InterpolatedUnivariateSpline(object_raw[0],
-																					object_raw[1])
-					self.storage_temp[object_id] = object_data
-						
+			# Try to find the object to transform. This object CANNOT be in temporary storage,
+			# but it can be in persistent or user storage.
+			object_raw = None
+			
+			if object_name in self.storage_pers:	
+				object_raw = self.storage_pers[object_name]
+	
 			else:
-							
-				# The object is not in storage at all, and cannot be generated; return none.
+				object_raw = tryTxtLoad(self, object_name, path)
+
+			if object_raw is None:
+				
+				# We cannot find an object to convert, return none.
 				object_data = None
+			
+			else:
+				
+				# Convert and store in temporary storage.
+				if inverse: 
+					
+					# There is a subtlety: the spline interpolator can't deal with decreasing 
+					# x-values, so if the y-values are decreasing, we reverse their order.
+					if object_raw[1][-1] < object_raw[1][0]:
+						object_raw = object_raw[:, ::-1]
+					
+					object_data = scipy.interpolate.InterpolatedUnivariateSpline(object_raw[1],
+																				object_raw[0])
+				else:
+					object_data = scipy.interpolate.InterpolatedUnivariateSpline(object_raw[0],
+																				object_raw[1])
+				self.storage_temp[object_id] = object_data
 				
 		return object_data
 
