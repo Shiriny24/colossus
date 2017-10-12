@@ -230,7 +230,7 @@ class StorageUser():
 		
 	###############################################################################################
 
-	def getStoredObject(self, object_name, interpolator = False, inverse = False):
+	def getStoredObject(self, object_name, interpolator = False, inverse = False, read_path = None):
 		"""
 		Retrieve a stored object from memory or file.
 
@@ -244,20 +244,43 @@ class StorageUser():
 			If True, return a spline interpolator instead of the underlying table.
 		inverse: bool
 			Return an interpolator that gives x(y) instead of y(x).
+		read_path: str
+			Return an interpolator that gives x(y) instead of y(x).
 	
 		Returns
 		-------------------------------------------------------------------------------------------
 		object_data: any
 			Returns the loaded object, and interpolator, or None if no object was found.
 		"""
+		
+		# -----------------------------------------------------------------------------------------
+		
+		def tryTxtLoad(self, load_id, read_path):
 			
+			object_data = None
+	
+			if self.persistence_read and read_path is not None:
+				if os.path.exists(read_path):
+					object_data = np.loadtxt(read_path, usecols = (0, 1),
+										skiprows = 0, comments = '#', unpack = True)
+				else:
+					raise Exception('File %s not found.' % (read_path))
+					
+			elif self.persistence_read and os.path.exists(self.cache_dir + object_id):
+				object_data = np.loadtxt(self.cache_dir + object_id, usecols = (0, 1),
+										skiprows = 0, comments = '#', unpack = True)
+							
+			return object_data
+
+		# -----------------------------------------------------------------------------------------
+		
 		# First, check for changes in the hash. If changes are detected, first call the user's 
 		# change callback function and then reset the storage.
 		if self.checkForChangedHash():
 			self.func_changed()
 			self.resetStorage()
 			
-		# Compute object name
+		# Compute object name. If the object contains a file path, we need to isolate 
 		object_id = object_name
 		if interpolator:
 			object_id += '_interpolator'
@@ -268,22 +291,35 @@ class StorageUser():
 		# - Check for the exact object the user requested (the object_id)
 		#   - Check in persistent storage
 		#   - Check in temporary storage (where interpolator / inverse objects live)
-		#   - Check in user text files
+		#   - Check in user text file (where the read_path was given)
+		#   - Check in user text file (placed in cache dir)
 		# - Check for the raw object (the object_name)
 		#   - Check in persistent storage
 		#   - Check in user text files
 		#   - Convert to the exact object, store in temporary storage
 		# - If all fail, return None
 
+		object_data = None
 		if object_id in self.storage_pers:	
 			object_data = self.storage_pers[object_id]
 		
-		elif object_id in self.storage_temp:	
+		elif object_id in self.storage_temp:
 			object_data = self.storage_temp[object_id]
 
+		#elif tryTxtLoad(self, object_id, read_path) is not None:
+		#	self.storage_temp[object_id] = object_data
+
+		elif self.persistence_read and read_path is not None:
+			if os.path.exists(read_path):
+				object_data = np.loadtxt(read_path, usecols = (0, 1),
+									skiprows = 0, comments = '#', unpack = True)
+				self.storage_temp[object_id] = object_data
+			else:
+				raise Exception('File %s not found.' % (read_path))
+				
 		elif self.persistence_read and os.path.exists(self.cache_dir + object_id):
 			object_data = np.loadtxt(self.cache_dir + object_id, usecols = (0, 1),
-									skiprows = 0, unpack = True)
+									skiprows = 0, comments = '#', unpack = True)
 			self.storage_temp[object_id] = object_data
 			
 		else:
@@ -300,8 +336,14 @@ class StorageUser():
 				if object_name in self.storage_pers:	
 					object_raw = self.storage_pers[object_name]
 		
-				elif self.persistence_read and os.path.exists(self.cache_dir + object_name):
-					object_raw = np.loadtxt(self.cache_dir + object_name, usecols = (0, 1),
+				elif self.persistence_read:
+					path = None
+					path1 = self.cache_dir + object_name
+					if os.path.exists(path):
+						path = path1
+					#elif os.path.exists()
+					if path is not None:
+						object_raw = np.loadtxt(self.cache_dir + object_name, usecols = (0, 1),
 									skiprows = 0, unpack = True)
 
 				if object_raw is None:
