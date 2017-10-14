@@ -19,9 +19,11 @@ The following models for the matter power spectrum are implemented in Colossus:
 ================== ======================================
 ID                 Paper
 ================== ======================================
-eisenstein98       
-eisenstein98_zb    
+eisenstein98       `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_
+eisenstein98_zb    `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_
 ================== ======================================
+
+The _zb extension indicates the zero-baryon version of the Eisenstein & Hu 1998 model.
 
 ---------------------------------------------------------------------------------------------------
 Module reference

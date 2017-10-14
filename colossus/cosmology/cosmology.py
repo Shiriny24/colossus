@@ -504,14 +504,59 @@ class Cosmology(object):
 
 	def __str__(self):
 		
-		s = 'Cosmology "%s", flat = %s, relspecies = %s, \n' \
-			'    Om0 = %.4f, Ode0 = %.4f, Ob0 = %.4f, H0 = %.2f, sigma8 = %.4f, ns = %.4f, \n' \
-			'    Tcmb0 = %.4f, Neff = %.4f, PL = %s, PLn = %.4f' \
-			% (self.name, str(self.flat), str(self.relspecies),
-			self.Om0, self.Ode0, self.Ob0, self.H0, self.sigma8, self.ns, self.Tcmb0, self.Neff,
-			str(self.power_law), self.power_law_n)
+		de_str = 'de_type = %s, ' % (str(self.de_type))
+		if self.de_type in ['lambda', 'user']:
+			pass
+		elif self.de_type == 'w0':
+			de_str += 'w0 = %.4f, ' % (self.w0)
+		elif self.de_type == 'w0wa':
+			de_str += 'w0 = %.4f, wa = %.4f, ' % (self.w0, self.wa)
+		else:
+			raise Exception('Unknown dark energy type, %s.' % self.de_type)
+		
+		pl_str = 'powerlaw = %s' % (str(self.power_law))
+		if self.power_law:
+			pl_str += ', PLn = %.4f' % (self.power_law_n)
+			
+		s = 'Cosmology "%s" \n' \
+			'    flat = %s, Om0 = %.4f, Ode0 = %.4f, Ob0 = %.4f, H0 = %.2f, sigma8 = %.4f, ns = %.4f\n' \
+			'    %srelspecies = %s, Tcmb0 = %.4f, Neff = %.4f, %s' \
+			% (self.name, 
+			str(self.flat), self.Om0, self.Ode0, self.Ob0, self.H0, self.sigma8, self.ns, 
+			de_str, str(self.relspecies), self.Tcmb0, self.Neff, pl_str)
 		
 		return s
+
+	###############################################################################################
+
+	# Compute a unique hash for the current cosmology name and parameters. If any of them change,
+	# the hash will change, causing an update of stored quantities.
+		
+	def _getHashableString(self):
+	
+		param_string = 'name_%s' % (self.name)
+		param_string += '_flat_%s' % (str(self.flat))
+		param_string += '_Om0_%.6f' % (self.Om0)
+		param_string += '_Ode0_%.6f' % (self.Ode0)
+		param_string += '_Ob0_%.6f' % (self.Ob0)
+		param_string += '_H0_%.6f' % (self.H0)
+		param_string += '_sigma8_%.6f' % (self.sigma8)
+		param_string += '_ns_%.6f' % (self.ns)
+
+		param_string += '_detype_%s' % (self.de_type)
+		if self.w0 is not None:
+			param_string += '_w0_%.6f' % (self.w0)
+		if self.wa is not None:
+			param_string += '_wa_%.6f' % (self.wa)
+
+		param_string += '_relspecies_%s' % (str(self.relspecies))	
+		param_string += '_Tcmb0_%.6f' % (self.Tcmb0)
+		param_string += '_Neff_%.6f' % (self.Neff)
+		
+		param_string += '_PL_%s' % (str(self.power_law))
+		param_string += '_PLn_%.6f' % (self.power_law_n)
+	
+		return param_string
 
 	###############################################################################################
 
@@ -556,20 +601,6 @@ class Cosmology(object):
 			self.Ok0 = 1.0 - self.Ode0 - self.Om0 - self.Or0
 
 		return
-
-	###############################################################################################
-
-	# Compute a unique hash for the current cosmology name and parameters. If any of them change,
-	# the hash will change, causing an update of stored quantities.
-		
-	def _getHashableString(self):
-	
-		param_string = "Name_%s_Flat_%s_relspecies_%s_Om0_%.4f_Ode0_%.4f_Ob0_%.4f_H0_%.4f_sigma8_%.4f_ns_%.4f_Tcmb0_%.4f_Neff_%.4f_PL_%s_PLn_%.4f" \
-			% (self.name, str(self.flat), str(self.relspecies),
-			self.Om0, self.Ode0, self.Ob0, self.H0, self.sigma8, self.ns, self.Tcmb0, self.Neff,
-			str(self.power_law), self.power_law_n)
-	
-		return param_string
 
 	###############################################################################################
 	# Basic cosmology calculations
@@ -1693,10 +1724,10 @@ class Cosmology(object):
 				msg = "Could not load data table, %s." % (table_name)
 				raise Exception(msg)
 			if np.max(k) > np.max(table[0]):
-				msg = "k (%.2e) is larger than max. k (%.2e)." % (np.max(k), np.max(table[0]))
+				msg = "k (%.2e) is larger than max. k in table (%.2e)." % (np.max(k), np.max(table[0]))
 				raise Exception(msg)
 			if np.min(k) < np.min(table[0]):
-				msg = "k (%.2e) is smaller than min. k (%.2e)." % (np.min(k), np.min(table[0]))
+				msg = "k (%.2e) is smaller than min. k in table (%.2e)." % (np.min(k), np.min(table[0]))
 				raise Exception(msg)
 
 			# TODO: should we get an interpolator instead?
