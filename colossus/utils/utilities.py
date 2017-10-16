@@ -82,13 +82,6 @@ def getHomeDir():
 
 ###################################################################################################
 
-# TODO documentation
-def isPath(p):
-	
-	return ('/' in p or os.path.exists(p))
-
-###################################################################################################
-
 def getCodeDir():
 	"""
 	Returns the path to this code file.
