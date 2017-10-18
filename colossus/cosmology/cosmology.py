@@ -138,10 +138,10 @@ otherwise computed from the matter and relativistic contributions)::
 Multiple models for the dark energy equation of state parameter :math:`w(z)` are implemented, 
 namely a cosmological constant (:math:`w=-1`), a constant :math:`w`, a linearly varying 
 :math:`w(z) = w_0 + w_a (1 - a)`, and arbitrary user-supplied functions for :math:`w(z)`. To set, 
-for example, a linearly varying EOS, we change the ``de_type`` parameter::
+for example, a linearly varying EOS, we change the ``de_model`` parameter::
 
 	params = cosmologies['planck15']
-	params['de_type'] = 'w0wa'
+	params['de_model'] = 'w0wa'
 	params['w0'] = -0.8
 	params['wa'] = 0.1
 	cosmo = setCosmology('planck_w0wa', params)
@@ -152,7 +152,7 @@ We can implement more exotic models by supplying an arbitrary function::
 		return -1.0 + 0.1 * z
 		
 	params = cosmologies['planck15']
-	params['de_type'] = 'user'
+	params['de_model'] = 'user'
 	params['wz_function'] = wz_func
 	cosmo = setCosmology('planck_wz', params)
 
@@ -308,7 +308,7 @@ class Cosmology(object):
 		top hat filter of radius 8 Mpc/h.
 	ns: float
 		The tilt of the primordial power spectrum.
-	de_type: str
+	de_model: str
 		An identifier indicating which dark energy equation of state is to be used. The DE equation
 		of state can either be a cosmological constant (``lambda``), a constant w (``w0``, the w0
 		parameter must be set), a linear function of the scale factor according to the 
@@ -316,14 +316,14 @@ class Cosmology(object):
 		and wa parameters must be set), or a function supplied by the user (``user``). In the latter 
 		case the w(z) function must be passed using the wz_function parameter.
 	w0: float
-		If ``de_type == w0``, this variable gives the constant dark energy equation of state 
-		parameter w. If ``de_type == w0wa``, this variable gives the constant component w (see
-		de_type parameter).
+		If ``de_model == w0``, this variable gives the constant dark energy equation of state 
+		parameter w. If ``de_model == w0wa``, this variable gives the constant component w (see
+		de_model parameter).
 	wa: float
-		If de_type == ``w0wa``, this variable gives the varying component of w (see de_type 
+		If de_model == ``w0wa``, this variable gives the varying component of w (see de_model 
 		parameter).
 	wz_function: function
-		A dark energy equation of state (if ``de_type == user``). This function must take z as the
+		A dark energy equation of state (if ``de_model == user``). This function must take z as the
 		only input variable and return w(z).
 	relspecies: bool
 		If False, all relativistic contributions to the energy density of the universe (such as 
@@ -359,7 +359,7 @@ class Cosmology(object):
 	
 	def __init__(self, name = None,
 		flat = True, Om0 = None, Ode0 = None, Ob0 = None, H0 = None, sigma8 = None, ns = None,
-		de_type = 'lambda', w0 = None, wa = None, wz_function = None,
+		de_model = 'lambda', w0 = None, wa = None, wz_function = None,
 		relspecies = True, Tcmb0 = defaults.COSMOLOGY_TCMB0, Neff = defaults.COSMOLOGY_NEFF,
 		power_law = False, power_law_n = 0.0,
 		print_info = False, print_warnings = True,
@@ -390,11 +390,11 @@ class Cosmology(object):
 			raise Exception('Ode0 must be set for non-flat cosmologies.')
 		if Ode0 is not None and Ode0 < 0.0:
 			raise Exception('Ode0 cannot be negative.')
-		if not de_type in ['lambda', 'w0', 'w0wa', 'user']:
-			raise Exception('Unknown dark energy type, %s. Valid types include lambda, w0, w0wa, and user.' % (de_type))
-		if de_type == 'user' and wz_function is None:
-			raise Exception('If de_type is user, a function must be passed for wz_function.')
-		if de_type == 'lambda':
+		if not de_model in ['lambda', 'w0', 'w0wa', 'user']:
+			raise Exception('Unknown dark energy type, %s. Valid types include lambda, w0, w0wa, and user.' % (de_model))
+		if de_model == 'user' and wz_function is None:
+			raise Exception('If de_model is user, a function must be passed for wz_function.')
+		if de_model == 'lambda':
 			w0 = -1
 			wa = None
 		
@@ -410,7 +410,7 @@ class Cosmology(object):
 		self.H0 = H0
 		self.sigma8 = sigma8
 		self.ns = ns
-		self.de_type = de_type
+		self.de_model = de_model
 		self.w0 = w0
 		self.wa = wa
 		self.wz_function = wz_function
@@ -503,15 +503,15 @@ class Cosmology(object):
 
 	def __str__(self):
 		
-		de_str = 'de_type = %s, ' % (str(self.de_type))
-		if self.de_type in ['lambda', 'user']:
+		de_str = 'de_model = %s, ' % (str(self.de_model))
+		if self.de_model in ['lambda', 'user']:
 			pass
-		elif self.de_type == 'w0':
+		elif self.de_model == 'w0':
 			de_str += 'w0 = %.4f, ' % (self.w0)
-		elif self.de_type == 'w0wa':
+		elif self.de_model == 'w0wa':
 			de_str += 'w0 = %.4f, wa = %.4f, ' % (self.w0, self.wa)
 		else:
-			raise Exception('Unknown dark energy type, %s.' % self.de_type)
+			raise Exception('Unknown dark energy type, %s.' % self.de_model)
 		
 		pl_str = 'powerlaw = %s' % (str(self.power_law))
 		if self.power_law:
@@ -542,7 +542,7 @@ class Cosmology(object):
 		param_string += '_sigma8_%.6f' % (self.sigma8)
 		param_string += '_ns_%.6f' % (self.ns)
 
-		param_string += '_detype_%s' % (self.de_type)
+		param_string += '_detype_%s' % (self.de_model)
 		if self.w0 is not None:
 			param_string += '_w0_%.6f' % (self.w0)
 		if self.wa is not None:
@@ -617,20 +617,20 @@ class Cosmology(object):
 			ret = 1.0 + self.wz_function(z)
 			return ret
 		
-		if self.de_type == 'lambda':
+		if self.de_model == 'lambda':
 			
 			de_z = 1.0
 		
-		elif self.de_type == 'w0':
+		elif self.de_model == 'w0':
 			
 			de_z = (1.0 + z)**(3.0 * (1.0 + self.w0))
 		
-		elif self.de_type == 'w0wa':
+		elif self.de_model == 'w0wa':
 			
 			a = 1.0 / (1.0 + z)
 			de_z = a**(-3.0 * (1.0 + self.w0 + self.wa)) * np.exp(-3.0 * self.wa * (1.0 - a))
 		
-		elif self.de_type == 'user':
+		elif self.de_model == 'user':
 			
 			z_array, is_array = utilities.getArray(z)
 			de_z = np.zeros_like(z_array)
@@ -641,7 +641,7 @@ class Cosmology(object):
 				de_z = de_z[0]
 
 		else:
-			raise Exception('Unknown de_type, %s.' % (self.de_type))
+			raise Exception('Unknown de_model, %s.' % (self.de_model))
 		
 		return de_z
 
@@ -708,7 +708,7 @@ class Cosmology(object):
 		The dark energy equation of state parameter.
 		
 		The EOS parameter is defined as :math:`w(z) = P(z) / \\rho(z)`. Depending on its chosen 
-		functional form (see the de_type parameter to the constructor), w(z) can be -1, another
+		functional form (see the de_model parameter to the constructor), w(z) can be -1, another
 		constant, a linear function of a, or an arbitrary function chosen by the user.
 		
 		Parameters
@@ -722,16 +722,16 @@ class Cosmology(object):
 			:math:`w(z)`, has the same dimensions as z.
 		"""
 	
-		if self.de_type == 'lambda':
+		if self.de_model == 'lambda':
 			w = np.ones_like(z) * -1.0
-		elif self.de_type == 'w0':
+		elif self.de_model == 'w0':
 			w = np.ones_like(z) * self.w0
-		elif self.de_type == 'w0wa':
+		elif self.de_model == 'w0wa':
 			w = self.w0 + self.wa * z / (1.0 + z)
-		elif self.de_type == 'user':
+		elif self.de_model == 'user':
 			w = self.wz_function(z)
 		else:
-			raise Exception('Unknown de_type, %s.' % (self.de_type))
+			raise Exception('Unknown de_model, %s.' % (self.de_model))
 				
 		return w
 

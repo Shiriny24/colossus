@@ -300,7 +300,7 @@ class TCDarkEnergy1(CosmologyTestCase):
 
 	def setUp(self):
 		c = {'flat': True, 'H0': 70.00, 'Om0': 0.2700, 'Ob0': 0.0469, 'sigma8': 0.8200, 
-			'ns': 0.9500, 'relspecies': True, 'de_type': 'w0wa', 'w0': -0.7, 'wa': 0.2}
+			'ns': 0.9500, 'relspecies': True, 'de_model': 'w0wa', 'w0': -0.7, 'wa': 0.2}
 		cosmology.addCosmology('myCosmo', c)
 		self.assertTrue('myCosmo' in cosmology.cosmologies)
 		cosmology.setCosmology('myCosmo')
@@ -318,7 +318,7 @@ class TCDarkEnergy2(CosmologyTestCase):
 
 	def setUp(self):
 		c = {'flat': True, 'H0': 70.00, 'Om0': 0.2700, 'Ob0': 0.0469, 'sigma8': 0.8200, 
-			'ns': 0.9500, 'relspecies': True, 'de_type': 'w0', 'w0': -0.7}
+			'ns': 0.9500, 'relspecies': True, 'de_model': 'w0', 'w0': -0.7}
 		cosmology.addCosmology('myCosmo', c)
 		self.assertTrue('myCosmo' in cosmology.cosmologies)
 		cosmology.setCosmology('myCosmo')
@@ -340,7 +340,7 @@ class TCDarkEnergy3(CosmologyTestCase):
 
 	def setUp(self):
 		c = {'flat': True, 'H0': 70.00, 'Om0': 0.2700, 'Ob0': 0.0469, 'sigma8': 0.8200, 
-			'ns': 0.9500, 'relspecies': True, 'de_type': 'user', 'wz_function': wz_func}
+			'ns': 0.9500, 'relspecies': True, 'de_model': 'user', 'wz_function': wz_func}
 		cosmology.addCosmology('myCosmo', c)
 		self.assertTrue('myCosmo' in cosmology.cosmologies)
 		cosmology.setCosmology('myCosmo')
