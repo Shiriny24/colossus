@@ -1695,6 +1695,12 @@ class Cosmology(object):
 	
 	###############################################################################################
 
+	def _matterPowerSpectrumNormName(self, model):
+		
+		return 'ps_norm_%s' % (model)
+	
+	###############################################################################################
+
 	# Utility to get the min and max k for which a power spectrum is valid. Only for internal use.
 
 	def _matterPowerSpectrumLimits(self, model, path):
@@ -1736,22 +1742,25 @@ class Cosmology(object):
 			if table is None:
 				msg = "Could not load data table, %s." % (table_name)
 				raise Exception(msg)
-			if np.max(k) > np.max(table[0]):
-				msg = "k (%.2e) is larger than max. k in table (%.2e)." % (np.max(k), np.max(table[0]))
-				raise Exception(msg)
+			k_min = 10**table[0][0]
 			if np.min(k) < np.min(table[0]):
-				msg = "k (%.2e) is smaller than min. k in table (%.2e)." % (np.min(k), np.min(table[0]))
+				msg = "k (%.2e) is smaller than min. k in table (%.2e)." % (np.min(k), k_min)
+				raise Exception(msg)
+			k_max = 10**table[0][-1]
+			if np.max(k) > k_max:
+				msg = "k (%.2e) is larger than max. k in table (%.2e)." % (np.max(k), k_max)
 				raise Exception(msg)
 
-			interpolator = self.storageUser.getStoredObject(table_name, path = path, 
-														interpolator = True)
-			Pk = interpolator(k)
+			# We do not store the interpolator here, because it might have the wrong normalization.
+			interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, 
+														store_interpolator = False)
+			Pk = 10**interpolator(np.log10(k))
 		
 		# This is a little tricky. We need to store the normalization factor somewhere, even if 
 		# interpolation = False; otherwise, we get into an infinite loop of computing sigma8, P(k), 
 		# sigma8 etc.
 		if not ignore_norm:
-			norm_name = 'ps_norm_%s' % (model)
+			norm_name = self._matterPowerSpectrumNormName(model)
 			norm = self.storageUser.getStoredObject(norm_name)
 			if norm is None:
 				sigma_8Mpc = self._sigmaExact(8.0, filt = 'tophat', ps_model = model, 
@@ -1774,45 +1783,77 @@ class Cosmology(object):
 
 	def _matterPowerSpectrumInterpolator(self, model, path, inverse = False):
 		
+		# We need to be a little careful in the case of a path being given. It is possible 
+		# that the power spectrum from the corresponding table has been evaluated and thus
+		# stored in a table, but that this function has not been executed yet, meaning that
+		# the power spectrum has not been normalized yet. In that case, we should not call the
+		# function that creates the interpolator because it *will* create an unnormalized
+		# interpolator.
 		table_name = self._matterPowerSpectrumName(model)
-		interpolator = self.storageUser.getStoredObject(table_name, path = path, 
+		if path is None:
+			interpolator = self.storageUser.getStoredObject(table_name,
 										interpolator = True, inverse = inverse)
-	
+		else:
+			interpolator = None
+			norm_name = self._matterPowerSpectrumNormName(model)
+			norm = self.storageUser.getStoredObject(norm_name)
+			if norm == 1.0:
+				interpolator = self.storageUser.getStoredObject(table_name,
+										interpolator = True, inverse = inverse)
+		
 		# If we could not find the interpolator, the underlying data table probably has not been
-		# created yet. If, however, we are dealing with a user-supplied table, it must exist and
-		# this indicates an error.
+		# created yet.
 		if interpolator is None:
 
-			if path is not None:
-				raise Exception('Failed to generate interpolator for user-supplied table.')
-			
-			if self.print_info:
-				print("Cosmology.matterPowerSpectrum: Computing lookup table.")				
-			
-			data_k = np.zeros((np.sum(self.k_Pk_Nbins) + 1), np.float)
-			n_regions = len(self.k_Pk_Nbins)
-			k_computed = 0
-			for i in range(n_regions):
-				log_min = np.log10(self.k_Pk[i])
-				log_max = np.log10(self.k_Pk[i + 1])
-				log_range = log_max - log_min
-				bin_width = log_range / self.k_Pk_Nbins[i]
-				if i == n_regions - 1:
-					data_k[k_computed:k_computed + self.k_Pk_Nbins[i] + 1] = \
-						10**np.arange(log_min, log_max + bin_width, bin_width)
-				else:
-					data_k[k_computed:k_computed + self.k_Pk_Nbins[i]] = \
-						10**np.arange(log_min, log_max, bin_width)
-				k_computed += self.k_Pk_Nbins[i]
-			data_Pk = self._matterPowerSpectrumExact(data_k, model = model, ignore_norm = False)
-			
-			table_ = np.array([np.log10(data_k), np.log10(data_Pk)])
-			self.storageUser.storeObject(table_name, table_)
-			if self.print_info:
-				print("Cosmology.matterPowerSpectrum: Lookup table completed.")	
-			
+			# We are dealing with a non-user supplied power spectrum, meaning we can decide the
+			# k array for the table.
+			if path is None:
+				
+				if self.print_info:
+					print("Cosmology.matterPowerSpectrum: Computing lookup table.")				
+				
+				data_k = np.zeros((np.sum(self.k_Pk_Nbins) + 1), np.float)
+				n_regions = len(self.k_Pk_Nbins)
+				k_computed = 0
+				for i in range(n_regions):
+					log_min = np.log10(self.k_Pk[i])
+					log_max = np.log10(self.k_Pk[i + 1])
+					log_range = log_max - log_min
+					bin_width = log_range / self.k_Pk_Nbins[i]
+					if i == n_regions - 1:
+						data_k[k_computed:k_computed + self.k_Pk_Nbins[i] + 1] = \
+							10**np.arange(log_min, log_max + bin_width, bin_width)
+					else:
+						data_k[k_computed:k_computed + self.k_Pk_Nbins[i]] = \
+							10**np.arange(log_min, log_max, bin_width)
+					k_computed += self.k_Pk_Nbins[i]
+				data_Pk = self._matterPowerSpectrumExact(data_k, model = model, ignore_norm = False)
+				
+				table_ = np.array([np.log10(data_k), np.log10(data_Pk)])
+				self.storageUser.storeObject(table_name, table_)
+				if self.print_info:
+					print("Cosmology.matterPowerSpectrum: Lookup table completed.")	
+
+			else:
+				
+				# If the interpolator has not been created yet, we need to normalize the table
+				# to the correct sigma8 which happens in the exact Pk function.
+				table_name = self._matterPowerSpectrumName(model)
+				table = self.storageUser.getStoredObject(table_name, path = path)
+				table_k = 10**table[0]
+				table_P = self._matterPowerSpectrumExact(table_k, model = model, path = path,
+														ignore_norm = False)
+				table[1] = np.log10(table_P)
+				self.storageUser.storeObject(table_name, table, persistent = False)
+				
+				# We also need to overwrite the norm with one, otherwise the interpolator will not
+				# match up with the result of the exact power spectrum function which will find the
+				# new, normed interpolator but still apply the old normalization.
+				norm_name = self._matterPowerSpectrumNormName(model)
+				self.storageUser.storeObject(norm_name, 1.0, persistent = False)
+
 			interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, 
-														inverse = inverse)
+															inverse = inverse)
 
 		return interpolator
 

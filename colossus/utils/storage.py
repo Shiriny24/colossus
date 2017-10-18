@@ -230,7 +230,8 @@ class StorageUser():
 		
 	###############################################################################################
 
-	def getStoredObject(self, object_name, interpolator = False, inverse = False, path = None):
+	def getStoredObject(self, object_name, interpolator = False, inverse = False, path = None,
+					store_interpolator = True, store_path_data = True):
 		"""
 		Retrieve a stored object from memory or file.
 
@@ -251,6 +252,12 @@ class StorageUser():
 		path: str
 			If not None, data is loaded from this file path (unless it has already been loaded, in
 			which case it is found in memory).
+		store_interpolator: bool
+			If True (the default), an interpolator that has been created is temporarily stored so
+			that it does not need to be created again.
+		store_path_data: bool
+			If True (the default), data loaded from a file defined by path is stored temporarily
+			so that it does not need to be loaded again.
 	
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -313,7 +320,7 @@ class StorageUser():
 
 		elif not interpolator:
 			object_data = tryTxtLoad(self, path)
-			if object_data is not None:
+			if (object_data is not None) and store_path_data:
 				self.storage_temp[object_id] = object_data
 
 		# We could not find the object ID anywhere. This can have two reasons: the object does
@@ -350,7 +357,8 @@ class StorageUser():
 				else:
 					object_data = scipy.interpolate.InterpolatedUnivariateSpline(object_raw[0],
 																				object_raw[1])
-				self.storage_temp[object_id] = object_data
+				if store_interpolator:
+					self.storage_temp[object_id] = object_data
 		
 		return object_data
 
