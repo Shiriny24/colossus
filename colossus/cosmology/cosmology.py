@@ -1743,7 +1743,7 @@ class Cosmology(object):
 				msg = "Could not load data table, %s." % (table_name)
 				raise Exception(msg)
 			k_min = 10**table[0][0]
-			if np.min(k) < np.min(table[0]):
+			if np.min(k) < k_min:
 				msg = "k (%.2e) is smaller than min. k in table (%.2e)." % (np.min(k), k_min)
 				raise Exception(msg)
 			k_max = 10**table[0][-1]
@@ -1867,7 +1867,7 @@ class Cosmology(object):
 		
 		By default, the power spectrum is computed using a model for the transfer function 
 		(see :func:`cosmology.power_spectrum.transferFunction` function). The default Eisenstein 
-		& Hu 1998 approximation is accurate to about 1%, and the interpolation introduces errors 
+		& Hu 1998 approximation is accurate to about 5%, and the interpolation introduces errors 
 		significantly smaller than that.
 		
 		Alternatively, the user can supply a file with a tabulated power spectrum using the 
@@ -1896,7 +1896,7 @@ class Cosmology(object):
 		-------------------------------------------------------------------------------------------
 		Pk: array_like
 			The matter power spectrum (or its logarithmic derivative if ``derivative == True``); has 
-			the same dimensions as k.
+			the same dimensions as k and units of :math:`(Mpc/h)^3`.
 		"""
 
 		if Pk_source is not None:
@@ -2465,7 +2465,7 @@ class Cosmology(object):
 				Pk = 10**ps_interpolator(np.log10(k))
 			else:
 				Pk = self._matterPowerSpectrumExact(k, model = ps_model, path = ps_path)
-
+			
 			ret = Pk * k / R * np.exp(-(k * R * f_cut)**2)
 			
 			return ret
@@ -2477,9 +2477,18 @@ class Cosmology(object):
 		if self.interpolation:
 			ps_interpolator = self._matterPowerSpectrumInterpolator(ps_model, ps_path)
 
-		# Use a Clenshaw-Curtis integration, i.e. an integral weighted by sin(kR). 
+		# Determine the integration limits. The limits chosen here correspond to the cut-off scale
+		# introduced in the integrator.
 		k_min = 1E-6 / R
 		k_max = 10.0 / f_cut / R
+
+		# If we are using a tabulated power spectrum, we just use the limits of that table IF they 
+		# are more stringent than those already determined.
+		k_min_model, k_max_model = self._matterPowerSpectrumLimits(ps_model, ps_path)
+		k_min = max(k_min, k_min_model * 1.0001)
+		k_max = min(k_max, k_max_model * 0.9999)
+
+		# Use a Clenshaw-Curtis integration, i.e. an integral weighted by sin(kR). 
 		args = R, ps_model, ps_interpolator
 		xi, _ = scipy.integrate.quad(integrand, k_min, k_max, args = args, epsabs = 0.0,
 					epsrel = self.accuracy_xi, limit = 100, weight = 'sin', wvar = R)
