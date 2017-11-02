@@ -145,8 +145,11 @@ class DK14Profile(profile_base.HaloDensityProfile):
 			self.par['beta'] = beta
 			self.par['gamma'] = gamma
 		else:
-			self._fundamentalParameters(M, c, z, mdef, selected_by, Gamma = Gamma,
+			if M is not None and c is not None and z is not None and mdef is not None:
+				self._fundamentalParameters(M, c, z, mdef, selected_by, Gamma = Gamma,
 									acc_warn = acc_warn, acc_err = acc_err)
+			else:
+				raise Exception('The DK14 profile needs either (M, c, z, mdef) or (rhos, rs, rt, alpha, beta, gamma, R200m) as parameters.')
 
 		# We need to guess a radius when computing vmax
 		self.r_guess = self.par['rs']
