@@ -48,6 +48,8 @@ Changes in the cosmology module:
 * Cosmology now allows non-constant dark energy equations of state. 
 * The OL0, OL(), and rho_L() parameters and functions were renamed to Ode0, Ode(), and rho_de().
 * The text_output option was removed from the cosmology object.
+* The soundHorizon() function now returns the sound horizon in Mpc/h rather than Mpc in order
+  to be consistent with the rest of the cosmology module.
 
 Changes in the halo module: 
 

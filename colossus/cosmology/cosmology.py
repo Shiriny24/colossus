@@ -1142,17 +1142,17 @@ class Cosmology(object):
 		"""
 		The sound horizon at recombination.
 
-		This function returns the sound horizon in Mpc (not Mpc/h!), according to Eisenstein & Hu 
+		This function returns the sound horizon in Mpc/h, according to Eisenstein & Hu 
 		1998, equation 26. This fitting function is accurate to 2% where :math:`\Omega_b h^2 > 0.0125` 
 		and :math:`0.025 < \Omega_m h^2 < 0.5`.
 
 		Returns
 		-------------------------------------------------------------------------------------------
 		s: float
-			The sound horizon at recombination in Mpc.
+			The sound horizon at recombination in Mpc/h.
 		"""
-				
-		s = 44.5 * np.log(9.83 / self.Omh2) / np.sqrt(1.0 + 10.0 * self.Ombh2**0.75)
+		
+		s = 44.5 * np.log(9.83 / self.Omh2) / np.sqrt(1.0 + 10.0 * self.Ombh2**0.75) * self.h
 		
 		return s
 

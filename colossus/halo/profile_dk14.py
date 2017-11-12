@@ -45,7 +45,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	The Diemer & Kravtsov 2014 density profile.
 	
 	This profile corresponds to an Einasto profile at small radii, and steepens around the virial 
-	radius. The profile formula has 6 free parameters, but most of those are fixed to particular 
+	radius. The profile formula has 6 free parameters, but most of those can be fixed to particular 
 	values that depend on the mass and mass accretion rate of a halo. The parameter values, and 
 	their dependence on mass etc, are explained in Section 3.3 of Diemer & Kravtsov 2014.
 	
@@ -58,12 +58,10 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	alpha   :math:`\\alpha`   Determines how quickly the slope of the inner Einasto profile steepens
 	beta    :math:`\\beta`    Sharpness of the steepening
 	gamma	:math:`\\gamma`   Asymptotic negative slope of the steepening term
-	R200m	:math:`R_{200m}` The radius that encloses and average overdensity of 200 :math:`\\rho_m(z)`
 	======= ================ ===================================================================================
 	
-	The user does not have to pass the values of these parameters, but can instead pass a 
-	spherical overdensity mass and (optionally) concentration. The conversion to the native 
-	parameters relies on the calibrations in DK14. 
+	The user can either pass the values of these parameters or a spherical overdensity mass and 
+	concentration. The conversion to the native parameters then relies on the calibrations in DK14. 
 	
 	The profile was calibrated for the median and mean profiles of two types of halo samples, 
 	namely samples selected by mass, and samples selected by both mass and mass accretion rate. 
@@ -137,13 +135,17 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		self.opt['R200m'] = R200m
 		
 		if rhos is not None and rs is not None and rt is not None and alpha is not None \
-			and beta is not None and gamma is not None and R200m is not None:
+			and beta is not None and gamma is not None:
 			self.par['rhos'] = rhos
 			self.par['rs'] = rs
 			self.par['rt'] = rt
 			self.par['alpha'] = alpha
 			self.par['beta'] = beta
 			self.par['gamma'] = gamma
+			
+			#if self.opt['R200m'] is None:
+			#	self.opt['R200m'] = self.RDelta(z, mdef)
+			
 		else:
 			if M is not None and c is not None and z is not None and mdef is not None:
 				self._fundamentalParameters(M, c, z, mdef, selected_by, Gamma = Gamma,

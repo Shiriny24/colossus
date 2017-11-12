@@ -86,29 +86,89 @@ from colossus.halo import mass_so
 
 ###################################################################################################
 
-models = ['press74', 'sheth99', 'jenkins01', 'reed03', 'warren06', 'tinker08', 'crocce10', 
-		'courtin11', 'bhattacharya11', 'watson13']
-"""A list of all implemented mass function models."""
+class HaloMassFunctionModel():
+	"""
+	This object contains certain characteristics of a mass function model, namely the mass 
+	definitions for which it is valid, whether it explicitly depends on the redshift (in some cases
+	this dependence arises because of the slight dependence of the collapse overdensity on z), and
+	how the collapse overdensity is computed by default (if applicable).
+
+	The ``models`` variable is a dictionary of :class:`SplashbackModel` objects containing all 
+	available models. The user can overwrite the properties of these models at their own risk.
+	"""
+	def __init__(self):
+		
+		self.func = None
+		self.z_dependence = False
+		self.deltac_dependence = False
+		self.mdef_dependence = False
+		self.mdefs = []
+		
+		return
 
 ###################################################################################################
 
-def massFunction(M, z,
-				mdef = 'fof', q_out = 'f', model = defaults.HALO_MASS_FUNCTION_MODEL,
-				sigma_args = {}, **kwargs):
+models = {}
+
+models['press74'] = HaloMassFunctionModel()
+models['press74'].mdefs = ['fof']
+models['press74'].deltac_dependence = True
+
+models['sheth99'] = HaloMassFunctionModel()
+models['sheth99'].mdefs = ['fof']
+models['sheth99'].deltac_dependence = True
+
+models['jenkins01'] = HaloMassFunctionModel()
+models['jenkins01'].mdefs = ['fof']
+
+models['reed03'] = HaloMassFunctionModel()
+models['reed03'].mdefs = ['fof']
+models['reed03'].deltac_dependence = True
+
+models['warren06'] = HaloMassFunctionModel()
+models['warren06'].mdefs = ['fof']
+
+models['tinker08'] = HaloMassFunctionModel()
+models['tinker08'].mdefs = ['*']
+models['tinker08'].z_dependence = True
+models['tinker08'].mdef_dependence = True
+
+models['crocce10'] = HaloMassFunctionModel()
+models['crocce10'].mdefs = ['fof']
+models['crocce10'].z_dependence = True
+
+models['courtin11'] = HaloMassFunctionModel()
+models['courtin11'].mdefs = ['fof']
+
+models['bhattacharya11'] = HaloMassFunctionModel()
+models['bhattacharya11'].mdefs = ['fof']
+models['bhattacharya11'].deltac_dependence = True
+
+models['watson13'] = HaloMassFunctionModel()
+models['watson13'].mdefs = ['fof']
+
+###################################################################################################
+
+def massFunction(x, z, q_in = 'M', mdef = 'fof', q_out = 'f', 
+				model = defaults.HALO_MASS_FUNCTION_MODEL,
+				sigma_args = {}, deltac_args = {}):
 	"""
-	The abundance of halos as a function of mass and redshift.
+	The abundance of halos as a function of mass (or sigma) and redshift.
 	
-	This function is a wrapper for all individual models implemented in this module. It needs mass
-	and redshift, as well as a mass definition which is set to ``fof`` by default (see the model 
-	table for valid redshifts). The output units are controlled by the ``q_out`` parameter, see 
-	the basic usage section for details.
+	This function is a wrapper for all individual models implemented in this module. It accepts
+	either mass or the variance sigma and redshift as input, as well as a mass definition which 
+	is set to ``fof`` by default (see the model table for valid redshifts). The output units are 
+	controlled by the ``q_out`` parameter, see the basic usage section for details.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
-	M: array_like
-		Halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
+	x: array_like
+		Either halo mass in :math:`M_{\odot}/h` or the variance :math:`\sigma`, depending on the 
+		value of the ``q_in`` parameter; can be a number or a numpy array.
 	z: float
 		Redshift
+	q_in: str
+		Either ``M`` or ``sigma``, indicating which is passed for the ``x`` parameter.
 	mdef: str
 		The mass definition in which the halo mass M is given and which the returned mass function
 		refers to. Please see the model table for the mass definitions for which each model is 
@@ -118,11 +178,12 @@ def massFunction(M, z,
 	model: str
 		The model of the mass function used.
 	sigma_args: dict
-		Extra arguments to be passed to the :func:`cosmology.cosmology.Cosmology.sigma` function when mass
-		is converted to sigma.
-	kwargs: kwargs
-		Extra parameters that are passed to the mass function; see the documentation of the 
-		individual models for possible parameters.
+		Extra arguments to be passed to the :func:`cosmology.cosmology.Cosmology.sigma` function 
+		when mass is converted to sigma.
+	deltac_args: dict
+		Extra parameters that are passed to the :func:`lss.lss.collapseOverdensity` function; see 
+		the documentation of the individual models for possible parameters. Note that not all 
+		models of the mass function rely on the collapse overdensity.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -132,72 +193,43 @@ def massFunction(M, z,
 
 	# Compute sigma
 	cosmo = cosmology.getCurrent()
-	R = lss.lagrangianR(M)
-	sigma = cosmo.sigma(R, z, **sigma_args)
+	
+	M = None
+	if q_in == 'M':
+		M = x
+		R = lss.lagrangianR(x)
+		sigma = cosmo.sigma(R, z, **sigma_args)
+	elif q_in == 'sigma':
+		sigma = x
+	else:
+		raise Exception('Unknown input quantity, %s.' % (q_in))
 
 	# Evaluate model
-	if model == 'press74':
-		func = modelPress74
-		args = (sigma, z)
-		mdefs = ['fof']
-		
-	elif model == 'sheth99':	
-		func = modelSheth99
-		args = (sigma, z)
-		mdefs = ['fof']
-
-	elif model == 'jenkins01':	
-		func = modelJenkins01
-		args = (sigma,)
-		mdefs = ['fof']
-
-	elif model == 'reed03':	
-		func = modelReed03
-		args = (sigma, z)
-		mdefs = ['fof']
-
-	elif model == 'warren06':	
-		func = modelWarren06
-		args = (sigma,)
-		mdefs = ['fof']
-
-	elif model == 'tinker08':
-		func = modelTinker08
-		args = (sigma, z, mdef)
-		mdefs = ['*']
-	
-	elif model == 'crocce10':
-		func = modelCrocce10
-		args = (sigma, z)
-		mdefs = ['fof']
-	
-	elif model == 'courtin11':	
-		func = modelCourtin11
-		args = (sigma,)
-		mdefs = ['fof']
-
-	elif model == 'bhattacharya11':	
-		func = modelBhattacharya11
-		args = (sigma, z)
-		mdefs = ['fof']
-
-	elif model == 'watson13':
-		func = modelWatson13
-		args = (sigma,)
-		mdefs = ['fof']
-	
-	else:
+	if not model in models.keys():
 		msg = 'Unknown model, %s.' % (model)
 		raise Exception(msg)
 
-	if not '*' in mdefs and not mdef in mdefs:
+	model_props = models[model]
+	args = (sigma,)
+	if model_props.z_dependence or model_props.deltac_dependence:
+		args += (z,)
+	if model_props.mdef_dependence:
+		args += (mdef,)
+	if model_props.deltac_dependence:
+		args += (deltac_args,)
+
+	if not '*' in model_props.mdefs and not mdef in model_props.mdefs:
 		raise Exception('The mass definition %s is not allowed for model %s. Allowed are: %s.' % \
-					(mdef, model, str(mdefs)))
+					(mdef, model, str(model_props.mdefs)))
 
-	f = func(*args)
+	f = model_props.func(*args)
 
-	mfunc = f
-	if q_out != 'f':
+	if q_out == 'f':
+		mfunc = f
+	else:
+		if M is None:
+			R = cosmo.sigma(sigma, inverse = True, **sigma_args)
+			M = lss.lagrangianM(R)
 		mfunc = convertMassFunction(f, M, z, 'f', q_out)
 
 	return mfunc
@@ -270,11 +302,12 @@ def convertMassFunction(mfunc, M, z, q_in, q_out):
 # FUNCTIONS FOR INDIVIDUAL MASS FUNCTION MODELS
 ###################################################################################################
 
-def modelPress74(sigma, z):
+def modelPress74(sigma, z, deltac_args = {'corrections': True}):
 	"""
 	The mass function model of Press & Schechter 1974.
 	
 	This model depends on redshift only through the collapse overdensity :math:`\\delta_{\\rm c}`.
+	By default, the collapse overdensity is computed including corrections due to cosmology.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -282,21 +315,26 @@ def modelPress74(sigma, z):
 		The variance corresponding to the desired halo mass.
 	z: float
 		Redshift
-		
+	deltac_corrections: bool
+		If True, include non-EdS corrections in the computation of the collapse overdensity.
+	
 	Returns
 	-----------------------------------------------------------------------------------------------
 	f: array_like
 		The halo mass function.
 	"""
 	
-	delta_c = lss.collapseOverdensity(corrections = True, z = z)
-	f = np.sqrt(2.0 / np.pi) * delta_c / sigma * np.exp(-0.5 * delta_c**2 / sigma**2)
+	print(deltac_args)
+	
+	delta_c = lss.collapseOverdensity(z = z, **deltac_args)
+	nu = delta_c / sigma
+	f = np.sqrt(2.0 / np.pi) * nu * np.exp(-0.5 * nu**2)
 	
 	return f
 
 ###################################################################################################
 
-def modelSheth99(sigma, z):
+def modelSheth99(sigma, z, deltac_args = {'corrections': True}):
 	"""
 	The mass function model of Sheth & Tormen 1999.
 	
@@ -317,7 +355,7 @@ def modelSheth99(sigma, z):
 		The halo mass function.
 	"""
 		
-	delta_c = lss.collapseOverdensity(corrections = True, z = z)
+	delta_c = lss.collapseOverdensity(z = z, **deltac_args)
 	A = 0.3222
 	a = 0.707
 	p = 0.3
@@ -353,7 +391,7 @@ def modelJenkins01(sigma):
 
 ###################################################################################################
 
-def modelReed03(sigma, z):
+def modelReed03(sigma, z, deltac_args = {'corrections': True}):
 	"""
 	The mass function model of Reed et al. 2003.
 	
@@ -373,7 +411,7 @@ def modelReed03(sigma, z):
 		The halo mass function.
 	"""
 		
-	f_ST = modelSheth99(sigma, z)
+	f_ST = modelSheth99(sigma, z, deltac_args = deltac_args)
 	f = f_ST * np.exp(-0.7 / (sigma * np.cosh(2.0 * sigma)**5))
 	
 	return f
@@ -525,7 +563,7 @@ def modelCourtin11(sigma):
 
 ###################################################################################################
 
-def modelBhattacharya11(sigma, z):
+def modelBhattacharya11(sigma, z, deltac_args = {'corrections': False}):
 	"""
 	The mass function model of Bhattacharya et al. 2011.
 	
@@ -547,7 +585,9 @@ def modelBhattacharya11(sigma, z):
 		The halo mass function.
 	"""
 		
-	delta_c = lss.collapseOverdensity(corrections = False, z = z)
+	delta_c = lss.collapseOverdensity(z = z, **deltac_args)
+	nu = delta_c / sigma
+	nu2 = nu**2
 
 	zp1 = 1.0 + z
 	A = 0.333 * zp1**-0.11
@@ -555,8 +595,7 @@ def modelBhattacharya11(sigma, z):
 	p = 0.807
 	q = 1.795
 
-	f = A * np.sqrt(2  / np.pi) * np.exp(-a * delta_c**2 / (2 * sigma**2)) \
-		* (1.0 + (sigma**2 / a / delta_c**2)**p) * (delta_c * np.sqrt(a) / sigma)**q
+	f = A * np.sqrt(2 / np.pi) * np.exp(-a * nu2 * 0.5) * (1.0 + (a * nu2)**-p) * (nu * np.sqrt(a))**q
 	
 	return f
 
@@ -588,5 +627,20 @@ def modelWatson13(sigma):
 	f = A * ((beta / sigma)**alpha + 1.0) * np.exp(-gamma / sigma**2)
 	
 	return f
+
+###################################################################################################
+# Pointers to model functions
+###################################################################################################
+
+models['press74'].func = modelPress74
+models['sheth99'].func = modelSheth99
+models['jenkins01'].func = modelJenkins01
+models['reed03'].func = modelReed03
+models['warren06'].func = modelWarren06
+models['tinker08'].func = modelTinker08
+models['crocce10'].func = modelCrocce10
+models['courtin11'].func = modelCourtin11
+models['bhattacharya11'].func = modelBhattacharya11
+models['watson13'].func = modelWatson13
 
 ###################################################################################################
