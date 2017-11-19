@@ -21,6 +21,10 @@ KB = 1.38064852E-16
 """The Boltzmann constant in erg/K."""
 G_CGS = 6.67408E-8
 """The gravitational constant G in :math:`cm^3 / g / s^2`."""
+EV = 1.60218E-12
+"""The energy 1 eV in erg."""
+H = 6.62606885E-27
+"""The planck constant in erg s."""
 
 ###################################################################################################
 # ASTRONOMY UNIT CONVERSIONS
