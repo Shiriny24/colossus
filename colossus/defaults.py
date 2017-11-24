@@ -52,6 +52,21 @@ HALO_SPLASHBACK_RSPDEF = 'mean'
 between different definitions."""
 
 ###################################################################################################
+# ARGUMENT LISTS
+###################################################################################################
+
+PS_ARGS = {'model': POWER_SPECTRUM_MODEL, 'path': None}
+"""The default arguments to be passed to the power spectrum function. This argument list cannot be
+empty by default because some functions store data tables depending on the underlying power 
+spectrum."""
+
+SIGMA_ARGS = {}
+"""The default arguments to be passed to the variance function."""
+
+DELTAC_ARGS = {}
+"""The default arguments to be passed to the collapse overdensity function."""
+
+###################################################################################################
 # HALO PROFILE (BASE CLASS)
 ###################################################################################################
 

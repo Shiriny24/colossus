@@ -35,6 +35,7 @@ import scipy.integrate
 import scipy.special
 import warnings
 
+from colossus import defaults
 from colossus.utils import constants
 from colossus.cosmology import cosmology
 
@@ -146,7 +147,7 @@ def collapseOverdensity(corrections = False, z = None):
 
 ###################################################################################################
 
-def peakHeight(M, z, sigma_args = {}, deltac_args = {}, 
+def peakHeight(M, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARGS, deltac_args = {}, 
 			filt = None, Pk_source = None, deltac_const = None):
 	"""
 	Peak height, :math:`\\nu`, given a halo mass.
@@ -161,6 +162,9 @@ def peakHeight(M, z, sigma_args = {}, deltac_args = {},
 		Halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
 	z: float
 		Redshift.
+	ps_args: kwargs
+		Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
+		function.
 	sigma_args: kwargs
 		Arguments passed to the :func:`cosmology.cosmology.Cosmology.sigma` function.
 	deltac_args: kwargs
@@ -189,15 +193,16 @@ def peakHeight(M, z, sigma_args = {}, deltac_args = {},
 	
 	cosmo = cosmology.getCurrent()
 	R = lagrangianR(M)
-	sigma = cosmo.sigma(R, z, **sigma_args)
+	sigma = cosmo.sigma(R, z, ps_args = ps_args, **sigma_args)
 	nu = collapseOverdensity(z = z, **deltac_args) / sigma
 
 	return nu
 
 ###################################################################################################
 
-def massFromPeakHeight(nu, z, sigma_args = {}, deltac_args = {}, 
-			filt = None, Pk_source = None, deltac_const = None):
+def massFromPeakHeight(nu, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARGS, 
+					deltac_args = defaults.DELTAC_ARGS, 
+					filt = None, Pk_source = None, deltac_const = None):
 	"""
 	Halo mass from peak height, :math:`\\nu`.
 	
@@ -246,8 +251,9 @@ def massFromPeakHeight(nu, z, sigma_args = {}, deltac_args = {},
 
 ###################################################################################################
 
-def nonLinearMass(z, sigma_args = {}, deltac_args = {}, 
-			filt = None, Pk_source = None):
+def nonLinearMass(z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARGS, 
+				deltac_args = defaults.DELTAC_ARGS, 
+				filt = None, Pk_source = None):
 	"""
 	The non-linear mass, :math:`M^*`.
 	
@@ -343,7 +349,7 @@ def _peakCurvatureExact(nu, gamma):
 # Wrapper for the function above which takes tables of sigmas. This form can be more convenient 
 # when computing many different nu's. 
 
-def _peakCurvatureExactFromSigma(sigma0, sigma1, sigma2, z, deltac_args = {}):
+def _peakCurvatureExactFromSigma(sigma0, sigma1, sigma2, z, deltac_args = defaults.DELTAC_ARGS):
 
 	nu = collapseOverdensity(z = z, **deltac_args) / sigma0
 	gamma = sigma1**2 / sigma0 / sigma2
@@ -382,7 +388,7 @@ def _peakCurvatureApprox(nu, gamma):
 # when computing many different nu's. For convenience, various intermediate numbers are 
 # returned as well.
 
-def _peakCurvatureApproxFromSigma(sigma0, sigma1, sigma2, z, deltac_args = {}):
+def _peakCurvatureApproxFromSigma(sigma0, sigma1, sigma2, z, deltac_args = defaults.DELTAC_ARGS):
 
 	nu = collapseOverdensity(z = z, **deltac_args) / sigma0
 	gamma = sigma1**2 / sigma0 / sigma2
@@ -393,7 +399,8 @@ def _peakCurvatureApproxFromSigma(sigma0, sigma1, sigma2, z, deltac_args = {}):
 
 ###############################################################################################
 
-def peakCurvature(M, z, exact = False, sigma_args = {'filt': 'gaussian'}, deltac_args = {}, 
+def peakCurvature(M, z, exact = False, ps_args = defaults.PS_ARGS, 
+				sigma_args = {'filt': 'gaussian'}, deltac_args = defaults.DELTAC_ARGS, 
 				filt = None, Pk_source = None, deltac_const = None):
 	"""
 	The average curvature of peaks for a halo mass M.
