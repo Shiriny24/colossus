@@ -216,6 +216,9 @@ def massFromPeakHeight(nu, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.
 		Peak height; can be a number or a numpy array.
 	z: float
 		Redshift.
+	ps_args: kwargs
+		Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
+		function.
 	sigma_args: kwargs
 		Arguments passed to the :func:`cosmology.cosmology.Cosmology.sigma` function.
 	deltac_args: kwargs
@@ -266,6 +269,9 @@ def nonLinearMass(z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARG
 	-------------------------------------------------------------------------------------------
 	z: float
 		Redshift.
+	ps_args: kwargs
+		Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
+		function.
 	sigma_args: kwargs
 		Arguments passed to the :func:`cosmology.cosmology.Cosmology.sigma` function.
 	deltac_args: kwargs
@@ -425,6 +431,9 @@ def peakCurvature(M, z, exact = False, ps_args = defaults.PS_ARGS,
 		Redshift.
 	exact: bool
 		If ``True``, evaluate the integral exactly; if ``False``, use the BBKS approximation.	
+	ps_args: kwargs
+		Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
+		function.
 	sigma_args: kwargs
 		Arguments passed to the :func:`cosmology.cosmology.Cosmology.sigma` function.
 	deltac_args: kwargs
