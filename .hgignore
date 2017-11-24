@@ -5,3 +5,4 @@ syntax:glob
 colossus/cache
 *.pyc
 *DS_Store
+*-checkpoint.ipynb
