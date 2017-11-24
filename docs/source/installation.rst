@@ -3,7 +3,8 @@ Installation
 ============
 
 You can install Colossus either using one of the common python package managers, or by downloading
-the code directly.
+the code directly. Colossus is compatible with both Python 2.7 and Python 3.x. However, the code is 
+developed and mostly tested in Python 3 which is thus the recommended version.
 
 ****************
 Using setuptools
