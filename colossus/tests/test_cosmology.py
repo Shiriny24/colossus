@@ -130,7 +130,7 @@ class TCComp(CosmologyTestCase):
 		self.assertAlmostEqualArray(self.cosmo.distanceModulus(TEST_Z[1:]), correct)		
 	
 	def test_soundHorizon(self):
-		self.assertAlmostEqual(self.cosmo.soundHorizon(), 150.21442991795007)
+		self.assertAlmostEqual(self.cosmo.soundHorizon(), 1.017552548264e+02)
 
 	###############################################################################################
 	# Densities and overdensities
