@@ -61,8 +61,23 @@ from colossus.halo import mass_so
 
 ###################################################################################################
 
-models = ['cole89', 'sheth01', 'tinker10']
-"""A list of all implemented bias models."""
+class HaloBiasModel():
+	"""
+	This object contains certain characteristics of a halo bias model. Currently, this object
+	is empty, but the ``models`` variable is a dictionary of :class:`HaloBiasModel` objects 
+	containing all available models.
+	"""
+		
+	def __init__(self):
+		return
+
+###################################################################################################
+
+models = {}
+
+models['cole89'] = HaloBiasModel()
+models['sheth01'] = HaloBiasModel()
+models['tinker10'] = HaloBiasModel()
 
 ###################################################################################################
 # HALO BIAS

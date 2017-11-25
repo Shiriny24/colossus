@@ -1,13 +1,13 @@
-===================================================================================================
+===========
 What's new?
-===================================================================================================
+===========
 
 See below for a listing of the most important code and interface changes in Colossus, starting 
 with version 1.1.
 
-***************************************************************************************************
+***********
 Version 1.1
-***************************************************************************************************
+***********
 
 A separate module for large-scale structure, lss, has been added, including functions previously
 housed in the cosmology module, the halo bias module, and a new module for the halo mass function.
@@ -42,7 +42,8 @@ Changes in the cosmology module:
   The names of the available models were changed from ``eh98`` to ``eisenstein98`` and from 
   ``eh98_smooth`` to ``eisenstein98_zb`` to conform with other colossus modules.
 * The ``Pk_source`` parameter was renamed to ``model`` in the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum`
-  function, and to ``ps_model`` in all other functions that rely on the power spectrum.
+  function. In functions that call the power spectrum, the user can pass a ps_args dictionary
+  containing kwargs that are passed to the power spectrum function.
 * The :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` function now takes redshift as
   an optional parameter.
 * Cosmology now allows non-constant dark energy equations of state. 

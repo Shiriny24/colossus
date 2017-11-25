@@ -34,15 +34,22 @@ class TCBias(test_colossus.ColosssusTestCase):
 		r = np.array([1.2, 10.8, 101.0])
 		correct = np.array([4.573596528967e+04, 2.073245325281e+04, 6.739324203655e+03])
 		self.assertAlmostEqualArray(bias.twoHaloTerm(r, 2.3E12, 1.0, '200c'), correct)
-
-	def test_modelCole89(self):
-		self.assertAlmostEqual(bias.modelCole89(3.0), 5.743636115674e+00)
-
-	def test_modelSheth01(self):
-		self.assertAlmostEqual(bias.modelSheth01(3.0), 4.720384850956e+00)
-		
-	def test_modelTinker10(self):
-		self.assertAlmostEqual(bias.modelTinker10(3.0, 1.0, '200c'), 5.290627688108e+00)
+	
+	def test_biasModels(self):
+		models = bias.models
+		for k in models.keys():
+			msg = 'Failure in model = %s' % (k)
+			if k == 'cole89':
+				correct = 5.743636115674e+00
+			elif k == 'sheth01':
+				correct = 4.720384850956e+00
+			elif k == 'tinker10':
+				correct = 5.290627688108e+00
+			else:
+				msg = 'Unknown model, %s.' % k
+				raise Exception(msg)
+			self.assertAlmostEqual(bias.haloBiasFromNu(3.0, z = 1.0, mdef = '200c', model = k), 
+								correct, msg = msg)
 		
 ###################################################################################################
 # TRIGGER

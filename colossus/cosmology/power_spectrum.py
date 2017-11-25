@@ -39,7 +39,12 @@ from colossus import defaults
 ###################################################################################################
 
 class PowerSpectrumModel():
-	
+	"""
+	This object contains certain characteristics of a power spectrum model. Currently, this object
+	is empty, but the ``models`` variable is a dictionary of :class:`PowerSpectrumModel` objects 
+	containing all available models.
+	"""
+		
 	def __init__(self):
 		return
 
