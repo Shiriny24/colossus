@@ -41,7 +41,9 @@ class ColosssusTestCase(unittest.TestCase):
 		if N1 != len(second):
 			raise Exception('Length of arrays must be the same.')
 		for i in range(N1):
-			msg = 'Array element %d/%d' % (i + 1, N1)
+			msg_ = ' Array element %d/%d' % (i + 1, N1)
+			if msg is not None:
+				msg = msg + msg_
 			self.assertAlmostEqual(first[i], second[i], places = places, msg = msg)
 
 ###################################################################################################
