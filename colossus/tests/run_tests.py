@@ -11,6 +11,7 @@ from colossus.tests import test_utils
 from colossus.tests import test_cosmology
 from colossus.tests import test_cosmology_power_spectrum
 from colossus.tests import test_lss_bias
+from colossus.tests import test_lss_mass_function
 from colossus.tests import test_lss_lss
 from colossus.tests import test_halo_concentration
 from colossus.tests import test_halo_mass
@@ -37,6 +38,7 @@ suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology_power_s
 # Large-scale structure
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_lss_lss.TCLss))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_lss_lss.TCLssInterp))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_lss_mass_function.TCMassFunction))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_lss_bias.TCBias))
 
 # Halo

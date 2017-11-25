@@ -17,7 +17,7 @@ from colossus.lss import lss
 # TEST CASES
 ###################################################################################################
 
-class TCMassFunctionFOF(test_colossus.ColosssusTestCase):
+class TCMassFunction(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
 		cosmology.setCosmology('planck15')
