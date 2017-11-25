@@ -23,7 +23,8 @@ The following functions were shifted from the cosmology module into the lss modu
 
 The new LSS module has led to the following other changes:
 
-* The module halo.bias is now :mod:`lss.bias`
+* The module halo.bias is now :mod:`lss.bias`. Like all other module implmenting models, it 
+  contains a ``models`` dictionary.
 * The :func:`lss.lss.collapseOverdensity()` function has been completely reworked. By default, it 
   still returns the constant collapse overdensity threshold in an Einstein-de Sitter universe. If a 
   redshift is passed, it applies small corrections based on the underlying cosmology. The previous 
