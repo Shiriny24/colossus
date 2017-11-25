@@ -38,7 +38,17 @@ from colossus import defaults
 
 ###################################################################################################
 
-models = ['eisenstein98', 'eisenstein98_zb']
+class PowerSpectrumModel():
+	
+	def __init__(self):
+		return
+
+###################################################################################################
+
+models = {}
+
+models['eisenstein98'] = PowerSpectrumModel()
+models['eisenstein98_zb'] = PowerSpectrumModel()
 
 ###################################################################################################
 
@@ -266,6 +276,6 @@ def modelEisenstein98ZeroBaryon(k, h, Om0, Ob0, Tcmb0):
 	L0 = np.log(2.0 * np.exp(1.0) + 1.8 * q)
 	Tk = L0 / (L0 + C0 * q * q)
 
-	return Tk	
+	return Tk
 
 ###################################################################################################
