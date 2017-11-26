@@ -27,6 +27,7 @@ Module reference
 
 import numpy as np
 import scipy.optimize
+import warnings
 
 from colossus import defaults
 from colossus.cosmology import cosmology
@@ -48,7 +49,10 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	radius. The profile formula has 6 free parameters, but most of those can be fixed to particular 
 	values that depend on the mass and mass accretion rate of a halo. The parameter values, and 
 	their dependence on mass etc, are explained in Section 3.3 of Diemer & Kravtsov 2014.
-	
+
+	There are two ways to initialize a DK14 profile. First, the user can pass the fundamental
+	parameters of the profile:
+
 	======= ================ ===================================================================================
 	Param.  Symbol           Explanation	
 	======= ================ ===================================================================================
@@ -58,17 +62,29 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	alpha   :math:`\\alpha`   Determines how quickly the slope of the inner Einasto profile steepens
 	beta    :math:`\\beta`    Sharpness of the steepening
 	gamma	:math:`\\gamma`   Asymptotic negative slope of the steepening term
+	z       :math:`z`        Redshift
 	======= ================ ===================================================================================
+
+	Alternatively, the user can pass a spherical overdensity mass and concentration, and the 
+	conversion to the native parameters then relies on the calibrations in DK14. In that case, 
+	the following parameters need to be set:
+
+	======= =======================================================
+	Param.  Explanation	
+	======= =======================================================
+	M	    A spherical overdensity mass
+	c       The corresponding concentration
+	mdef    The mass definition in which M and c are given
+	z       Redshift
+	======= =======================================================
 	
-	The user can either pass the values of these parameters or a spherical overdensity mass and 
-	concentration. The conversion to the native parameters then relies on the calibrations in DK14. 
-	
-	The profile was calibrated for the median and mean profiles of two types of halo samples, 
-	namely samples selected by mass, and samples selected by both mass and mass accretion rate. 
-	When a new profile object is created, the user can choose between those by setting 
-	``selected = 'by_mass'`` or ``selected = 'by_accretion_rate'``. The latter option results 
-	in a more accurate representation of the density profile, but the mass accretion rate must be 
-	known. 
+	A number of other parameters can be used to give additional information about the profile
+	that can be used to set the internal parameters. The fitting function was calibrated for the 
+	median and mean profiles of two types of halo samples, namely samples selected by mass, and 
+	samples selected by both mass and mass accretion rate. When a new profile object is created, 
+	the user can choose between those by setting ``selected = 'by_mass'`` or 
+	``selected = 'by_accretion_rate'``. The latter option results in a more accurate representation
+	of the density profile, but the mass accretion rate must be known. 
 	
 	If the profile is chosen to model halo samples selected by mass (``selected_by = 'M'``),
 	we set beta = 4 and gamma = 8. If the sample is selected by both mass and mass 
@@ -76,21 +92,40 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	result in a different calibration of the turnover radius rt. In the latter case, both z and 
 	Gamma must not be None. See the :func:`deriveParameters` function for more details.
 
-	The DK14 profile only makes sense if some description of the outer profile is added to this
-	inner term. Adding these terms is easy using the :func:`getDK14ProfileWithOuterTerms` 
-	function. Alternatively, the user can pass a list of OuterTerm objects (see documentation 
-	of the :mod:`halo.profile_base` parent class).
+	PELASE NOTE: While it is possible to create this inner term without any outer profiles, the 
+	DK14 profile makes sense only if some description of the outer profile is added. Adding these 
+	terms is easy using the wrapper function :func:`getDK14ProfileWithOuterTerms`. Alternatively, the 
+	user can pass a list of OuterTerm objects (see documentation of the :mod:`halo.profile_base` 
+	parent class).
+	
+	Some of the outer term parameterizations rely, in turn, on properties of the total profile 
+	such as the mass. In those cases, the constructor determines the mass iteratively, taking the
+	changing contribution of the outer term into account. However, this procedure can make the 
+	constructor slow. Thus, it is generally prefer to initialize the outer terms with fixed 
+	parameters (e.g., pivot radius or bias).
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
+	rhos: float
+		The central scale density, in physical :math:`M_{\odot} h^2 / kpc^3`
+	rs: float
+		The scale radius in physical kpc/h
+	rt: float
+		The radius where the profile steepens, in physical kpc/h
+	alpha: float
+		Determines how quickly the slope of the inner Einasto profile steepens
+	beta: float
+		Sharpness of the steepening
+	gamma: float
+		Asymptotic negative slope of the steepening term
 	M: float
 		Halo mass in :math:`M_{\odot}/h`.
 	c: float
 		Concentration in the same mass definition as M.
-	z: float
-		Redshift
 	mdef: str
 		The mass definition to which M corresponds.
+	z: float
+		Redshift
 	selected_by: str
 		The halo sample to which this profile refers can be selected mass ``M`` or by accretion
 		rate ``Gamma``. This parameter influences how some of the fixed parameters in the 
@@ -110,16 +145,22 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	# CONSTRUCTOR
 	###############################################################################################
 	
-	def __init__(self, rhos = None, rs = None, rt = None, alpha = None, beta = None, gamma = None, R200m = None,
-				M = None, c = None, z = None, mdef = None, 
-				selected_by = defaults.HALO_PRPFOLE_DK14_SELECTED_BY, Gamma = None, 
+	def __init__(self, 
+				rhos = None, rs = None, rt = None, alpha = None, beta = None, gamma = None,
+				M = None, c = None, mdef = None, 
+				z = None, selected_by = defaults.HALO_PRPFOLE_DK14_SELECTED_BY, Gamma = None, 
 				outer_terms = [], 
 				acc_warn = defaults.HALO_PROFILE_DK14_ACC_WARN, 
-				acc_err = defaults.HALO_PROFILE_DK14_ACC_ERR):
+				acc_err = defaults.HALO_PROFILE_DK14_ACC_ERR,
+				# Deprecated
+				R200m = None):
 	
+		if R200m is not None:
+			warnings.warn('The R200m parameter is deprecated and should not be passed to the DK14 constructor any more.')
+
 		# Set the fundamental variables par_names and opt_names
 		self.par_names = ['rhos', 'rs', 'rt', 'alpha', 'beta', 'gamma']
-		self.opt_names = ['selected_by', 'Gamma', 'R200m']
+		self.opt_names = ['selected_by', 'Gamma', 'R200m', 'z']
 		self.fit_log_mask = np.array([False, False, False, False, False, False])
 		
 		# Run the constructor
@@ -130,12 +171,17 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		self.accuracy_mass = 1E-4
 		self.accuracy_radius = 1E-4
 
+		if z is None:
+			raise Exception('Need the redshift z to construct a DK14 profile.')
+
 		self.opt['selected_by'] = selected_by
 		self.opt['Gamma'] = Gamma
-		self.opt['R200m'] = R200m
+		self.opt['z'] = z
+		self.opt['R200m'] = None
 		
 		if rhos is not None and rs is not None and rt is not None and alpha is not None \
 			and beta is not None and gamma is not None:
+			
 			self.par['rhos'] = rhos
 			self.par['rs'] = rs
 			self.par['rt'] = rt
@@ -143,8 +189,9 @@ class DK14Profile(profile_base.HaloDensityProfile):
 			self.par['beta'] = beta
 			self.par['gamma'] = gamma
 			
-			#if self.opt['R200m'] is None:
-			#	self.opt['R200m'] = self.RDelta(z, mdef)
+			# We need to call the update function to compute R200m or any other parameters that
+			# change with the fundamental profile parameters.
+			self.update()
 			
 		else:
 			if M is not None and c is not None and z is not None and mdef is not None:
@@ -152,6 +199,10 @@ class DK14Profile(profile_base.HaloDensityProfile):
 									acc_warn = acc_warn, acc_err = acc_err)
 			else:
 				raise Exception('The DK14 profile needs either (M, c, z, mdef) or (rhos, rs, rt, alpha, beta, gamma, R200m) as parameters.')
+
+		# Sanity checks
+		if self.par['rhos'] < 0.0 or self.par['rs'] < 0.0 or self.par['rt'] < 0.0:
+			raise Exception('The DK14 radius parameters cannot be negative, something went wrong (%s).' % (str(self.par)))
 
 		# We need to guess a radius when computing vmax
 		self.r_guess = self.par['rs']
@@ -259,7 +310,8 @@ class DK14Profile(profile_base.HaloDensityProfile):
 			self.par['rt'] = rt_R200m * R200m
 			self.par['rhos'] *= self._normalizeInner(R200m, M200m)
 
-			par2['RDelta'] = self._RDeltaLowlevel(par2['RDelta'], rho_target, guess_tolerance = GUESS_TOL)
+			par2['RDelta'] = self._RDeltaLowlevel(par2['RDelta'], rho_target, 
+												guess_tolerance = GUESS_TOL)
 			
 			return par2['RDelta'] - R_target
 		
@@ -312,45 +364,52 @@ class DK14Profile(profile_base.HaloDensityProfile):
 
 	###############################################################################################
 
-	def update(self, adjust_outer_parameters = True):
+	def update(self):
 		"""
 		Update the profile options after a parameter change.
 		
 		The DK14 profile has one internal option, opt['R200m'], that does not stay in sync with
-		the other profile parameters if they are changed outside the constructor. This function 
-		adjusts R200m, in addition to whatever action is taken in the update function of the 
-		super class.
-		
-		Additionally, this function can adjust the parameters of outer profiles that rely on R200m,
-		for example the pivot radius of a power-law outer profile. This behavior can be switched
-		off using the adjust_outer_parameters flag. Note that the conversion only works for those
-		profiles supported by the :func:`getDK14ProfileWithOuterTerms` initializer function. For
-		user-defined outer terms, the rescaling will not work out of the box.
-		
-		Parameters
-		-------------------------------------------------------------------------------------------
-		adjust_outer_parameters: bool
-			See above.
+		the other profile parameters if they are changed (either inside or outside the constructor). 
+		This function adjusts R200m, in addition to whatever action is taken in the update function 
+		of the super class. Note that this adjustment needs to be done iteratively if any outer
+		profiles rely on R200m.
 		"""
+
+		# -----------------------------------------------------------------------------------------
+		# This is a special version of the normal difference equation for finding R_Delta. Here, 
+		# the given radius corresponds to R200m, and we set that R200m in the options so that it
+		# can be evaluated by the outer terms.
 		
+		def _thresholdEquationR200m(r, prof_object, density_threshold):
+			
+			prof_object.opt['R200m'] = r
+			diff = self.enclosedMass(r) / 4.0 / np.pi * 3.0 / r**3 - density_threshold
+			
+			return diff
+
+		# -----------------------------------------------------------------------------------------
+	
 		profile_base.HaloDensityProfile.update(self)
 		
-		R200m_new = self.RDelta(self.opt['z'], '200m')
-		
-		# If the power law outer term relies on R200m, we need to update the normalization. Note
-		# that this conversion is not quite accurate in the presence of a 1/m term.
-		
-		for i in range(len(self._outer_terms)):
-			if isinstance(self._outer_terms[i], profile_outer.OuterTermPowerLaw):
-				if self._outer_terms[i].term_opt['pivot'] == 'R200m':
-					
-					old_norm, slope, r_pivot, _, _ = self._outer_terms[i]._getParameters()
-					new_pivot = R200m_new * self.opt[self._outer_terms[i].term_opt_names[1]]
-					new_norm = old_norm * (r_pivot / new_pivot)**slope
-					self.par[self._outer_terms[i].term_par_names[0]] = new_norm
+		density_threshold = mass_so.densityThreshold(self.opt['z'], '200m')
 
-		self.opt['R200m'] = R200m_new
+		# If we have not at all compute R200m yet, we don't even have an initial guess for that
+		# computation. We take a wild guess by simply assuming a concentration of 5, but allow
+		# for a larger range of radii in the iteration than we normally would.
+		if self.opt['R200m'] is None:
+			R_guess = self.par['rs'] * 5.0
+			guess_tolerance = 20.0
+			self.opt['R200m'] = R_guess
+		else:
+			R_guess = self.opt['R200m']
+			guess_tolerance = 5.0
 		
+		# Note that we cannot just use the RDelta function here. While that function iterates, it
+		# does not set R200m between iterations, meaning that the outer terms are evaluated with 
+		# the input R200m. 
+		self.opt['R200m'] = scipy.optimize.brentq(_thresholdEquationR200m, R_guess / guess_tolerance,
+				R_guess * guess_tolerance, args = (self, density_threshold), xtol = self.accuracy_radius)
+				
 		return
 
 	###############################################################################################

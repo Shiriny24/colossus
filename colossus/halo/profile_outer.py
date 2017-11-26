@@ -312,6 +312,10 @@ class OuterTermCorrelationFunction(OuterTerm):
 	density), care must be taken to set the correct integration limits. See the documentation of 
 	the correlation function in the cosmology module for more information.
 	
+	Please note that this term can cause the profile constructor to get slow if the bias is 
+	computed iteratively (i.e., from R200m or some other SO quantity). If you have a guess for the
+	bias, it is much better to fix it from the beginning.
+	
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	z: float
@@ -334,7 +338,8 @@ class OuterTermCorrelationFunction(OuterTerm):
 		independent parameter any more.
 	"""
 
-	def __init__(self, z = None, derive_bias_from = None, bias = None, z_name = 'z', bias_name = 'bias'):
+	def __init__(self, z = None, derive_bias_from = None, bias = None, z_name = 'z', 
+				bias_name = 'bias'):
 		
 		if z is None:
 			raise Exception('Redshift cannot be None.')
@@ -590,3 +595,5 @@ class OuterTermPowerLaw(OuterTerm):
 			deriv[counter] = -rho * np.log(rro) / t1 * rro**slope
 		
 		return deriv
+
+	###############################################################################################

@@ -66,6 +66,11 @@ Changes in the halo module:
   about the available models. 
 * The klypin14_nu and klypin14_m concentration models were renamed to klypin16_nu and klypin16_m
   to maintain compatibility with the publication of their paper.
+* The DK14 profile constructor does not take R200m as an input any more and instead computes it
+  self-consistently regardless of what the other inputs are. In this new version, the redshift 
+  always needs to be passed to the constructor. These changes fix a bug with outer profiles
+  that themselves rely on R200m as an input. Furthermore, the normalization of power-law outer
+  profiles is no longer adjusted in order to maintain a constant amplitude of R200m changes.
 
 Other changes:
 

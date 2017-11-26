@@ -430,22 +430,65 @@ class TCNFW(test_colossus.ColosssusTestCase):
 # TEST CASE: DK14 SPECIAL FUNCTIONS
 ###################################################################################################
 
+# This test case checks whether the iterative setting of R200m works in the DK14 profile
+
 class TCDK14(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
-		cosmology.setCosmology('WMAP9')
+		cosmology.setCosmology('planck15')
+		self.M = 1E14
+		self.c = 7.0
+		self.z = 1.0
+		self.mdef = '200c'
 	
-	def test_update(self, verbose = False):
-		self.prof = profile_dk14.getDK14ProfileWithOuterTerms(outer_term_names = ['mean', 'pl'], 
-				power_law_norm = 1.0, power_law_slope = 1.5,  power_law_max = 1000.0, 
-				M = 1E12, c = 5.0, mdef = 'vir', z = 0.5)
-		r = 1000.0
-		rho_old = self.prof.density(r)
-		self.prof.par['rs'] *= 1.5
-		self.prof.update()
-		rho_new = self.prof.density(r)
-		diff = abs(rho_new / rho_old - 1.0)
-		self.assertLess(diff, 1E-3)
+	# Test 1: No outer terms	
+	def test_DK14ConstructorInner(self):
+		
+		p1 = profile_dk14.DK14Profile(M = self.M, c = self.c, z = self.z, mdef = self.mdef)
+		p2 = profile_dk14.DK14Profile(z = self.z, 
+					rhos = p1.par['rhos'], rs = p1.par['rs'], rt = p1.par['rt'], 
+					alpha = p1.par['alpha'], beta = p1.par['beta'], gamma = p1.par['gamma'])
+		self.assertAlmostEqual(p1.opt['R200m'], p2.opt['R200m'], places = 3)
+
+	# Test 2: With outer terms
+	def test_DK14ConstructorOuter(self):
+
+		power_law_norm = 3.0
+		ot_pl = profile_outer.OuterTermPowerLaw(norm = power_law_norm, 
+								slope = 1.5, pivot = 'R200m', pivot_factor = 5.0, z = self.z,
+								max_rho = 1000.0)
+		p1 = profile_dk14.DK14Profile(M = self.M, c = self.c, z = self.z, mdef = self.mdef, 
+									outer_terms = [ot_pl])
+		p2 = profile_dk14.DK14Profile(z = self.z, 
+					rhos = p1.par['rhos'], rs = p1.par['rs'], rt = p1.par['rt'], 
+					alpha = p1.par['alpha'], beta = p1.par['beta'], gamma = p1.par['gamma'], 
+					outer_terms = [ot_pl])
+		self.assertAlmostEqual(p1.opt['R200m'], p2.opt['R200m'], places = 3)
+
+	# Test 3: Using wrapper function
+	def test_DK14ConstructorWrapper(self):
+
+		power_law_norm = 3.0
+		p1 = profile_dk14.getDK14ProfileWithOuterTerms(M = self.M, c = self.c, z = self.z, mdef = self.mdef, 
+					outer_term_names = ['pl'], power_law_norm = power_law_norm)
+		p2 = profile_dk14.getDK14ProfileWithOuterTerms(z = self.z, 
+					rhos = p1.par['rhos'], rs = p1.par['rs'], rt = p1.par['rt'], 
+					alpha = p1.par['alpha'], beta = p1.par['beta'], gamma = p1.par['gamma'], 
+					outer_term_names = ['pl'], power_law_norm = power_law_norm)
+		self.assertAlmostEqual(p1.opt['R200m'], p2.opt['R200m'], places = 3)
+
+	# Test 4: Using the correlation function. This test is skipped because it is very slow
+	
+# 	def test_DK14ConstructorCorrelationFunction(self):
+# 		
+# 		ot_cf = profile_outer.OuterTermCorrelationFunction(derive_bias_from = 'R200m', z = self.z)
+# 		p1 = profile_dk14.DK14Profile(M = self.M, c = self.c, z = self.z, mdef = self.mdef, 
+# 									outer_terms = [ot_cf])
+# 		p2 = profile_dk14.DK14Profile(z = self.z, 
+# 					rhos = p1.par['rhos'], rs = p1.par['rs'], rt = p1.par['rt'], 
+# 					alpha = p1.par['alpha'], beta = p1.par['beta'], gamma = p1.par['gamma'], 
+# 					outer_terms = [ot_cf])
+# 		self.assertAlmostEqual(p1.opt['R200m'], p2.opt['R200m'], places = 3)
 
 ###################################################################################################
 # TRIGGER
