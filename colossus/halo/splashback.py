@@ -131,6 +131,10 @@ class SplashbackModel():
 	among these quantities, then the redshift needs to be passed to the :func:`splashbackModel`
 	function.
 	
+	This object does not contain a function pointer to the model functions because those functions
+	do not work in a uniform way, necessitating a somewhat more complex decision tree when 
+	evaluating them.
+	
 	The ``models`` variable is a dictionary of :class:`SplashbackModel` objects containing all 
 	available models. The user can overwrite the properties of these models at their own risk.
 	"""

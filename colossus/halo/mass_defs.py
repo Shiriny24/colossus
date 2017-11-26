@@ -64,7 +64,7 @@ from colossus.halo import profile_nfw
 ###################################################################################################
 
 def evolveSO(M_i, c_i, z_i, mdef_i, z_f, mdef_f, 
-				profile = defaults.HALO_MASS_CONVERSION_PROFILE, **profile_args):
+				profile = defaults.HALO_MASS_CONVERSION_PROFILE, profile_args = {}):
 	"""
 	Evolve the spherical overdensity radius for a fixed profile.
 	
@@ -98,7 +98,7 @@ def evolveSO(M_i, c_i, z_i, mdef_i, z_f, mdef_f,
 	profile: str or HaloDensityProfile
 		The functional form of the profile assumed in the computation; can be ``nfw`` or an 
 		instance of HaloDensityProfile (which satisfies particular conditions, see above).
-	profile_args: kwargs
+	profile_args: dict
 		Any other keyword args are passed to the constructor of the density profile class.
 		
 	Returns
@@ -153,7 +153,8 @@ def evolveSO(M_i, c_i, z_i, mdef_i, z_f, mdef_f,
 		rhos, rs = profile_nfw.NFWProfile.fundamentalParameters(M_i, c_i, z_i, mdef_i)
 		density_threshold = mass_so.densityThreshold(z_f, mdef_f)
 		for i in range(N):
-			cnew[i] = profile_nfw.NFWProfile.xDelta(rhos[i], rs[i], density_threshold, x_guess = c_i[i])
+			cnew[i] = profile_nfw.NFWProfile.xDelta(rhos[i], rs[i], density_threshold, 
+												x_guess = c_i[i])
 		Rnew = rs * cnew
 
 	elif inspect.isclass(profile):
@@ -178,7 +179,7 @@ def evolveSO(M_i, c_i, z_i, mdef_i, z_f, mdef_f,
 ###################################################################################################
 
 def changeMassDefinition(M, c, z, mdef_in, mdef_out, 
-						profile = defaults.HALO_MASS_CONVERSION_PROFILE):
+						profile = defaults.HALO_MASS_CONVERSION_PROFILE, profile_args = {}):
 	"""
 	Change the spherical overdensity mass definition.
 	
@@ -202,6 +203,8 @@ def changeMassDefinition(M, c, z, mdef_in, mdef_out,
 		The output mass definition.
 	profile: str
 		The functional form of the profile assumed in the computation; can be ``nfw`` or ``dk14``.
+	profile_args: dict
+		Any other keyword args are passed to the constructor of the density profile class.
 
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -219,12 +222,12 @@ def changeMassDefinition(M, c, z, mdef_in, mdef_out,
 	halo.mass_adv.changeMassDefinitionCModel: Change the spherical overdensity mass definition, using a model for the concentration.
 	"""
 	
-	return evolveSO(M, c, z, mdef_in, z, mdef_out, profile = profile)
+	return evolveSO(M, c, z, mdef_in, z, mdef_out, profile = profile, profile_args = profile_args)
 
 ###################################################################################################
 
 def pseudoEvolve(M, c, mdef, z_i, z_f,
-						profile = defaults.HALO_MASS_CONVERSION_PROFILE):
+						profile = defaults.HALO_MASS_CONVERSION_PROFILE, profile_args = {}):
 	"""
 	Pseudo-evolve a static density profile.
 
@@ -256,6 +259,8 @@ def pseudoEvolve(M, c, mdef, z_i, z_f,
 		The final redshift (can be smaller, equal to, or larger than z_i).
 	profile: str
 		The functional form of the profile assumed in the computation; can be ``nfw`` or ``dk14``.
+	profile_args: dict
+		Any other keyword args are passed to the constructor of the density profile class.
 
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -272,6 +277,6 @@ def pseudoEvolve(M, c, mdef, z_i, z_f,
 	evolveSO: Evolve the spherical overdensity radius for a fixed profile.
 	"""
 	
-	return evolveSO(M, c, z_i, mdef, z_f, mdef, profile = profile)
+	return evolveSO(M, c, z_i, mdef, z_f, mdef, profile = profile, profile_args = profile_args)
 
 ###################################################################################################
