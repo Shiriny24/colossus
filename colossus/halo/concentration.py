@@ -92,9 +92,61 @@ from colossus.halo import mass_defs
 
 ###################################################################################################
 
-models = ['klypin16_nu', 'klypin16_m', 'diemer15', 'dutton14', 'bhattacharya13', 'prada12', 
-		'klypin11', 'duffy08', 'bullock01']
-"""A list of all implemented concentration models."""
+class ConcentrationModel():
+	"""
+	This object contains certain characteristics of a concentration model, most importantly the 
+	mass definitions for which concentration can be output (note that the concentration() function
+	can automatically convert mass definitions). The listing also contains flags for models that
+	are supposed to be universally valid (i.e., at all redshifts, masses, and cosmologies), and 
+	models that implement multiple statistics (mean, median etc).
+	
+	The ``models`` variable is a dictionary of :class:`ConcentrationModel` objects containing all 
+	available models.
+	"""
+	def __init__(self):
+		
+		self.mdefs = []
+		self.func = None
+		self.universal = False
+		self.depends_on_statistic = False
+		
+		return
+
+###################################################################################################
+
+models = {}
+
+models['bullock01'] = ConcentrationModel()
+models['bullock01'].mdefs = ['200c']
+
+models['duffy08'] = ConcentrationModel()
+models['duffy08'].mdefs = ['200c', 'vir', '200m']
+
+models['klypin11'] = ConcentrationModel()
+models['klypin11'].mdefs = ['vir']
+
+models['prada12'] = ConcentrationModel()
+models['prada12'].mdefs = ['200c']
+models['prada12'].universal = True
+
+models['bhattacharya13'] = ConcentrationModel()
+models['bhattacharya13'].mdefs = ['200c', 'vir', '200m']
+
+models['dutton14'] = ConcentrationModel()
+models['dutton14'].mdefs = ['200c', 'vir']
+
+models['diemer15'] = ConcentrationModel()
+models['diemer15'].mdefs = ['200c']
+models['diemer15'].universal = True
+models['diemer15'].depends_on_statistic = True
+
+models['klypin16_m'] = ConcentrationModel()
+models['klypin16_m'].mdefs = ['200c', 'vir']
+
+models['klypin16_nu'] = ConcentrationModel()
+models['klypin16_nu'].mdefs = ['200c', 'vir']
+
+###################################################################################################
 
 INVALID_CONCENTRATION = -1.0
 """The concentration value returned if the model routine fails to compute."""
@@ -158,8 +210,8 @@ def concentration(M, mdef, z,
 	# ---------------------------------------------------------------------------------------------
 	# Evaluate the concentration model
 
-	def evaluateC(func, M, limited, args):
-		if limited:
+	def evaluateC(func, M, universal, args):
+		if not universal:
 			c, mask = func(M, *args)
 		else:
 			mask = None
@@ -169,9 +221,9 @@ def concentration(M, mdef, z,
 	# ---------------------------------------------------------------------------------------------
 	# This equation is zero for a mass MDelta (in the mass definition of the c-M model) when the
 	# corresponding mass in the user's mass definition is M_desired.
-	def eq(MDelta, M_desired, mdef_model, func, limited, args):
+	def eq(MDelta, M_desired, mdef_model, func, universal, args):
 		
-		cDelta, _ = evaluateC(func, MDelta, limited, args)
+		cDelta, _ = evaluateC(func, MDelta, universal, args)
 		if cDelta < 0.0:
 			return np.nan
 		Mnew, _, _ = mass_defs.changeMassDefinition(MDelta, cDelta, z, mdef_model, mdef)
@@ -181,63 +233,16 @@ def concentration(M, mdef, z,
 	# ---------------------------------------------------------------------------------------------
 	# Distinguish between models
 		
-	if model == 'klypin16_nu':
-		mdefs_model = ['200c', 'vir']
-		func = modelKlypin16fromNu
-		args = (z,)
-		limited = True
-
-	elif model == 'klypin16_m':
-		mdefs_model = ['200c', 'vir']
-		func = modelKlypin16fromM
-		args = (z,)
-		limited = True
-	
-	elif model == 'diemer15':
-		mdefs_model = ['200c']
-		func = modelDiemer15fromM
-		args = (z, statistic)
-		limited = False
-
-	elif model == 'dutton14':
-		mdefs_model = ['200c', 'vir']
-		func = modelDutton14
-		args = (z,)
-		limited = True
-
-	elif model == 'bhattacharya13':
-		mdefs_model = ['200c', 'vir', '200m']
-		func = modelBhattacharya13
-		args = (z,)
-		limited = True
-
-	elif model == 'prada12':
-		mdefs_model = ['200c']
-		func = modelPrada12
-		args = (z,)
-		limited = False
-
-	elif model == 'klypin11':
-		mdefs_model = ['vir']
-		func = modelKlypin11
-		args = (z,)
-		limited = True
-		
-	elif model == 'duffy08':
-		mdefs_model = ['200c', 'vir', '200m']
-		func = modelDuffy08
-		args = (z,)
-		limited = True
-	
-	elif model == 'bullock01':
-		mdefs_model = ['200c']
-		func = modelBullock01
-		args = (z,)
-		limited = True
-	
-	else:
+	if not model in models.keys():
 		msg = 'Unknown model, %s.' % (model)
 		raise Exception(msg)
+	
+	mdefs_model = models[model].mdefs
+	universal = models[model].universal
+	func = models[model].func
+	args = (z,)
+	if models[model].depends_on_statistic:
+		args = args + (statistic,)
 	
 	# Now check whether the definition the user has requested is the native definition of the model.
 	# If yes, we just return the model concentration. If not, the problem is much harder. Without 
@@ -247,10 +252,10 @@ def concentration(M, mdef, z,
 		
 		if len(mdefs_model) > 1:
 			args = args + (mdef,)
-		c, mask = evaluateC(func, M, limited, args)
+		c, mask = evaluateC(func, M, universal, args)
 		
 		# Generate a mask if the model doesn't return one
-		if not limited and range_return:
+		if universal and range_return:
 			if utilities.isArray(c):
 				mask = np.ones((len(c)), dtype = bool)
 			else:
@@ -276,7 +281,7 @@ def concentration(M, mdef, z,
 		for i in range(N):
 			
 			# Iteratively enlarge the search range, if necessary
-			args_solver = M_array[i], mdef_model, func, limited, args
+			args_solver = M_array[i], mdef_model, func, universal, args
 			j = 0
 			MDelta = None
 			while MDelta is None and j < n_guess_factors:
@@ -307,10 +312,10 @@ def concentration(M, mdef, z,
 				mask[i] = False
 			
 			else:
-				cDelta, mask_element = evaluateC(func, MDelta, limited, args)
+				cDelta, mask_element = evaluateC(func, MDelta, universal, args)
 				_, _, c[i] = mass_defs.changeMassDefinition(MDelta, cDelta, z, mdef_model,
 										mdef, profile = conversion_profile)
-				if limited:
+				if not universal:
 					mask[i] = mask_element
 	
 		# If necessary, convert back to scalars
@@ -319,7 +324,7 @@ def concentration(M, mdef, z,
 			mask = mask[0]
 
 	# Spit out warning if the range was violated
-	if range_warning and not range_return and limited:
+	if range_warning and not range_return and not universal:
 		mask_array, _ = utilities.getArray(mask)
 		if False in mask_array:
 			warnings.warn('Some masses or redshifts are outside the validity of the concentration model.')
@@ -952,5 +957,19 @@ def modelBullock01(M200c, z):
 		mask = mask[0]
 		
 	return c200c, mask
+
+###################################################################################################
+# Pointers to model functions
+###################################################################################################
+
+models['bullock01'].func = modelBullock01
+models['duffy08'].func = modelDuffy08
+models['klypin11'].func = modelKlypin11
+models['prada12'].func = modelPrada12
+models['bhattacharya13'].func = modelBhattacharya13
+models['dutton14'].func = modelDutton14
+models['diemer15'].func = modelDiemer15fromM
+models['klypin16_m'].func = modelKlypin16fromM
+models['klypin16_nu'].func = modelKlypin16fromNu
 
 ###################################################################################################
