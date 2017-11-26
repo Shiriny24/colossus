@@ -13,25 +13,25 @@ A separate module for large-scale structure, lss, has been added, including func
 housed in the cosmology module, the halo bias module, and a new module for the halo mass function.
 The following functions were shifted from the cosmology module into the lss module:
 
-* Cosmology.lagrangianR() is now :func:`lss.lss.lagrangianR`
-* Cosmology.lagrangianM() is now :func:`lss.lss.lagrangianM`
-* Cosmology.collapseOverdensity() is now :func:`lss.lss.collapseOverdensity`
-* Cosmology.peakHeight() is now :func:`lss.lss.peakHeight`
-* Cosmology.massFromPeakHeight() is now :func:`lss.lss.massFromPeakHeight`
-* Cosmology.nonLinearMass() is now :func:`lss.lss.nonLinearMass`
-* Cosmology.peakCurvature() is now :func:`lss.lss.peakCurvature`
+* Cosmology.lagrangianR() is now :func:`lss.peaks.lagrangianR`
+* Cosmology.lagrangianM() is now :func:`lss.peaks.lagrangianM`
+* Cosmology.collapseOverdensity() is now :func:`lss.peaks.collapseOverdensity`
+* Cosmology.peakHeight() is now :func:`lss.peaks.peakHeight`
+* Cosmology.massFromPeakHeight() is now :func:`lss.peaks.massFromPeakHeight`
+* Cosmology.nonLinearMass() is now :func:`lss.peaks.nonLinearMass`
+* Cosmology.peakCurvature() is now :func:`lss.peaks.peakCurvature`
 
 The new LSS module has led to the following other changes:
 
 * The module halo.bias is now :mod:`lss.bias`. Like all other module implmenting models, it 
   contains a ``models`` dictionary.
-* The :func:`lss.lss.collapseOverdensity()` function has been completely reworked. By default, it 
+* The :func:`lss.peaks.collapseOverdensity()` function has been completely reworked. By default, it 
   still returns the constant collapse overdensity threshold in an Einstein-de Sitter universe. If a 
   redshift is passed, it applies small corrections based on the underlying cosmology. The previous 
   parameters to this function will now cause an error. This change also affects all functions that
-  rely on the collapse overdensity, such as :func:`lss.lss.peakHeight()`, 
-  :func:`lss.lss.massFromPeakHeight()`, :func:`lss.lss.nonLinearMass()`, and 
-  :func:`lss.lss.peakCurvature()`. These functions now take dictionaries of parameters that are 
+  rely on the collapse overdensity, such as :func:`lss.peaks.peakHeight()`, 
+  :func:`lss.peaks.massFromPeakHeight()`, :func:`lss.peaks.nonLinearMass()`, and 
+  :func:`lss.peaks.peakCurvature()`. These functions now take dictionaries of parameters that are 
   passed to the collapse overdensity and sigma functions.
 * The halo bias module was improved, with two new models for halo bais (spherical collapse and
   Sheth et al. 2001).

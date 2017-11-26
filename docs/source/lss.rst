@@ -1,6 +1,6 @@
-=====================================
+=====================
 Large-scale structure
-=====================================
+=====================
 
 This module implements functions related to large-scale structure. The scope includes the non-
 linear collapse of Gaussian random fields, i.e. density peaks, peak height and such, as well as the
@@ -11,13 +11,13 @@ quantities that are not necessarily related to collapsed peaks; those are based 
 :doc:`cosmology_cosmology` module. Any functions concerned with the shape of collapsed peaks are 
 based in the :doc:`halo` module.
 
----------------------------------------------------------------------------------------------------
+----------------
 Module reference
----------------------------------------------------------------------------------------------------
+----------------
 
 .. toctree::
     :maxdepth: 3
 
-    lss_lss
+    lss_peaks
     lss_mass_function
     lss_bias

@@ -67,7 +67,7 @@ calibrated to various mass definitions. The ``tinker08`` model can handle any ov
 There are two different types of redshift dependence of :math:`f(\\sigma)` listed above: some 
 models explicitly depend on redshift (e.g., ``bhattacharya11``), some models only change through 
 the small variation of the collapse overdensity :math:`\\delta_{\\rm c}` 
-(see :func:`lss.lss.collapseOverdensity`). The ``tinker08`` model depends on redshift only through 
+(see :func:`lss.peaks.collapseOverdensity`). The ``tinker08`` model depends on redshift only through 
 the conversion of the overdensity threshold.
 
 Mass functions based on the Press-Schechter formalism (i.e., parameterizations in terms of f(sigma)
@@ -87,7 +87,7 @@ import numpy as np
 
 from colossus import defaults
 from colossus.cosmology import cosmology
-from colossus.lss import lss
+from colossus.lss import peaks
 from colossus.halo import mass_so
 
 ###################################################################################################
@@ -211,7 +211,7 @@ def massFunction(x, z, q_in = 'M', mdef = 'fof', q_out = 'f',
 		Extra arguments to be passed to the :func:`cosmology.cosmology.Cosmology.sigma` function 
 		when mass is converted to sigma.
 	deltac_args: dict
-		Extra parameters that are passed to the :func:`lss.lss.collapseOverdensity` function; see 
+		Extra parameters that are passed to the :func:`lss.peaks.collapseOverdensity` function; see 
 		the documentation of the individual models for possible parameters. Note that not all 
 		models of the mass function rely on the collapse overdensity.
 		
@@ -227,12 +227,12 @@ def massFunction(x, z, q_in = 'M', mdef = 'fof', q_out = 'f',
 	M = None
 	if q_in == 'M':
 		M = x
-		R = lss.lagrangianR(x)
+		R = peaks.lagrangianR(x)
 		sigma = cosmo.sigma(R, z, **sigma_args)
 	elif q_in == 'sigma':
 		sigma = x
 	elif q_in == 'nu':
-		delta_c = lss.collapseOverdensity(z = z, **deltac_args)
+		delta_c = peaks.collapseOverdensity(z = z, **deltac_args)
 		sigma = delta_c / x
 	else:
 		raise Exception('Unknown input quantity, %s.' % (q_in))
@@ -261,7 +261,7 @@ def massFunction(x, z, q_in = 'M', mdef = 'fof', q_out = 'f',
 	else:
 		if M is None:
 			R = cosmo.sigma(sigma, inverse = True, ps_args = ps_args, **sigma_args)
-			M = lss.lagrangianM(R)
+			M = peaks.lagrangianM(R)
 		mfunc = convertMassFunction(f, M, z, 'f', q_out)
 
 	return mfunc
@@ -307,7 +307,7 @@ def convertMassFunction(mfunc, M, z, q_in, q_out,
 		return mfunc
 
 	cosmo = cosmology.getCurrent()
-	R = lss.lagrangianR(M)
+	R = peaks.lagrangianR(M)
 	d_ln_sigma_d_ln_R = cosmo.sigma(R, z, derivative = True, ps_args = ps_args, **sigma_args)
 	rho_Mpc = cosmo.rho_m(0.0) * 1E9
 	
@@ -363,7 +363,7 @@ def modelPress74(sigma, z, deltac_args = {'corrections': True}):
 		The halo mass function.
 	"""
 	
-	delta_c = lss.collapseOverdensity(z = z, **deltac_args)
+	delta_c = peaks.collapseOverdensity(z = z, **deltac_args)
 	nu = delta_c / sigma
 	f = np.sqrt(2.0 / np.pi) * nu * np.exp(-0.5 * nu**2)
 	
@@ -399,7 +399,7 @@ def modelSheth99(sigma, z, deltac_args = {'corrections': True}):
 		The halo mass function.
 	"""
 		
-	delta_c = lss.collapseOverdensity(z = z, **deltac_args)
+	delta_c = peaks.collapseOverdensity(z = z, **deltac_args)
 	A = 0.3222
 	a = 0.707
 	p = 0.3
@@ -521,7 +521,7 @@ def modelReed07(sigma, z, deltac_args = {'corrections': True}, exact_n = True):
 		The halo mass function.
 	"""
 			
-	delta_c = lss.collapseOverdensity(z = z, **deltac_args)
+	delta_c = peaks.collapseOverdensity(z = z, **deltac_args)
 
 	if exact_n:
 		cosmo = cosmology.getCurrent()
@@ -697,7 +697,7 @@ def modelBhattacharya11(sigma, z, deltac_args = {'corrections': False}):
 		The halo mass function.
 	"""
 		
-	delta_c = lss.collapseOverdensity(z = z, **deltac_args)
+	delta_c = peaks.collapseOverdensity(z = z, **deltac_args)
 	nu = delta_c / sigma
 	nu2 = nu**2
 
@@ -942,7 +942,7 @@ def modelDespali16(sigma, z, mdef, ellipsoidal = False):
 		a = 0.4332 * x**2 + 0.2263 * x + 0.7665
 		p = -0.1151 * x**2 + 0.2554 * x + 0.2488
 		
-	delta_c = lss.collapseOverdensity(corrections = True, z = z)
+	delta_c = peaks.collapseOverdensity(corrections = True, z = z)
 	
 	nu_p = a * delta_c**2 / sigma**2
 	f = 2.0 * A * np.sqrt(nu_p / 2.0 / np.pi) * np.exp(-0.5 * nu_p) * (1.0 + nu_p**-p)

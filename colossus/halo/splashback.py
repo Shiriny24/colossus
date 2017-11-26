@@ -65,7 +65,7 @@ shows how to calculate :math:`R_{\\rm sp}/R_{\\rm 200m}` when only the mass of a
 
 	z = 0.5
 	cosmo = cosmology.getCurrent()
-	nu200m = lss.peakHeight(1E12, z)
+	nu200m = peaks.peakHeight(1E12, z)
 	RspR200m, mask = splashback.splashbackModel('RspR200m', nu200m = nu200m, z = z)
 
 If the mass accretion rate is known, that constraint can also be used::
@@ -115,7 +115,7 @@ import scipy.interpolate
 from colossus import defaults
 from colossus.utils import utilities
 from colossus.cosmology import cosmology
-from colossus.lss import lss
+from colossus.lss import peaks
 from colossus.halo import mass_so
 from colossus.halo import mass_defs
 from colossus.halo import mass_adv
@@ -507,7 +507,7 @@ def splashbackRadius(z, mdef, R = None, M = None, c = None, Gamma = None,
 			M200m, R200m, _ = mass_defs.changeMassDefinition(M, c, z, mdef, '200m', 
 										profile = profile)
 			
-	nu200m = lss.peakHeight(M200m, z)
+	nu200m = peaks.peakHeight(M200m, z)
 	
 	RspR200m, mask1 = splashbackModel('RspR200m', Gamma = Gamma, nu200m = nu200m, z = z, model = model,
 				statistic = statistic, rspdef = rspdef)

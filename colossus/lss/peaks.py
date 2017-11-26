@@ -1,12 +1,13 @@
 ###################################################################################################
 #
-# lss.py                    (c) Benedikt Diemer
+# peaks.py                  (c) Benedikt Diemer
 #     				    	    benedikt.diemer@cfa.harvard.edu
 #
 ###################################################################################################
 
 """
-This module contains relatively general functions, such as translating halo mass into peak height.
+This module contains functions related to peaks in Gaussian random fields, such as translating 
+halo mass into peak height.
 
 ---------------------------------------------------------------------------------------------------
 Basic usage
@@ -17,7 +18,7 @@ to that of a typically collapsed structure, quantified by the variance of the li
 The peak height of a halo is simple to evaluate in Colossus::
 	
 	setCosmology('planck15')
-	nu = lss.peakHeight(M, z)
+	nu = peaks.peakHeight(M, z)
 
 The inverse function converts peak height to mass. The non-linear mass is defined as the mass at
 which peak height is unity at a given redshift, i.e., the mass of a halo that is typically 

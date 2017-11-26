@@ -1494,10 +1494,10 @@ class Cosmology(object):
 	#DEPRECATED
 	def lagrangianR(self, M):
 		"""
-		Deprecated, please use :func:`lss.lss.lagrangianR`.
+		Deprecated, please use :func:`lss.peaks.lagrangianR`.
 		"""
 		
-		warnings.warn('This function is deprecated and will be removed. Please use lss.lss.lagrangianR.')
+		warnings.warn('This function is deprecated and will be removed. Please use lss.peaks.lagrangianR.')
 		
 		return (3.0 * M / 4.0 / np.pi / self.rho_m(0.0) / 1E9)**(1.0 / 3.0)
 	
@@ -1506,10 +1506,10 @@ class Cosmology(object):
 	#DEPRECATED
 	def lagrangianM(self, R):
 		"""
-		Deprecated, please use :func:`lss.lss.lagrangianM`.
+		Deprecated, please use :func:`lss.peaks.lagrangianM`.
 		"""
 
-		warnings.warn('This function is deprecated and will be removed. Please use lss.lss.lagrangianM.')
+		warnings.warn('This function is deprecated and will be removed. Please use lss.peaks.lagrangianM.')
 	
 		return 4.0 / 3.0 * np.pi * R**3 * self.rho_m(0.0) * 1E9
 
@@ -1675,10 +1675,10 @@ class Cosmology(object):
 	# DEPRECATED
 	def collapseOverdensity(self, deltac_const = True, sigma = None):
 		"""
-		Deprecated, please use :func:`lss.lss.collapseOverdensity`.
+		Deprecated, please use :func:`lss.peaks.collapseOverdensity`.
 		"""
 
-		warnings.warn('This function is deprecated and will be removed. Please use lss.lss.collapseOverdensity.')
+		warnings.warn('This function is deprecated and will be removed. Please use lss.peaks.collapseOverdensity.')
 						
 		if deltac_const:
 			delta_c = constants.DELTA_COLLAPSE
@@ -2280,10 +2280,10 @@ class Cosmology(object):
 	# DEPRECATED
 	def peakHeight(self, M, z, filt = 'tophat', ps_model = defaults.POWER_SPECTRUM_MODEL, deltac_const = True):
 		"""
-		Deprecated, please use :func:`lss.lss.peakHeight`.
+		Deprecated, please use :func:`lss.peaks.peakHeight`.
 		"""
 
-		warnings.warn('This function is deprecated and will be removed. Please use lss.lss.peakHeight.')
+		warnings.warn('This function is deprecated and will be removed. Please use lss.peaks.peakHeight.')
 					
 		R = self.lagrangianR(M)
 		sigma = self.sigma(R, z, filt = filt, ps_model = ps_model)
@@ -2296,10 +2296,10 @@ class Cosmology(object):
 	# DEPRECATED
 	def massFromPeakHeight(self, nu, z, filt = 'tophat', ps_model = defaults.POWER_SPECTRUM_MODEL, deltac_const = True):
 		"""
-		Deprecated, please use :func:`lss.lss.massFromPeakHeight`.
+		Deprecated, please use :func:`lss.peaks.massFromPeakHeight`.
 		"""
 
-		warnings.warn('This function is deprecated and will be removed. Please use lss.lss.massFromPeakHeight.')
+		warnings.warn('This function is deprecated and will be removed. Please use lss.peaks.massFromPeakHeight.')
 
 		sigma = self.collapseOverdensity(deltac_const = deltac_const) / nu
 		R = self.sigma(sigma, z, filt = filt, ps_model = ps_model, inverse = True)
@@ -2312,10 +2312,10 @@ class Cosmology(object):
 	# DEPRECATED
 	def nonLinearMass(self, z, filt = 'tophat', ps_model = defaults.POWER_SPECTRUM_MODEL):
 		"""
-		Deprecated, please use :func:`lss.lss.nonLinearMass`.
+		Deprecated, please use :func:`lss.peaks.nonLinearMass`.
 		"""
 
-		warnings.warn('This function is deprecated and will be removed. Please use lss.lss.nonLinearMass.')
+		warnings.warn('This function is deprecated and will be removed. Please use lss.peaks.nonLinearMass.')
 
 		return self.massFromPeakHeight(1.0, z = z, filt = filt, ps_model = ps_model, deltac_const = True)
 
@@ -2431,10 +2431,10 @@ class Cosmology(object):
 	def peakCurvature(self, M, z, filt = 'gaussian', ps_model = defaults.POWER_SPECTRUM_MODEL,
 					deltac_const = True, exact = False):
 		"""
-		Deprecated, please use :func:`lss.lss.peakCurvature`.
+		Deprecated, please use :func:`lss.peaks.peakCurvature`.
 		"""
 
-		warnings.warn('This function is deprecated and will be removed. Please use lss.lss.peakCurvature.')
+		warnings.warn('This function is deprecated and will be removed. Please use lss.peaks.peakCurvature.')
 
 		R = self.lagrangianR(M)
 		sigma0 = self.sigma(R, z, j = 0, filt = filt, ps_model = ps_model)

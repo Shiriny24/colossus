@@ -1,6 +1,6 @@
-=====================================
-General routines
-=====================================
+===============================
+Peaks in Gaussian random fields
+===============================
 
-.. automodule:: lss.lss
+.. automodule:: lss.peaks
     :members:

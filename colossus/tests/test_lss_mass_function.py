@@ -11,7 +11,7 @@ import numpy as np
 from colossus.tests import test_colossus
 from colossus.cosmology import cosmology
 from colossus.lss import mass_function
-from colossus.lss import lss
+from colossus.lss import peaks
 
 ###################################################################################################
 # TEST CASES
@@ -27,8 +27,8 @@ class TCMassFunction(test_colossus.ColosssusTestCase):
 		
 		M = 1E12
 		z = 1.0
-		nu = lss.peakHeight(M, z)
-		delta_c = lss.collapseOverdensity()
+		nu = peaks.peakHeight(M, z)
+		delta_c = peaks.collapseOverdensity()
 		sigma = delta_c / nu
 		
 		correct = 4.431947671729e-01

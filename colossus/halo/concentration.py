@@ -86,7 +86,7 @@ from colossus.utils import utilities
 from colossus.utils import constants
 from colossus import defaults
 from colossus.cosmology import cosmology
-from colossus.lss import lss
+from colossus.lss import peaks
 from colossus.halo import mass_so
 from colossus.halo import mass_defs
 
@@ -379,7 +379,7 @@ def modelKlypin16fromNu(M, z, mdef):
 		msg = 'Invalid mass definition for Klypin et al 2016 peak height-based model, %s.' % mdef
 		raise Exception(msg)
 
-	nu = lss.peakHeight(M, z)
+	nu = peaks.peakHeight(M, z)
 	sigma = constants.DELTA_COLLAPSE / nu
 	a0 = np.interp(z, z_bins, a0_bins)
 	b0 = np.interp(z, z_bins, b0_bins)
@@ -524,7 +524,7 @@ def modelDiemer15fromM(M200c, z, statistic = 'median'):
 	else:
 		n = _diemer15_n_fromM(M200c)
 	
-	nu = lss.peakHeight(M200c, z)
+	nu = peaks.peakHeight(M200c, z)
 	c200c = _diemer15(nu, n, statistic)
 
 	return c200c
@@ -652,7 +652,7 @@ def _diemer15_n_fromM(M):
 
 def _diemer15_n_fromnu(nu, z):
 
-	M = lss.massFromPeakHeight(nu, z)
+	M = peaks.massFromPeakHeight(nu, z)
 	n = _diemer15_n_fromM(M)
 	
 	return n
@@ -737,7 +737,7 @@ def modelBhattacharya13(M, z, mdef):
 	
 	# Note that peak height in the B13 paper is defined wrt. the mass definition in question, so 
 	# we can just use M to evaluate nu. 
-	nu = lss.peakHeight(M, z)
+	nu = peaks.peakHeight(M, z)
 
 	if mdef == '200c':
 		c_fit = 5.9 * D**0.54 * nu**-0.35
@@ -791,7 +791,7 @@ def modelPrada12(M200c, z):
 		return 1.047 + (1.646 - 1.047) * (1.0 / np.pi * np.arctan(7.386 * (x - 0.526)) + 0.5)
 
 	cosmo = cosmology.getCurrent()
-	nu = lss.peakHeight(M200c, z)
+	nu = peaks.peakHeight(M200c, z)
 
 	a = 1.0 / (1.0 + z)
 	x = (cosmo.Ode0 / cosmo.Om0) ** (1.0 / 3.0) * a
@@ -934,7 +934,7 @@ def modelBullock01(M200c, z):
 	# The math works out such that we are looking for the redshift where the growth factor is
 	# equal to the peak height of a halo with mass F * M.
 	M_array, is_array = utilities.getArray(M200c)
-	D_target = lss.peakHeight(F * M_array, 0.0)
+	D_target = peaks.peakHeight(F * M_array, 0.0)
 	mask = (D_target > Dmin) & (D_target < Dmax)
 	N = len(M_array)
 	c200c = np.zeros((N), dtype = float)

@@ -25,7 +25,7 @@ mass needs to be converted to peak height first::
 
 	M = 1E14
 	z = 0.0
-	nu = lss.peakHeight(M, z)
+	nu = peaks.peakHeight(M, z)
 	b = bias.haloBiasFromNu(nu, model = 'sheth01')
 	b = bias.haloBias(M, model = 'tinker10', z = z, mdef = 'vir')
 
@@ -56,7 +56,7 @@ import numpy as np
 from colossus.utils import constants
 from colossus import defaults
 from colossus.cosmology import cosmology
-from colossus.lss import lss
+from colossus.lss import peaks
 from colossus.halo import mass_so
 
 ###################################################################################################
@@ -154,7 +154,7 @@ def haloBias(M, z, mdef = None, model = defaults.HALO_BIAS_MODEL):
 	haloBiasFromNu: The halo bias at a given peak height. 
 	"""
 		
-	nu = lss.peakHeight(M, z)
+	nu = peaks.peakHeight(M, z)
 	bias = haloBiasFromNu(nu, z = z, mdef = mdef, model = model)
 	
 	return bias
@@ -222,7 +222,7 @@ def modelCole89(nu):
 		Halo bias; has the same dimensions as nu or z.
 	"""
 	
-	delta_c = lss.collapseOverdensity()
+	delta_c = peaks.collapseOverdensity()
 	bias = 1.0 + (nu**2 - 1.0) / delta_c
 	
 	return bias
@@ -251,7 +251,7 @@ def modelSheth01(nu):
 	anu2 = a * nu**2
 	anu2c = anu2**c
 	t1 = b * (1.0 - c) * (1.0 - 0.5 * c)
-	delta_sc = lss.collapseOverdensity()
+	delta_sc = peaks.collapseOverdensity()
 	bias = 1.0 +  1.0 / (roota * delta_sc) * (roota * anu2 + roota * b * anu2**(1.0 - c) - anu2c / (anu2c + t1))
 
 	return bias

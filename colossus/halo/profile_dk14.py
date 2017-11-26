@@ -30,7 +30,7 @@ import scipy.optimize
 
 from colossus import defaults
 from colossus.cosmology import cosmology
-from colossus.lss import lss
+from colossus.lss import peaks
 from colossus.halo import mass_so
 from colossus.halo import profile_base
 from colossus.halo import profile_outer
@@ -252,7 +252,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 			
 			self.opt['R200m'] = R200m
 			M200m = mass_so.R_to_M(R200m, z, '200m')
-			nu200m = lss.peakHeight(M200m, z)
+			nu200m = peaks.peakHeight(M200m, z)
 
 			self.par['alpha'], self.par['beta'], self.par['gamma'], rt_R200m = \
 				self.deriveParameters(selected_by, nu200m = nu200m, z = z, Gamma = Gamma)
@@ -274,7 +274,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 			# The user has supplied M200m, the parameters follow directly from the input
 			M200m = M
 			self.opt['R200m'] = mass_so.M_to_R(M200m, z, '200m')
-			nu200m = lss.peakHeight(M200m, z)
+			nu200m = peaks.peakHeight(M200m, z)
 			self.par['alpha'], self.par['beta'], self.par['gamma'], rt_R200m = \
 				self.deriveParameters(selected_by, nu200m = nu200m, z = z, Gamma = Gamma)
 			self.par['rt'] = rt_R200m * self.opt['R200m']
