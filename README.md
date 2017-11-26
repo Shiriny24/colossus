@@ -2,7 +2,7 @@ Colossus
 ========
 
 Colossus is an astrophysics toolkit, the name is an acronym for **CO**smology, ha**LO**, 
-and large-**S**cale **S**tr**U**cture tool**S**. Please consult the [[Online Documentation](https://bdiemer.bitbucket.io/)] for details.
+and large-**S**cale **S**tr**U**cture tool**S**. Please consult the [[Online Documentation](https://bdiemer.bitbucket.io/colossus/)] for details.
 
 Installation
 ------------
