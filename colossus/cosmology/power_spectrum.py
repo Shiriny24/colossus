@@ -33,6 +33,7 @@ Module reference
 ###################################################################################################
 
 import numpy as np
+from collections import OrderedDict
 
 from colossus import defaults
 
@@ -50,7 +51,7 @@ class PowerSpectrumModel():
 
 ###################################################################################################
 
-models = {}
+models = OrderedDict()
 
 models['eisenstein98'] = PowerSpectrumModel()
 models['eisenstein98_zb'] = PowerSpectrumModel()

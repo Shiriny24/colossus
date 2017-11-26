@@ -84,6 +84,7 @@ Module reference
 ###################################################################################################
 
 import numpy as np
+from collections import OrderedDict
 
 from colossus import defaults
 from colossus.cosmology import cosmology
@@ -114,7 +115,7 @@ class HaloMassFunctionModel():
 
 ###################################################################################################
 
-models = {}
+models = OrderedDict()
 
 models['press74'] = HaloMassFunctionModel()
 models['press74'].mdefs = ['fof']

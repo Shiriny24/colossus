@@ -111,6 +111,7 @@ Module reference
 
 import numpy as np
 import scipy.interpolate
+from collections import OrderedDict
 
 from colossus import defaults
 from colossus.utils import utilities
@@ -157,7 +158,7 @@ class SplashbackModel():
 
 ###################################################################################################
 
-models = {}
+models = OrderedDict()
 
 models['adhikari14'] = SplashbackModel()
 models['adhikari14'].qx = ['Gamma']

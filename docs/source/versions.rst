@@ -60,9 +60,9 @@ Changes in the halo module:
   general nature. The :func:`halo.mass_defs.pseudoEvolve` function is a wrapper for evolveSO, and
   has one fewer parameter than previously (no final mass definition).
 * Some modules contain a MODELS dictionary or list naming all implemented fitting functions. For
-  consistency, all occurrences of MODELS have been renamed to "models", affecting the concentration,
-  splashback, and bias modules.
-* The models field is not a list any more but a dictionary of objects that contain information 
+  consistency, all occurrences of MODELS have been renamed to "models", affecting the power 
+  spectrum, bias, halo mass function, concentration, and splashback modules. Furthermore, the 
+  models field is not a list any more but an ordered dictionary of objects that contain information 
   about the available models. 
 * The klypin14_nu and klypin14_m concentration models were renamed to klypin16_nu and klypin16_m
   to maintain compatibility with the publication of their paper.

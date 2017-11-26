@@ -52,6 +52,7 @@ Module reference
 ###################################################################################################
 
 import numpy as np
+from collections import OrderedDict
 
 from colossus.utils import constants
 from colossus import defaults
@@ -73,7 +74,7 @@ class HaloBiasModel():
 
 ###################################################################################################
 
-models = {}
+models = OrderedDict()
 
 models['cole89'] = HaloBiasModel()
 models['sheth01'] = HaloBiasModel()
