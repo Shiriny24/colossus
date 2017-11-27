@@ -52,10 +52,10 @@ reed07	       fof   	        delta_c     `Reed et al. 2007 <http://adsabs.harvar
 tinker08       Any SO 	        Yes	        `Tinker et al. 2008 <http://adsabs.harvard.edu/abs/2008ApJ...688..709T>`_
 crocce10       fof   	        No          `Crocce et al. 2010 <http://adsabs.harvard.edu/abs/2010MNRAS.403.1353C>`_
 bhattacharya11 fof   	        Yes         `Bhattacharya et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...732..122B>`_
-courtin11      fof   	        No	        `Courtin et al. 2011 <http://adsabs.harvard.edu/abs/2011MNRAS.410.1911C>`_
+courtin11      fof              No          `Courtin et al. 2011 <http://adsabs.harvard.edu/abs/2011MNRAS.410.1911C>`_
 angulo12       fof  	        No          `Angulo et al. 2012 <http://adsabs.harvard.edu/abs/2012MNRAS.426.2046A>`_
 watson13       fof              Yes (SO)    `Watson et al. 2013 <http://adsabs.harvard.edu/abs/2013MNRAS.433.1230W>`_
-bocquet16      200m,200c,500c   Yes (SO)    `Bocquet et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.456.2361B>`_
+bocquet16      200m,200c,500c   Yes         `Bocquet et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.456.2361B>`_
 despali16      Any SO           Yes         `Despali et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.456.2486D>`_
 ============== ================ =========== ======================================
 
