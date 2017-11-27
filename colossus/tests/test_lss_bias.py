@@ -31,8 +31,8 @@ class TCBias(test_colossus.ColosssusTestCase):
 		self.assertAlmostEqual(bias.haloBias(2.3E12, 1.0, '200c'), 1.552991796791e+00)
 		
 	def test_twoHaloTerm(self):
-		r = np.array([1.2, 10.8, 101.0])
-		correct = np.array([4.573596528967e+04, 2.073245325281e+04, 6.739324203655e+03])
+		r = np.array([0.012, 0.18, 2.05])
+		correct = np.array([2.622669497365e+04, 7.223891617509e+03, 1.089652009720e+03])
 		self.assertAlmostEqualArray(bias.twoHaloTerm(r, 2.3E12, 1.0, '200c'), correct)
 	
 	def test_biasModels(self):
