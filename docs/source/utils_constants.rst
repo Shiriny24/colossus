@@ -1,6 +1,6 @@
-=====================================
-Astronomical and physical constants
-=====================================
+=========
+Constants
+=========
 
 .. automodule:: utils.constants
     :members:

@@ -3,8 +3,8 @@ Tutorials
 =========
 
 The easiest way to learn how to use colossus is by following the tutorial notebooks. Each notebook 
-covers a colossus module. The Jupyter notebooks without output can be found in the /tutorials folder.
-The links below point to the output of those notebooks:
+covers a colossus module. The Jupyter notebooks are located in the colossus/tutorials directory.
+The links below point to the html output of those notebooks:
 
 * `Cosmology <_static/tutorial_cosmology.html>`_
 * `LSS: peaks in Gaussian random fields <_static/tutorial_lss_peaks.html>`_
