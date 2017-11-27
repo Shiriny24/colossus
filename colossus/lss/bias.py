@@ -167,7 +167,7 @@ def twoHaloTerm(r, M, z, mdef, model = defaults.HALO_BIAS_MODEL):
 	The 2-halo term as a function of radius and halo mass. 
 
 	The 2-halo term in the halo-matter correlation function describes the excess density around 
-	halos due to the proximity of other halos. This contribution can be approximated as the matter-
+	halos due to the proximity of other peaks. This contribution can be approximated as the matter-
 	matter correlation function times a linear bias which depends on the peak height of the halo.
 	Sometimes this term includes an additional factor of the mean density which is omitted here. 
 	
@@ -177,7 +177,7 @@ def twoHaloTerm(r, M, z, mdef, model = defaults.HALO_BIAS_MODEL):
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	r: array_like
-		Halocentric radius in physical kpc/h; can be a number or a numpy array.
+		Halocentric radius in comoving Mpc/h; can be a number or a numpy array.
 	M: float
 		Halo mass in :math:`M_{\odot}/h`
 	z: float
@@ -196,8 +196,7 @@ def twoHaloTerm(r, M, z, mdef, model = defaults.HALO_BIAS_MODEL):
 	
 	cosmo = cosmology.getCurrent()
 	bias = haloBias(M, z, mdef, model = model)
-	r_comoving_Mpc = r / 1000.0 * (1.0 + z)
-	xi = cosmo.correlationFunction(r_comoving_Mpc, z)
+	xi = cosmo.correlationFunction(r, z)
 	rho_2h = cosmo.rho_m(z) * bias * xi
 	
 	return rho_2h

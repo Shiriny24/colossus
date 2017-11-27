@@ -1,6 +1,6 @@
-===================================================================================================
+======================
 Colossus Documentation
-===================================================================================================
+======================
 
 Colossus is an acronym for **CO**\ smology, ha\ **LO** and large-\ **S**\ cale **S**\ tr\ **U**\ cture 
 tool\ **S**\ . As the name suggests, Colossus constitutes a collection of modules pertaining to 
@@ -31,9 +31,9 @@ While Colossus has been tested against various other codes, there is no guarante
 of bugs. Use it at your own risk, and please report any errors, inconveniences and unclear 
 documentation to the developer.
 
-***************************************************************************************************
+***************
 Citing Colossus
-***************************************************************************************************
+***************
 
 If you use Colossus for a publication, please cite Diemer & Kravtsov 2015 
 [`ApJ 799, 108 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_] and/or the
@@ -42,9 +42,9 @@ based on other papers that proposed, for example, density profile or concentrati
 If you use such routines, please cite the paper(s) mentioned in the function and/or module
 documentation.
 
-***************************************************************************************************
+********
 Contents
-***************************************************************************************************
+********
 
 .. toctree::
     :maxdepth: 2
@@ -52,14 +52,13 @@ Contents
     installation
     versions
     tutorials
-    units
     modules
     utils
     global
 
-***************************************************************************************************
+******
 Search
-***************************************************************************************************
+******
 
 * :ref:`genindex`
 * :ref:`modindex`

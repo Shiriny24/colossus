@@ -56,19 +56,19 @@ Concentration models
 The following models are supported in this module, and their ID can be passed as the ``model`` 
 parameter to the :func:`concentration` function:
 
-============== ================ ================== =========== ========== ======================================
+============== ================ ================== =========== ========== ============================================================================
 ID             Native mdefs     M range (z=0)      z range     Cosmology  Paper
-============== ================ ================== =========== ========== ======================================
-klypin16_nu    200c, vir        M > 1E10           0 < z < 5   Pl1        Klypin et al. 2016 (MNRAS 457, 4340)
-klypin16_m     200c, vir        M > 1E10           0 < z < 5   Pl1/WMAP7  Klypin et al. 2016 (MNRAS 457, 4340)
-diemer15       200c             Any                Any         Any        Diemer & Kravtsov 2015 (ApJ 799, 108)
-dutton14       200c, vir        M > 1E10           0 < z < 5   Pl1        Dutton & Maccio 2014 (MNRAS 441, 3359)
-bhattacharya13 200c, vir, 200m  2E12 < M < 2E15    0 < z < 2   WMAP7      Bhattacharya et al. 2013 (ApJ 766, 32)
-prada12        200c             Any                Any         Any        Prada et al. 2012 (MNRAS 423, 3018)
-klypin11       vir              3E10 < M < 5E14    0           WMAP7      Klypin et al. 2011 (ApJ 740, 102)
-duffy08        200c, vir, 200m  1E11 < M < 1E15    0 < z < 2   WMAP5      Duffy et al. 2008 (MNRAS 390, L64)
-bullock01	   200c             Almost any         Any         Any        Bullock et al. 2001 (MNRAS 321, 559)
-============== ================ ================== =========== ========== ======================================
+============== ================ ================== =========== ========== ============================================================================
+bullock01	   200c             Almost any         Any         Any        `Bullock et al. 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.321..559B>`_
+duffy08        200c, vir, 200m  1E11 < M < 1E15    0 < z < 2   WMAP5      `Duffy et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.390L..64D>`_
+klypin11       vir              3E10 < M < 5E14    0           WMAP7      `Klypin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...740..102K>`_
+prada12        200c             Any                Any         Any        `Prada et al. 2012 <http://adsabs.harvard.edu/abs/2012MNRAS.423.3018P>`_
+bhattacharya13 200c, vir, 200m  2E12 < M < 2E15    0 < z < 2   WMAP7      `Bhattacharya et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...32B>`_
+dutton14       200c, vir        M > 1E10           0 < z < 5   Pl1        `Dutton & Maccio 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.441.3359D>`_
+diemer15       200c             Any                Any         Any        `Diemer & Kravtsov 2015 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_
+klypin16_m     200c, vir        M > 1E10           0 < z < 5   Pl1/WMAP7  `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
+klypin16_nu    200c, vir        M > 1E10           0 < z < 5   Pl1        `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
+============== ================ ================== =========== ========== ============================================================================
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -761,7 +761,7 @@ def _diemer15_k_R(M):
 
 	cosmo = cosmology.getCurrent()
 	rho0 = cosmo.rho_m(0.0)
-	R = (3.0 * M / 4.0 / np.pi / rho0) ** (1.0 / 3.0) / 1000.0
+	R = (3.0 * M / 4.0 / np.pi / rho0)**(1.0 / 3.0) / 1000.0
 	k_R = 2.0 * np.pi / R * DIEMER15_KAPPA
 
 	return k_R

@@ -1281,7 +1281,7 @@ class Cosmology(object):
 		-------------------------------------------------------------------------------------------
 		Ogamma: The density of photons in the universe, in units of the critical density.
 		"""
-			
+		
 		return constants.RHO_CRIT_0_KPC3 * self.Ogamma0 * (1.0 + z)**4
 
 	###############################################################################################
@@ -1378,7 +1378,7 @@ class Cosmology(object):
 		"""
 		The dark energy density of the universe, in units of the critical density. 
 		
-		In a flat universe, :math:`\Omega_{\rm DE} = 1 - \Omega_m - \Omega_r`.
+		In a flat universe, :math:`\Omega_{\\rm DE} = 1 - \Omega_m - \Omega_r`.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -2177,7 +2177,7 @@ class Cosmology(object):
 		derivative: bool
 			If True, return the logarithmic derivative, :math:`d \log(\sigma) / d \log(R)`, or its
 			inverse, :math:`d \log(R) / d \log(\sigma)` if ``inverse == True``.
-		ps_args: kwargs
+		ps_args: dict
 			Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
 			function.
 		Pk_source: deprecated
@@ -2562,7 +2562,7 @@ class Cosmology(object):
 			Redshift
 		derivative: bool
 			If ``derivative == True``, the linear derivative :math:`d \\xi / d R` is returned.
-		ps_args: kwargs
+		ps_args: dict
 			Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
 			function.
 		Pk_source: deprecated

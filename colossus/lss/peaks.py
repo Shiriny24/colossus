@@ -46,7 +46,7 @@ def lagrangianR(M):
 	"""
 	The lagrangian radius of a halo of mass M.
 
-	Converts the mass of a halo (in comoving :math:`M_{\odot} / h`) to the radius of its 
+	Converts the mass of a halo (in :math:`M_{\odot} / h`) to the radius of its 
 	comoving Lagrangian volume (in comoving Mpc/h), that is the volume that encloses the halo's 
 	mass given the mean density of the universe at z = 0.
 
@@ -163,12 +163,12 @@ def peakHeight(M, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARG
 		Halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
 	z: float
 		Redshift.
-	ps_args: kwargs
+	ps_args: dict
 		Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
 		function.
-	sigma_args: kwargs
+	sigma_args: dict
 		Arguments passed to the :func:`cosmology.cosmology.Cosmology.sigma` function.
-	deltac_args: kwargs
+	deltac_args: dict
 		Arguments passed to the :func:`collapseOverdensity` function.
 	filt: deprecated
 	Pk_source: deprecated
@@ -217,12 +217,12 @@ def massFromPeakHeight(nu, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.
 		Peak height; can be a number or a numpy array.
 	z: float
 		Redshift.
-	ps_args: kwargs
+	ps_args: dict
 		Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
 		function.
-	sigma_args: kwargs
+	sigma_args: dict
 		Arguments passed to the :func:`cosmology.cosmology.Cosmology.sigma` function.
-	deltac_args: kwargs
+	deltac_args: dict
 		Arguments passed to the :func:`collapseOverdensity` function.
 	filt: deprecated
 	Pk_source: deprecated
@@ -270,12 +270,12 @@ def nonLinearMass(z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARG
 	-------------------------------------------------------------------------------------------
 	z: float
 		Redshift.
-	ps_args: kwargs
+	ps_args: dict
 		Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
 		function.
-	sigma_args: kwargs
+	sigma_args: dict
 		Arguments passed to the :func:`cosmology.cosmology.Cosmology.sigma` function.
-	deltac_args: kwargs
+	deltac_args: dict
 		Arguments passed to the :func:`collapseOverdensity` function.
 	filt: deprecated
 	Pk_source: deprecated
@@ -432,12 +432,12 @@ def peakCurvature(M, z, exact = False, ps_args = defaults.PS_ARGS,
 		Redshift.
 	exact: bool
 		If ``True``, evaluate the integral exactly; if ``False``, use the BBKS approximation.	
-	ps_args: kwargs
+	ps_args: dict
 		Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
 		function.
-	sigma_args: kwargs
+	sigma_args: dict
 		Arguments passed to the :func:`cosmology.cosmology.Cosmology.sigma` function.
-	deltac_args: kwargs
+	deltac_args: dict
 		Arguments passed to the :func:`collapseOverdensity` function.
 	filt: deprecated
 	Pk_source: deprecated

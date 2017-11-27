@@ -6,38 +6,43 @@ You can install Colossus either using one of the common python package managers,
 the code directly. Colossus is compatible with both Python 2.7 and Python 3.x. However, the code is 
 developed and mostly tested in Python 3 which is thus the recommended version.
 
-****************
-Using setuptools
-****************
+.. rubric:: Package installation
 
-The easiest way to install Colossus is by executing:
+The easiest way to install Colossus is by executing
 
 .. code:: shell
 
     pip install colossus
 
-You might need to prefix this command with ``sudo``. Alternatively, you can clone the BitBucket 
-repository by executing:
+You might need to prefix this command with ``sudo``. To update the code, execute
 
 .. code:: shell
 
-    hg clone https://bitbucket.org/bdiemer/colossus
+    pip install --upgrade colossus
 
-*******************
-Manual installation
-*******************
+For more information, please see the 
+`pip documentation <https://packaging.python.org/tutorials/installing-packages/>`_.
 
-Alternatively, you can clone the public BitBucket repository [https://bitbucket.org/bdiemer/colossus] 
-by executing::
+.. rubric:: Repository installation
 
-    hg clone https://bitbucket.org/bdiemer/colossus
+If you want to edit the code, you might prefer to clone the public BitBucket repository 
+https://bitbucket.org/bdiemer/colossus by executing
+
+.. code:: shell
+
+   hg clone https://bitbucket.org/bdiemer/colossus
 
 For this method, you will need the version control system Mercurial (hg), which you can 
-download [`here <http://mercurial.selenic.com/>`_].
+download `here <http://mercurial.selenic.com/>`_. You need to manually add colossus
+to your $PYTHONPATH variable. You can can update the code by pulling changes from the 
+repository,
 
-******************
-Running unit tests
-******************
+.. code:: shell
+
+   hg pull
+   hg up
+
+.. rubric:: Running unit tests
 
 After installing colossus, you should run a suite of unit tests to ensure the code works
 as expected. In python, execute::

@@ -1,12 +1,12 @@
-=====================================
+=====================
 Halo Density Profiles
-=====================================
+=====================
 
 This document describes the Colossus mechanisms for dealing with halo density profiles.
 
----------------------------------------------------------------------------------------------------
+------------------
 General philosophy
----------------------------------------------------------------------------------------------------
+------------------
 
 The halo density profile module is based on a powerful base class, 
 :class:`halo.profile_base.HaloDensityProfile`. Some of the major design decisions regarding this 
@@ -36,9 +36,9 @@ class are:
   cosmological information). If a profile object relies on cosmology, the user needs to set a 
   cosmology or an error will be thrown.
 
----------------------------------------------------------------------------------------------------
+-----------
 Basic usage
----------------------------------------------------------------------------------------------------
+-----------
 
 Almost all profile related functions are encapsulated within profile objects. For example, let us 
 create an NFW profile for a halo with a particular virial mass and concentration::
@@ -54,19 +54,19 @@ reference of the functionality of the profile objects. For documentation on sphe
 mass definitions, please see the documentation of the :doc:`halo_mass` module. The following 
 functional forms for the density profile are currently implemented:
 
-=================================================== =============================== ========================= =============
-Class                                               Explanation                     Paper                      Reference
-=================================================== =============================== ========================= =============
-:class:`halo.profile_spline.SplineProfile`          An arbitrary density profile     ---                      ---
-:class:`halo.profile_einasto.EinastoProfile`        Einasto profile                 Einasto 1965              TrAlm 5, 87
-:class:`halo.profile_hernquist.HernquistProfile`    Hernquist profile               Hernquist 1990            ApJ 356, 359
-:class:`halo.profile_nfw.NFWProfile`                Navarro-Frenk-White profile     Navarro et al. 1997       ApJ 490, 493
-:class:`halo.profile_dk14.DK14Profile`              Diemer & Kravtsov 2014 profile  Diemer & Kravtsov 2014    ApJ 789, 1
-=================================================== =============================== ========================= =============
+=================================================== =========================================== =========================
+Class                                               Explanation                                 Paper                    
+=================================================== =========================================== =========================
+:class:`halo.profile_spline.SplineProfile`          An arbitrary density profile                ---                      ---
+:class:`halo.profile_einasto.EinastoProfile`        Einasto profile                             `Einasto 1965 <http://adsabs.harvard.edu/abs/1965TrAlm...5...87E>`_
+:class:`halo.profile_hernquist.HernquistProfile`    Hernquist profile                           `Hernquist 1990 <http://adsabs.harvard.edu/abs/1990ApJ...356..359H>`_
+:class:`halo.profile_nfw.NFWProfile`                Navarro-Frenk-White profile                 `Navarro et al. 1997 <http://adsabs.harvard.edu/abs/1997ApJ...490..493N>`_
+:class:`halo.profile_dk14.DK14Profile`              Diemer & Kravtsov profile                   `Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_
+=================================================== =========================================== =========================
 
----------------------------------------------------------------------------------------------------
+-----------------------
 Adding an outer profile
----------------------------------------------------------------------------------------------------
+-----------------------
 
 Let us again create an NFW profile, but add a description of the outer profile using the matter-
 matter correlation function::
@@ -76,9 +76,9 @@ matter correlation function::
 
 The outer_terms keyword can be used with any class derived from HaloDensityProfile.
 
----------------------------------------------------------------------------------------------------
+----------------------------
 Creating a new profile class
----------------------------------------------------------------------------------------------------
+----------------------------
 
 It is easy to create a new form of the density profile in colossus. For example, let us create a
 Hernquist profile. All we have to do is:
@@ -113,9 +113,9 @@ improve it by letting the user pass mass and concentration to the constructor an
 and rs, and overwriting more methods such as the density derivative and enclosed mass of the
 Hernquist profile.
 
----------------------------------------------------------------------------------------------------
+---------------
 Profile fitting
----------------------------------------------------------------------------------------------------
+---------------
 
 Here, fitting refers to finding the parameters of a halo density profile which best describe a
 given set of data points. Each point corresponds to a radius and a particular quantity, such as 
@@ -140,9 +140,9 @@ use an MCMC sampler, for example to fit the surface density profile::
 The :func:`halo.profile_base.HaloDensityProfile.fit` function accepts many input options, some specific to the 
 fitting method used. Please see the detailed documentation below.
 
----------------------------------------------------------------------------------------------------
+-----------------------------------------------------
 The general base classes for inner and outer profiles
----------------------------------------------------------------------------------------------------
+-----------------------------------------------------
 
 .. toctree::
     :maxdepth: 3
@@ -150,9 +150,9 @@ The general base classes for inner and outer profiles
     halo_profile_base
     halo_profile_outer
 
----------------------------------------------------------------------------------------------------
+-------------------------------------
 Specific forms of the density profile
----------------------------------------------------------------------------------------------------
+-------------------------------------
 
 .. toctree::
     :maxdepth: 3

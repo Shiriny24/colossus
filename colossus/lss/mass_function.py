@@ -100,7 +100,7 @@ class HaloMassFunctionModel():
 	this dependence arises because of the slight dependence of the collapse overdensity on z), and
 	how the collapse overdensity is computed by default (if applicable).
 
-	The ``models`` variable is a dictionary of :class:`SplashbackModel` objects containing all 
+	The ``models`` variable is a dictionary of :class:`HaloMassFunctionModel` objects containing all 
 	available models. The user can overwrite the properties of these models at their own risk.
 	"""
 	def __init__(self):
@@ -191,7 +191,7 @@ def massFunction(x, z, q_in = 'M', mdef = 'fof', q_out = 'f',
 	-----------------------------------------------------------------------------------------------
 	x: array_like
 		Either halo mass in :math:`M_{\odot}/h`, the variance :math:`\sigma`, or peak height
-		:math:`\nu`, depending on the value of the ``q_in`` parameter; can be a number or a numpy 
+		:math:`\\nu`, depending on the value of the ``q_in`` parameter; can be a number or a numpy 
 		array.
 	z: float
 		Redshift
@@ -205,7 +205,7 @@ def massFunction(x, z, q_in = 'M', mdef = 'fof', q_out = 'f',
 		The units in which the mass function is returned; can be ``f``, ``dndlnM``, or ``M2dndM``.
 	model: str
 		The model of the mass function used.
-	ps_args: kwargs
+	ps_args: dict
 		Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
 		function.
 	sigma_args: dict
@@ -291,7 +291,7 @@ def convertMassFunction(mfunc, M, z, q_in, q_out,
 		table on top of this file for the meaning of these units.
 	q_out: str
 		The units in which the mass function is returned; see above.
-	ps_args: kwargs
+	ps_args: dict
 		Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
 		function.
 	sigma_args: dict
@@ -355,8 +355,8 @@ def modelPress74(sigma, z, deltac_args = {'corrections': True}):
 		The variance corresponding to the desired halo mass.
 	z: float
 		Redshift
-	deltac_args: kwargs
-		Arguments passed to the :func:`collapseOverdensity` function.
+	deltac_args: dict
+		Arguments passed to the :func:`lss.peaks.collapseOverdensity` function.
 	
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -391,8 +391,8 @@ def modelSheth99(sigma, z, deltac_args = {'corrections': True}):
 		The variance corresponding to the desired halo mass.
 	z: float
 		Redshift
-	deltac_args: kwargs
-		Arguments passed to the :func:`collapseOverdensity` function.
+	deltac_args: dict
+		Arguments passed to the :func:`lss.peaks.collapseOverdensity` function.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -449,8 +449,8 @@ def modelReed03(sigma, z, deltac_args = {'corrections': True}):
 		The variance corresponding to the desired halo mass.
 	z: float
 		Redshift
-	deltac_args: kwargs
-		Arguments passed to the :func:`collapseOverdensity` function.
+	deltac_args: dict
+		Arguments passed to the :func:`lss.peaks.collapseOverdensity` function.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -511,8 +511,8 @@ def modelReed07(sigma, z, deltac_args = {'corrections': True}, exact_n = True):
 		The variance corresponding to the desired halo mass.
 	z: float
 		Redshift
-	deltac_args: kwargs
-		Arguments passed to the :func:`collapseOverdensity` function.
+	deltac_args: dict
+		Arguments passed to the :func:`lss.peaks.collapseOverdensity` function.
 	exact_n: bool
 		Compute the slope of the power spectrum numerically or approximate it.
 		
@@ -689,8 +689,8 @@ def modelBhattacharya11(sigma, z, deltac_args = {'corrections': False}):
 		The variance corresponding to the desired halo mass.
 	z: float
 		Redshift
-	deltac_args: kwargs
-		Arguments passed to the :func:`collapseOverdensity` function.
+	deltac_args: dict
+		Arguments passed to the :func:`lss.peaks.collapseOverdensity` function.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
