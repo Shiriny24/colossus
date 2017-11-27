@@ -19,6 +19,8 @@ The most important changes are that
 * A number of interfaces have been made more homogeneous.
 * Wherever possible, deprecated function interfaces are still present for backward compatibility but 
   issue a warning. These functions and parameters will be removed in the next version.
+* This documentation has been reorganized and improved, and its location has shifted to 
+  https://bdiemer.bitbucket.io/colossus.
 
 The following functions are now housed in the LSS module:
 

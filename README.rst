@@ -50,7 +50,7 @@ License & Citing
 
 Author:        Benedikt Diemer (benedikt.diemer@cfa.harvard.edu)
 
-Contributors:  Andrey Kravtsov (MCMC)
+Contributors:  Matt Becker (EH98 transfer function), Andrey Kravtsov (MCMC)
 
 License:       MIT. Copyright (c) 2014-2017
 
