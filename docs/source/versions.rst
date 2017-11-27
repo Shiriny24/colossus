@@ -3,11 +3,11 @@ What's new?
 ===========
 
 See below for a listing of the most important code and interface changes in Colossus, starting 
-with version 1.1.
+with version 1.1.0.
 
-.. rubric:: Version 1.1
+.. rubric:: Version 1.1.0
 
-Version 1.1 presents a major change to the Colossus interface, documentation, and tutorial system.
+Version 1.1.0 presents a major change to the Colossus interface, documentation, and tutorial system.
 The most important changes are that
 
 * A new top-level module for large-scale structure, LSS, has been added, including functions previously
