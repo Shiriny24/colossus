@@ -60,4 +60,3 @@ and/or the `ASCL entry <http://adsabs.harvard.edu/abs/2015ascl.soft01016D>`_. Ma
 routines implement the results of other papers. If you use such
 routines, please take care to cite the relevant papers as well (they will be mentioned in the 
 function and/or module documentation).
-    
