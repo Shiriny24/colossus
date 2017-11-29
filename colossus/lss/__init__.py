@@ -1,1 +1,1 @@
-__all__ = ['bias', 'halo_mass_function', 'lss']
+__all__ = ['bias', 'mass_function', 'peaks']

@@ -1,1 +1,1 @@
-__all__ = ['cosmology']
+__all__ = ['cosmology', 'power_spectrum']
