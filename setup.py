@@ -4,7 +4,7 @@ with open('README.rst', encoding = 'utf-8') as f:
 	long_description = f.read()
 	
 setup(name = 'colossus',
-	version = '1.1.0',
+	version = '1.1.1',
 	description = 'Cosmology, halo, and large-scale structure tools',
 	long_description = long_description,
 	url = 'https://bitbucket.org/bdiemer/colossus',
@@ -14,7 +14,7 @@ setup(name = 'colossus',
 	requires = ['numpy', 'scipy'],
 	packages = ['colossus', 
 				'colossus.cosmology', 
-				'colossus.demos', 
+				'colossus.lss', 
 				'colossus.halo', 
 				'colossus.tests', 
 				'colossus.utils'],
