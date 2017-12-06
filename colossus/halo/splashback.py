@@ -127,7 +127,7 @@ from colossus.halo import profile_nfw
 class SplashbackModel():
 	"""
 	This object contains certain characteristics of a model, most importantly the input quantities
-	``qx`` and output quantities ``qy`` the model is capable of processing. Additionally, the 
+	``q_in`` and output quantities ``q_out`` the model is capable of processing. Additionally, the 
 	``depends_on`` field lists the quantities the model depends on. If, for example, z is 
 	among these quantities, then the redshift needs to be passed to the :func:`splashbackModel`
 	function.
@@ -141,8 +141,8 @@ class SplashbackModel():
 	"""
 	def __init__(self):
 		
-		self.qx = []
-		self.qy = []
+		self.q_in = []
+		self.q_out = []
 		self.depends_on = []
 		self.min_Gamma = -np.inf
 		self.max_Gamma = np.inf
@@ -161,34 +161,34 @@ class SplashbackModel():
 models = OrderedDict()
 
 models['adhikari14'] = SplashbackModel()
-models['adhikari14'].qx = ['Gamma']
-models['adhikari14'].qy = ['RspR200m', 'MspM200m', 'Deltasp']
+models['adhikari14'].q_in = ['Gamma']
+models['adhikari14'].q_out = ['RspR200m', 'MspM200m', 'Deltasp']
 models['adhikari14'].depends_on = ['Gamma', 'z']
 models['adhikari14'].min_Gamma = 0.2
 models['adhikari14'].max_Gamma = 5.9
 
 models['more15'] = SplashbackModel()
-models['more15'].qx = ['Gamma', 'nu200m']
-models['more15'].qy = ['RspR200m', 'MspM200m', 'Deltasp']
+models['more15'].q_in = ['Gamma', 'nu200m']
+models['more15'].q_out = ['RspR200m', 'MspM200m', 'Deltasp']
 models['more15'].depends_on = ['Gamma', 'z']
 
 models['shi16'] = SplashbackModel()
-models['shi16'].qx = ['Gamma']
-models['shi16'].qy = ['RspR200m', 'MspM200m', 'Deltasp']
+models['shi16'].q_in = ['Gamma']
+models['shi16'].q_out = ['RspR200m', 'MspM200m', 'Deltasp']
 models['shi16'].depends_on = ['Gamma', 'z']
 models['shi16'].min_Gamma = 0.5
 models['shi16'].max_Gamma = 5.0
 
 models['mansfield17'] = SplashbackModel()
-models['mansfield17'].qx = ['Gamma']
-models['mansfield17'].qy = ['RspR200m', 'MspM200m', 'Deltasp', 'RspR200m-1s', 'MspM200m-1s']
+models['mansfield17'].q_in = ['Gamma']
+models['mansfield17'].q_out = ['RspR200m', 'MspM200m', 'Deltasp', 'RspR200m-1s', 'MspM200m-1s']
 models['mansfield17'].depends_on = ['Gamma', 'z', 'nu']
 models['mansfield17'].min_Gamma = 0.5
 models['mansfield17'].max_Gamma = 7.0
 
 models['diemer17'] = SplashbackModel()
-models['diemer17'].qx = ['Gamma', 'nu200m']
-models['diemer17'].qy = ['RspR200m', 'MspM200m', 'Deltasp', 'RspR200m-1s', 'MspM200m-1s', 'Deltasp-1s']
+models['diemer17'].q_in = ['Gamma', 'nu200m']
+models['diemer17'].q_out = ['RspR200m', 'MspM200m', 'Deltasp', 'RspR200m-1s', 'MspM200m-1s', 'Deltasp-1s']
 models['diemer17'].depends_on = ['Gamma', 'z', 'nu', 'rspdef']
 models['diemer17'].min_nu200m = 0.0
 models['diemer17'].max_nu200m = 5.0
@@ -197,7 +197,7 @@ models['diemer17'].max_z = 8.0
 
 ###################################################################################################
 
-def splashbackModel(qy, Gamma = None, nu200m = None, z = None,
+def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 				model = defaults.HALO_SPLASHBACK_MODEL,
 				statistic = defaults.HALO_SPLASHBACK_STATISTIC,
 				rspdef = defaults.HALO_SPLASHBACK_RSPDEF):
@@ -216,7 +216,7 @@ def splashbackModel(qy, Gamma = None, nu200m = None, z = None,
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
-	qy: str
+	q_out: str
 		Identifier of the output quantity (see listing above). 
 	Gamma: array_like
 		Mass accretion rate; can be a number or a numpy array. This quantity only needs to be 
@@ -258,18 +258,18 @@ def splashbackModel(qy, Gamma = None, nu200m = None, z = None,
 	if Gamma is None and nu200m is None:
 		raise Exception('Either Gamma or nu200m must be passed.')
 	if Gamma is not None:
-		qx = 'Gamma'
+		q_in = 'Gamma'
 	else:
-		qx = 'nu200m'
-	if not qx in m.qx:
-		raise Exception('Model %s cannot handle input quantity %s.' % (model, qx))
-	if not qy in m.qy:
-		raise Exception('Model %s cannot output quantity %s.' % (model, qy))
+		q_in = 'nu200m'
+	if not q_in in m.q_in:
+		raise Exception('Model %s cannot handle input quantity %s.' % (model, q_in))
+	if not q_out in m.q_out:
+		raise Exception('Model %s cannot output quantity %s.' % (model, q_out))
 
 	# Check for wrong input of parameters. If multiple fields are given, they must either be 
 	# numbers of arrays of the same dimension as the primary input. Create a mask indicating
 	# where the results are valid.
-	if qx == 'Gamma':
+	if q_in == 'Gamma':
 		if utilities.isArray(Gamma):
 			if z is not None and utilities.isArray(z) and len(z) != len(Gamma):
 				raise Exception('If z is an array, it must have the same dimensions as Gamma.')
@@ -280,20 +280,20 @@ def splashbackModel(qy, Gamma = None, nu200m = None, z = None,
 		mask = (Gamma >= m.min_Gamma) & (Gamma <= m.max_Gamma)
 		if nu200m is not None:
 			mask = mask & (nu200m >= m.min_nu200m) & (nu200m <= m.max_nu200m)
-	elif qx == 'nu200m':
+	elif q_in == 'nu200m':
 		if utilities.isArray(nu200m):
 			if z is not None and utilities.isArray(z) and len(z) != len(nu200m):
 				raise Exception('If z is an array, it must have the same dimensions as nu200m.')
 		mask = (nu200m >= m.min_nu200m) & (nu200m <= m.max_nu200m)
 	else:
-		raise Exception('Unknown input quantity, %s.' % qx)
+		raise Exception('Unknown input quantity, %s.' % q_in)
 	if z is not None:
 		mask = mask & (z >= m.min_z) & (z <= m.max_z) 
 	
 	# Now apply the mask to the input array, and return if there are no valid entries.
-	if qx == 'Gamma':
+	if q_in == 'Gamma':
 		x = Gamma
-	elif qx == 'nu200m':
+	elif q_in == 'nu200m':
 		x = nu200m
 	x, is_array = utilities.getArray(x)
 	mask, _ = utilities.getArray(mask)
@@ -301,11 +301,11 @@ def splashbackModel(qy, Gamma = None, nu200m = None, z = None,
 	if np.count_nonzero(mask) == 0:
 		print('WARNING: Found no input values within the limits of model %s.' % model)
 		return np.array([]), mask
-	if qx == 'Gamma':
+	if q_in == 'Gamma':
 		Gamma = x
 		if nu200m is not None and utilities.isArray(nu200m):
 			nu200m = nu200m[mask]
-	elif qx == 'nu200m':
+	elif q_in == 'nu200m':
 		nu200m = x
 	
 	# Compute Om from z, but only if z is given. Some models use Om rather than z.
@@ -319,33 +319,33 @@ def splashbackModel(qy, Gamma = None, nu200m = None, z = None,
 	if model == 'adhikari14':
 		
 		Delta, c = modelAdhikari14Deltasp(Gamma, Om)
-		if qy == 'Deltasp':
+		if q_out == 'Deltasp':
 			ret = Delta
-		elif qy == 'RspR200m':
+		elif q_out == 'RspR200m':
 			ret, _ = modelAdhikari14RspR200m(Delta, c, Om, z)
-		elif qy == 'MspM200m':
+		elif q_out == 'MspM200m':
 			_, ret = modelAdhikari14RspR200m(Delta, c, Om, z)
 			
 	elif model == 'more15':
 
-		if qy == 'RspR200m':
+		if q_out == 'RspR200m':
 			ret = modelMore15RspR200m(z = z, Gamma = Gamma, nu200m = nu200m)
-		elif qy == 'MspM200m':
+		elif q_out == 'MspM200m':
 			ret = modelMore15MspM200m(z = z, Gamma = Gamma, nu200m = nu200m)
-		elif qy == 'Deltasp':
+		elif q_out == 'Deltasp':
 			msp200m = modelMore15MspM200m(z = z, Gamma = Gamma, nu200m = nu200m)
 			rsp200m = modelMore15RspR200m(z = z, Gamma = Gamma, nu200m = nu200m)
 			ret = 200.0 * msp200m / rsp200m**3
 
 	elif model == 'shi16':
 		
-		if qy == 'RspR200m':
+		if q_out == 'RspR200m':
 			ret = modelShi16RspR200m(Gamma, Om)
-		elif qy == 'MspM200m':
+		elif q_out == 'MspM200m':
 			delta = modelShi16Delta(Gamma, Om)
 			rspr200m = modelShi16RspR200m(Gamma, Om)
 			ret = delta / 200.0 * rspr200m**3
-		elif qy == 'Deltasp':
+		elif q_out == 'Deltasp':
 			ret = modelShi16Delta(Gamma, Om)
 	
 	elif model == 'mansfield17':
@@ -359,17 +359,17 @@ def splashbackModel(qy, Gamma = None, nu200m = None, z = None,
 			if utilities.isArray(Om):
 				Om = Om[mask_new]
 			
-		if qy == 'RspR200m':
+		if q_out == 'RspR200m':
 			ret = modelMansfield17RspR200m(x, Om, nu200m)
-		elif qy == 'MspM200m':
+		elif q_out == 'MspM200m':
 			ret = modelMansfield17MspM200m(x, Om, nu200m)
-		elif qy == 'Deltasp':
+		elif q_out == 'Deltasp':
 			rspr200m = modelMansfield17RspR200m(x, Om, nu200m)
 			mspm200m = modelMansfield17MspM200m(x, Om, nu200m)
 			ret = mspm200m * 200.0 / rspr200m**3
-		elif qy == 'RspR200m-1s':
+		elif q_out == 'RspR200m-1s':
 			ret = np.ones((len(x)), np.float) * 0.046
-		elif qy == 'MspM200m-1s':
+		elif q_out == 'MspM200m-1s':
 			ret = np.ones((len(x)), np.float) * 0.054
 			
 	if model == 'diemer17':
@@ -382,31 +382,31 @@ def splashbackModel(qy, Gamma = None, nu200m = None, z = None,
 			return ret, mask
 		
 		# If only nu200m is given, we compute Gamma from nu and z.
-		if qx == 'nu200m':
+		if q_in == 'nu200m':
 			Gamma = modelDiemer17Gamma(nu200m, z)
 		
-		if qy == 'RspR200m':
+		if q_out == 'RspR200m':
 			ret = modelDiemer17RspR200m('RspR200m', Gamma, nu200m, z, rspdef)
-		elif qy == 'MspM200m':
+		elif q_out == 'MspM200m':
 			ret = modelDiemer17RspR200m('MspM200m', Gamma, nu200m, z, rspdef)
-		elif qy == 'Deltasp':
+		elif q_out == 'Deltasp':
 			rsp200m = modelDiemer17RspR200m('RspR200m', Gamma, nu200m, z, rspdef)
 			msp200m = modelDiemer17RspR200m('MspM200m', Gamma, nu200m, z, rspdef)
 			ret = 200.0 * msp200m / rsp200m**3
 		else:
-			if qx == 'nu200m':
-				if qy == 'RspR200m-1s':
+			if q_in == 'nu200m':
+				if q_out == 'RspR200m-1s':
 					ret = np.ones((len(mask)), np.float) * 0.07
-				elif qy == 'MspM200m-1s':
+				elif q_out == 'MspM200m-1s':
 					ret = np.ones((len(mask)), np.float) * 0.07
-				elif qy == 'Deltasp-1s':
+				elif q_out == 'Deltasp-1s':
 					ret = np.ones((len(mask)), np.float) * 0.15
 			else:
-				if qy == 'RspR200m-1s':
+				if q_out == 'RspR200m-1s':
 					ret = modelDiemer17Scatter('RspR200m-1s', Gamma, nu200m, z, rspdef)
-				elif qy == 'MspM200m-1s':
+				elif q_out == 'MspM200m-1s':
 					ret = modelDiemer17Scatter('MspM200m-1s', Gamma, nu200m, z, rspdef)
-				elif qy == 'Deltasp-1s':
+				elif q_out == 'Deltasp-1s':
 					rsp_1s = modelDiemer17Scatter('RspR200m-1s', Gamma, nu200m, z, rspdef)
 					msp_1s = modelDiemer17Scatter('MspM200m-1s', Gamma, nu200m, z, rspdef)
 					ret = np.sqrt(msp_1s**2 + 3.0 * rsp_1s**2)
@@ -751,14 +751,14 @@ def modelDiemer17Gamma(nu200m, z):
 
 ###################################################################################################
 
-def modelDiemer17RspR200m(qy, Gamma, nu200m, z, rspdef):
+def modelDiemer17RspR200m(q_out, Gamma, nu200m, z, rspdef):
 	"""
 	:math:`R_{\\rm sp}` and :math:`M_{\\rm sp}` for the ``diemer17`` model.
 	"""
 
 	if rspdef == 'mean':
 		
-		if qy == 'RspR200m':
+		if q_out == 'RspR200m':
 			a0 = 0.649783
 			b0 = 0.600362
 			b_om = 0.091996
@@ -780,7 +780,7 @@ def modelDiemer17RspR200m(qy, Gamma, nu200m, z, rspdef):
 			c_nu_p = 0.000000
 			c_nu2_p = 0.000000
 			
-		elif qy == 'MspM200m':
+		elif q_out == 'MspM200m':
 			a0 = 0.679244
 			b0 = 0.405083
 			b_om = 0.291925
@@ -803,7 +803,7 @@ def modelDiemer17RspR200m(qy, Gamma, nu200m, z, rspdef):
 			c_nu2_p = 0.000000
 	else:
 		
-		if qy == 'RspR200m':
+		if q_out == 'RspR200m':
 			a0 = 0.320332
 			b0 = 0.267433
 			b_om = 0.113389
@@ -825,7 +825,7 @@ def modelDiemer17RspR200m(qy, Gamma, nu200m, z, rspdef):
 			c_nu_p = -0.451066
 			c_nu2_p = 0.088029
 			
-		elif qy == 'MspM200m':
+		elif q_out == 'MspM200m':
 			a0 = 0.264765
 			b0 = 0.666040
 			b_om = 0.168814
@@ -874,29 +874,29 @@ def modelDiemer17RspR200m(qy, Gamma, nu200m, z, rspdef):
 
 ###################################################################################################
 
-def modelDiemer17Scatter(qy, Gamma, nu200m, z, rspdef):
+def modelDiemer17Scatter(q_out, Gamma, nu200m, z, rspdef):
 	"""
 	The 68% scatter in any quantity for the ``diemer17`` model.
 	"""
 
 	if rspdef == 'mean':
-		if qy == 'RspR200m-1s':
+		if q_out == 'RspR200m-1s':
 			sigma_0 = 0.052645
 			sigma_Gamma = 0.003846
 			sigma_nu = -0.012054
 			sigma_p = 0.000000
-		elif qy == 'MspM200m-1s':
+		elif q_out == 'MspM200m-1s':
 			sigma_0 = 0.052815
 			sigma_Gamma = 0.002456
 			sigma_nu = -0.011182
 			sigma_p = 0.000000
 	else:
-		if qy == 'RspR200m-1s':
+		if q_out == 'RspR200m-1s':
 			sigma_0 = 0.044548
 			sigma_Gamma = 0.004404
 			sigma_nu = -0.014636
 			sigma_p = 0.022637
-		elif qy == 'MspM200m-1s':
+		elif q_out == 'MspM200m-1s':
 			sigma_0 = 0.027594
 			sigma_Gamma = 0.002330
 			sigma_nu = -0.012491

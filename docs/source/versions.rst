@@ -5,6 +5,16 @@ What's new?
 See below for a listing of the most important code and interface changes in Colossus, starting 
 with version 1.1.0.
 
+.. rubric:: Version 1.2.0
+
+Version 1.2.0 is the version that coincided with the first publication of the code paper on 
+arXiv.org. The following changes were made:
+
+* All functions and parameters that were deprecated in 1.1.0 have been entirely removed from
+  the code (rather than outputting warnings).
+* The ``qx`` and ``qy`` parameters in the :mod:`halo.splashback` module were renamed to ``q_in`` and
+  ``q_out`` to conform with the rest of the code.
+
 .. rubric:: Version 1.1.0
 
 Version 1.1.0 presents a major change to the Colossus interface, documentation, and tutorial system.
