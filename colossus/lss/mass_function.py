@@ -902,7 +902,7 @@ def modelBocquet16(sigma, z, mdef, hydro = True):
 
 ###################################################################################################
 
-def modelDespali16(sigma, z, mdef, ellipsoidal = False):
+def modelDespali16(sigma, z, mdef, deltac_args = {'corrections': True}, ellipsoidal = False):
 	"""
 	The mass function model of Despali et al. 2016.
 	
@@ -943,7 +943,7 @@ def modelDespali16(sigma, z, mdef, ellipsoidal = False):
 		a = 0.4332 * x**2 + 0.2263 * x + 0.7665
 		p = -0.1151 * x**2 + 0.2554 * x + 0.2488
 		
-	delta_c = peaks.collapseOverdensity(corrections = True, z = z)
+	delta_c = peaks.collapseOverdensity(z = z, **deltac_args)
 	
 	nu_p = a * delta_c**2 / sigma**2
 	f = 2.0 * A * np.sqrt(nu_p / 2.0 / np.pi) * np.exp(-0.5 * nu_p) * (1.0 + nu_p**-p)
