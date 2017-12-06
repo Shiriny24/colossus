@@ -155,7 +155,8 @@ INVALID_CONCENTRATION = -1.0
 ###################################################################################################
 
 def concentration(M, mdef, z,
-				model = defaults.HALO_CONCENTRATION_MODEL, statistic = defaults.HALO_CONCENTRATION_STATISTIC,
+				model = defaults.HALO_CONCENTRATION_MODEL, 
+				statistic = defaults.HALO_CONCENTRATION_STATISTIC,
 				conversion_profile = defaults.HALO_MASS_CONVERSION_PROFILE, 
 				range_return = False, range_warning = True):
 	"""
