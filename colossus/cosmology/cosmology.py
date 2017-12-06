@@ -7,15 +7,16 @@
 
 """
 This module is an implementation of the standard FLRW cosmology with a number of dark energy models
-include :math:`\Lambda CDM` and varying dark energy equations of state. The module includes the 
-contributions from dark matter, baryons, curvature, photons, neutrinos, and dark energy.
+including :math:`\Lambda CDM`, wCDM, and varying dark energy equations of state. The cosmology 
+object models the contributions from dark matter, baryons, curvature, photons, neutrinos, and 
+dark energy.
  
 ---------------------------------------------------------------------------------------------------
 Basic usage
 ---------------------------------------------------------------------------------------------------
 
-In Colossus, the cosmology is set globally, and all Colossus functions must respect that global
-cosmology. Colossus does not set a default cosmology, meaning the user must set a cosmology before 
+In Colossus, the cosmology is set globally, and all functions respect that global cosmology. 
+Colossus does not set a default cosmology, meaning that the user must set a cosmology before 
 using any cosmological functions or any other functions that rely on the Cosmology module.
 
 ***************************************************************************************************
@@ -68,8 +69,9 @@ switching between cosmologies::
 	setCurrent(cosmo1)
 
 The user can change the cosmological parameters of an existing cosmology object at run-time, but 
-MUST call the update function directly after the changes. This function ensures that the parameters 
-are consistent (e.g., flatness), and discards pre-computed quantities::
+MUST call the update function :func:`~cosmology.cosmology.Cosmology.checkForChangedCosmology` 
+directly after the changes. This function ensures that the parameters are consistent (e.g., 
+flatness) and that no outdated cached quantities are used::
 
 	cosmo = setCosmology('WMAP9')
 	cosmo.Om0 = 0.31
@@ -89,37 +91,43 @@ Summary of getter and setter functions
 Standard cosmologies
 ---------------------------------------------------------------------------------------------------
 
-============== ===================== =========== =======================================
-ID             Paper                 Location    Explanation
-============== ===================== =========== =======================================
-planck15-only  Planck Collab. 2015   Table 4     Best-fit, Planck only (column 2) 					
-planck15       Planck Collab. 2015 	 Table 4     Best-fit with ext (column 6)			
-planck13-only  Planck Collab. 2013   Table 2     Best-fit, Planck only 					
-planck13       Planck Collab. 2013 	 Table 5     Best-fit with BAO etc. 					
-WMAP9-only     Hinshaw et al. 2013   Table 2     Max. likelihood, WMAP only 				
-WMAP9-ML       Hinshaw et al. 2013   Table 2     Max. likelihood, with eCMB, BAO and H0 	
-WMAP9          Hinshaw et al. 2013   Table 4     Best-fit, with eCMB, BAO and H0 		
-WMAP7-only     Komatsu et al. 2011   Table 1     Max. likelihood, WMAP only 				
-WMAP7-ML       Komatsu et al. 2011   Table 1     Max. likelihood, with BAO and H0 		
-WMAP7 	       Komatsu et al. 2011   Table 1     Best-fit, with BAO and H0 				
-WMAP5-only     Komatsu et al. 2009   Table 1     Max. likelihood, WMAP only 			
-WMAP5-ML       Komatsu et al. 2009   Table 1     Max. likelihood, with BAO and SN 		
-WMAP5 	       Komatsu et al. 2009   Table 1     Best-fit, with BAO and SN 			
-WMAP3-ML       Spergel et al. 2007   Table 2     Max.likelihood, WMAP only 				
-WMAP3          Spergel et al. 2007   Table 5     Best fit, WMAP only 					
-WMAP1-ML       Spergel et al. 2003   Table 1/4   Max.likelihood, WMAP only 				
-WMAP1          Spergel et al. 2003   Table 7/4   Best fit, WMAP only 					
-illustris      Vogelsberger+ 2014    --          Cosmology of the Illustris simulation
-bolshoi	       Klypin et al. 2011    --          Cosmology of the Bolshoi simulation
-millennium     Springel et al. 2005	 --          Cosmology of the Millennium simulation 
-EdS            --                    --          Einstein-de Sitter cosmology
-powerlaw       --                    --          Default settings for power-law cosms.
-============== ===================== =========== =======================================
+The following sets of cosmological parameters can be chosen using the 
+:func:`~cosmology.cosmology.setCosmology` function:
 
-Those cosmologies that refer to particular simulations (such as bolshoi and millennium) are
+.. table::
+	:widths: auto
+
+	============== ================================================================================ =========== =======================================
+	ID             Paper                                                                            Location    Explanation
+	============== ================================================================================ =========== =======================================
+	planck15-only  `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`_     Table 4     Best-fit, Planck only (column 2) 					
+	planck15       `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`_ 	Table 4     Best-fit with ext (column 6)			
+	planck13-only  `Planck Collab. 2013 <http://adsabs.harvard.edu/abs/2014A%26A...571A..16P>`_     Table 2     Best-fit, Planck only 					
+	planck13       `Planck Collab. 2013 <http://adsabs.harvard.edu/abs/2014A%26A...571A..16P>`_     Table 5     Best-fit with BAO etc. 					
+	WMAP9-only     `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`_       Table 2     Max. likelihood, WMAP only 				
+	WMAP9-ML       `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`_       Table 2     Max. likelihood, with eCMB, BAO and H0 	
+	WMAP9          `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`_ 	    Table 4     Best-fit, with eCMB, BAO and H0 		
+	WMAP7-only     `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`_  	    Table 1     Max. likelihood, WMAP only 				
+	WMAP7-ML       `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`_  	    Table 1     Max. likelihood, with BAO and H0 		
+	WMAP7 	       `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`_  	    Table 1     Best-fit, with BAO and H0 				
+	WMAP5-only     `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`_  	    Table 1     Max. likelihood, WMAP only 			
+	WMAP5-ML       `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`_  	    Table 1     Max. likelihood, with BAO and SN 		
+	WMAP5 	       `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`_  	    Table 1     Best-fit, with BAO and SN 			
+	WMAP3-ML       `Spergel et al. 2007 <http://adsabs.harvard.edu/abs/2007ApJS..170..377S>`_       Table 2     Max.likelihood, WMAP only 				
+	WMAP3          `Spergel et al. 2007 <http://adsabs.harvard.edu/abs/2007ApJS..170..377S>`_       Table 5     Best fit, WMAP only 					
+	WMAP1-ML       `Spergel et al. 2003 <http://adsabs.harvard.edu/abs/2003ApJS..148..175S>`_       Table 1/4   Max.likelihood, WMAP only 				
+	WMAP1          `Spergel et al. 2003 <http://adsabs.harvard.edu/abs/2003ApJS..148..175S>`_       Table 7/4   Best fit, WMAP only 					
+	illustris      `Vogelsberger et al. 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.444.1518V>`_  --          Cosmology of the Illustris simulation
+	bolshoi	       `Klypin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...740..102K>`_        --          Cosmology of the Bolshoi simulation
+	millennium     `Springel et al. 2005 <http://adsabs.harvard.edu/abs/2005Natur.435..629S>`_	    --          Cosmology of the Millennium simulation 
+	EdS            --                                                                               --          Einstein-de Sitter cosmology
+	powerlaw       --                                                                               --          Default settings for power-law cosms.
+	============== ================================================================================ =========== =======================================
+
+Those cosmologies that refer to particular simulations (such as ``bolshoi`` and ``millennium``) are
 generally set to ignore relativistic species, i.e. photons and neutrinos, because they are not
-modeled in the simulations. The EdS cosmology refers to an Einstein-de Sitter model, i.e. a flat
-cosmology with only dark matter.
+modeled in the simulations. The ``EdS`` cosmology refers to an Einstein-de Sitter model, i.e. a flat
+cosmology with only dark matter and :math:`\Omega_{\\rm m} = 1`.
 
 ---------------------------------------------------------------------------------------------------
 Dark energy and curvature
@@ -168,16 +176,18 @@ is the basis for the variance and correlation function. These models are impleme
 Derivatives and inverses
 ---------------------------------------------------------------------------------------------------
 
-Almost all cosmology functions that are interpolated (e.g., :func:`Cosmology.age`, 
-:func:`Cosmology.luminosityDistance()` or :func:`Cosmology.sigma()`) can be evaluated as an nth 
-derivative. Please note that some functions are interpolated in log space, resulting in a logarithmic
-derivative, while others are interpolated and differentiated in linear space. Please see the 
-function documentations below for details.
+Almost all cosmology functions that are interpolated (e.g., 
+:func:`~cosmology.cosmology.Cosmology.age`, 
+:func:`~cosmology.cosmology.Cosmology.luminosityDistance()` or 
+:func:`~cosmology.cosmology.Cosmology.sigma()`) can be evaluated as an nth derivative. Please note 
+that some functions are interpolated in log space, resulting in a logarithmic derivative, while 
+others are interpolated and differentiated in linear space. Please see the function documentations 
+below for details.
 
 The derivative functions were not systematically tested for accuracy. Their accuracy will depend
-on how well the function in question is represented by the spline approximation. In general, 
-the accuracy of the derivatives will be worse that the error quoted on the function itself, and 
-get worse with the order of the derivative.
+on how well the function in question is represented by the interpolating spline approximation. In 
+general, the accuracy of the derivatives will be worse that the error quoted on the function itself,
+and get worse with the order of the derivative.
 
 Furthermore, the inverse of interpolated functions can be evaluated by passing ``inverse = True``.
 In this case, for a function y(x), x(y) is returned instead. Those functions raise an Exception if

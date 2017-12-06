@@ -2,9 +2,9 @@
 Installation
 ============
 
-You can install Colossus either using one of the common python package managers, or by downloading
+You can install Colossus either using one of the common python package manager pip, or by downloading
 the code directly. Colossus is compatible with both Python 2.7 and Python 3.x. However, the code is 
-developed and mostly tested in Python 3 which is thus the recommended version.
+developed and mostly tested in Python 3, which is thus the recommended version.
 
 .. rubric:: Package installation
 
@@ -34,7 +34,7 @@ https://bitbucket.org/bdiemer/colossus by executing
 
 For this method, you will need the version control system Mercurial (hg), which you can 
 download `here <http://mercurial.selenic.com/>`_. You need to manually add colossus
-to your $PYTHONPATH variable. You can can update the code by pulling changes from the 
+to your ``$PYTHONPATH`` variable. You can update the code by pulling changes from the 
 repository,
 
 .. code:: shell
@@ -44,22 +44,22 @@ repository,
 
 .. rubric:: Running unit tests
 
-After installing colossus, you should run a suite of unit tests to ensure the code works
+After installing Colossus, you should run its suite of unit tests to ensure the code works
 as expected. In python, execute::
 
     from colossus.tests import run_tests
     
 The output should look something like this::
 
-    test_Ez (colossus.tests.test_cosmology.TCComp) ... ok
-    test_Hz (colossus.tests.test_cosmology.TCComp) ... ok
-    ...
-    test_pdf (colossus.tests.test_halo_profile.TCNFW) ... ok
-    test_update (colossus.tests.test_halo_profile.TCDK14) ... ok
-    
-    ----------------------------------------------------------------------
-    Ran 72 tests in 3.327s
-    
-    OK
-        
+   test_home_dir (colossus.tests.test_utils.TCGen) ... ok
+   test_Ez (colossus.tests.test_cosmology.TCComp) ... ok
+   ...
+   test_DK14ConstructorOuter (colossus.tests.test_halo_profile.TCDK14) ... ok
+   test_DK14ConstructorWrapper (colossus.tests.test_halo_profile.TCDK14) ... ok
+   
+   ----------------------------------------------------------------------
+   Ran 85 tests in 6.788s
+   
+   OK
+           
 If any errors occur, please send the output to the author.

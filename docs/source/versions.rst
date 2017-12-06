@@ -60,46 +60,48 @@ Changes in the cosmology module:
 
 * Cosmology now allows for a non-constant dark energy equations of state. The implemented dark 
   energy models include a fixed or varying equation of state (see 
-  :class:`cosmology.cosmology.Cosmology` for more information). As a result, the OL0, OL(), 
+  :class:`~cosmology.cosmology.Cosmology` class for more information). As a result, the OL0, OL(), 
   and rho_L() parameters and functions were renamed to ``Ode0``, ``Ode()``, and ``rho_de()``.
 * The power spectrum models were extracted into a separate module, :mod:`cosmology.power_spectrum`.
   The names of the available models were changed from ``eh98`` to ``eisenstein98`` and from 
   ``eh98_smooth`` to ``eisenstein98_zb`` to conform with other Colossus modules.
 * The ``Pk_source`` parameter was renamed to ``model`` in the 
-  :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` function. In functions that call 
+  :func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum` function. In functions that call 
   the power spectrum, the user can pass a ``ps_args`` dictionary containing kwargs that are 
   passed to the power spectrum function.
-* The :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` function now takes redshift as
+* The :func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum` function now takes redshift as
   an optional parameter.
-* The text_output option was removed from the cosmology object.
-* The soundHorizon() function now returns the sound horizon in Mpc/h rather than Mpc in order
-  to be consistent with the rest of the cosmology module.
+* The ``text_output`` option was removed from the cosmology object.
+* The :func:`~cosmology.cosmology.Cosmology.soundHorizon()` function now returns the sound horizon 
+  in Mpc/h rather than Mpc in order to be consistent with the rest of the cosmology module.
 
 Changes in the LSS module:
 
-* The :func:`lss.peaks.collapseOverdensity()` function has been completely reworked. By default, it 
+* The :func:`~lss.peaks.collapseOverdensity()` function has been completely reworked. By default, it 
   still returns the constant collapse overdensity threshold in an Einstein-de Sitter universe. If a 
   redshift is passed, it applies small corrections based on the underlying cosmology. The previous 
   parameters to this function will now cause an error. This change also affects all functions that
-  rely on the collapse overdensity, such as :func:`lss.peaks.peakHeight()`, 
-  :func:`lss.peaks.massFromPeakHeight()`, :func:`lss.peaks.nonLinearMass()`, and 
-  :func:`lss.peaks.peakCurvature()`. These functions now accept dictionaries of parameters that are 
-  passed to the collapse overdensity and :func:`cosmology.cosmology.Cosmology.sigma` functions.
+  rely on the collapse overdensity, such as :func:`~lss.peaks.peakHeight()`, 
+  :func:`~lss.peaks.massFromPeakHeight()`, :func:`~lss.peaks.nonLinearMass()`, and 
+  :func:`~lss.peaks.peakCurvature()`. These functions now accept dictionaries of parameters that are 
+  passed to the collapse overdensity and :func:`~cosmology.cosmology.Cosmology.sigma` functions.
 * The halo bias module was extended with two new models for halo bias.
-* The input units to the :func:`lss.bias.twoHaloTerm` function are now in comoving Mpc/h rather 
+* The input units to the :func:`~lss.bias.twoHaloTerm` function are now in comoving Mpc/h rather 
   than physical kpc/h in order to conform to the unit system of the LSS module.
 
 Changes in the halo module: 
 
 * The interface of the SO changing functions in :mod:`halo.mass_defs` has changed. The function
-  previously called pseudoEvolve is now called :func:`halo.mass_defs.evolveSO` to reflect its more
-  general nature. The :func:`halo.mass_defs.pseudoEvolve` function is a wrapper for evolveSO, and
+  previously called pseudoEvolve is now called :func:`~halo.mass_defs.evolveSO` to reflect its more
+  general nature. The :func:`~halo.mass_defs.pseudoEvolve` function is a wrapper for evolveSO, and
   has one fewer parameter than previously (no final mass definition).
-* The DK14 profile constructor does not take R200m as an input any more and instead computes it
-  self-consistently regardless of what the other inputs are. In this new version, the redshift 
-  always needs to be passed to the constructor. These changes fix a bug with outer profiles
-  that themselves rely on R200m as an input. Furthermore, the normalization of power-law outer
-  profiles is no longer adjusted in order to maintain a constant amplitude of R200m changes.
+* The :class:`~halo.profile_dk14.DK14Profile` constructor does not take R200m as an input any 
+  more and instead computes it self-consistently regardless of what the other inputs are. In this 
+  new version, the redshift always needs to be passed to the constructor. These changes fix a bug 
+  with outer profiles that themselves rely on R200m as an input. Furthermore, the normalization of 
+  power-law outer profiles is no longer adjusted in order to maintain a constant amplitude of 
+  R200m changes. It is up to the user to ensure that the behavior of the outer profile makes 
+  sense physically.
 * The ``klypin14_nu`` and ``klypin14_m`` concentration models were renamed to ``klypin16_nu`` 
   and ``klypin16_m`` to maintain compatibility with the publication date of their paper.
   

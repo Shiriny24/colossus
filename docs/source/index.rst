@@ -8,7 +8,7 @@ ha\ **LO** and large-\ **S**\ cale **S**\ tr\ **U**\ cture tool\ **S**\ . Corres
 consists of three top-level modules:
 
 * :doc:`cosmology_cosmology`: Implements LCDM cosmologies with curvature, relativistic species, 
-  and different dark energy equations of state. Incldues standard calculations such as densities 
+  and different dark energy equations of state. Includes standard calculations such as densities 
   and times, but also more advanced computations such as the power spectrum, variance, and correlation
   function.
 * :doc:`lss`: Deals with peaks in Gaussian random fields and the statistical
@@ -29,7 +29,7 @@ Colossus is developed with the following chief design goals in mind:
 
 While Colossus has been tested extensively, there is no guarantee that it is free of bugs. Use it 
 at your own risk, and please report any errors, inconveniences and unclear documentation to the 
-developer.
+author.
 
 ***************
 Citing Colossus
