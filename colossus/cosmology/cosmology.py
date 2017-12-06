@@ -221,8 +221,6 @@ Module reference
 
 import numpy as np
 import scipy.integrate
-import scipy.special
-import warnings
 
 from colossus import defaults
 from colossus import settings
@@ -363,9 +361,7 @@ class Cosmology(object):
 		relspecies = True, Tcmb0 = defaults.COSMOLOGY_TCMB0, Neff = defaults.COSMOLOGY_NEFF,
 		power_law = False, power_law_n = 0.0,
 		print_info = False, print_warnings = True,
-		interpolation = True, persistence = settings.PERSISTENCE, 
-		#deprecated parameters
-		OL0 = None, storage = None):
+		interpolation = True, persistence = settings.PERSISTENCE):
 		
 		if name is None:
 			raise Exception('A name for the cosmology must be set.')
@@ -397,9 +393,6 @@ class Cosmology(object):
 		if de_model == 'lambda':
 			w0 = -1
 			wa = None
-		
-		if OL0 is not None:
-			warnings.warn('The OL0 parameter is deprecated, please use Ode0 instead.')
 	
 		# Copy the cosmological parameters into the class
 		self.name = name
@@ -463,8 +456,6 @@ class Cosmology(object):
 		self.print_warnings = print_warnings
 		
 		# Create a storage object
-		if storage is not None:
-			warnings.warn('The storage parameter is deprecated, it was renamed to persistence.')
 		self.storageUser = storage_unit.StorageUser('cosmology', persistence, self.getName, 
 									self._getHashableString, self._ensureConsistency)
 				
@@ -1224,18 +1215,6 @@ class Cosmology(object):
 
 	###############################################################################################
 	
-	#DEPRECATED
-	def rho_L(self):
-		"""
-		Deprecated, please use :func:`rho_de`.
-		"""
-				
-		warnings.warn('The rho_L function is deprecated, please use rho_de instead.')
-		
-		return self.rho_de()
-
-	###############################################################################################
-	
 	def rho_de(self, z):
 		"""
 		The dark energy density of the universe at redshift z.
@@ -1362,18 +1341,6 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	#DEPRECATED
-	def OL(self, z):
-		"""
-		Deprecated, please use :func:`Ode`.
-		"""
-
-		warnings.warn('The OL function is deprecated, please use Ode instead.')
-
-		return self.Ode(z)
-
-	###############################################################################################
-
 	def Ode(self, z):
 		"""
 		The dark energy density of the universe, in units of the critical density. 
@@ -1489,30 +1456,6 @@ class Cosmology(object):
 
 	###############################################################################################
 	# Structure growth, power spectrum etc.
-	###############################################################################################
-	
-	#DEPRECATED
-	def lagrangianR(self, M):
-		"""
-		Deprecated, please use :func:`lss.peaks.lagrangianR`.
-		"""
-		
-		warnings.warn('This function is deprecated and will be removed. Please use lss.peaks.lagrangianR.')
-		
-		return (3.0 * M / 4.0 / np.pi / self.rho_m(0.0) / 1E9)**(1.0 / 3.0)
-	
-	###############################################################################################
-	
-	#DEPRECATED
-	def lagrangianM(self, R):
-		"""
-		Deprecated, please use :func:`lss.peaks.lagrangianM`.
-		"""
-
-		warnings.warn('This function is deprecated and will be removed. Please use lss.peaks.lagrangianM.')
-	
-		return 4.0 / 3.0 * np.pi * R**3 * self.rho_m(0.0) * 1E9
-
 	###############################################################################################
 
 	def growthFactorUnnormalized(self, z):
@@ -1670,23 +1613,6 @@ class Cosmology(object):
 
 		return D
 
-	###############################################################################################
-	
-	# DEPRECATED
-	def collapseOverdensity(self, deltac_const = True, sigma = None):
-		"""
-		Deprecated, please use :func:`lss.peaks.collapseOverdensity`.
-		"""
-
-		warnings.warn('This function is deprecated and will be removed. Please use lss.peaks.collapseOverdensity.')
-						
-		if deltac_const:
-			delta_c = constants.DELTA_COLLAPSE
-		else:
-			delta_c = constants.DELTA_COLLAPSE * (1.0 + 0.47 * (sigma / constants.DELTA_COLLAPSE)**1.23)
-		
-		return delta_c
-	
 	###############################################################################################
 
 	def _matterPowerSpectrumName(self, model):
@@ -1862,8 +1788,7 @@ class Cosmology(object):
 	###############################################################################################
 
 	def matterPowerSpectrum(self, k, z = 0.0, model = defaults.POWER_SPECTRUM_MODEL, path = None,
-						derivative = False,
-						Pk_source = None):
+						derivative = False):
 		"""
 		The matter power spectrum at a scale k.
 		
@@ -1892,7 +1817,6 @@ class Cosmology(object):
 			log10(k) (in comoving h/Mpc) and log10(P).
 		derivative: bool
 			If False, return P(k). If True, return :math:`d \log(P) / d \log(k)`.
-		Pk_source: deprecated
 			
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -1900,9 +1824,6 @@ class Cosmology(object):
 			The matter power spectrum (or its logarithmic derivative if ``derivative == True``); has 
 			the same dimensions as k and units of :math:`(Mpc/h)^3`.
 		"""
-
-		if Pk_source is not None:
-			warnings.warn('The Pk_source parameter has been deprecated. Please see documentation.')
 
 		if self.interpolation:
 			
@@ -2135,8 +2056,7 @@ class Cosmology(object):
 	###############################################################################################
 	
 	def sigma(self, R, z, j = 0, filt = 'tophat', inverse = False, derivative = False, 
-							ps_args = defaults.PS_ARGS,
-							Pk_source = None):
+							ps_args = defaults.PS_ARGS):
 		"""
 		The rms variance of the linear density field on a scale R, :math:`\\sigma(R)`.
 		
@@ -2180,7 +2100,6 @@ class Cosmology(object):
 		ps_args: dict
 			Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
 			function.
-		Pk_source: deprecated
 		
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -2193,9 +2112,6 @@ class Cosmology(object):
 		-------------------------------------------------------------------------------------------
 		matterPowerSpectrum: The matter power spectrum at a scale k.
 		"""
-
-		if Pk_source is not None:
-			warnings.warn('The Pk_source parameter has been deprecated. Please see documentation.')
 
 		if self.interpolation:
 			interpolator = self._sigmaInterpolator(j, filt, inverse, ps_args)
@@ -2274,177 +2190,6 @@ class Cosmology(object):
 			ret *= self.growthFactor(z)
 		
 		return ret
-
-	###############################################################################################
-	
-	# DEPRECATED
-	def peakHeight(self, M, z, filt = 'tophat', ps_model = defaults.POWER_SPECTRUM_MODEL, deltac_const = True):
-		"""
-		Deprecated, please use :func:`lss.peaks.peakHeight`.
-		"""
-
-		warnings.warn('This function is deprecated and will be removed. Please use lss.peaks.peakHeight.')
-					
-		R = self.lagrangianR(M)
-		sigma = self.sigma(R, z, filt = filt, ps_model = ps_model)
-		nu = self.collapseOverdensity(deltac_const, sigma) / sigma
-
-		return nu
-	
-	###############################################################################################
-
-	# DEPRECATED
-	def massFromPeakHeight(self, nu, z, filt = 'tophat', ps_model = defaults.POWER_SPECTRUM_MODEL, deltac_const = True):
-		"""
-		Deprecated, please use :func:`lss.peaks.massFromPeakHeight`.
-		"""
-
-		warnings.warn('This function is deprecated and will be removed. Please use lss.peaks.massFromPeakHeight.')
-
-		sigma = self.collapseOverdensity(deltac_const = deltac_const) / nu
-		R = self.sigma(sigma, z, filt = filt, ps_model = ps_model, inverse = True)
-		M = self.lagrangianM(R)
-		
-		return M
-	
-	###############################################################################################
-	
-	# DEPRECATED
-	def nonLinearMass(self, z, filt = 'tophat', ps_model = defaults.POWER_SPECTRUM_MODEL):
-		"""
-		Deprecated, please use :func:`lss.peaks.nonLinearMass`.
-		"""
-
-		warnings.warn('This function is deprecated and will be removed. Please use lss.peaks.nonLinearMass.')
-
-		return self.massFromPeakHeight(1.0, z = z, filt = filt, ps_model = ps_model, deltac_const = True)
-
-	###############################################################################################
-	# Peak curvature routines
-	###############################################################################################
-	
-	# DEPRECATED
-	def _peakCurvatureExact(self, nu, gamma):
-	
-		# Equation A15 in BBKS. 
-		
-		def curvature_fx(x):
-	
-			f1 = np.sqrt(5.0 / 2.0) * x
-			t1 = scipy.special.erf(f1) + scipy.special.erf(f1 / 2.0)
-	
-			b0 = np.sqrt(2.0 / 5.0 / np.pi)
-			b1 = 31.0 * x ** 2 / 4.0 + 8.0 / 5.0
-			b2 = x ** 2 / 2.0 - 8.0 / 5.0
-			t2 = b0 * (b1 * np.exp(-5.0 * x ** 2 / 8.0) + b2 * np.exp(-5.0 * x ** 2 / 2.0))
-	
-			res = (x ** 3 - 3.0 * x) * t1 / 2.0 + t2
-	
-			return res
-	
-		# Equation A14 in BBKS, minus the normalization which is irrelevant here. If we need the 
-		# normalization, the Rstar parameter also needs to be passed.
-		
-		def curvature_Npk(x, nu, gamma):
-	
-			#norm = np.exp(-nu**2 / 2.0) / (2 * np.pi)**2 / Rstar**3
-			norm = 1.0
-			fx = curvature_fx(x)
-			xstar = gamma * nu
-			g2 = 1.0 - gamma ** 2
-			exponent = -(x - xstar) ** 2 / (2.0 * g2)
-			res = norm * fx * np.exp(exponent) / np.sqrt(2.0 * np.pi * g2)
-	
-			return res
-	
-		# Average over Npk
-		
-		def curvature_Npk_x(x, nu, gamma):
-			return curvature_Npk(x, nu, gamma) * x
-	
-		args = nu, gamma
-		norm, _ = scipy.integrate.quad(curvature_Npk, 0.0, np.infty, args, epsrel = 1E-10)
-		integ, _ = scipy.integrate.quad(curvature_Npk_x, 0.0, np.infty, args, epsrel = 1E-10)
-		xav = integ / norm
-	
-		return xav
-	
-	###############################################################################################
-	
-	# Wrapper for the function above which takes tables of sigmas. This form can be more convenient 
-	# when computing many different nu's. 
-	
-	# DEPRECATED
-	def _peakCurvatureExactFromSigma(self, sigma0, sigma1, sigma2, deltac_const = True):
-	
-		nu = self.collapseOverdensity(deltac_const, sigma0) / sigma0
-		gamma = sigma1 ** 2 / sigma0 / sigma2
-	
-		x = nu * 0.0
-		for i in range(len(nu)):
-			x[i] = self._peakCurvatureExact(nu[i], gamma[i])
-	
-		return nu, gamma, x
-	
-	###############################################################################################
-	
-	# Get peak curvature from the approximate formula in BBKS. This approx. is excellent over the 
-	# relevant range of nu.
-	
-	# DEPRECATED
-	def _peakCurvatureApprox(self, nu, gamma):
-	
-		# Compute theta according to Equation 6.14 in BBKS
-		g = gamma
-		gn = g * nu
-		theta1 = 3.0 * (1.0 - g ** 2) + (1.216 - 0.9 * g ** 4) * np.exp(-g * gn * gn / 8.0)
-		theta2 = np.sqrt(3.0 * (1.0 - g ** 2) + 0.45 + (gn / 2.0) ** 2) + gn / 2.0
-		theta = theta1 / theta2
-	
-		# Equation 6.13 in BBKS
-		x = gn + theta
-		
-		# Equation 6.15 in BBKS
-		nu_tilde = nu - theta * g / (1.0 - g ** 2)
-	
-		return theta, x, nu_tilde
-	
-	###############################################################################################
-	
-	# Wrapper for the function above which takes tables of sigmas. This form can be more convenient 
-	# when computing many different nu's. For convenience, various intermediate numbers are 
-	# returned as well.
-	
-	# DEPRECATED
-	def _peakCurvatureApproxFromSigma(self, sigma0, sigma1, sigma2, deltac_const = True):
-	
-		nu = self.collapseOverdensity(deltac_const, sigma0) / sigma0
-		gamma = sigma1**2 / sigma0 / sigma2
-		
-		theta, x, nu_tilde = self._peakCurvatureApprox(nu, gamma)
-		
-		return nu, gamma, x, theta, nu_tilde
-	
-	###############################################################################################
-	
-	# DEPRECATED
-	def peakCurvature(self, M, z, filt = 'gaussian', ps_model = defaults.POWER_SPECTRUM_MODEL,
-					deltac_const = True, exact = False):
-		"""
-		Deprecated, please use :func:`lss.peaks.peakCurvature`.
-		"""
-
-		warnings.warn('This function is deprecated and will be removed. Please use lss.peaks.peakCurvature.')
-
-		R = self.lagrangianR(M)
-		sigma0 = self.sigma(R, z, j = 0, filt = filt, ps_model = ps_model)
-		sigma1 = self.sigma(R, z, j = 1, filt = filt, ps_model = ps_model)
-		sigma2 = self.sigma(R, z, j = 2, filt = filt, ps_model = ps_model)
-	
-		if exact:
-			return self._peakCurvatureExactFromSigma(sigma0, sigma1, sigma2, deltac_const = deltac_const)
-		else:
-			return self._peakCurvatureApproxFromSigma(sigma0, sigma1, sigma2, deltac_const = deltac_const)
 
 	###############################################################################################
 
@@ -2539,8 +2284,7 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	def correlationFunction(self, R, z, derivative = False, ps_args = defaults.PS_ARGS,
-						Pk_source = None):
+	def correlationFunction(self, R, z, derivative = False, ps_args = defaults.PS_ARGS):
 		"""
 		The linear matter-matter correlation function at radius R.
 		
@@ -2565,7 +2309,6 @@ class Cosmology(object):
 		ps_args: dict
 			Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
 			function.
-		Pk_source: deprecated
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -2576,9 +2319,6 @@ class Cosmology(object):
 		-------------------------------------------------------------------------------------------
 		matterPowerSpectrum: The matter power spectrum at a scale k.
 		"""
-	
-		if Pk_source is not None:
-			warnings.warn('The Pk_source parameter has been deprecated. Please see documentation.')
 	
 		if self.interpolation:
 			

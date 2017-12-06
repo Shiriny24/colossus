@@ -27,7 +27,6 @@ Module reference
 
 import numpy as np
 import scipy.optimize
-import warnings
 
 from colossus import defaults
 from colossus.cosmology import cosmology
@@ -151,12 +150,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 				z = None, selected_by = defaults.HALO_PRPFOLE_DK14_SELECTED_BY, Gamma = None, 
 				outer_terms = [], 
 				acc_warn = defaults.HALO_PROFILE_DK14_ACC_WARN, 
-				acc_err = defaults.HALO_PROFILE_DK14_ACC_ERR,
-				# Deprecated
-				R200m = None):
-	
-		if R200m is not None:
-			warnings.warn('The R200m parameter is deprecated and should not be passed to the DK14 constructor any more.')
+				acc_err = defaults.HALO_PROFILE_DK14_ACC_ERR):
 
 		# Set the fundamental variables par_names and opt_names
 		self.par_names = ['rhos', 'rs', 'rt', 'alpha', 'beta', 'gamma']

@@ -34,7 +34,6 @@ Module reference
 import numpy as np
 import scipy.integrate
 import scipy.special
-import warnings
 
 from colossus import defaults
 from colossus.utils import constants
@@ -148,8 +147,7 @@ def collapseOverdensity(corrections = False, z = None):
 
 ###################################################################################################
 
-def peakHeight(M, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARGS, deltac_args = {}, 
-			filt = None, Pk_source = None, deltac_const = None):
+def peakHeight(M, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARGS, deltac_args = {}):
 	"""
 	Peak height, :math:`\\nu`, given a halo mass.
 	
@@ -170,9 +168,6 @@ def peakHeight(M, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARG
 		Arguments passed to the :func:`cosmology.cosmology.Cosmology.sigma` function.
 	deltac_args: dict
 		Arguments passed to the :func:`collapseOverdensity` function.
-	filt: deprecated
-	Pk_source: deprecated
-	deltac_const: deprecated
 	
 	Returns
 	-------------------------------------------------------------------------------------------
@@ -183,14 +178,6 @@ def peakHeight(M, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARG
 	-------------------------------------------------------------------------------------------
 	massFromPeakHeight: Halo mass from peak height, :math:`\\nu`.
 	"""
-			
-	# Compatibility warnings
-	if filt is not None:
-		warnings.warn('The filt parameter has been deprecated. Please see documentation.')
-	if Pk_source is not None:
-		warnings.warn('The Pk_source parameter has been deprecated. Please see documentation.')
-	if deltac_const is not None:
-		warnings.warn('The deltac_const parameter has been deprecated. Please see documentation.')
 	
 	cosmo = cosmology.getCurrent()
 	R = lagrangianR(M)
@@ -202,8 +189,7 @@ def peakHeight(M, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARG
 ###################################################################################################
 
 def massFromPeakHeight(nu, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARGS, 
-					deltac_args = defaults.DELTAC_ARGS, 
-					filt = None, Pk_source = None, deltac_const = None):
+					deltac_args = defaults.DELTAC_ARGS):
 	"""
 	Halo mass from peak height, :math:`\\nu`.
 	
@@ -224,9 +210,6 @@ def massFromPeakHeight(nu, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.
 		Arguments passed to the :func:`cosmology.cosmology.Cosmology.sigma` function.
 	deltac_args: dict
 		Arguments passed to the :func:`collapseOverdensity` function.
-	filt: deprecated
-	Pk_source: deprecated
-	deltac_const: deprecated
 
 	Returns
 	-------------------------------------------------------------------------------------------
@@ -238,14 +221,6 @@ def massFromPeakHeight(nu, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.
 	peakHeight: Peak height, :math:`\\nu`, given a halo mass.
 	"""
 
-	# Compatibility warnings
-	if filt is not None:
-		warnings.warn('The filt parameter has been deprecated. Please see documentation.')
-	if Pk_source is not None:
-		warnings.warn('The Pk_source parameter has been deprecated. Please see documentation.')
-	if deltac_const is not None:
-		warnings.warn('The deltac_const parameter has been deprecated. Please see documentation.')
-
 	cosmo = cosmology.getCurrent()
 	sigma = collapseOverdensity(z = z, **deltac_args) / nu
 	R = cosmo.sigma(sigma, z, inverse = True, **sigma_args)
@@ -256,8 +231,7 @@ def massFromPeakHeight(nu, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.
 ###################################################################################################
 
 def nonLinearMass(z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARGS, 
-				deltac_args = defaults.DELTAC_ARGS, 
-				filt = None, Pk_source = None):
+				deltac_args = defaults.DELTAC_ARGS):
 	"""
 	The non-linear mass, :math:`M^*`.
 	
@@ -277,8 +251,6 @@ def nonLinearMass(z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARG
 		Arguments passed to the :func:`cosmology.cosmology.Cosmology.sigma` function.
 	deltac_args: dict
 		Arguments passed to the :func:`collapseOverdensity` function.
-	filt: deprecated
-	Pk_source: deprecated
 
 	Returns
 	-------------------------------------------------------------------------------------------
@@ -290,12 +262,6 @@ def nonLinearMass(z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARG
 	massFromPeakHeight: Halo mass from peak height, :math:`\\nu`.
 	"""
 
-	# Compatibility warnings
-	if filt is not None:
-		warnings.warn('The filt parameter has been deprecated. Please see documentation.')
-	if Pk_source is not None:
-		warnings.warn('The Pk_source parameter has been deprecated. Please see documentation.')
-	
 	return massFromPeakHeight(1.0, z, sigma_args = sigma_args, deltac_args = deltac_args)
 
 ###################################################################################################
@@ -407,8 +373,7 @@ def _peakCurvatureApproxFromSigma(sigma0, sigma1, sigma2, z, deltac_args = defau
 ###############################################################################################
 
 def peakCurvature(M, z, exact = False, ps_args = defaults.PS_ARGS, 
-				sigma_args = {'filt': 'gaussian'}, deltac_args = defaults.DELTAC_ARGS, 
-				filt = None, Pk_source = None, deltac_const = None):
+				sigma_args = {'filt': 'gaussian'}, deltac_args = defaults.DELTAC_ARGS):
 	"""
 	The average curvature of peaks for a halo mass M.
 	
@@ -439,9 +404,6 @@ def peakCurvature(M, z, exact = False, ps_args = defaults.PS_ARGS,
 		Arguments passed to the :func:`cosmology.cosmology.Cosmology.sigma` function.
 	deltac_args: dict
 		Arguments passed to the :func:`collapseOverdensity` function.
-	filt: deprecated
-	Pk_source: deprecated
-	deltac_const: deprecated
 
 	Returns
 	-------------------------------------------------------------------------------------------
