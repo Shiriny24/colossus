@@ -281,67 +281,79 @@ cosmologies['powerlaw']      = {'flat': True, 'H0': 70.00, 'Om0': 1.0000, 'Ob0':
 class Cosmology(object):
 	"""
 	A cosmology is set via the parameters passed to the constructor. Any parameter whose default
-	value is ``None`` must be set by the user. This can easily be done using the 
-	:func:`setCosmology()` function with one of the pre-defined sets of cosmological parameters 
+	value is ``None`` must be set by the user. The easiest way to set these parameters is to use 
+	the :func:`setCosmology()` function with one of the pre-defined sets of cosmological parameters 
 	listed above. 
 	
-	The user can choose between different equations of state for dark energy, including an 
-	arbitrary :math:`w(z)` function.
+	In addition, the user can choose between different equations of state for dark energy, 
+	including an arbitrary :math:`w(z)` function.
 	
-	Some parameters that are well constrained and have a sub-dominant impact on the computations
-	have pre-set default values, such as the CMB temperature (T = 2.7255 K) and the effective number 
-	of neutrino species (Neff = 3.046). These values are compatible with the most recent 
-	measurements and can be changed by the user.
+	A few cosmological parameters are free in principle, but are well constrained and have a 
+	sub-dominant impact on the computations. For such parameters, default values are pre-set so 
+	that the user does not have to choose them manually. This includes the CMB temperature today 
+	(``Tcmb0`` = 2.7255 K) and the effective number of neutrino species (``Neff`` = 3.046). These 
+	values are compatible with the most recent observational measurements and can be changed by 
+	the user if necessary.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	name: str		
-		A name for the cosmology, e.g. ``WMAP9``.
+		A name for the cosmology, e.g. ``WMAP9`` or a user-defined name. If a user-defined set of
+		cosmological parameters is used, it is advisable to use a name that does not represent any
+		of the pre-set cosmologies.
 	flat: bool
-		If flat, there is no curvature, :math:`\Omega_k = 0`, and the dark energy content of the 
+		If flat, there is no curvature, :math:`\Omega_{\\rm k} = 0`, and the dark energy content of the 
 		universe is computed as
-		:math:`\Omega_{de} = 1 - \Omega_m - \Omega_{\\gamma} - \Omega_{\\nu}`.
+		:math:`\Omega_{\\rm de} = 1 - \Omega_{\\rm m} - \Omega_{\\gamma} - \Omega_{\\nu}` where 
+		:math:`\Omega_{\\rm m}` is the density of matter (dark matter and baryons) in units of the
+		critical density, :math:`\Omega_{\\gamma}` is the density of photons, and 
+		:math:`\Omega_{\\nu}` the density of neutrinos. If ``flat == False``, the ``Ode0`` parameter
+		must be passed.
 	Om0: float
-		:math:`\Omega_{m}`, the matter density in units of the critical density at z = 0 (includes 
+		:math:`\Omega_{\\rm m}`, the matter density in units of the critical density at z = 0 (includes 
 		all non-relativistic matter, i.e., dark matter and baryons but not neutrinos).
-	Ob0: float
-		:math:`\Omega_{b}`, the baryon density in units of the critical density at z = 0.
 	Ode0: float
-		:math:`\Omega_{de}`, the dark energy density in units of the critical density at z = 0. 
+		:math:`\Omega_{\\rm de}`, the dark energy density in units of the critical density at z = 0. 
 		This parameter is ignored if ``flat == True``.
+	Ob0: float
+		:math:`\Omega_{\\rm b}`, the baryon density in units of the critical density at z = 0.
 	H0: float
 		The Hubble constant in km/s/Mpc.
 	sigma8: float
 		The normalization of the power spectrum, i.e. the variance when the field is filtered with a 
-		top hat filter of radius 8 Mpc/h.
+		top hat filter of radius 8 Mpc/h. See the :func:`sigma` function for details on the variance.
 	ns: float
 		The tilt of the primordial power spectrum.
 	de_model: str
 		An identifier indicating which dark energy equation of state is to be used. The DE equation
-		of state can either be a cosmological constant (``lambda``), a constant w (``w0``, the w0
-		parameter must be set), a linear function of the scale factor according to the 
-		parameterization of Linder 2003 where :math:`w(z) = w_0 + w_a (1 - a)`  (``w0wa``, the w0
-		and wa parameters must be set), or a function supplied by the user (``user``). In the latter 
-		case the w(z) function must be passed using the wz_function parameter.
+		of state can either be a cosmological constant (``de_model = lambda``), a constant w 
+		(``de_model = w0``, the ``w0`` parameter must be set), a linear function of the scale 
+		factor according to the parameterization of 
+		`Linder 2003 <http://adsabs.harvard.edu/abs/2003PhRvL..90i1301L>`_ where 
+		:math:`w(z) = w_0 + w_a (1 - a)`  (``de_model = w0wa``, the ``w0`` and ``wa`` parameters 
+		must be set), or a function supplied by the user (``de_model = user``). In the latter case, 
+		the w(z) function must be passed using the ``wz_function`` parameter.
 	w0: float
 		If ``de_model == w0``, this variable gives the constant dark energy equation of state 
 		parameter w. If ``de_model == w0wa``, this variable gives the constant component w (see
-		de_model parameter).
+		``de_model`` parameter).
 	wa: float
-		If de_model == ``w0wa``, this variable gives the varying component of w (see de_model 
-		parameter).
+		If ``de_model == w0wa``, this variable gives the varying component of w, otherwise it is
+		ignored (see ``de_model`` parameter).
 	wz_function: function
-		A dark energy equation of state (if ``de_model == user``). This function must take z as the
-		only input variable and return w(z).
+		If ``de_model == user``, this field must give a function that represents the dark energy 
+		equation of state. This function must take z as its only input variable and return w(z).
 	relspecies: bool
-		If False, all relativistic contributions to the energy density of the universe (such as 
-		photons and neutrinos) are ignored.
+		If ``relspecies == False``, all relativistic contributions to the energy density of the 
+		universe (such as photons and neutrinos) are ignored. If ``relspecies == True``, their
+		energy densities are computed based on the ``Tcmb0`` and ``Neff`` parameters.
 	Tcmb0: float
 		The temperature of the CMB at z = 0 in Kelvin.
 	Neff: float
 		The effective number of neutrino species.
 	power_law: bool
-		Assume a power-law matter power spectrum, :math:`P(k) = k^{power\_law\_n}`.
+		Create a self-similar cosmology with a power-law matter power spectrum, 
+		:math:`P(k) = k^{\\rm power\_law\_n}`. 
 	power_law_n: float
 		See ``power_law``.
 	interpolation: bool
@@ -349,9 +361,9 @@ class Cosmology(object):
 		cutting down the computation times for future calculations. If ``interpolation == False``,
 		all interpolation is switched off. This can be useful when evaluating quantities for many
 		different cosmologies (where computing the tables takes a prohibitively long time). 
-		However, many functions will be *much* slower if this setting is False, please use it only 
-		if absolutely necessary. Furthermore, the derivative functions of :math:`P(k)`, 
-		:math:`\sigma(R)` etc will not work if ``interpolation == False``.
+		However, many functions will be *much* slower if this setting is ``False``, and the 
+		derivatives and inverses will not work. Thus, please use ``interpolation == False`` only 
+		if absolutely necessary.
 	persistence: str 
 		By default, interpolation tables and other data are stored in a permanent file for
 		each cosmology. This avoids re-computing the tables when the same cosmology is set again. 
@@ -370,8 +382,8 @@ class Cosmology(object):
 		de_model = 'lambda', w0 = None, wa = None, wz_function = None,
 		relspecies = True, Tcmb0 = defaults.COSMOLOGY_TCMB0, Neff = defaults.COSMOLOGY_NEFF,
 		power_law = False, power_law_n = 0.0,
-		print_info = False, print_warnings = True,
-		interpolation = True, persistence = settings.PERSISTENCE):
+		interpolation = True, persistence = settings.PERSISTENCE,
+		print_info = False, print_warnings = True):
 		
 		if name is None:
 			raise Exception('A name for the cosmology must be set.')
@@ -709,9 +721,10 @@ class Cosmology(object):
 		The dark energy equation of state parameter.
 		
 		The EOS parameter is defined as :math:`w(z) = P(z) / \\rho(z)`. Depending on its chosen 
-		functional form (see the de_model parameter to the constructor), w(z) can be -1, another
-		constant, a linear function of a, or an arbitrary function chosen by the user.
-		
+		functional form (see the ``de_model`` parameter to :func:`~cosmology.cosmology.Cosmology`), 
+		w(z) can be -1, another constant, a linear function of a, or an arbitrary function chosen 
+		by the user.
+	
 		Parameters
 		-------------------------------------------------------------------------------------------
 		z: array_like
@@ -905,7 +918,7 @@ class Cosmology(object):
 
 	def lookbackTime(self, z, derivative = 0, inverse = False):
 		"""
-		The lookback time since z.
+		The lookback time since redshift z.
 		
 		The lookback time corresponds to the difference between the age of the universe at 
 		redshift z and today.
@@ -917,7 +930,8 @@ class Cosmology(object):
 		derivative: int
 			If greater than 0, evaluate the nth derivative, :math:`d^nt/dz^n`.
 		inverse: bool
-			If True, evaluate :math:`z(t)` instead of :math:`t(z)`.
+			If True, evaluate :math:`z(t)` instead of :math:`t(z)`. In this case, the ``z`` field
+			must contain the time(s) in Gyr.
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -957,7 +971,8 @@ class Cosmology(object):
 		derivative: int
 			If greater than 0, evaluate the nth derivative, :math:`d^nt/dz^n`.
 		inverse: bool
-			If True, evaluate :math:`z(t)` instead of :math:`t(z)`.
+			If True, evaluate :math:`z(t)` instead of :math:`t(z)`. In this case, the ``z`` field
+			must contain the time(s) in Gyr.
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -979,12 +994,12 @@ class Cosmology(object):
 
 	def comovingDistance(self, z_min = 0.0, z_max = 0.0, transverse = True):
 		"""
-		The comoving distance between redshift :math:`z_{min}` and :math:`z_{max}`.
+		The comoving distance between redshift :math:`z_{\\rm min}` and :math:`z_{\\rm max}`.
 		
-		Either z_min or z_min can be a numpy array; in those cases, the same z_min / z_max is 
-		applied to all values of the other. If both are numpy arrays, they need to have 
-		the same dimensions, and the comoving distance returned corresponds to a series of 
-		different z_min and z_max values. 
+		Either ``z_min`` or ``z_max`` can be a numpy array; in those cases, the same ``z_min`` / 
+		``z_max`` is applied to all values of the other. If both are numpy arrays, they need to 
+		have the same dimensions, and the comoving distance returned corresponds to a series of 
+		different ``z_min`` and ``z_max`` values. 
 		
 		The transverse parameter determines whether the line-of-sight or transverse comoving
 		distance is returned. For flat cosmologies, the two are the same, but for cosmologies with
@@ -993,9 +1008,9 @@ class Cosmology(object):
 		and angular diameter distances.
 
 		This function does not use interpolation (unlike the other distance functions) because it
-		accepts both z_min and z_max parameters which would necessitate a 2D interpolation. Thus,
-		for fast evaluation, the luminosity and angular diameter distance functions should be used
-		directly.
+		accepts both ``z_min`` and ``z_max`` parameters which would necessitate a 2D interpolation. 
+		Thus, for fast evaluation, the :func:`luminosityDistance` and 
+		:func:`angularDiameterDistance` functions should be used.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -1010,7 +1025,7 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		d: array_like
-			The comoving distance in Mpc/h; has the same dimensions as zmin and/or zmax.
+			The comoving distance in Mpc/h; has the same dimensions as ``zmin`` and/or ``zmax``.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -1053,7 +1068,8 @@ class Cosmology(object):
 		derivative: int
 			If greater than 0, evaluate the nth derivative, :math:`d^nD/dz^n`.
 		inverse: bool
-			If True, evaluate :math:`z(D)` instead of :math:`D(z)`.
+			If True, evaluate :math:`z(D)` instead of :math:`D(z)`. In this case, the ``z`` field
+			must contain the luminosity distance in Mpc/h.
 			
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -1062,7 +1078,7 @@ class Cosmology(object):
 
 		See also
 		-------------------------------------------------------------------------------------------
-		comovingDistance: The comoving distance between redshift :math:`z_{min}` and :math:`z_{max}`.
+		comovingDistance: The comoving distance between redshift :math:`z_{\\rm min}` and :math:`z_{\\rm max}`.
 		angularDiameterDistance: The angular diameter distance to redshift z.
 		"""
 		
@@ -1095,7 +1111,8 @@ class Cosmology(object):
 		derivative: int
 			If greater than 0, evaluate the nth derivative, :math:`d^nD/dz^n`.
 		inverse: bool
-			If True, evaluate :math:`z(D)` instead of :math:`D(z)`.
+			If True, evaluate :math:`z(D)` instead of :math:`D(z)`. In this case, the ``z`` field
+			must contain the angular diameter distance in Mpc/h.
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -1105,7 +1122,7 @@ class Cosmology(object):
 
 		See also
 		-------------------------------------------------------------------------------------------
-		comovingDistance: The comoving distance between redshift :math:`z_{min}` and :math:`z_{max}`.
+		comovingDistance: The comoving distance between redshift :math:`z_{\\rm min}` and :math:`z_{\\rm max}`.
 		luminosityDistance: The luminosity distance to redshift z.
 		"""
 
@@ -1143,9 +1160,10 @@ class Cosmology(object):
 		"""
 		The sound horizon at recombination.
 
-		This function returns the sound horizon in Mpc/h, according to Eisenstein & Hu 
-		1998, equation 26. This fitting function is accurate to 2% where :math:`\Omega_b h^2 > 0.0125` 
-		and :math:`0.025 < \Omega_m h^2 < 0.5`.
+		This function returns the sound horizon in Mpc/h, according to 
+		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_, equation 26. 
+		This fitting function is accurate to 2% where :math:`\Omega_{\\rm b} h^2 > 0.0125` and 
+		:math:`0.025 < \Omega_{\\rm m} h^2 < 0.5`.
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -1219,6 +1237,10 @@ class Cosmology(object):
 		rho_baryon: array_like
 			The baryon density in units of physical :math:`M_{\odot} h^2 / kpc^3`; has the same 
 			dimensions as z.
+	
+		See also
+		-------------------------------------------------------------------------------------------
+		Ob: The baryon density of the universe, in units of the critical density.
 		"""
 
 		return constants.RHO_CRIT_0_KPC3 * self.Ob0 * (1.0 + z)**3
@@ -1351,11 +1373,32 @@ class Cosmology(object):
 
 	###############################################################################################
 
+	def Ob(self, z):
+		"""
+		The baryon density of the universe, in units of the critical density.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		z: array_like
+			Redshift; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		Omega_baryon: array_like
+			Has the same dimensions as z.
+
+		See also
+		-------------------------------------------------------------------------------------------
+		rho_b: The baryon density of the universe at redshift z.
+		"""
+
+		return self.Ob0 * (1.0 + z)**3 / (self.Ez(z))**2
+
+	###############################################################################################
+
 	def Ode(self, z):
 		"""
 		The dark energy density of the universe, in units of the critical density. 
-		
-		In a flat universe, :math:`\Omega_{\\rm DE} = 1 - \Omega_m - \Omega_r`.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -1373,27 +1416,6 @@ class Cosmology(object):
 		"""
 
 		return self.Ode0 / (self.Ez(z))**2 * self._rho_de_z(z)
-
-	###############################################################################################
-
-	def Ok(self, z):
-		"""
-		The curvature density of the universe in units of the critical density. 
-		
-		In a flat universe, :math:`\Omega_k = 0`.
-
-		Parameters
-		-------------------------------------------------------------------------------------------
-		z: array_like
-			Redshift; can be a number or a numpy array.
-
-		Returns
-		-------------------------------------------------------------------------------------------
-		Omega_curvature: array_like
-			Has the same dimensions as z.
-		"""
-					
-		return self.Ok0 * (1.0 + z)**2 / (self.Ez(z))**2
 
 	###############################################################################################
 
@@ -1445,7 +1467,9 @@ class Cosmology(object):
 
 	def Or(self, z):
 		"""
-		The density of relativistic species in the universe, in units of the critical density. 
+		The density of relativistic species, in units of the critical density. 
+
+		This function returns the sum of the densities of photons and neutrinos.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -1465,6 +1489,27 @@ class Cosmology(object):
 		return self.Or0 * (1.0 + z)**4 / (self.Ez(z))**2
 
 	###############################################################################################
+
+	def Ok(self, z):
+		"""
+		The curvature density of the universe in units of the critical density. 
+		
+		In a flat universe, :math:`\Omega_{\\rm k} = 0`.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		z: array_like
+			Redshift; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		Omega_curvature: array_like
+			Has the same dimensions as z.
+		"""
+					
+		return self.Ok0 * (1.0 + z)**2 / (self.Ez(z))**2
+
+	###############################################################################################
 	# Structure growth, power spectrum etc.
 	###############################################################################################
 
@@ -1473,11 +1518,16 @@ class Cosmology(object):
 		The linear growth factor, :math:`D_+(z)`.
 		
 		The growth factor describes the linear evolution of over- and underdensities in the dark
-		matter density field. There are three regimes: 1) In the matter-radiation regime, we use an 
-		approximate analytical formula (Equation 5 in Gnedin, Kravtsov & Rudd 2011). If relativistic 
-		species are ignored, :math:`D_+(z) \propto a`. 2) In the matter-dominated regime, 
-		:math:`D_+(z) \propto a`. 3) In the matter-dark energy regime, we evaluate :math:`D_+(z)` 
-		through integration as defined in Eisenstein & Hu 99, Equation 8 (see also Heath 1977). 
+		matter density field. There are three regimes: 
+		
+		* In the matter-radiation regime, we use an approximate analytical formula (Equation 5 in 
+		  `Gnedin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..194...46G>`_. If 
+		  relativistic species are ignored, :math:`D_+(z) \propto a`. 
+		* In the matter-dominated regime, :math:`D_+(z) \propto a`. 
+		* In the matter-dark energy regime, we evaluate :math:`D_+(z)` 
+		  through integration as defined in 
+		  `Eisenstein & Hu 1999 <http://adsabs.harvard.edu/abs/1999ApJ...511....5E>`_, Equation 8 
+		  (see also `Heath 1977 <http://adsabs.harvard.edu/abs/1977MNRAS.179..351H>`_). 
 		
 		At the transition between the integral and analytic approximation regimes, the two 
 		expressions do not quite match up, with differences of the order <1E-3. in order to avoid
@@ -1485,9 +1535,10 @@ class Cosmology(object):
 		interpolated.
 		
 		The normalization is such that the growth factor approaches :math:`D_+(a) = a` in the 
-		matter-dominated regime. There are other normalizations of the growth factor (e.g., Percival 
-		2005, Equation 15), but since we almost always care about the growth factor normalized to 
-		z = 0, the normalization does not matter too much (see the :func:`growthFactor` function).
+		matter-dominated regime. There are other normalizations of the growth factor (e.g., 
+		`Percival 2005 <http://adsabs.harvard.edu/abs/2005A%26A...443..819P>`_, Equation 15), but 
+		since we almost always care about the growth factor normalized to z = 0, the normalization 
+		does not matter too much (see the :func:`growthFactor` function).
 		
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -1600,7 +1651,8 @@ class Cosmology(object):
 		derivative: int
 			If greater than 0, evaluate the nth derivative, :math:`d^nD_+/dz^n`.
 		inverse: bool
-			If True, evaluate :math:`z(D_+)` instead of :math:`D_+(z)`.
+			If True, evaluate :math:`z(D_+)` instead of :math:`D_+(z)`. In this case, the ``z`` 
+			field must contain the normalized growth factor.
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -1803,20 +1855,35 @@ class Cosmology(object):
 		The matter power spectrum at a scale k.
 		
 		By default, the power spectrum is computed using a model for the transfer function 
-		(see :func:`cosmology.power_spectrum.transferFunction` function). The default Eisenstein 
-		& Hu 1998 approximation is accurate to about 5%, and the interpolation introduces errors 
+		(see the :func:`~cosmology.power_spectrum.transferFunction` function). The default 
+		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_ 
+		approximation is accurate to about 5%, and the interpolation introduces errors 
 		significantly smaller than that.
 		
-		Alternatively, the user can supply a file with a tabulated power spectrum using the 
-		``path`` parameter. 
+		Alternatively, the user can supply the path to a file with a tabulated power spectrum 
+		using the ``path`` parameter. The file must contain two columns, :math:`\log_{10}(k)`
+		and :math:`\log_{10}(P)` where k and P(k) are in the same units as in this function. This
+		table is interpolated with a third-order spline. Note that the tabulated spectrum is 
+		normalized to the value if :math:`\sigma_8` set in the cosmology.
+
+		Warnings
+		-------------------------------------------------------------------------------------------
+		If a user-supplied power spectrum table is used, integrals over the power spectrum such 
+		as the variance and correlation function are integrated only within the limits of the
+		given power spectrum. By default, Boltzmann codes return a relatively small range in 
+		wavenumber. Please increase this range if necessary, and check that the computed quantities
+		are converged.
 		
 		Parameters
 		-------------------------------------------------------------------------------------------
 		k: array_like
 			The wavenumber k (in comoving h/Mpc), where :math:`10^{-20} < k < 10^{20}`; can be a 
-			number or a numpy array.
+			number or a numpy array. If a user-supplied table is used, the limits of that table
+			apply.
 		z: float
-			The redshift at which the power spectrum is evaluated, zero by default.
+			The redshift at which the power spectrum is evaluated, zero by default. If non-zero,
+			the power spectrum is scaled with the linear growth factor, 
+			:math:`P(k, z) = P(k, 0) D_{+}^2(z)`.
 		model: str
 			A model for the power spectrum (see the :mod:`cosmology.power_spectrum` module). If a
 			tabulated power spectrum is used (see ``path`` parameter), this name must still be 
@@ -1824,7 +1891,8 @@ class Cosmology(object):
 			overlap with any other models.
 		path: str
 			A path to a file containing the power spectrum as a table, where the two columns are
-			log10(k) (in comoving h/Mpc) and log10(P).
+			:math:`\log_{10}(k)` (in comoving h/Mpc) and :math:`\log_{10}(P)` (in 
+			:math:`({\\rm Mpc}/h)^3`).
 		derivative: bool
 			If False, return P(k). If True, return :math:`d \log(P) / d \log(k)`.
 			
@@ -1832,7 +1900,7 @@ class Cosmology(object):
 		-------------------------------------------------------------------------------------------
 		Pk: array_like
 			The matter power spectrum (or its logarithmic derivative if ``derivative == True``); has 
-			the same dimensions as k and units of :math:`(Mpc/h)^3`.
+			the same dimensions as k and units of :math:`({\\rm Mpc}/h)^3`.
 		"""
 
 		if self.interpolation:
@@ -1880,7 +1948,7 @@ class Cosmology(object):
 
 	def filterFunction(self, filt, k, R):
 		"""
-		The filter function for the variance in Fourier space. 
+		The Fourier transform of certain filter functions.
 		
 		This function is dimensionless, the input units are k in comoving h/Mpc and R in comoving 
 		Mpc/h. Please see the documentation of the :func:`sigma` function for details.
@@ -1888,7 +1956,8 @@ class Cosmology(object):
 		Parameters
 		-------------------------------------------------------------------------------------------
 		filt: str
-			Either ``tophat``, ``sharp-k``, or ``gaussian``.
+			Either ``tophat`` (a top-hat filter in real space), ``sharp-k`` (a top-hat filter in
+			Fourier space), or ``gaussian`` (a Gaussian in both real and Fourier space).
 		k: float
 			A wavenumber k (in comoving h/Mpc).
 		R: float
@@ -2075,19 +2144,21 @@ class Cosmology(object):
 		.. math::
 			\\sigma^2(R,z) = \\frac{1}{2 \\pi^2} \\int_0^{\\infty} k^2 k^{2j} P(k,z) |\\tilde{W}(kR)|^2 dk
 
-		where :math:`\\tilde{W}(kR)$` is the Fourier transform of the :func:`filterFunction`, and 
+		where :math:`\\tilde{W}(kR)` is the Fourier transform of the :func:`filterFunction`, and 
 		:math:`P(k,z) = D_+^2(z)P(k,0)` is the :func:`matterPowerSpectrum`. 
 		
 		By default, the power spectrum is computed using the transfer function approximation of 
-		Eisenstein & Hu 1998 which is accurate to about 1% (see the :mod:`cosmology.power_spectrum` 
-		module). The integration and interpolation introduce errors smaller than that. If using 
-		a tabulated power spectrum, please note that the limits of the corresponding table are used
-		for the integration.
+		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_ (see the 
+		:mod:`cosmology.power_spectrum` module). With this approximation, the variance is accurate
+		to about 2% or better. Using a tabulated power spectrum can make this computation more
+		accurate, but please note that the limits of the corresponding table are used for the 
+		integration.
 		
 		Higher moments of the variance (such as :math:`\sigma_1`, :math:`\sigma_2` etc) can be 
-		computed by setting j > 0 (see Bardeen et al. 1986). For the higher moments, the 
-		interpolation error increases to up to ~0.5%. Furthermore, the logarithmic derivative of 
-		:math:`\sigma(R)` can be evaluated by setting ``derivative == True``.
+		computed by setting j > 0 (see 
+		`Bardeen et al. 1986 <http://adsabs.harvard.edu/abs/1986ApJ...304...15B>`_). Furthermore, 
+		the logarithmic derivative :math:`d \log(\sigma) / d \log(R)` can be evaluated by setting 
+		``derivative == True``.
 		
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -2098,18 +2169,19 @@ class Cosmology(object):
 			Redshift; for z > 0, :math:`\sigma(R)` is multiplied by the linear growth factor.
 		j: integer
 			The order of the integral. j = 0 corresponds to the variance, j = 1 to the same integral 
-			with an extra :math:`k^2` term etc; see Bardeen et al. 1986 for mathematical details.
+			with an extra :math:`k^2` term etc; see 
+			`Bardeen et al. 1986 <http://adsabs.harvard.edu/abs/1986ApJ...304...15B>`_ for 
+			mathematical details.
 		filt: str
-			Either ``tophat``, ``sharp-k`` or ``gaussian``. Higher moments (j > 0) can only be 
-			computed for the gaussian filter.
+			Either ``tophat``, ``sharp-k`` or ``gaussian`` (see :func:`filterFunction`). Higher 
+			moments (j > 0) can only be computed for the gaussian filter.
 		inverse: bool
-			If True, compute :math:`R(\sigma)` rather than :math:`\sigma(R)`. For internal use.
+			If True, compute :math:`R(\sigma)` rather than :math:`\sigma(R)`.
 		derivative: bool
 			If True, return the logarithmic derivative, :math:`d \log(\sigma) / d \log(R)`, or its
 			inverse, :math:`d \log(R) / d \log(\sigma)` if ``inverse == True``.
 		ps_args: dict
-			Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
-			function.
+			Arguments passed to the :func:`matterPowerSpectrum` function.
 		
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -2294,30 +2366,34 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	def correlationFunction(self, R, z, derivative = False, ps_args = defaults.PS_ARGS):
+	def correlationFunction(self, R, z = 0.0, derivative = False, ps_args = defaults.PS_ARGS):
 		"""
 		The linear matter-matter correlation function at radius R.
 		
 		The linear correlation function is defined as 
 		
 		.. math::
-			\\xi(R) = \\frac{1}{2 \\pi^2} \\int_0^\\infty k^2 P(k) \\frac{\\sin(kR)}{kR} dk
+			\\xi(R,z) = \\frac{1}{2 \\pi^2} \\int_0^\\infty k^2 P(k,z) \\frac{\\sin(kR)}{kR} dk
 		
-		where P(k) is the :func:`matterPowerSpectrum`. The integration, as well as the 
-		interpolation routine, are accurate to ~1-2% over the range :math:`10^{-3} < R < 500`. 
-		Note that, if a user-defined table for the power spectrum is used, the integration is
-		performed within the limits of that table.
+		where P(k) is the :func:`matterPowerSpectrum`. By default, the power spectrum is computed 
+		using the transfer function approximation of 
+		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_ (see the 
+		:mod:`cosmology.power_spectrum` module). With this approximation, the correlation function
+		is accurate to ~5% over the range :math:`10^{-2} < R < 200`. Using a tabulated power 
+		spectrum can make this computation more accurate, but please note that the limits of the 
+		corresponding table are used for the integration. 
 		
 		Parameters
 		-------------------------------------------------------------------------------------------
 		R: array_like
 			The radius in comoving Mpc/h; can be a number or a numpy array.
 		z: float
-			Redshift
+			Redshift; if non-zero, the correlation function is scaled with the linear growth 
+			factor, :math:`\\xi(R, z) = \\xi(R, 0) D_{+}^2(z)`.
 		derivative: bool
 			If ``derivative == True``, the linear derivative :math:`d \\xi / d R` is returned.
 		ps_args: dict
-			Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
+			Arguments passed to the :func:`matterPowerSpectrum` 
 			function.
 
 		Returns
@@ -2379,16 +2455,18 @@ def setCosmology(cosmo_name, params = None):
 	Set a cosmology.
 	
 	This function provides a convenient way to create a cosmology object without setting the 
-	parameters of the Cosmology class manually. See the Basic Usage section for examples.
+	parameters of the :class:`Cosmology` class manually. See the Basic Usage section for examples.
 	Whichever way the cosmology is set, the global variable is updated so that the :func:`getCurrent` 
 	function returns the set cosmology.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	cosmo_name: str
-		The name of the cosmology.
+		The name of the cosmology. Can be the name of a pre-set cosmology, or another name in which
+		case the ``params`` dictionary needs to be provided.
 	params: dictionary
-		The parameters of the constructor of the Cosmology class.
+		The parameters of the constructor of the :class:`Cosmology` class. Not necessary if
+		``cosmo_name`` is the name of a pre-set cosmology.
 
 	Returns
 	-----------------------------------------------------------------------------------------------
