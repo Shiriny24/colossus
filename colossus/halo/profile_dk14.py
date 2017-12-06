@@ -388,27 +388,58 @@ class DK14Profile(profile_base.HaloDensityProfile):
 			return diff
 
 		# -----------------------------------------------------------------------------------------
+
+		GUESS_FACTOR = 5.0
+		MAX_GUESSES = 20
 	
 		profile_base.HaloDensityProfile.update(self)
 		
 		density_threshold = mass_so.densityThreshold(self.opt['z'], '200m')
 
-		# If we have not at all compute R200m yet, we don't even have an initial guess for that
-		# computation. We take a wild guess by simply assuming a concentration of 5, but allow
-		# for a larger range of radii in the iteration than we normally would.
+		# If we have not at all computed R200m yet, we don't even have an initial guess for that
+		# computation. But even if we have, the user could have changed the parameters in some 
+		# drastic fashion, for example by lowering the central density significantly to create a 
+		# much less dense halo. Thus, we start from a guess radius and increase / decrease the 
+		# upper/lower bounds until the threshold equation is positive at the lower bound 
+		# (indicating that the density there is higher than the threshold) and negative at the
+		# upper bound. If we do not have a previous R200m, we begin by guessing a concentration of
+		# five.
 		if self.opt['R200m'] is None:
 			R_guess = self.par['rs'] * 5.0
-			guess_tolerance = 20.0
-			self.opt['R200m'] = R_guess
 		else:
 			R_guess = self.opt['R200m']
-			guess_tolerance = 5.0
+
+		R_low = R_guess
+		found = False
+		i = 0
+		while i <= MAX_GUESSES:
+			if _thresholdEquationR200m(R_low, self, density_threshold) > 0.0:
+				found = True
+				break
+			R_low /= GUESS_FACTOR
+			i += 1
+		if not found:
+			raise Exception('Cound not find radius where the enclosed density was smaller than threshold (r %.2e kpc/h, rho_threshold %.2e).' \
+						% (R_low, density_threshold))
+
+		R_high = R_guess
+		found = False
+		i = 0
+		while i <= MAX_GUESSES:
+			if _thresholdEquationR200m(R_high, self, density_threshold) < 0.0:
+				found = True
+				break
+			R_high *= GUESS_FACTOR
+			i += 1
+		if not found:
+			raise Exception('Cound not find radius where the enclosed density was larger than threshold (r %.2e kpc/h, rho_threshold %.2e).' \
+						% (R_high, density_threshold))
 		
 		# Note that we cannot just use the RDelta function here. While that function iterates, it
 		# does not set R200m between iterations, meaning that the outer terms are evaluated with 
 		# the input R200m. 
-		self.opt['R200m'] = scipy.optimize.brentq(_thresholdEquationR200m, R_guess / guess_tolerance,
-				R_guess * guess_tolerance, args = (self, density_threshold), xtol = self.accuracy_radius)
+		self.opt['R200m'] = scipy.optimize.brentq(_thresholdEquationR200m, R_low, R_high, 
+							args = (self, density_threshold), xtol = self.accuracy_radius)
 				
 		return
 
