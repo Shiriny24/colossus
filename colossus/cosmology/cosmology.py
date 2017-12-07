@@ -2150,9 +2150,9 @@ class Cosmology(object):
 		By default, the power spectrum is computed using the transfer function approximation of 
 		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_ (see the 
 		:mod:`cosmology.power_spectrum` module). With this approximation, the variance is accurate
-		to about 2% or better. Using a tabulated power spectrum can make this computation more
-		accurate, but please note that the limits of the corresponding table are used for the 
-		integration.
+		to about 2% or better (see the Colossus code paper for details). Using a tabulated power 
+		spectrum can make this computation more accurate, but please note that the limits of the 
+		corresponding table are used for the integration.
 		
 		Higher moments of the variance (such as :math:`\sigma_1`, :math:`\sigma_2` etc) can be 
 		computed by setting j > 0 (see 
@@ -2379,9 +2379,9 @@ class Cosmology(object):
 		using the transfer function approximation of 
 		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_ (see the 
 		:mod:`cosmology.power_spectrum` module). With this approximation, the correlation function
-		is accurate to ~5% over the range :math:`10^{-2} < R < 200`. Using a tabulated power 
-		spectrum can make this computation more accurate, but please note that the limits of the 
-		corresponding table are used for the integration. 
+		is accurate to ~5% over the range :math:`10^{-2} < R < 200` (see the Colossus code paper 
+		for details). Using a tabulated power spectrum can make this computation more accurate, 
+		but please note that the limits of the corresponding table are used for the integration. 
 		
 		Parameters
 		-------------------------------------------------------------------------------------------

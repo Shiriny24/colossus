@@ -8,7 +8,7 @@
 """
 This module implements models for the matter power spectrum, or more exactly, for the transfer 
 function. Generally speaking, the transfer function should be evaluated using the 
-:func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` function.
+:func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum` function.
 
 ---------------------------------------------------------------------------------------------------
 Power spectrum models
@@ -16,14 +16,15 @@ Power spectrum models
 
 The following models for the matter power spectrum are implemented in Colossus:
 
-================== ======================================
-ID                 Paper
-================== ======================================
-eisenstein98       `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_
-eisenstein98_zb    `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_
-================== ======================================
+.. table::
+	:widths: auto
 
-The _zb extension indicates the zero-baryon version of the Eisenstein & Hu 1998 model.
+	================== ============================================================================ ======================================
+	ID                 Reference                                                                    Comment
+	================== ============================================================================ ======================================
+	eisenstein98       `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_  A semi-analytical fitting function
+	eisenstein98_zb    `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_  The zero-baryon version, i.e., no BAO
+	================== ============================================================================ ======================================
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -41,9 +42,9 @@ from colossus import defaults
 
 class PowerSpectrumModel():
 	"""
-	This object contains certain characteristics of a power spectrum model. Currently, this object
-	is empty, but the ``models`` variable is a dictionary of :class:`PowerSpectrumModel` objects 
-	containing all available models.
+	This object describes the characteristics of a power spectrum model. Currently, this object
+	is empty, but the ``power_spectrum.models`` variable is a dictionary of 
+	:class:`PowerSpectrumModel` objects containing all available models.
 	"""
 		
 	def __init__(self):
@@ -63,15 +64,15 @@ def transferFunction(k, h, Om0, Ob0, Tcmb0, model = defaults.POWER_SPECTRUM_MODE
 	The transfer function.
 	
 	The transfer function transforms the spectrum of primordial fluctuations into the
-	power spectrum of the initial matter density fluctuations. The primordial power spectrum is 
+	linear power spectrum of the matter density fluctuations. The primordial power spectrum is 
 	usually described as a power law, leading to a power spectrum
 	
 	.. math::
 		P(k) = T(k)^2 k^{n_s}
 		
 	where P(k) is the matter power spectrum, T(k) is the transfer function, and :math:`n_s` is 
-	the tilt of the primordial power spectrum. See the :mod:`cosmology.cosmology` module for further 
-	details on the cosmological parameters.
+	the tilt of the primordial power spectrum. See the :class:`~cosmology.cosmology.Cosmology` 
+	class for further  details on the cosmological parameters.
 
 	Parameters
 	-------------------------------------------------------------------------------------------
@@ -80,9 +81,9 @@ def transferFunction(k, h, Om0, Ob0, Tcmb0, model = defaults.POWER_SPECTRUM_MODE
 	h: float
 		The Hubble constant in units of 100 km/s/Mpc.
 	Om0: float
-		:math:`\Omega_{m}`, the matter density in units of the critical density at z = 0.
+		:math:`\Omega_{\\rm m}`, the matter density in units of the critical density at z = 0.
 	Ob0: float
-		:math:`\Omega_{b}`, the baryon density in units of the critical density at z = 0.
+		:math:`\Omega_{\\rm b}`, the baryon density in units of the critical density at z = 0.
 	Tcmb0: float
 		The temperature of the CMB at z = 0 in Kelvin.
 
@@ -107,8 +108,15 @@ def modelEisenstein98(k, h, Om0, Ob0, Tcmb0):
 	"""
 	The transfer function according to Eisenstein & Hu 1998.
 	
-	This function computes the Eisenstein & Hu 1998 approximation to the transfer function at a 
-	scale k, and is based on Matt Becker's cosmocalc code.
+	This function computes the 
+	`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_ approximation 
+	to the transfer function at a scale k. The code was adapted from Matt Becker's cosmocalc 
+	code.
+	
+	This function was tested against numerical calculations based on the CAMB code 
+	(`Lewis et al. 2000 <http://adsabs.harvard.edu/abs/2000ApJ...538..473L>`_) and found to be
+	accurate to 5\% or better up to k of about 100 h/Mpc (see the Colossus code paper for 
+	details). 
 
 	Parameters
 	-------------------------------------------------------------------------------------------
@@ -117,9 +125,9 @@ def modelEisenstein98(k, h, Om0, Ob0, Tcmb0):
 	h: float
 		The Hubble constant in units of 100 km/s/Mpc.
 	Om0: float
-		:math:`\Omega_{m}`, the matter density in units of the critical density at z = 0.
+		:math:`\Omega_{\\rm m}`, the matter density in units of the critical density at z = 0.
 	Ob0: float
-		:math:`\Omega_{b}`, the baryon density in units of the critical density at z = 0.
+		:math:`\Omega_{\\rm b}`, the baryon density in units of the critical density at z = 0.
 	Tcmb0: float
 		The temperature of the CMB at z = 0 in Kelvin.
 
@@ -232,6 +240,11 @@ def modelEisenstein98(k, h, Om0, Ob0, Tcmb0):
 def modelEisenstein98ZeroBaryon(k, h, Om0, Ob0, Tcmb0):
 	"""
 	The zero-baryon transfer function according to Eisenstein & Hu 1998.
+	
+	This fitting function is significantly simpler than the full 
+	:func:`modelEisenstein98` version, and still approximates numerical calculations from a 
+	Boltzmann code to better than 10\%, and almost as accurate when computing the variance or
+	correlation function (see the Colossus code paper for details).
 
 	Parameters
 	-------------------------------------------------------------------------------------------
@@ -240,9 +253,9 @@ def modelEisenstein98ZeroBaryon(k, h, Om0, Ob0, Tcmb0):
 	h: float
 		The Hubble constant in units of 100 km/s/Mpc.
 	Om0: float
-		:math:`\Omega_{m}`, the matter density in units of the critical density at z = 0.
+		:math:`\Omega_{\\rm m}`, the matter density in units of the critical density at z = 0.
 	Ob0: float
-		:math:`\Omega_{b}`, the baryon density in units of the critical density at z = 0.
+		:math:`\Omega_{\\rm b}`, the baryon density in units of the critical density at z = 0.
 	Tcmb0: float
 		The temperature of the CMB at z = 0 in Kelvin.
 
