@@ -6,14 +6,14 @@
 ###################################################################################################
 
 """
-The mass function quantifies how many halos of a given mass have formed at a given redshift and
-cosmology.
+The mass function quantifies how many halos of a certain mass exist at a given redshift and in a
+given cosmology.
 
 ---------------------------------------------------------------------------------------------------
 Basic usage
 ---------------------------------------------------------------------------------------------------
 
-This module implements a range of models for the halo mass function. The easiest and recommended
+This module implements a number of models for the halo mass function. The easiest and recommended
 use of the module is through the :func:`massFunction` function, a wrapper for all individual
 models::
 	
@@ -28,17 +28,17 @@ is returned as :math:`f(\\sigma)`, the natural units in Press-Schechter theory, 
 	\\frac{dn}{d \\ln(M)} = f(\\sigma) \\frac{\\rho_0}{M} \\frac{d \\ln(\\sigma^{-1})}{d \\ln(M)} 
 
 where :math:`\\sigma` is the variance on the lagrangian size scale of the halo mass in question
-(see :mod:`cosmology.cosmology`). The function can also return the mass function in other units,
-namely :math:`dn/d\\ln(M)` (indicated by q_out = ``dndlnM``) and :math:`M^2 dn/dM` (indicated by 
-q_out = ``M2dndM``). These conversions can be performed separately using the 
+(see :func:`~cosmology.cosmology.Cosmology.sigma`). The function can also return the mass function in other units,
+namely :math:`dn/d\\ln(M)` (indicated by ``q_out = dndlnM``) and :math:`M^2 dn/dM` (indicated by 
+``q_out = M2dndM``). These conversions can be performed separately using the 
 :func:`convertMassFunction` function.
 
 ---------------------------------------------------------------------------------------------------
 Mass function models
 ---------------------------------------------------------------------------------------------------
 
-The following models are supported in this module, and their ID can be passed as the ``model`` 
-parameter to the :func:`massFunction` function:
+The following models are supported, and are listed in the :data:`models` dictionary. Their ID can 
+be passed as the ``model`` parameter to the :func:`massFunction` function: 
 
 ============== ================ =========== ======================================
 ID             mdefs            z-dep.      Reference
@@ -116,6 +116,10 @@ class HaloMassFunctionModel():
 ###################################################################################################
 
 models = OrderedDict()
+"""
+An ordered dictionary containing one :class:`HaloMassFunctionModel` entry for each mass function 
+model.
+"""
 
 models['press74'] = HaloMassFunctionModel()
 models['press74'].mdefs = ['fof']
