@@ -6,23 +6,36 @@
 ###################################################################################################
 
 """
-This module contains functions related to peaks in Gaussian random fields, such as translating 
-halo mass into peak height.
+This module contains functions related to peaks in Gaussian random fields, namely the overdensity
+for collapse, peak height and curvature, and the non-linear mass.
 
 ---------------------------------------------------------------------------------------------------
 Basic usage
 ---------------------------------------------------------------------------------------------------
 
-The peak height of halos quantifies how likely they are to have collapsed by comparing their mass
-to that of a typically collapsed structure, quantified by the variance of the linear density field.
-The peak height of a halo is simple to evaluate in Colossus::
+The peak height of a halo quantifies how big a fluctuation in the linear density field this halo
+corresponds to. This quantity is computed as the ratio of the critical overdensity of collapse
+(1.686 according to the top-hat spherical collapse model in an Einstein-de Sitter universe) to 
+the variance of the linear density field on the scale of the halo, 
+:math:`\\nu \equiv \delta_c / \sigma(M)`. For example, halos with peak height one correspond to 
+peaks that have just reached a variance equal to the collapse overdensity at a given 
+redshift, and should thus be collapsing. Halos of smaller peak height have, on average, already 
+collapsed in the past, and halos of higher peak height will, on average, collapse in the future.
+The peak height of a halo is easy to evaluate in Colossus using the :func:`peakHeight` 
+function::
 	
 	setCosmology('planck15')
 	nu = peaks.peakHeight(M, z)
 
-The inverse function converts peak height to mass. The non-linear mass is defined as the mass at
-which peak height is unity at a given redshift, i.e., the mass of a halo that is typically 
-collapsing at the current time.
+The inverse function :func:`massFromPeakHeight` converts peak height to mass. Internally, the 
+scale on which the variance is computed as the lagrangian radius :func:`lagrangianR` of halos, and
+the :func:`collapseOverdensity` function offers additional options such as corrections due to 
+cosmology. Finally, the variance is computed using the 
+:func:`~cosmology.cosmology.Cosmology.sigma` function which takes another set of parameters. All
+those options can be passed to any function related to peak height. The 
+:func:`nonLinearMass` is defined as the mass where peak height is unity at a given redshift, i.e., 
+the mass of a halo that is typically collapsing at the current time. Finally, 
+:func:`peakCurvature` is a higher-order property of peaks that describes their shape.
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -46,8 +59,8 @@ def lagrangianR(M):
 	The lagrangian radius of a halo of mass M.
 
 	Converts the mass of a halo (in :math:`M_{\odot} / h`) to the radius of its 
-	comoving Lagrangian volume (in comoving Mpc/h), that is the volume that encloses the halo's 
-	mass given the mean density of the universe at z = 0.
+	comoving Lagrangian volume (in comoving Mpc/h), that is the volume that would enclose the 
+	halo's mass at the mean density of the universe at z = 0.
 
 	Parameters
 	-------------------------------------------------------------------------------------------
@@ -76,8 +89,8 @@ def lagrangianM(R):
 	The lagrangian mass of a halo of radius R.
 
 	Converts the radius of a halo (in comoving Mpc/h) to the mass in its comoving Lagrangian 
-	volume (in :math:`M_{\odot} / h`), that is the volume that encloses the halo's mass given the 
-	mean density of the universe at z = 0.
+	volume (in :math:`M_{\odot} / h`), that is the volume that would enclose the halo's mass 
+	at the mean density of the universe at z = 0.
 
 	Parameters
 	-------------------------------------------------------------------------------------------
@@ -113,7 +126,8 @@ def collapseOverdensity(corrections = False, z = None):
 	cosmology). Such corrections are applied if desired, by default this function returns the 
 	constant value (see, e.g., `Mo, van den Bosch & White <http://adsabs.harvard.edu/abs/2010gfe..book.....M>`_ 
 	for a derivation of the corrections). Note that correction formulae are implemented for flat
-	cosmologies and cosmologies without dark energy, but not the general case (curvature and DE).
+	cosmologies and cosmologies without dark energy, but not for the general case (both 
+	curvature and dark energy).
 
 	Parameters
 	-------------------------------------------------------------------------------------------
@@ -121,7 +135,8 @@ def collapseOverdensity(corrections = False, z = None):
 		If True, corrections to the collapse overdensity are applied in a non-EdS cosmology. In
 		this case, a redshift must be passed.
 	z: float
-		Redshift where the collapse density is evaluated. Only necessary if corrections == True.
+		Redshift where the collapse density is evaluated. Only necessary if 
+		``corrections == True``.
 	
 	Returns
 	-------------------------------------------------------------------------------------------
@@ -149,11 +164,18 @@ def collapseOverdensity(corrections = False, z = None):
 
 def peakHeight(M, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARGS, deltac_args = {}):
 	"""
-	Peak height, :math:`\\nu`, given a halo mass.
+	The peak height corresponding to a given a halo mass.
 	
-	Peak height is defined as :math:`\\nu \equiv \delta_c / \sigma(M)`. See the documentation 
-	of the :func:`cosmology.cosmology.Cosmology.sigma` function for details on filters, power 
-	spectrum source etc.
+	Peak height is defined as :math:`\\nu \equiv \delta_c / \sigma(M)`. This function takes 
+	optional parameter lists for the 
+	:func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum`, 
+	:func:`~cosmology.cosmology.Cosmology.sigma`, and
+	:func:`collapseOverdensity` functions. Please see the documentation of those funtions for
+	details.
+	
+	Note that the peak height does not explicitly depend on the mass definition in which ``M``
+	is given, but that it corresponds to that mass definition. For example, if M200m is given,
+	that mass and the corresponding peak height will be larger than R500c for the same halo.
 	
 	Parameters
 	-------------------------------------------------------------------------------------------
@@ -162,21 +184,21 @@ def peakHeight(M, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARG
 	z: float
 		Redshift.
 	ps_args: dict
-		Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
+		Arguments passed to the :func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum` 
 		function.
 	sigma_args: dict
-		Arguments passed to the :func:`cosmology.cosmology.Cosmology.sigma` function.
+		Arguments passed to the :func:`~cosmology.cosmology.Cosmology.sigma` function.
 	deltac_args: dict
 		Arguments passed to the :func:`collapseOverdensity` function.
 	
 	Returns
 	-------------------------------------------------------------------------------------------
 	nu: array_like
-		Peak height; has the same dimensions as M.
+		Peak height; has the same dimensions as ``M``.
 
 	See also
 	-------------------------------------------------------------------------------------------
-	massFromPeakHeight: Halo mass from peak height, :math:`\\nu`.
+	massFromPeakHeight: Halo mass from peak height.
 	"""
 	
 	cosmo = cosmology.getCurrent()
@@ -191,11 +213,14 @@ def peakHeight(M, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARG
 def massFromPeakHeight(nu, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARGS, 
 					deltac_args = defaults.DELTAC_ARGS):
 	"""
-	Halo mass from peak height, :math:`\\nu`.
+	Halo mass from peak height.
 	
-	Peak height is defined as :math:`\\nu \equiv \delta_c / \sigma(M)`. See the documentation 
-	of the :func:`cosmology.cosmology.Cosmology.sigma` function for details on filters, power 
-	spectrum source etc.
+	Peak height is defined as :math:`\\nu \equiv \delta_c / \sigma(M)`. This function takes 
+	optional parameter lists for the 
+	:func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum`, 
+	:func:`~cosmology.cosmology.Cosmology.sigma`, and
+	:func:`collapseOverdensity` functions. Please see the documentation of those funtions for
+	details.
 	
 	Parameters
 	-------------------------------------------------------------------------------------------
@@ -204,21 +229,21 @@ def massFromPeakHeight(nu, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.
 	z: float
 		Redshift.
 	ps_args: dict
-		Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
+		Arguments passed to the :func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum` 
 		function.
 	sigma_args: dict
-		Arguments passed to the :func:`cosmology.cosmology.Cosmology.sigma` function.
+		Arguments passed to the :func:`~cosmology.cosmology.Cosmology.sigma` function.
 	deltac_args: dict
 		Arguments passed to the :func:`collapseOverdensity` function.
 
 	Returns
 	-------------------------------------------------------------------------------------------
 	M: array_like
-		Mass in :math:`M_{\odot}/h`; has the same dimensions as nu.
+		Mass in :math:`M_{\odot}/h`; has the same dimensions as ``nu``.
 
 	See also
 	-------------------------------------------------------------------------------------------
-	peakHeight: Peak height, :math:`\\nu`, given a halo mass.
+	peakHeight: The peak height corresponding to a given a halo mass.
 	"""
 
 	cosmo = cosmology.getCurrent()
@@ -233,22 +258,26 @@ def massFromPeakHeight(nu, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.
 def nonLinearMass(z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARGS, 
 				deltac_args = defaults.DELTAC_ARGS):
 	"""
-	The non-linear mass, :math:`M^*`.
+	The non-linear mass.
 	
 	:math:`M^*` is the mass for which the variance is equal to the collapse threshold, i.e.
-	:math:`\sigma(M^*) = \delta_c` and thus :math:`\\nu(M^*) = 1`. See the documentation 
-	of the :func:`cosmology.cosmology.Cosmology.sigma` function for details on filters, power 
-	spectrum source etc.
+	:math:`\sigma(M^*) = \delta_c` and thus :math:`\\nu(M^*) = 1`.
+
+	This function takes optional parameter lists for the 
+	:func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum`, 
+	:func:`~cosmology.cosmology.Cosmology.sigma`, and
+	:func:`collapseOverdensity` functions. Please see the documentation of those funtions for
+	details.
 	
 	Parameters
 	-------------------------------------------------------------------------------------------
 	z: float
 		Redshift.
 	ps_args: dict
-		Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
+		Arguments passed to the :func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum` 
 		function.
 	sigma_args: dict
-		Arguments passed to the :func:`cosmology.cosmology.Cosmology.sigma` function.
+		Arguments passed to the :func:`~cosmology.cosmology.Cosmology.sigma` function.
 	deltac_args: dict
 		Arguments passed to the :func:`collapseOverdensity` function.
 
@@ -259,7 +288,8 @@ def nonLinearMass(z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARG
 
 	See also
 	-------------------------------------------------------------------------------------------
-	massFromPeakHeight: Halo mass from peak height, :math:`\\nu`.
+	peakHeight: The peak height corresponding to a given a halo mass.
+	massFromPeakHeight: Halo mass from peak height.
 	"""
 
 	return massFromPeakHeight(1.0, z, sigma_args = sigma_args, deltac_args = deltac_args)
@@ -380,14 +410,16 @@ def peakCurvature(M, z, exact = False, ps_args = defaults.PS_ARGS,
 	In a Gaussian random field, :math:`\delta`, the peak height is defined as 
 	:math:`\delta / \\sigma` where :math:`\\sigma = \\sigma_0` is the rms variance. The 
 	curvature of the field is defined as :math:`x = -\\nabla^2 \delta / \\sigma_2` where 
-	:math:`\\sigma_2` is the second moment of the variance.
+	:math:`\\sigma_2` is the second moment of the variance (see the documentation of the
+	:func:`~cosmology.cosmology.Cosmology.sigma` function).
 	
 	This function computes the average curvature of peaks in a Gaussian random field, <x>,
-	according to Bardeen et al. 1986 (BBKS), for halos of a certain mass M. This mass is 
-	converted to a Lagrangian scale R, and thus the variance and its moments. The evaluation
-	can be performed by integration of Equation A14 in BBKS (if ``exact == True``), or using 
-	their fitting function in Equation 6.13 (if ``exact == False``). The fitting function is 
-	excellent over the relevant range of peak heights. 
+	according to `Bardeen et al. 1986 <http://adsabs.harvard.edu/abs/1986ApJ...304...15B>`_ 
+	(BBKS), for halos of a certain mass M. This mass is converted to a lagrangian scale R 
+	which serves as the scale on which the variance and its moments are evaluated. The 
+	computation can be performed by integration of Equation A14 in BBKS (if ``exact == True``), 
+	or using their fitting function in Equation 6.13 (if ``exact == False``). The fitting 
+	function is excellent over the relevant range of peak heights. 
 	
 	Parameters
 	-------------------------------------------------------------------------------------------
@@ -398,10 +430,10 @@ def peakCurvature(M, z, exact = False, ps_args = defaults.PS_ARGS,
 	exact: bool
 		If ``True``, evaluate the integral exactly; if ``False``, use the BBKS approximation.	
 	ps_args: dict
-		Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
+		Arguments passed to the :func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum` 
 		function.
 	sigma_args: dict
-		Arguments passed to the :func:`cosmology.cosmology.Cosmology.sigma` function.
+		Arguments passed to the :func:`~cosmology.cosmology.Cosmology.sigma` function.
 	deltac_args: dict
 		Arguments passed to the :func:`collapseOverdensity` function.
 
@@ -411,24 +443,24 @@ def peakCurvature(M, z, exact = False, ps_args = defaults.PS_ARGS,
 		Peak height; has the same dimensions as M.
 	gamma: array_like
 		An intermediate parameter, :math:`\\gamma = \\sigma_1^2 / (\\sigma_0 \\sigma_2)` (see
-		Equation 4.6a in BBKS); has the same dimensions as M.
+		Equation 4.6a in BBKS); has the same dimensions as ``M``.
 	x: array_like
 		The mean peak curvature for halos of mass M (note the caveat discussed above); has the 
-		same dimensions as M.
+		same dimensions as ``M``.
 	theta: array_like
 		An intermediate parameter (see Equation 6.14 in BBKS; only returned if ``exact == False``); 
-		has the same dimensions as M.
+		has the same dimensions as ``M``.
 	nu_tilde: array_like
 		The modified peak height (see Equation 6.15 in BBKS; only returned if ``exact == False``); 
-		has the same dimensions as M.
+		has the same dimensions as ``M``.
 	
 	Warnings
 	-------------------------------------------------------------------------------------------		
-	While peak height quantifies how high a fluctuation over the background a halo is, peak
-	curvature tells us something about the shape of the initial peak. However, note the 
-	cloud-in-cloud problem (BBKS): not all peaks end up forming halos, particularly small
-	peaks will often get swallowed by other peaks. Thus, the average peak curvature is not
-	necessarily equal to the average curvature of peaks that form halos.		
+	While peak height quantifies how high a fluctuation over the background a halo corresponds
+	to, peak curvature tells us about the shape of the initial peak. However, peak curvature 
+	suffers from the cloud-in-cloud problem (BBKS): not all peaks end up forming halos, 
+	especially small peaks will often get swallowed by larger peaks. Thus, the average peak 
+	curvature is not necessarily equal to the average curvature of peaks that form halos.		
 	"""
 
 	cosmo = cosmology.getCurrent()
