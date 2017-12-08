@@ -7,8 +7,8 @@
 
 """
 Halo bias quantifies the excess clustering of halos over the clustering of dark matter. Bias is,
-in general, a function of halo mass and scale, but this module implements only scale-free bias
-models.
+in general, a function of halo mass and scale, but this module currently implements only 
+scale-free bias models.
 
 ---------------------------------------------------------------------------------------------------
 Basic usage
@@ -29,20 +29,23 @@ mass needs to be converted to peak height first::
 	b = bias.haloBiasFromNu(nu, model = 'sheth01')
 	b = bias.haloBias(M, model = 'tinker10', z = z, mdef = 'vir')
 
-The simplest bias model (cole89) is based on the peak-background split model and was derived in a 
+The simplest bias model (``cole89``) is based on the peak-background split model and was derived in a 
 number of different papers. The rest of the models was calibrated using numerical simulations:
 
-============== =========================== =========================== =========================================
-ID             Parameters                  z-dependence                Reference
-============== =========================== =========================== =========================================
-cole89         M/nu                        None                        `Cole & Kaiser 1989 <http://adsabs.harvard.edu/abs/1989MNRAS.237.1127C>`_
-sheth01        M/nu                        None                        `Sheth et al. 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.323....1S>`_
-tinker10       M/nu, z, mdef               Through mass definition     `Tinker et al. 2010 <http://adsabs.harvard.edu/abs/2010ApJ...724..878T>`_       
-============== =========================== =========================== =========================================
+.. table::
+	:widths: auto
 
-The Tinker et al. 2010 model was calibrated for a range of overdensities with respect to the mean
-density of the universe. Thus, depending on the mass definition used, this model can predict a 
-slight redshift evolution.
+	============== =========================== =========================== =========================================
+	ID             Parameters                  z-dependence                Reference
+	============== =========================== =========================== =========================================
+	cole89         M/nu                        No                          `Cole & Kaiser 1989 <http://adsabs.harvard.edu/abs/1989MNRAS.237.1127C>`_, `Mo & White 1996 <http://adsabs.harvard.edu/abs/1996MNRAS.282..347M>`_
+	sheth01        M/nu                        No                          `Sheth et al. 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.323....1S>`_
+	tinker10       M/nu, z, mdef               Through mass definition     `Tinker et al. 2010 <http://adsabs.harvard.edu/abs/2010ApJ...724..878T>`_       
+	============== =========================== =========================== =========================================
+
+The `Tinker et al. 2010 <http://adsabs.harvard.edu/abs/2010ApJ...724..878T>`_ model was 
+calibrated for a range of overdensities with respect to the mean density of the universe. Thus, 
+depending on the mass definition used, this model can predict a slight redshift evolution.
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -64,9 +67,11 @@ from colossus.halo import mass_so
 
 class HaloBiasModel():
 	"""
+	Characteristics of halo bias models.
+	
 	This object contains certain characteristics of a halo bias model. Currently, this object
-	is empty, but the ``models`` variable is a dictionary of :class:`HaloBiasModel` objects 
-	containing all available models.
+	is empty. The :data:`models` dictionary contains one item of this class for each available 
+	model.
 	"""
 		
 	def __init__(self):
@@ -75,6 +80,9 @@ class HaloBiasModel():
 ###################################################################################################
 
 models = OrderedDict()
+"""
+An ordered dictionary containing one :class:`HaloBiasModel` entry for each model.
+"""
 
 models['cole89'] = HaloBiasModel()
 models['sheth01'] = HaloBiasModel()
@@ -105,7 +113,7 @@ def haloBiasFromNu(nu, z = None, mdef = None, model = defaults.HALO_BIAS_MODEL):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	bias: array_like
-		Halo bias; has the same dimensions as nu or z.
+		Halo bias; has the same dimensions as ``nu`` or ``z``.
 
 	See also
 	-----------------------------------------------------------------------------------------------
@@ -130,9 +138,9 @@ def haloBias(M, z, mdef = None, model = defaults.HALO_BIAS_MODEL):
 	"""
 	The halo bias at a given mass. 
 
-	This function is a wrapper around haloBiasFromNu. The mass definition is necessary only for 
-	certain models whereas the redshift is always necessary in order to convert mass to peak 
-	height.
+	This function is a wrapper around :func:`haloBiasFromNu`. The mass definition is necessary 
+	only for certain models whereas the redshift is always necessary in order to convert mass to 
+	peak height.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -141,14 +149,14 @@ def haloBias(M, z, mdef = None, model = defaults.HALO_BIAS_MODEL):
 	z: array_like
 		Redshift; can be a number or a numpy array.
 	mdef: str
-		The mass definition in which M is given. Only necessary for certain models.
+		The mass definition in which ``M`` is given. Only necessary for certain models.
 	model: str
 		The bias model used.
 
 	Returns
 	-----------------------------------------------------------------------------------------------
 	bias: array_like
-		Halo bias; has the same dimensions as M or z.
+		Halo bias; has the same dimensions as ``M`` or ``z``.
 
 	See also
 	-----------------------------------------------------------------------------------------------
@@ -183,7 +191,7 @@ def twoHaloTerm(r, M, z, mdef, model = defaults.HALO_BIAS_MODEL):
 	z: float
 		Redshift
 	mdef: str
-		The mass definition in which M is given.
+		The mass definition in which ``M`` is given.
 	model: str
 		The bias model used.
 
@@ -191,7 +199,7 @@ def twoHaloTerm(r, M, z, mdef, model = defaults.HALO_BIAS_MODEL):
 	-----------------------------------------------------------------------------------------------
 	rho_2h: array_like
 		The density due to the 2-halo term in physical :math:`M_{\odot}h^2/kpc^3`; has the same 
-		dimensions as r.
+		dimensions as ``r``.
 	"""	
 	
 	cosmo = cosmology.getCurrent()
@@ -209,7 +217,9 @@ def modelCole89(nu):
 	"""
 	The peak-background split prediction for halo bias 
 	
-	For a derivation of this model, see e.g. Cole & Kaiser 1989 or Mo & White 1996.
+	For a derivation of this model, see 
+	`Cole & Kaiser 1989 <http://adsabs.harvard.edu/abs/1989MNRAS.237.1127C>`_ or 
+	`Mo & White 1996 <http://adsabs.harvard.edu/abs/1996MNRAS.282..347M>`_.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -219,7 +229,7 @@ def modelCole89(nu):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	bias: array_like
-		Halo bias; has the same dimensions as nu or z.
+		Halo bias; has the same dimensions as ``nu`` or ``z``.
 	"""
 	
 	delta_c = peaks.collapseOverdensity()
@@ -231,7 +241,7 @@ def modelCole89(nu):
 
 def modelSheth01(nu):
 	"""
-	The halo bias at a given peak height according to Sheth et al. 2001. 
+	The halo bias model of Sheth et al. 2001. 
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -241,7 +251,7 @@ def modelSheth01(nu):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	bias: array_like
-		Halo bias; has the same dimensions as nu or z.
+		Halo bias; has the same dimensions as ``nu`` or ``z``.
 	"""
 	
 	a = 0.707
@@ -260,13 +270,12 @@ def modelSheth01(nu):
 
 def modelTinker10(nu, z, mdef):
 	"""
-	The halo bias at a given peak height according to Tinker et al. 2010. 
+	The halo bias model of Tinker et al. 2010. 
 
-	The halo bias, using the approximation of Tinker et al. 2010, ApJ 724, 878. The mass definition,
-	mdef, must correspond to the mass that was used to evaluate the peak height. Note that the 
-	Tinker bias function is universal in redshift at fixed peak height, but only for mass 
-	definitions defined wrt the mean density of the universe. For other definitions, :math:`\\Delta_m`
-	evolves with redshift, leading to an evolving bias at fixed peak height. 
+	The mass definition ``mdef`` must correspond to the mass that was used to evaluate the peak 
+	height. Note that the Tinker bias function is universal in redshift at fixed peak height, but 
+	only for mass definitions defined wrt. the mean density of the universe. For other definitions, 
+	:math:`\\Delta_{\\rm m}` evolves with redshift, leading to an evolving bias at fixed peak height. 
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -280,7 +289,7 @@ def modelTinker10(nu, z, mdef):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	bias: array_like
-		Halo bias; has the same dimensions as nu or z.
+		Halo bias; has the same dimensions as ``nu`` or ``z``.
 	"""
 	
 	if z is None:
