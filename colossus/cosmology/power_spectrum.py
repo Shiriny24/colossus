@@ -14,7 +14,8 @@ function. Generally speaking, the transfer function should be evaluated using th
 Power spectrum models
 ---------------------------------------------------------------------------------------------------
 
-The following models for the matter power spectrum are implemented in Colossus:
+The following models are supported, and are listed in the :data:`models` dictionary. Their ID can 
+be passed as the ``model`` parameter to the :func:`transferFunction` function: 
 
 .. table::
 	:widths: auto
@@ -42,9 +43,10 @@ from colossus import defaults
 
 class PowerSpectrumModel():
 	"""
-	This object describes the characteristics of a power spectrum model. Currently, this object
-	is empty, but the ``power_spectrum.models`` variable is a dictionary of 
-	:class:`PowerSpectrumModel` objects containing all available models.
+	Characteristics of power spectrum models.
+	
+	This object is currently empty. The :data:`models` dictionary contains one item of this 
+	class for each available model.
 	"""
 		
 	def __init__(self):
@@ -53,6 +55,9 @@ class PowerSpectrumModel():
 ###################################################################################################
 
 models = OrderedDict()
+"""
+An ordered dictionary containing one :class:`PowerSpectrumModel` entry for each model.
+"""
 
 models['eisenstein98'] = PowerSpectrumModel()
 models['eisenstein98_zb'] = PowerSpectrumModel()

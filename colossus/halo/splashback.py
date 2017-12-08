@@ -126,6 +126,8 @@ from colossus.halo import profile_nfw
 
 class SplashbackModel():
 	"""
+	Characteristics of splashback models.
+	
 	This object contains certain characteristics of a model, most importantly the input quantities
 	``q_in`` and output quantities ``q_out`` the model is capable of processing. Additionally, the 
 	``depends_on`` field lists the quantities the model depends on. If, for example, z is 
@@ -135,9 +137,8 @@ class SplashbackModel():
 	This object does not contain a function pointer to the model functions because those functions
 	do not work in a uniform way, necessitating a somewhat more complex decision tree when 
 	evaluating them.
-	
-	The ``models`` variable is a dictionary of :class:`SplashbackModel` objects containing all 
-	available models. The user can overwrite the properties of these models at their own risk.
+
+	The :data:`models` dictionary contains one item of this class for each available model.
 	"""
 	def __init__(self):
 		
@@ -159,6 +160,9 @@ class SplashbackModel():
 ###################################################################################################
 
 models = OrderedDict()
+"""
+An ordered dictionary containing one :class:`SplashbackModel` entry for each model.
+"""
 
 models['adhikari14'] = SplashbackModel()
 models['adhikari14'].q_in = ['Gamma']

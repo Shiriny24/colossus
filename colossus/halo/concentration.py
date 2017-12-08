@@ -95,14 +95,15 @@ from colossus.halo import mass_defs
 
 class ConcentrationModel():
 	"""
+	Characteristics of concentration models.
+	
 	This object contains certain characteristics of a concentration model, most importantly the 
 	mass definitions for which concentration can be output (note that the concentration() function
 	can automatically convert mass definitions). The listing also contains flags for models that
 	are supposed to be universally valid (i.e., at all redshifts, masses, and cosmologies), and 
 	models that implement multiple statistics (mean, median etc).
-	
-	The ``models`` variable is a dictionary of :class:`ConcentrationModel` objects containing all 
-	available models.
+
+	The :data:`models` dictionary contains one item of this class for each available model.
 	"""
 	def __init__(self):
 		
@@ -116,6 +117,9 @@ class ConcentrationModel():
 ###################################################################################################
 
 models = OrderedDict()
+"""
+An ordered dictionary containing one :class:`ConcentrationModel` entry for each model.
+"""
 
 models['bullock01'] = ConcentrationModel()
 models['bullock01'].mdefs = ['200c']

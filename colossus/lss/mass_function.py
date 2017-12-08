@@ -95,13 +95,14 @@ from colossus.halo import mass_so
 
 class HaloMassFunctionModel():
 	"""
-	This object contains certain characteristics of a mass function model, namely the mass 
+	Characteristics of halo mass function models.
+	
+	This class contains certain characteristics of a mass function model, namely the mass 
 	definitions for which it is valid, whether it explicitly depends on the redshift (in some cases
 	this dependence arises because of the slight dependence of the collapse overdensity on z), and
 	how the collapse overdensity is computed by default (if applicable).
 
-	The ``models`` variable is a dictionary of :class:`HaloMassFunctionModel` objects containing all 
-	available models. The user can overwrite the properties of these models at their own risk.
+	The :data:`models` dictionary contains one item of this class for each available model.
 	"""
 	def __init__(self):
 		
@@ -117,8 +118,7 @@ class HaloMassFunctionModel():
 
 models = OrderedDict()
 """
-An ordered dictionary containing one :class:`HaloMassFunctionModel` entry for each mass function 
-model.
+An ordered dictionary containing one :class:`HaloMassFunctionModel` entry for each model.
 """
 
 models['press74'] = HaloMassFunctionModel()
@@ -179,17 +179,22 @@ models['despali16'].mdef_dependence = True
 
 ###################################################################################################
 
-def massFunction(x, z, q_in = 'M', mdef = 'fof', q_out = 'f', 
+def massFunction(x, z, q_in = 'M', q_out = 'f', mdef = 'fof', 
 				model = defaults.HALO_MASS_FUNCTION_MODEL,
 				ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARGS, 
 				deltac_args = defaults.DELTAC_ARGS, **kwargs):
 	"""
-	The abundance of halos as a function of redshift and mass, sigma, or peak height.
+	The abundance of halos as a function of redshift and mass, variance, or peak height.
 	
 	This function is a wrapper for all individual models implemented in this module. It accepts
-	either mass or the variance sigma and redshift as input, as well as a mass definition which 
-	is set to ``fof`` by default (see the model table for valid redshifts). The output units are 
-	controlled by the ``q_out`` parameter, see the basic usage section for details.
+	either mass, variance, or peak height as input (controlled by the ``q_in`` parameter, see the 
+	:func:`~cosmology.cosmology.Cosmology.sigma` and :func:`~lss.peaks.peakHeight` functions for
+	details on those quantities). The output units are controlled by the ``q_out`` parameter, see 
+	the basic usage section for details.
+	
+	This function also deals with different mass definitions. By default, the definition is set to
+	``fof``, but some models can also return the mass function for SO definitions (see 
+	:data:`models` list). 
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -201,24 +206,27 @@ def massFunction(x, z, q_in = 'M', mdef = 'fof', q_out = 'f',
 		Redshift
 	q_in: str
 		Either ``M``, ``sigma``, or ``nu`` indicating which is passed for the ``x`` parameter.
-	mdef: str
-		The mass definition in which the halo mass M is given and which the returned mass function
-		refers to. Please see the model table for the mass definitions for which each model is 
-		valid.
 	q_out: str
 		The units in which the mass function is returned; can be ``f``, ``dndlnM``, or ``M2dndM``.
+	mdef: str
+		The mass definition in which the halo mass M is given (or from which the variance or peak
+		height were computed). The returned mass function refers to this mass definition. Please 
+		see the model table for the mass definitions for which each model is valid.
 	model: str
 		The model of the mass function used.
 	ps_args: dict
-		Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
+		Arguments passed to the :func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum` 
 		function.
 	sigma_args: dict
-		Extra arguments to be passed to the :func:`cosmology.cosmology.Cosmology.sigma` function 
-		when mass is converted to sigma.
+		Extra arguments to be passed to the :func:`~cosmology.cosmology.Cosmology.sigma` function 
+		if mass is converted to a variance.
 	deltac_args: dict
-		Extra parameters that are passed to the :func:`lss.peaks.collapseOverdensity` function; see 
+		Extra parameters that are passed to the :func:`~lss.peaks.collapseOverdensity` function; see 
 		the documentation of the individual models for possible parameters. Note that not all 
 		models of the mass function rely on the collapse overdensity.
+	kwargs: kwargs
+		Extra arguments passed to the function of the particular model. See the documentation of 
+		those functions for valid arguments.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -280,7 +288,7 @@ def convertMassFunction(mfunc, M, z, q_in, q_out,
 	
 	Virtually all models parameterize the mass function in the natural Press-Schechter units, 
 	:math:`f(\\sigma)`. This function convert any allowed units into any other units. See the 
-	basic usage section for details.
+	basic usage section for details on the meaning of the units.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -292,15 +300,15 @@ def convertMassFunction(mfunc, M, z, q_in, q_out,
 		Redshift
 	q_in: str
 		The units in which the mass function is input; can be ``f``, ``dndlnM``, or ``M2dndM``. See
-		table on top of this file for the meaning of these units.
+		Basic Usage section for the meaning of these units.
 	q_out: str
 		The units in which the mass function is returned; see above.
 	ps_args: dict
-		Arguments passed to the :func:`cosmology.cosmology.Cosmology.matterPowerSpectrum` 
+		Arguments passed to the :func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum` 
 		function.
 	sigma_args: dict
-		Extra arguments to be passed to the :func:`cosmology.cosmology.Cosmology.sigma` function 
-		when mass is converted to sigma.
+		Extra arguments to be passed to the :func:`~cosmology.cosmology.Cosmology.sigma` function 
+		when mass is converted to a variance.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -356,16 +364,16 @@ def modelPress74(sigma, z, deltac_args = {'corrections': True}):
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	sigma: array_like
-		The variance corresponding to the desired halo mass.
+		Variance; can be a number or a numpy array.
 	z: float
 		Redshift
 	deltac_args: dict
-		Arguments passed to the :func:`lss.peaks.collapseOverdensity` function.
+		Arguments passed to the :func:`~lss.peaks.collapseOverdensity` function.
 	
 	Returns
 	-----------------------------------------------------------------------------------------------
 	f: array_like
-		The halo mass function.
+		The halo mass function :math:`f(\\sigma)`, has the same dimensions as ``sigma``.
 	"""
 	
 	delta_c = peaks.collapseOverdensity(z = z, **deltac_args)
@@ -380,28 +388,29 @@ def modelSheth99(sigma, z, deltac_args = {'corrections': True}):
 	"""
 	The mass function model of Sheth & Tormen 1999.
 	
-	This model was created to account for the differences between the classic Press-Schechter model
+	This model was created to account for the differences between the classic 
+	`Press& Schechter 1974 <http://adsabs.harvard.edu/abs/1974ApJ...187..425P>`_ model
 	and measurements of the halo abundance in numerical simulations. The model is given in Equation 
-	10. Note that the collapse overdensity is computed including corrections due to dark energy. 
-	Compared to the paper, the equation implemented here contains an extra factor of 2 because the
-	original equation refers to the A = 1/2 normalization of Press & Schechter.
-	
-	This model is sometimes also known as "SMT" for Sheth, Mo and Tormen 2001 who use the same 
-	fitting function.
+	10. Note that, by default, the collapse overdensity is computed including corrections due to 
+	cosmology. Compared to the paper, the equation implemented here contains an extra factor of 2 
+	because the original equation refers to the A = 1/2 normalization of Press & Schechter.
+	This model is sometimes also known as "SMT" for 
+	`Sheth, Mo and Tormen 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.323....1S>`_ who use the
+	same fitting function.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	sigma: array_like
-		The variance corresponding to the desired halo mass.
+		Variance; can be a number or a numpy array.
 	z: float
 		Redshift
 	deltac_args: dict
-		Arguments passed to the :func:`lss.peaks.collapseOverdensity` function.
+		Arguments passed to the :func:`~lss.peaks.collapseOverdensity` function.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
 	f: array_like
-		The halo mass function.
+		The halo mass function :math:`f(\\sigma)`, has the same dimensions as ``sigma``.
 	"""
 		
 	delta_c = peaks.collapseOverdensity(z = z, **deltac_args)
@@ -426,12 +435,12 @@ def modelJenkins01(sigma):
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	sigma: array_like
-		The variance corresponding to the desired halo mass.
+		Variance; can be a number or a numpy array.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
 	f: array_like
-		The halo mass function.
+		The halo mass function :math:`f(\\sigma)`, has the same dimensions as ``sigma``.
 	"""
 	
 	f = 0.315 * np.exp(-np.abs(np.log(1.0 / sigma) + 0.61)**3.8)
@@ -444,22 +453,23 @@ def modelReed03(sigma, z, deltac_args = {'corrections': True}):
 	"""
 	The mass function model of Reed et al. 2003.
 	
-	This model corrects the Sheth & Tormen 1999 model at high masses, the functional form is given
-	in Equation 9.
+	This model corrects the 
+	`Sheth & Tormen 1999 <http://adsabs.harvard.edu/abs/1999MNRAS.308..119S>`_ model at high 
+	masses, the functional form is given in Equation 9.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	sigma: array_like
-		The variance corresponding to the desired halo mass.
+		Variance; can be a number or a numpy array.
 	z: float
 		Redshift
 	deltac_args: dict
-		Arguments passed to the :func:`lss.peaks.collapseOverdensity` function.
+		Arguments passed to the :func:`~lss.peaks.collapseOverdensity` function.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
 	f: array_like
-		The halo mass function.
+		The halo mass function :math:`f(\\sigma)`, has the same dimensions as ``sigma``.
 	"""
 		
 	f_ST = modelSheth99(sigma, z, deltac_args = deltac_args)
@@ -473,18 +483,18 @@ def modelWarren06(sigma):
 	"""
 	The mass function model of Warren et al. 2006.
 	
-	This model does not explicitly rely on the collapse overdenisty and thus has no redshift 
+	This model does not explicitly rely on the collapse overdensity and thus has no redshift 
 	dependence. The functional form is given in Equation 5. 
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	sigma: array_like
-		The variance corresponding to the desired halo mass.
+		Variance; can be a number or a numpy array.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
 	f: array_like
-		The halo mass function.
+		The halo mass function :math:`f(\\sigma)`, has the same dimensions as ``sigma``.
 	"""
 		
 	A = 0.7234
@@ -504,26 +514,24 @@ def modelReed07(sigma, z, deltac_args = {'corrections': True}, exact_n = True):
 	
 	This model takes the changing slope of the power spectrum into account. This slope can be 
 	computed numerically using the colossus interpolation tables, or using the approximation in 
-	equation 14 of Reed et al. 2007 (the more exact numerical version is the default).
-	
-	Reed et al. 2007 give two expressions for their mass functions, we use equation 11 rather than
-	equation 12 because the latter appears to suffer from typos.
+	Equation 14 (the more exact numerical version is the default). The paper gives two expressions 
+	for their mass function, this code uses Equation 11.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	sigma: array_like
-		The variance corresponding to the desired halo mass.
+		Variance; can be a number or a numpy array.
 	z: float
 		Redshift
 	deltac_args: dict
-		Arguments passed to the :func:`lss.peaks.collapseOverdensity` function.
+		Arguments passed to the :func:`~lss.peaks.collapseOverdensity` function.
 	exact_n: bool
 		Compute the slope of the power spectrum numerically or approximate it.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
 	f: array_like
-		The halo mass function.
+		The halo mass function :math:`f(\\sigma)`, has the same dimensions as ``sigma``.
 	"""
 			
 	delta_c = peaks.collapseOverdensity(z = z, **deltac_args)
@@ -569,16 +577,16 @@ def modelTinker08(sigma, z, mdef):
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	sigma: array_like
-		The variance corresponding to the desired halo mass.
+		Variance; can be a number or a numpy array.
 	z: float
 		Redshift
 	mdef: str
-		The mass definition to which sigma corresponds.
+		The mass definition to which ``sigma`` corresponds.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
 	f: array_like
-		The halo mass function.
+		The halo mass function :math:`f(\\sigma)`, has the same dimensions as ``sigma``.
 	"""
 	
 	if mdef == 'fof':
@@ -624,12 +632,12 @@ def modelCrocce10(sigma, z):
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	sigma: array_like
-		The variance corresponding to the desired halo mass.
+		Variance; can be a number or a numpy array.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
 	f: array_like
-		The halo mass function.
+		The halo mass function :math:`f(\\sigma)`, has the same dimensions as ``sigma``.
 	"""
 		
 	zp1 = 1.0 + z
@@ -648,22 +656,24 @@ def modelCourtin11(sigma):
 	"""
 	The mass function model of Courtin et al. 2011.
 	
-	The model uses the same functional form as the Sheth & Tormen 99 model, but with different
+	The model uses the same functional form as the 
+	`Sheth & Tormen 1999 <http://adsabs.harvard.edu/abs/1999MNRAS.308..119S>`_, but with different
 	parameters and a fixed collapse overdensity :math:`\\delta_{\\rm c} = 1.673`. Note that there
-	appears to be an error in Equations 8 and 22 in Courtin et al. 2011: the factor of root(a) 
-	should be in the numerator rather than denominator in order to reproduce the ST expression.
-	Other authors have taken the formula literally, e.g. Watson et al. 2013. Here, we assume that
+	appears to be an error in Equations 8 and 22: the factor of :math:`\sqrt{a}` should be in the 
+	numerator rather than denominator in order to reproduce the ST expression. Other authors have 
+	taken the formula literally, e.g. 
+	`Watson et al. 2013 <http://adsabs.harvard.edu/abs/2013MNRAS.433.1230W>`_. Here, we assume that 
 	the intended expression is, indeed, that of ST.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	sigma: array_like
-		The variance corresponding to the desired halo mass.
+		Variance; can be a number or a numpy array.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
 	f: array_like
-		The halo mass function.
+		The halo mass function :math:`f(\\sigma)`, has the same dimensions as ``sigma``.
 	"""
 		
 	delta_c = 1.673
@@ -690,16 +700,16 @@ def modelBhattacharya11(sigma, z, deltac_args = {'corrections': False}):
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	sigma: array_like
-		The variance corresponding to the desired halo mass.
+		Variance; can be a number or a numpy array.
 	z: float
 		Redshift
 	deltac_args: dict
-		Arguments passed to the :func:`lss.peaks.collapseOverdensity` function.
+		Arguments passed to the :func:`~lss.peaks.collapseOverdensity` function.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
 	f: array_like
-		The halo mass function.
+		The halo mass function :math:`f(\\sigma)`, has the same dimensions as ``sigma``.
 	"""
 		
 	delta_c = peaks.collapseOverdensity(z = z, **deltac_args)
@@ -722,18 +732,18 @@ def modelAngulo12(sigma):
 	"""
 	The mass function model of Angulo et al. 2012.
 	
-	The model is specified in equation 2. Note that there is a typo in this equation that was 
+	The model is specified in Equation 2. Note that there is a typo in this equation that was 
 	corrected in other implementations of the model.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	sigma: array_like
-		The variance corresponding to the desired halo mass.
+		Variance; can be a number or a numpy array.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
 	f: array_like
-		The halo mass function.
+		The halo mass function :math:`f(\\sigma)`, has the same dimensions as ``sigma``.
 	"""
 	
 	f = 0.201 * ((2.08 / sigma)**1.7 + 1.0) * np.exp(-1.172 / sigma**2)
@@ -755,16 +765,16 @@ def modelWatson13(sigma, z, mdef):
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	sigma: array_like
-		The variance corresponding to the desired halo mass.
+		Variance; can be a number or a numpy array.
 	z: float
 		Redshift
 	mdef: str
-		The mass definition to which sigma corresponds.
+		The mass definition to which ``sigma`` corresponds.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
 	f: array_like
-		The halo mass function.
+		The halo mass function :math:`f(\\sigma)`, has the same dimensions as ``sigma``.
 	"""
 	
 	if mdef == 'fof':
@@ -820,18 +830,18 @@ def modelBocquet16(sigma, z, mdef, hydro = True):
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	sigma: array_like
-		The variance corresponding to the desired halo mass.
+		Variance; can be a number or a numpy array.
 	z: float
 		Redshift
 	mdef: str
-		The mass definition to which sigma corresponds.
+		The mass definition to which ``sigma`` corresponds.
 	hydro: bool
 		If True, return the model for hydro simulations, otherwise DM-only.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
 	f: array_like
-		The halo mass function.
+		The halo mass function :math:`f(\\sigma)`, has the same dimensions as ``sigma``.
 	"""
 	
 	if mdef == '200m':
@@ -912,26 +922,24 @@ def modelDespali16(sigma, z, mdef, deltac_args = {'corrections': True}, ellipsoi
 	
 	The parameters were fit for a number of different mass definitions, redshifts, and cosmologies.
 	Here, we use the most general parameter set using the rescaling formula for redshift and mass 
-	definitions given in Equation 12. 
-	
-	Furthermore, the user can choose between results based on conventional SO halo finding and an
-	ellipsoidal halo finder.
+	definitions given in Equation 12. Furthermore, the user can choose between results based on 
+	conventional SO halo finding and an ellipsoidal halo finder.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	sigma: array_like
-		The variance corresponding to the desired halo mass.
+		Variance; can be a number or a numpy array.
 	z: float
 		Redshift
 	mdef: str
-		The mass definition to which sigma corresponds.
+		The mass definition to which ``sigma`` corresponds.
 	ellipsoidal: bool
 		If True, return the results for an ellipsoidal halo finder, otherwise standard SO.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
 	f: array_like
-		The halo mass function.
+		The halo mass function :math:`f(\\sigma)`, has the same dimensions as ``sigma``.
 	"""
 
 	Delta = mass_so.densityThreshold(z, mdef)

@@ -1161,7 +1161,7 @@ class Cosmology(object):
 		The sound horizon at recombination.
 
 		This function returns the sound horizon in Mpc/h, according to 
-		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_, equation 26. 
+		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_, Equation 26. 
 		This fitting function is accurate to 2% where :math:`\Omega_{\\rm b} h^2 > 0.0125` and 
 		:math:`0.025 < \Omega_{\\rm m} h^2 < 0.5`.
 
