@@ -51,7 +51,7 @@ class HernquistProfile(profile_base.HaloDensityProfile):
 	z: float
 		Redshift
 	mdef: str
-		The mass definition in which M and c are given.
+		The mass definition in which M and c are given. See :doc:`halo_mass` for details.
 	"""
 
 	###############################################################################################
@@ -103,7 +103,7 @@ class HernquistProfile(profile_base.HaloDensityProfile):
 		z: float
 			Redshift
 		mdef: str
-			The mass definition in which M and c are given.
+			The mass definition in which M and c are given. See :doc:`halo_mass` for details.
 			
 		Returns
 		-------------------------------------------------------------------------------------------

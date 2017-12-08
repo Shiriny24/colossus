@@ -447,7 +447,8 @@ def splashbackRadius(z, mdef, R = None, M = None, c = None, Gamma = None,
 	z: float
 		Redshift
 	mdef: str
-		Mass definition in which any combination of R, M, and c is given.
+		Mass definition in which any combination of R, M, and c is given. See :doc:`halo_mass` 
+		for details.
 	R: array_like
 		Spherical overdensity radius in physical :math:`kpc/h`; can be a number or a numpy array.
 		Either R or M need to be passed, not both.

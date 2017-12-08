@@ -1,13 +1,14 @@
-=====================================
+=================
 Dark matter halos
-=====================================
+=================
 
-This module contains all functions dealing with the size (mass or radius) and structure
-of dark matter halos.
+This module contains all functions dealing with the properties of individual dark matter halos,
+including their radius and mass, conversions between different mass definitions, their density 
+profiles, and concentration. 
 
----------------------------------------------------------------------------------------------------
+----------------
 Module reference
----------------------------------------------------------------------------------------------------
+----------------
 
 .. toctree::
     :maxdepth: 3

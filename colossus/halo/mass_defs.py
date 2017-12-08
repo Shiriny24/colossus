@@ -252,7 +252,7 @@ def pseudoEvolve(M, c, mdef, z_i, z_f,
 		The initial halo concentration; can be a number of a numpy array. If both M_i and c_i are 
 		arrays, they must have the same dimensions.
 	mdef: str
-		The SO mass definition.
+		The SO mass definition. See :doc:`halo_mass` for details.
 	z_i: float
 		The initial redshift.
 	z_f: float

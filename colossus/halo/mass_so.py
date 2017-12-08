@@ -54,7 +54,7 @@ def parseMassDefinition(mdef):
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	mdef: str
-		The mass definition
+		The mass definition. See :doc:`halo_mass` for details.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -100,7 +100,7 @@ def parseRadiusMassDefinition(rmdef):
 	radius_mass: str
 		Can be 'R' for radius or 'M' for mass.
 	mdef: str
-		The mdef the mass or radius are based on.
+		The mdef the mass or radius are based on. See :doc:`halo_mass` for details.
 	mdef_type: str
 		Can either be based on the mean density (``mdef_type=='m'``), the critical density 
 		(``mdef_type=='m'``) or the virial overdensity (``mdef_type=='vir'``).
@@ -133,7 +133,7 @@ def densityThreshold(z, mdef):
 	z: array_like
 		Redshift; can be a number or a numpy array.
 	mdef: str
-		The mass definition
+		The mass definition. See :doc:`halo_mass` for details.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -207,7 +207,7 @@ def M_to_R(M, z, mdef):
 	z: float
 		Redshift
 	mdef: str
-		The mass definition
+		The mass definition. See :doc:`halo_mass` for details.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -240,7 +240,7 @@ def R_to_M(R, z, mdef):
 	z: float
 		Redshift
 	mdef: str
-		The mass definition
+		The mass definition. See :doc:`halo_mass` for details.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -272,7 +272,7 @@ def dynamicalTime(z, mdef, definition = 'crossing'):
 	z: array_like
 		Redshift; can be a number or a numpy array.
 	mdef: str
-		The mass definition
+		The mass definition. See :doc:`halo_mass` for details.
 	definition: str
 		An identifier for a definition of the dynamical time. Valid definitions are ``crossing``
 		(the crossing time), ``peri`` (the time to reach the halo center, half the crossing time)

@@ -212,6 +212,7 @@ def massFunction(x, z, q_in = 'M', q_out = 'f', mdef = 'fof',
 		The mass definition in which the halo mass M is given (or from which the variance or peak
 		height were computed). The returned mass function refers to this mass definition. Please 
 		see the model table for the mass definitions for which each model is valid.
+		See :doc:`halo_mass` for details.
 	model: str
 		The model of the mass function used.
 	ps_args: dict
@@ -581,7 +582,7 @@ def modelTinker08(sigma, z, mdef):
 	z: float
 		Redshift
 	mdef: str
-		The mass definition to which ``sigma`` corresponds.
+		The mass definition to which ``sigma`` corresponds. See :doc:`halo_mass` for details.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -769,7 +770,7 @@ def modelWatson13(sigma, z, mdef):
 	z: float
 		Redshift
 	mdef: str
-		The mass definition to which ``sigma`` corresponds.
+		The mass definition to which ``sigma`` corresponds. See :doc:`halo_mass` for details.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -834,7 +835,7 @@ def modelBocquet16(sigma, z, mdef, hydro = True):
 	z: float
 		Redshift
 	mdef: str
-		The mass definition to which ``sigma`` corresponds.
+		The mass definition to which ``sigma`` corresponds. See :doc:`halo_mass` for details.
 	hydro: bool
 		If True, return the model for hydro simulations, otherwise DM-only.
 		
@@ -932,7 +933,7 @@ def modelDespali16(sigma, z, mdef, deltac_args = {'corrections': True}, ellipsoi
 	z: float
 		Redshift
 	mdef: str
-		The mass definition to which ``sigma`` corresponds.
+		The mass definition to which ``sigma`` corresponds. See :doc:`halo_mass` for details.
 	ellipsoidal: bool
 		If True, return the results for an ellipsoidal halo finder, otherwise standard SO.
 		

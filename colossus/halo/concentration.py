@@ -182,6 +182,7 @@ def concentration(M, mdef, z,
 		Halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
 	mdef: str
 		The mass definition in which the halo mass M is given, and in which c is returned. 
+		See :doc:`halo_mass` for details.
 	z: float
 		Redshift
 	model: str
@@ -419,7 +420,7 @@ def modelDuffy08(M, z, mdef):
 		Redshift
 	mdef: str
 		The mass definition in which the mass is given, and in which concentration is returned.
-		Can be ``200c``, ``vir``, or ``200m`` for this function.
+		Can be ``200c``, ``vir``, or ``200m`` for this function. See :doc:`halo_mass` for details.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -551,7 +552,7 @@ def modelBhattacharya13(M, z, mdef):
 		Redshift
 	mdef: str
 		The mass definition in which the mass is given, and in which concentration is returned.
-		Can be ``200c``, ``vir``, or ``200m``.
+		Can be ``200c``, ``vir``, or ``200m``. See :doc:`halo_mass` for details.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -607,7 +608,7 @@ def modelDutton14(M, z, mdef):
 		Redshift
 	mdef: str
 		The mass definition in which the mass is given, and in which concentration is returned.
-		Can be ``200c`` or ``vir``.
+		Can be ``200c`` or ``vir``. See :doc:`halo_mass` for details.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -846,7 +847,7 @@ def modelKlypin16fromM(M, z, mdef):
 		Redshift
 	mdef: str
 		The mass definition in which the mass(es) are given, and in which concentration is returned.
-		Can be ``200c`` or ``vir``.
+		Can be ``200c`` or ``vir``. See :doc:`halo_mass` for details.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -924,7 +925,7 @@ def modelKlypin16fromNu(M, z, mdef):
 		Redshift
 	mdef: str
 		The mass definition in which the mass is given, and in which concentration is returned.
-		Can be ``200c`` or ``vir``.
+		Can be ``200c`` or ``vir``. See :doc:`halo_mass` for details.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------

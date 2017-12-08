@@ -112,6 +112,7 @@ def M4rs(M, z, mdef, c = None):
 		Redshift
 	mdef: str
 		The spherical overdensity mass definition in which M (and optionally c) are given.
+		See :doc:`halo_mass` for details.
 	c: array_like
 		Concentration. If this parameter is not passed, concentration is automatically 
 		computed. Must have the same dimensions as M.

@@ -560,7 +560,7 @@ class HaloDensityProfile():
 		z: float
 			Redshift
 		mdef: str
-			The radius definition for the cut-off radius.
+			The radius definition for the cut-off radius. See :doc:`halo_mass` for details.
 		
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -1101,6 +1101,7 @@ class HaloDensityProfile():
 			Redshift
 		mdef: str
 			The mass definition for which the spherical overdensity radius is computed.
+			See :doc:`halo_mass` for details.
 			
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -1132,6 +1133,7 @@ class HaloDensityProfile():
 			Redshift
 		mdef: str
 			The mass definition for which the spherical overdensity mass is computed.
+			See :doc:`halo_mass` for details.
 			
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -1163,6 +1165,7 @@ class HaloDensityProfile():
 			Redshift
 		mdef: str
 			The mass definition for which the spherical overdensity mass is computed.
+			See :doc:`halo_mass` for details.
 			
 		Returns
 		-------------------------------------------------------------------------------------------

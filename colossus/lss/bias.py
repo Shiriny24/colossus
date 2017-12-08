@@ -106,7 +106,7 @@ def haloBiasFromNu(nu, z = None, mdef = None, model = defaults.HALO_BIAS_MODEL):
 		Redshift; can be a number or a numpy array. Only necessary for certain models.
 	mdef: str
 		The mass definition corresponding to the mass that was used to evaluate the peak height.
-		Only necessary for certain models.
+		Only necessary for certain models. See :doc:`halo_mass` for details.
 	model: str
 		The bias model used.
 	
@@ -150,6 +150,7 @@ def haloBias(M, z, mdef = None, model = defaults.HALO_BIAS_MODEL):
 		Redshift; can be a number or a numpy array.
 	mdef: str
 		The mass definition in which ``M`` is given. Only necessary for certain models.
+		See :doc:`halo_mass` for details.
 	model: str
 		The bias model used.
 
@@ -191,7 +192,7 @@ def twoHaloTerm(r, M, z, mdef, model = defaults.HALO_BIAS_MODEL):
 	z: float
 		Redshift
 	mdef: str
-		The mass definition in which ``M`` is given.
+		The mass definition in which ``M`` is given. See :doc:`halo_mass` for details.
 	model: str
 		The bias model used.
 
@@ -284,7 +285,7 @@ def modelTinker10(nu, z, mdef):
 	z: array_like
 		Redshift; can be a number or a numpy array.
 	mdef: str
-		The mass definition
+		The mass definition. See :doc:`halo_mass` for details.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------

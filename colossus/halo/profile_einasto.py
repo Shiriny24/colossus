@@ -64,7 +64,7 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 	z: float
 		Redshift
 	mdef: str
-		The mass definition in which M and c are given.		
+		The mass definition in which M and c are given. See :doc:`halo_mass` for details.
 	"""
 
 	###############################################################################################
@@ -129,7 +129,7 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 		z: float
 			Redshift
 		mdef: str
-			The mass definition in which M and c are given.
+			The mass definition in which M and c are given. See :doc:`halo_mass` for details.
 		alpha: float
 			The radial dependence of the profile slope; can be None in which case it is 
 			approximated.

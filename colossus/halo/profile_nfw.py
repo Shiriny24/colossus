@@ -56,7 +56,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	z: float
 		Redshift
 	mdef: str
-		The mass definition in which M and c are given.
+		The mass definition in which M and c are given. See :doc:`halo_mass` for details.
 	"""
 	
 	###############################################################################################
@@ -118,7 +118,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		z: float
 			Redshift
 		mdef: str
-			The mass definition in which M and c are given.
+			The mass definition in which M and c are given. See :doc:`halo_mass` for details.
 			
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -522,6 +522,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 			Redshift
 		mdef: str
 			The mass definition for which the spherical overdensity radius is computed.
+			See :doc:`halo_mass` for details.
 			
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -627,7 +628,7 @@ def radiusFromPdf(M, c, z, mdef, cumulativePdf,
 	z: float
 		Redshift
 	mdef: str
-		The mass definition in which the halo mass M is given. 
+		The mass definition in which the halo mass M is given. See :doc:`halo_mass` for details.
 	cumulativePdf: array_like
 		The cumulative pdf that we are seeking. If an array, this array needs to have the same 
 		dimensions as the M array.

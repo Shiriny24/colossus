@@ -122,7 +122,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	c: float
 		Concentration in the same mass definition as M.
 	mdef: str
-		The mass definition to which M corresponds.
+		The mass definition to which M corresponds. See :doc:`halo_mass` for details.
 	z: float
 		Redshift
 	selected_by: str
@@ -526,6 +526,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 			Redshift
 		mdef: str
 			The mass definition for which the spherical overdensity radius is computed.
+			See :doc:`halo_mass` for details.
 			
 		Returns
 		-------------------------------------------------------------------------------------------
