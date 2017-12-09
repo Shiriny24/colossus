@@ -132,9 +132,21 @@ class HaloMassFunctionModel():
 		
 		self.func = None
 		self.z_dependence = False
+		"""
+		Indicates whether :math:`f(\\sigma)` depends on redshift in this model.
+		"""
 		self.deltac_dependence = False
+		"""
+		Indicates whether :math:`f(\\sigma)` depends on the collapse overdensity.
+		"""
 		self.mdef_dependence = False
+		"""
+		Indicates whether :math:`f(\\sigma)` depends on the mass definition (for SO models).
+		"""
 		self.mdefs = []
+		"""
+		A list of mass definitions for which this model is valid. See :doc:`halo_mass` for details.
+		"""
 		
 		return
 

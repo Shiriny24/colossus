@@ -28,7 +28,7 @@ can take on the following values in Colossus:
     =================== ========== ============================== ================================================================
     Matter              ``<int>m`` ``178m``, ``200m``             Integer times the mean matter density of the universe
     Critical            ``<int>c`` ``200c``, ``500c``, ``2500c``  Integer times the critical density of the universe
-    Virial              ``vir``    ``vir``                        An overdensity that varies with redshift (`Bryan & Normal 1998 <http://adsabs.harvard.edu/abs/1998ApJ...495...80B>`_)
+    Virial              ``vir``    ``vir``                        An overdensity that varies with redshift (`Bryan & Norman 1998 <http://adsabs.harvard.edu/abs/1998ApJ...495...80B>`_)
     Any SO              ``*``      ``*``                          Any spherical overdensity mass definition
     Friends-of-friends  ``fof``    ``fof``                        Friends-of-friends mass (any linking length)
     =================== ========== ============================== ================================================================

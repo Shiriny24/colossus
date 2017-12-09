@@ -7,8 +7,8 @@
 
 """
 This module implements functions to convert between spherical overdensity mass definitions and to 
-compute pseudo-evolution. For the most basic aspects of spherical overdensity mass definitions, 
-see the :doc:`halo_mass_so` section.
+compute pseudo-evolution. For basic aspects of spherical overdensity mass definitions, see the 
+:doc:`halo_mass_so` section.
 
 ---------------------------------------------------------------------------------------------------
 Basics
@@ -19,30 +19,41 @@ radius and mass definitions based on this profile. These functions include chang
 definition at fixed redshift, changing redshift at fixed overdensity ("pseudo-evolution"), or
 changing both.
 
+One common application is to convert one spherical overdensity mass definitions to another (at 
+fixed redshift)::
+	
+	Mvir = 1E12
+	cvir = 10.0
+	z = 1.0
+	M200m, R200m, c200m = changeMassDefinition(Mvir, cvir, z, 'vir', '200m')
+	
+Here we assumed a halo with :math:`M_{vir}=10^{12} M_{\odot}/h` and :math:`c_{vir} = 10` at z=1, 
+and converted it to the 200m mass definition. For convenience, the new radius and concentration 
+are also returned.
+
 Pseudo-evolution is the evolution of a spherical overdensity halo radius, mass, and concentration 
-due to an evolving reference density (see Diemer, More & Kravtsov 2013 for more information). 
+due to an evolving reference density (see 
+`Diemer et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...25D>`_ for more information). 
 The :func:`pseudoEvolve` function is a general implementation of this effect. The function 
 assumes a profile that is fixed in physical units, and computes how the radius, mass and 
-concentration evolve due to changes in mass definition and/or redshift. In the following 
-example we compute the pseudo-evolution of a halo with virial mass :math:`M_{vir}=10^{12} M_{\odot}/h` 
-from z=1 to z=0::
+concentration evolve due to changes in redshift (at fixed mass definition). In the following 
+example we compute the pseudo-evolution of a halo with virial mass 
+:math:`M_{vir}=10^{12} M_{\odot}/h` from z=1 to z=0::
 
-	M, R, c = pseudoEvolve(1E12, 10.0, 'vir', 1.0, 0.0)
+	M_ini = 1E12
+	c_ini = 10.0
+	z_ini = 1.0
+	z_final = 0.0
+	M, R, c = pseudoEvolve(M_ini, c_ini, 'vir', z_ini, z_final)
 	
 Here we have assumed that the halo has a concentration :math:`c_{vir} = 10` at z=1. By default, 
-an NFW density profile is assumed, but the user can also pass another profile object. Another
-useful application of this function is to convert one spherical overdensity mass definitions 
-to another (at fixed redshift)::
-
-	M200m, R200m, c200m = changeMassDefinition(1E12, 10.0, 1.0, 'vir', '200m')
-	
-Here we again assumed a halo with :math:`M_{vir}=10^{12} M_{\odot}/h` and :math:`c_{vir} = 10` 
-at z=1, and converted it to the 200m mass definition. 
+an NFW density profile is assumed, but the user can also pass another profile object. 
 
 Often, we do not know the concentration of a halo and wish to estimate it using a concentration-
-mass model. This function is performed by a convenient wrapper for the changeMassDefinition()
-function, :func:`halo.mass_adv.changeMassDefinitionCModel`. This function is located in a 
-different unit to avoid circular imports.
+mass model. This can be done using the :doc:`halo_concentration` module, but there is also 
+a convenient wrapper for the :func:`changeMassDefinition` function, 
+:func:`~halo.mass_adv.changeMassDefinitionCModel`. This function is located in a different module 
+to avoid circular imports.
 
 ---------------------------------------------------------------------------------------------------
 Module contents
@@ -83,7 +94,7 @@ def evolveSO(M_i, c_i, z_i, mdef_i, z_f, mdef_f,
 	
 	To evaluate the new mass, radius, and concentration, we need to assume a particular form of the
 	density profile. This profile can be either the NFW profile (``profile = 'nfw'``), or any 
-	other profile class (derived from :class:`halo.profile_base.HaloDensityProfile`). In the latter
+	other profile class (derived from :class:`~halo.profile_base.HaloDensityProfile`). In the latter
 	case, the passed profile class must accept mass, mass definition, concentration, and redshift
 	as parameters to its constructor. Additional parameters can be passed as well, for example
 	outer profile terms.
@@ -92,18 +103,18 @@ def evolveSO(M_i, c_i, z_i, mdef_i, z_f, mdef_f,
 	-----------------------------------------------------------------------------------------------
 	M_i: array_like
 		The initial halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array. If both 
-		M_i and c_i are arrays, they must have the same dimensions.
+		``M_i`` and ``c_i`` are arrays, they must have the same dimensions.
 	c_i: array_like
-		The initial halo concentration; can be a number of a numpy array. If both M_i and c_i are 
-		arrays, they must have the same dimensions.
+		The initial halo concentration; can be a number of a numpy array. If both ``M_i`` and 
+		``c_i`` are arrays, they must have the same dimensions.
 	z_i: float
 		The initial redshift.
 	mdef_i: str
 		The initial mass definition.
 	z_f: float
-		The final redshift (can be smaller, equal to, or larger than z_i).
+		The final redshift (can be smaller, equal to, or larger than ``z_i``).
 	mdef_f: str
-		The final mass definition (can be the same as mdef_i, or different).
+		The final mass definition (can be the same as ``mdef_i``, or different).
 	profile: str or HaloDensityProfile
 		The functional form of the profile assumed in the computation; can be ``nfw`` or an 
 		instance of HaloDensityProfile (which satisfies particular conditions, see above).
@@ -113,17 +124,17 @@ def evolveSO(M_i, c_i, z_i, mdef_i, z_f, mdef_f,
 	Returns
 	-----------------------------------------------------------------------------------------------
 	Mnew: array_like
-		The new halo mass in :math:`M_{\odot}/h`; has the same dimensions as M_i or c_i.
+		The new halo mass in :math:`M_{\odot}/h`; has the same dimensions as ``M_i`` or ``c_i``.
 	Rnew: array_like
-		The new halo radius in physical kpc/h; has the same dimensions as M_i or c_i.
+		The new halo radius in physical kpc/h; has the same dimensions as ``M_i`` or ``c_i``.
 	cnew: array_like
 		The new concentration (now referring to the new mass definition); has the same dimensions 
-		as M_i or c_i.
+		as ``M_i`` or ``c_i``.
 		
 	See also
 	-----------------------------------------------------------------------------------------------
 	changeMassDefinition: Change the spherical overdensity mass definition.
-	pseudoEvolve: Compute changes due to pseudo-evolution.
+	pseudoEvolve: Pseudo-evolve a static density profile.
 	"""
 
 	# Redshift must always be a number, not an array
@@ -200,10 +211,10 @@ def changeMassDefinition(M, c, z, mdef_in, mdef_out,
 	-----------------------------------------------------------------------------------------------
 	M: array_like
 		The initial halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array. If both 
-		M and c are arrays, they must have the same dimensions.
+		``M`` and ``c`` are arrays, they must have the same dimensions.
 	c: array_like
-		The initial halo concentration; can be a number of a numpy array. If both M and c are 
-		arrays, they must have the same dimensions.
+		The initial halo concentration; can be a number of a numpy array. If both ``M`` and ``c`` 
+		are arrays, they must have the same dimensions.
 	z: float
 		The initial redshift.
 	mdef_in: str
@@ -218,12 +229,12 @@ def changeMassDefinition(M, c, z, mdef_in, mdef_out,
 	Returns
 	-----------------------------------------------------------------------------------------------
 	Mnew: array_like
-		The new halo mass in :math:`M_{\odot}/h`; has the same dimensions as M or c.
+		The new halo mass in :math:`M_{\odot}/h`; has the same dimensions as ``M`` or ``c``.
 	Rnew: array_like
-		The new halo radius in physical kpc/h; has the same dimensions as M or c.
+		The new halo radius in physical kpc/h; has the same dimensions as ``M`` or ``c``.
 	cnew: array_like
 		The new concentration (now referring to the new mass definition); has the same dimensions 
-		as M or c.
+		as ``M`` or ``c``.
 		
 	See also
 	-----------------------------------------------------------------------------------------------
@@ -241,13 +252,14 @@ def pseudoEvolve(M, c, mdef, z_i, z_f,
 	Pseudo-evolve a static density profile.
 
 	This function computes the evolution of spherical overdensity mass and radius due to a changing 
-	reference density, an effect called 'pseudo-evolution' (Diemer, et al. 2013 ApJ 766, 25). The 
-	user passes the mass and concentration of the density profile, together with a redshift and 
-	mass definition to which M and c refer.
+	reference density, an effect called 'pseudo-evolution' (e.g.,
+	`Diemer et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...25D>`_). The user passes 
+	the mass and concentration of the density profile, together with a redshift and mass definition 
+	to which ``M`` and ``c`` refer.
 	
 	To evaluate the new mass, radius, and concentration, we need to assume a particular form of the
 	density profile. This profile can be either the NFW profile (``profile = 'nfw'``), or any 
-	other profile class (derived from :class:`halo.profile_base.HaloDensityProfile`). In the latter
+	other profile class (derived from :class:`~halo.profile_base.HaloDensityProfile`). In the latter
 	case, the passed profile class must accept mass, mass definition, concentration, and redshift
 	as parameters to its constructor. Additional parameters can be passed as well, for example
 	outer profile terms.
@@ -256,16 +268,16 @@ def pseudoEvolve(M, c, mdef, z_i, z_f,
 	-----------------------------------------------------------------------------------------------
 	M: array_like
 		The initial halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array. If both 
-		M_i and c_i are arrays, they must have the same dimensions.
+		``M`` and ``c`` are arrays, they must have the same dimensions.
 	c: array_like
-		The initial halo concentration; can be a number of a numpy array. If both M_i and c_i are 
-		arrays, they must have the same dimensions.
+		The initial halo concentration; can be a number of a numpy array. If both ``M`` and ``c`` 
+		are arrays, they must have the same dimensions.
 	mdef: str
 		The SO mass definition. See :doc:`halo_mass` for details.
 	z_i: float
 		The initial redshift.
 	z_f: float
-		The final redshift (can be smaller, equal to, or larger than z_i).
+		The final redshift (can be smaller, equal to, or larger than ``z_i``).
 	profile: str
 		The functional form of the profile assumed in the computation; can be ``nfw`` or ``dk14``.
 	profile_args: dict
@@ -274,12 +286,12 @@ def pseudoEvolve(M, c, mdef, z_i, z_f,
 	Returns
 	-----------------------------------------------------------------------------------------------
 	Mnew: array_like
-		The new halo mass in :math:`M_{\odot}/h`; has the same dimensions as M or c.
+		The new halo mass in :math:`M_{\odot}/h`; has the same dimensions as ``M`` or ``c``.
 	Rnew: array_like
-		The new halo radius in physical kpc/h; has the same dimensions as M or c.
+		The new halo radius in physical kpc/h; has the same dimensions as ``M`` or ``c``.
 	cnew: array_like
 		The new concentration (now referring to the new mass definition); has the same dimensions 
-		as M or c.
+		as ``M`` or ``c``.
 		
 	See also
 	-----------------------------------------------------------------------------------------------

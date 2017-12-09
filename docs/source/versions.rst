@@ -15,6 +15,8 @@ arXiv.org. The following changes were made:
 * The ``qx`` and ``qy`` parameters in the :mod:`halo.splashback` module were renamed to ``q_in`` and
   ``q_out`` to conform with the rest of the code.
 
+* Fixed error in splashback model interface
+
 .. rubric:: Version 1.1.0
 
 Version 1.1.0 presents a major change to the Colossus interface, documentation, and tutorial system.

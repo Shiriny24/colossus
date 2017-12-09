@@ -64,11 +64,11 @@ def parseMassDefinition(mdef):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	mdef_type: str
-		Can either be based on the mean density (``mdef_type=='m'``), the critical density 
-		(``mdef_type=='m'``) or the virial overdensity (``mdef_type=='vir'``).
+		Can either be based on the mean density (``mdef_type='m'``), the critical density 
+		(``mdef_type='c'``) or the virial overdensity (``mdef_type='vir'``).
 	mdef_delta: int
 		The overdensity; if ``mdef_type=='vir'``, the overdensity depends on redshift, and this
-		parameter is None.
+		parameter is ``None``.
 	"""
 	
 	if mdef[-1] == 'c':
@@ -103,15 +103,15 @@ def parseRadiusMassDefinition(rmdef):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	radius_mass: str
-		Can be 'R' for radius or 'M' for mass.
+		Can be ``R`` for radius or ``M`` for mass.
 	mdef: str
 		The mdef the mass or radius are based on. See :doc:`halo_mass` for details.
 	mdef_type: str
-		Can either be based on the mean density (``mdef_type=='m'``), the critical density 
-		(``mdef_type=='m'``) or the virial overdensity (``mdef_type=='vir'``).
+		Can either be based on the mean density (``mdef_type='m'``), the critical density 
+		(``mdef_type='c'``) or the virial overdensity (``mdef_type=='vir'``).
 	mdef_delta: int
 		The overdensity; if ``mdef_type=='vir'``, the overdensity depends on redshift, and this
-		parameter is None.
+		parameter is ``None``.
 	"""
 		
 	if rmdef[0] in ['r', 'R']:
@@ -143,7 +143,8 @@ def densityThreshold(z, mdef):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	rho: array_like
-		The threshold density in physical :math:`M_{\odot}h^2/kpc^3`; has the same dimensions as z.
+		The threshold density in physical :math:`M_{\odot}h^2/kpc^3`; has the same dimensions as 
+		``z``.
 
 	See also
 	-----------------------------------------------------------------------------------------------
@@ -171,9 +172,10 @@ def deltaVir(z):
 	"""
 	The virial overdensity in units of the critical density.
 	
-	This function uses the fitting formula of Bryan & Norman 1998 to determine the virial 
-	overdensity. While the universe is dominated by matter, this overdensity is about 178. Once 
-	dark energy starts to matter, it decreases. 
+	This function uses the fitting formula of 
+	`Bryan & Norman 1998 <http://adsabs.harvard.edu/abs/1998ApJ...495...80B>`_ to determine the 
+	virial overdensity. While the universe is dominated by matter, this overdensity is about 178. 
+	Once dark energy starts to matter, it decreases. 
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -183,7 +185,7 @@ def deltaVir(z):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	Delta: array_like
-		The virial overdensity; has the same dimensions as z.
+		The virial overdensity; has the same dimensions as ``z``.
 
 	See also
 	-----------------------------------------------------------------------------------------------
@@ -200,10 +202,10 @@ def deltaVir(z):
 
 def M_to_R(M, z, mdef):
 	"""
-	Spherical overdensity mass from radius.
+	Convert spherical overdensity mass to radius.
 	
-	This function returns a spherical overdensity halo radius for a halo mass M. Note that this 
-	function is independent of the form of the density profile.
+	This function returns a spherical overdensity halo radius for a halo mass ``M``. Note that 
+	this function is independent of the form of the density profile.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -217,11 +219,11 @@ def M_to_R(M, z, mdef):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	R: array_like
-		Halo radius in physical kpc/h; has the same dimensions as M.
+		Halo radius in physical kpc/h; has the same dimensions as ``M``.
 
 	See also
 	-----------------------------------------------------------------------------------------------
-	R_to_M: Spherical overdensity radius from mass.
+	R_to_M: Convert spherical overdensity radius to mass.
 	"""
 	
 	rho = densityThreshold(z, mdef)
@@ -233,10 +235,10 @@ def M_to_R(M, z, mdef):
 
 def R_to_M(R, z, mdef):
 	"""
-	Spherical overdensity radius from mass.
+	Convert spherical overdensity radius to mass.
 	
-	This function returns a spherical overdensity halo mass for a halo radius R. Note that this 
-	function is independent of the form of the density profile.
+	This function returns a spherical overdensity halo mass for a halo radius ``R``. Note that 
+	this function is independent of the form of the density profile.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -254,7 +256,7 @@ def R_to_M(R, z, mdef):
 
 	See also
 	-----------------------------------------------------------------------------------------------
-	M_to_R: Spherical overdensity mass from radius.
+	M_to_R: Convert spherical overdensity mass to radius.
 	"""
 	
 	rho = densityThreshold(z, mdef)
@@ -269,9 +271,10 @@ def dynamicalTime(z, mdef, definition = 'crossing'):
 	The dynamical time of a halo.
 	
 	The dynamical time can be estimated in multiple ways, but is almost always based on the ratio
-	of radius to circular velocity. This ratio is more succinctly expressed as a multiple of the
-	Hubble time which depends on the overdensity threshold and redshift.
-
+	of a distance to circular velocity. The relevant distance can be defined in different ways as
+	indicated with the ``definition`` parameter. The dynamical time is more succinctly expressed 
+	as a multiple of the Hubble time which depends on the overdensity threshold and redshift.
+	
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	z: array_like
@@ -281,12 +284,12 @@ def dynamicalTime(z, mdef, definition = 'crossing'):
 	definition: str
 		An identifier for a definition of the dynamical time. Valid definitions are ``crossing``
 		(the crossing time), ``peri`` (the time to reach the halo center, half the crossing time)
-		and ``orbit`` (the time to orbit around the halo, crossing time times pi).
+		and ``orbit`` (the time to orbit around the halo, crossing time times :math:`\pi`).
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
 	t_dyn: array_like
-		Dynamical time in Gyr; has the same dimensions as z.
+		Dynamical time in Gyr; has the same dimensions as ``z``.
 	"""
 	
 	cosmo = cosmology.getCurrent()

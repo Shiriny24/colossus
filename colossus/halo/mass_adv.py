@@ -12,26 +12,35 @@ This module represents a collection of advanced utilities related to halo mass d
 Changing mass definitions assuming a concentration
 ---------------------------------------------------------------------------------------------------
 
-The :func:`halo.mass_defs.changeMassDefinition()` function needs to know the concentration of a 
-halo. For convenience, the following function uses a concentration model to estimate the 
+The :func:`~halo.mass_defs.changeMassDefinition()` function needs to be given the concentration of 
+a halo. For convenience, the following function uses a concentration model to estimate the 
 concentration::
 
-	M200m, R200m, c200m = changeMassDefinitionCModel(1E12, 1.0, 'vir', '200m')
+	Mvir = 1E12
+	z = 1.0
+	M200m, R200m, c200m = changeMassDefinitionCModel(Mvir, z, 'vir', '200m')
 	
-By default, the function uses the ``diemer_15`` concentration model (see the documentation of the
-:mod:`halo.concentration` module). This function is not included in the :mod:`halo.mass_defs`
-module in order to avoid circular dependencies.
+By default, the function uses the default concentration model (see the :doc:`halo_concentration` 
+module), but the user can choose a different model. This function is not included in the 
+:mod:`~halo.mass_defs` module in order to avoid circular dependencies.
 
 ---------------------------------------------------------------------------------------------------
 Alternative mass definitions
 ---------------------------------------------------------------------------------------------------
 
-Two alternative mass definitions were suggested in More, Diemer & Kravtsov 2015, namely the 
-splashback radius and the mass within four scale radii. For routines relating to the former, please
-see the :mod:`halo.splashback` module. In this module, only :math:`M_{<4r_s}` is implemented. This 
-mass definition quantifies the mass in the inner part of the halo. During the fast accretion 
+`More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`_ suggested two alternative
+mass definitions, namely the splashback radius and the mass within four scale radii. For the
+former, please see the :doc:`halo_splashback` module. This module implements :math:`M_{<4r_s}`, the
+mass within four scale radii::
+
+	Mvir = 1E12
+	cvir = 8.0
+	z = 1.0
+	M_inner = M4rs(Mvir, z, 'vir', c = cvir)
+
+This mass definition quantifies the mass in the inner part of the halo. During the fast accretion 
 regime, this mass definition tracks :math:`M_{vir}`, but when the halo stops accreting it 
-approaches a constant. 
+approaches a constant. The function uses an NFW profile to compute the inner mass.
 
 ---------------------------------------------------------------------------------------------------
 Module contents
@@ -59,9 +68,9 @@ def changeMassDefinitionCModel(M, z, mdef_in, mdef_out,
 							profile = defaults.HALO_MASS_CONVERSION_PROFILE, 
 							c_model = defaults.HALO_CONCENTRATION_MODEL):
 	"""
-	Change the spherical overdensity mass definition, using a model for the concentration.
+	Change the spherical overdensity mass definition.
 	
-	This function is a wrapper for the :func:`halo.mass_defs.changeMassDefinition()` function. 
+	This function is a wrapper for the :func:`~halo.mass_defs.changeMassDefinition()` function. 
 	Instead of forcing the user to provide concentrations, they are computed from a model indicated 
 	by the ``c_model`` parameter.
 	
@@ -74,7 +83,7 @@ def changeMassDefinitionCModel(M, z, mdef_in, mdef_out,
 	mdef_i: str
 		The initial mass definition.
 	mdef_f: str
-		The final mass definition (can be the same as mdef_i, or different).
+		The final mass definition (can be the same as ``mdef_i``, or different).
 	profile: str
 		The functional form of the profile assumed in the computation; can be ``nfw`` or ``dk14``.
 	c_model: str
@@ -83,12 +92,12 @@ def changeMassDefinitionCModel(M, z, mdef_in, mdef_out,
 	Returns
 	-----------------------------------------------------------------------------------------------
 	Mnew: array_like
-		The new halo mass in :math:`M_{\odot}/h`; has the same dimensions as M_i.
+		The new halo mass in :math:`M_{\odot}/h`; has the same dimensions as ``M``.
 	Rnew: array_like
-		The new halo radius in physical kpc/h; has the same dimensions as M_i.
+		The new halo radius in physical kpc/h; has the same dimensions as ``M``.
 	cnew: array_like
 		The new concentration (now referring to the new mass definition); has the same dimensions 
-		as M_i.
+		as ``M``.
 		
 	See also
 	-----------------------------------------------------------------------------------------------
@@ -106,7 +115,9 @@ def M4rs(M, z, mdef, c = None):
 	"""
 	Convert a spherical overdensity mass to :math:`M_{<4rs}`.
 	
-	See the section on mass definitions for the definition of :math:`M_{<4rs}`.
+	Evaluates the mass within four scale radii, assuming an NFW profile. See 
+	`More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`_ for the rationale 
+	behind this definition.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -116,17 +127,17 @@ def M4rs(M, z, mdef, c = None):
 	z: float
 		Redshift
 	mdef: str
-		The spherical overdensity mass definition in which M (and optionally c) are given.
+		The spherical overdensity mass definition in which ``M`` (and optionally ``c``) are given.
 		See :doc:`halo_mass` for details.
 	c: array_like
 		Concentration. If this parameter is not passed, concentration is automatically 
-		computed. Must have the same dimensions as M.
+		computed. Must have the same dimensions as ``M``.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
 	M4rs: array_like
 		The mass within 4 scale radii, :math:`M_{<4rs}`, in :math:`M_{\odot} / h`; has the 
-		same dimensions as M.
+		same dimensions as ``M``.
 	"""
 
 	if c is None:
