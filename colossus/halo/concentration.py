@@ -7,8 +7,13 @@
 
 """
 This module implements a range of models for halo concentration as a function of mass, redshift, 
-and cosmology. The main function in this module, :func:`concentration`, is a wrapper for all 
-models::
+and cosmology. 
+
+---------------------------------------------------------------------------------------------------
+Basics
+---------------------------------------------------------------------------------------------------
+
+The main function in this module, :func:`concentration`, is a wrapper for all models::
 	
 	setCosmology('WMAP9')
 	cvir = concentration(1E12, 'vir', 0.0, model = 'diemer15')
@@ -56,19 +61,41 @@ Concentration models
 The following models are supported in this module, and their ID can be passed as the ``model`` 
 parameter to the :func:`concentration` function:
 
-============== ================ ================== =========== ========== ============================================================================
-ID             Native mdefs     M range (z=0)      z range     Cosmology  Paper
-============== ================ ================== =========== ========== ============================================================================
-bullock01	   200c             Almost any         Any         Any        `Bullock et al. 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.321..559B>`_
-duffy08        200c, vir, 200m  1E11 < M < 1E15    0 < z < 2   WMAP5      `Duffy et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.390L..64D>`_
-klypin11       vir              3E10 < M < 5E14    0           WMAP7      `Klypin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...740..102K>`_
-prada12        200c             Any                Any         Any        `Prada et al. 2012 <http://adsabs.harvard.edu/abs/2012MNRAS.423.3018P>`_
-bhattacharya13 200c, vir, 200m  2E12 < M < 2E15    0 < z < 2   WMAP7      `Bhattacharya et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...32B>`_
-dutton14       200c, vir        M > 1E10           0 < z < 5   Pl1        `Dutton & Maccio 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.441.3359D>`_
-diemer15       200c             Any                Any         Any        `Diemer & Kravtsov 2015 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_
-klypin16_m     200c, vir        M > 1E10           0 < z < 5   Pl1/WMAP7  `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
-klypin16_nu    200c, vir        M > 1E10           0 < z < 5   Pl1        `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
-============== ================ ================== =========== ========== ============================================================================
+.. table::
+	:widths: auto
+
+	============== ================ ================== =========== ========== ============================================================================
+	ID             Native mdefs     M range (z=0)      z range     Cosmology  Paper
+	============== ================ ================== =========== ========== ============================================================================
+	bullock01	   200c             Almost any         Any         Any        `Bullock et al. 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.321..559B>`_
+	duffy08        200c, vir, 200m  1E11 < M < 1E15    0 < z < 2   WMAP5      `Duffy et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.390L..64D>`_
+	klypin11       vir              3E10 < M < 5E14    0           WMAP7      `Klypin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...740..102K>`_
+	prada12        200c             Any                Any         Any        `Prada et al. 2012 <http://adsabs.harvard.edu/abs/2012MNRAS.423.3018P>`_
+	bhattacharya13 200c, vir, 200m  2E12 < M < 2E15    0 < z < 2   WMAP7      `Bhattacharya et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...32B>`_
+	dutton14       200c, vir        M > 1E10           0 < z < 5   Pl1        `Dutton & Maccio 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.441.3359D>`_
+	diemer15       200c             Any                Any         Any        `Diemer & Kravtsov 2015 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_
+	klypin16_m     200c, vir        M > 1E10           0 < z < 5   Pl1/WMAP7  `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
+	klypin16_nu    200c, vir        M > 1E10           0 < z < 5   Pl1        `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
+	============== ================ ================== =========== ========== ============================================================================
+
+---------------------------------------------------------------------------------------------------
+Module contents
+---------------------------------------------------------------------------------------------------
+
+.. autosummary:: 
+	ConcentrationModel
+	models
+	concentration
+	modelBullock01
+	modelDuffy08
+	modelKlypin11
+	modelPrada12
+	modelBhattacharya13
+	modelDutton14
+	modelDiemer15fromM
+	modelDiemer15fromNu
+	modelKlypin16fromM
+	modelKlypin16fromNu
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -118,6 +145,8 @@ class ConcentrationModel():
 
 models = OrderedDict()
 """
+Dictionary containing a list of models.
+
 An ordered dictionary containing one :class:`ConcentrationModel` entry for each model.
 """
 

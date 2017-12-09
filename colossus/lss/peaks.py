@@ -10,7 +10,7 @@ This module contains functions related to peaks in Gaussian random fields, namel
 for collapse, peak height and curvature, and the non-linear mass.
 
 ---------------------------------------------------------------------------------------------------
-Basic usage
+Basics
 ---------------------------------------------------------------------------------------------------
 
 The peak height of a halo quantifies how big a fluctuation in the linear density field this halo
@@ -36,6 +36,19 @@ those options can be passed to any function related to peak height. The
 :func:`nonLinearMass` is defined as the mass where peak height is unity at a given redshift, i.e., 
 the mass of a halo that is typically collapsing at the current time. Finally, 
 :func:`peakCurvature` is a higher-order property of peaks that describes their shape.
+
+---------------------------------------------------------------------------------------------------
+Module contents
+---------------------------------------------------------------------------------------------------
+
+.. autosummary::
+	lagrangianR
+	lagrangianM
+	collapseOverdensity
+	peakHeight
+	massFromPeakHeight
+	nonLinearMass
+	peakCurvature
 
 ---------------------------------------------------------------------------------------------------
 Module reference

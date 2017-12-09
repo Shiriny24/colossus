@@ -10,7 +10,7 @@ This module implements basic aspects of spherical overdensity mass definitions f
 halos (please see :doc:`halo_mass` for an introduction).
 
 ---------------------------------------------------------------------------------------------------
-Basic usage
+Basics
 ---------------------------------------------------------------------------------------------------
 
 For example, we can compute the spherical overdensity radius of a halo with particular mass or
@@ -23,6 +23,10 @@ The other functions in this module allow us to parse the mass definition strings
 density thresholds, but typically the user will not need to evaluate those functions manually
 since most SO-related functions in colossus accept mdef as an argument.
 
+---------------------------------------------------------------------------------------------------
+Module contents
+---------------------------------------------------------------------------------------------------
+
 .. autosummary:: 
 
 	parseMassDefinition
@@ -31,6 +35,7 @@ since most SO-related functions in colossus accept mdef as an argument.
     deltaVir
     M_to_R
     R_to_M
+    dynamicalTime
 
 ---------------------------------------------------------------------------------------------------
 Module reference

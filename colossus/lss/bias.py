@@ -11,23 +11,22 @@ in general, a function of halo mass and scale, but this module currently impleme
 scale-free bias models.
 
 ---------------------------------------------------------------------------------------------------
-Basic usage
+Basics
 ---------------------------------------------------------------------------------------------------
 
-Bias can be evaluated based on either mass or peak height:
-
-.. autosummary:: 
-    haloBias
-	haloBiasFromNu
-
-The parameters that need to be passed depend on the bias model to some degree, and on whether the 
-mass needs to be converted to peak height first::
+Bias can be evaluated as a function of either mass or peak height. The parameters that need to be 
+passed depend on the bias model to some degree, and on whether the mass needs to be converted to 
+peak height first::
 
 	M = 1E14
 	z = 0.0
 	nu = peaks.peakHeight(M, z)
 	b = bias.haloBiasFromNu(nu, model = 'sheth01')
 	b = bias.haloBias(M, model = 'tinker10', z = z, mdef = 'vir')
+
+---------------------------------------------------------------------------------------------------
+Bias models
+---------------------------------------------------------------------------------------------------
 
 The simplest bias model (``cole89``) is based on the peak-background split model and was derived in a 
 number of different papers. The rest of the models was calibrated using numerical simulations:
@@ -47,6 +46,20 @@ The `Tinker et al. 2010 <http://adsabs.harvard.edu/abs/2010ApJ...724..878T>`_ mo
 calibrated for a range of overdensities with respect to the mean density of the universe. Thus, 
 depending on the mass definition used, this model can predict a slight redshift evolution.
 
+---------------------------------------------------------------------------------------------------
+Module contents
+---------------------------------------------------------------------------------------------------
+
+.. autosummary::
+	HaloBiasModel
+	models
+	haloBias
+	haloBiasFromNu
+	twoHaloTerm
+	modelCole89
+	modelSheth01
+	modelTinker10
+	
 ---------------------------------------------------------------------------------------------------
 Module reference
 ---------------------------------------------------------------------------------------------------
@@ -81,6 +94,8 @@ class HaloBiasModel():
 
 models = OrderedDict()
 """
+Dictionary containing a list of models.
+
 An ordered dictionary containing one :class:`HaloBiasModel` entry for each model.
 """
 
@@ -216,7 +231,7 @@ def twoHaloTerm(r, M, z, mdef, model = defaults.HALO_BIAS_MODEL):
 
 def modelCole89(nu):
 	"""
-	The peak-background split prediction for halo bias 
+	The peak-background split prediction for halo bias.
 	
 	For a derivation of this model, see 
 	`Cole & Kaiser 1989 <http://adsabs.harvard.edu/abs/1989MNRAS.237.1127C>`_ or 
@@ -242,7 +257,7 @@ def modelCole89(nu):
 
 def modelSheth01(nu):
 	"""
-	The halo bias model of Sheth et al. 2001. 
+	The halo bias model of Sheth et al 2001. 
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -271,7 +286,7 @@ def modelSheth01(nu):
 
 def modelTinker10(nu, z, mdef):
 	"""
-	The halo bias model of Tinker et al. 2010. 
+	The halo bias model of Tinker et al 2010. 
 
 	The mass definition ``mdef`` must correspond to the mass that was used to evaluate the peak 
 	height. Note that the Tinker bias function is universal in redshift at fixed peak height, but 

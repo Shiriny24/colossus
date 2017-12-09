@@ -11,7 +11,7 @@ compute pseudo-evolution. For the most basic aspects of spherical overdensity ma
 see the :doc:`halo_mass_so` section.
 
 ---------------------------------------------------------------------------------------------------
-Basic usage
+Basics
 ---------------------------------------------------------------------------------------------------
 
 The functions in this unit assume a static halo density profile and compute spherical overdensity
@@ -43,6 +43,15 @@ Often, we do not know the concentration of a halo and wish to estimate it using 
 mass model. This function is performed by a convenient wrapper for the changeMassDefinition()
 function, :func:`halo.mass_adv.changeMassDefinitionCModel`. This function is located in a 
 different unit to avoid circular imports.
+
+---------------------------------------------------------------------------------------------------
+Module contents
+---------------------------------------------------------------------------------------------------
+
+.. autosummary:: 
+	evolveSO
+	changeMassDefinition
+	pseudoEvolve
 
 ---------------------------------------------------------------------------------------------------
 Module reference

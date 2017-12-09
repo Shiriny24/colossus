@@ -12,7 +12,7 @@ object models the contributions from dark matter, baryons, curvature, photons, n
 dark energy.
  
 ---------------------------------------------------------------------------------------------------
-Basic usage
+Basics
 ---------------------------------------------------------------------------------------------------
 
 In Colossus, the cosmology is set globally, and all functions respect that global cosmology. 

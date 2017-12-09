@@ -10,7 +10,7 @@ This module implements an Markov Chain Monte-Carlo sampler based on the Goodman 
 algorithm. It was written by Andrey Kravtsov and adapted for Colossus by Benedikt Diemer.
 
 ---------------------------------------------------------------------------------------------------
-Basic usage
+Basics
 ---------------------------------------------------------------------------------------------------
 
 Say we want to find the best-fit parameters x of some model. The likelihood for this model should 

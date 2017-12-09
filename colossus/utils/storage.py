@@ -13,7 +13,7 @@ be used to detect changes that make it necessary to reset the storage, for examp
 physical parameters to a model. 
 
 ---------------------------------------------------------------------------------------------------
-Basic usage
+Basics
 ---------------------------------------------------------------------------------------------------
 
 The most important step is to set up this storage user class::

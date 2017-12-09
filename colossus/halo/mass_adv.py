@@ -33,7 +33,12 @@ mass definition quantifies the mass in the inner part of the halo. During the fa
 regime, this mass definition tracks :math:`M_{vir}`, but when the halo stops accreting it 
 approaches a constant. 
 
-.. autosummary::	
+---------------------------------------------------------------------------------------------------
+Module contents
+---------------------------------------------------------------------------------------------------
+
+.. autosummary::
+	changeMassDefinitionCModel	
 	M4rs
 
 ---------------------------------------------------------------------------------------------------

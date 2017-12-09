@@ -10,7 +10,7 @@ The mass function quantifies how many halos of a certain mass exist at a given r
 given cosmology.
 
 ---------------------------------------------------------------------------------------------------
-Basic usage
+Basics
 ---------------------------------------------------------------------------------------------------
 
 This module implements a number of models for the halo mass function. The easiest and recommended
@@ -67,7 +67,7 @@ calibrated to various mass definitions. The ``tinker08`` model can handle any ov
 There are two different types of redshift dependence of :math:`f(\\sigma)` listed above: some 
 models explicitly depend on redshift (e.g., ``bhattacharya11``), some models only change through 
 the small variation of the collapse overdensity :math:`\\delta_{\\rm c}` 
-(see :func:`lss.peaks.collapseOverdensity`). The ``tinker08`` model depends on redshift only through 
+(see :func:`~lss.peaks.collapseOverdensity`). The ``tinker08`` model depends on redshift only through 
 the conversion of the overdensity threshold.
 
 Mass functions based on the Press-Schechter formalism (i.e., parameterizations in terms of f(sigma)
@@ -76,6 +76,30 @@ across redshifts and cosmologies. However, it has been shown that this is true o
 Nevertheless, this function does not check whether the user input is outside the range where the
 model was calibrated, be it in halo mass, redshift, or cosmology.
 
+---------------------------------------------------------------------------------------------------
+Module contents
+--------------------------------------------------------------------------------------------------- 
+
+.. autosummary::
+	HaloMassFunctionModel
+	models
+	massFunction
+	convertMassFunction
+	modelPress74
+	modelSheth99
+	modelJenkins01
+	modelReed03
+	modelWarren06
+	modelReed07
+	modelTinker08
+	modelCrocce10
+	modelCourtin11
+	modelBhattacharya11
+	modelAngulo12
+	modelWatson13
+	modelBocquet16
+	modelDespali16
+	
 ---------------------------------------------------------------------------------------------------
 Module reference
 --------------------------------------------------------------------------------------------------- 
@@ -118,6 +142,8 @@ class HaloMassFunctionModel():
 
 models = OrderedDict()
 """
+Dictionary containing a list of models.
+
 An ordered dictionary containing one :class:`HaloMassFunctionModel` entry for each model.
 """
 
@@ -184,7 +210,7 @@ def massFunction(x, z, q_in = 'M', q_out = 'f', mdef = 'fof',
 				ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARGS, 
 				deltac_args = defaults.DELTAC_ARGS, **kwargs):
 	"""
-	The abundance of halos as a function of redshift and mass, variance, or peak height.
+	The abundance of halos as a function of mass, variance, or peak height.
 	
 	This function is a wrapper for all individual models implemented in this module. It accepts
 	either mass, variance, or peak height as input (controlled by the ``q_in`` parameter, see the 
@@ -428,7 +454,7 @@ def modelSheth99(sigma, z, deltac_args = {'corrections': True}):
 
 def modelJenkins01(sigma):
 	"""
-	The mass function model of Jenkins et al. 2001.
+	The mass function model of Jenkins et al 2001.
 	
 	The model is given in Equation 9. It does not explicitly rely on the collapse overdensity and
 	thus has no redshift evolution.
@@ -452,7 +478,7 @@ def modelJenkins01(sigma):
 
 def modelReed03(sigma, z, deltac_args = {'corrections': True}):
 	"""
-	The mass function model of Reed et al. 2003.
+	The mass function model of Reed et al 2003.
 	
 	This model corrects the 
 	`Sheth & Tormen 1999 <http://adsabs.harvard.edu/abs/1999MNRAS.308..119S>`_ model at high 
@@ -482,7 +508,7 @@ def modelReed03(sigma, z, deltac_args = {'corrections': True}):
 
 def modelWarren06(sigma):
 	"""
-	The mass function model of Warren et al. 2006.
+	The mass function model of Warren et al 2006.
 	
 	This model does not explicitly rely on the collapse overdensity and thus has no redshift 
 	dependence. The functional form is given in Equation 5. 
@@ -511,7 +537,7 @@ def modelWarren06(sigma):
 
 def modelReed07(sigma, z, deltac_args = {'corrections': True}, exact_n = True):
 	"""
-	The mass function model of Reed et al. 2007.
+	The mass function model of Reed et al 2007.
 	
 	This model takes the changing slope of the power spectrum into account. This slope can be 
 	computed numerically using the colossus interpolation tables, or using the approximation in 
@@ -568,7 +594,7 @@ def modelReed07(sigma, z, deltac_args = {'corrections': True}, exact_n = True):
 
 def modelTinker08(sigma, z, mdef):
 	"""
-	The mass function model of Tinker et al. 2008.
+	The mass function model of Tinker et al 2008.
 	
 	This model was the first calibrated for SO rather than FOF masses, and can predict the mass 
 	function for a large range of overdensities (:math:`200 \\leq \\Delta_{\\rm m} \\leq 3200`).
@@ -626,7 +652,7 @@ def modelTinker08(sigma, z, mdef):
 
 def modelCrocce10(sigma, z):
 	"""
-	The mass function model of Crocce et al. 2010.
+	The mass function model of Crocce et al 2010.
 	
 	This function was calibrated between z = 0 and 1, and is given in Equation 22.
 	
@@ -655,7 +681,7 @@ def modelCrocce10(sigma, z):
 
 def modelCourtin11(sigma):
 	"""
-	The mass function model of Courtin et al. 2011.
+	The mass function model of Courtin et al 2011.
 	
 	The model uses the same functional form as the 
 	`Sheth & Tormen 1999 <http://adsabs.harvard.edu/abs/1999MNRAS.308..119S>`_, but with different
@@ -691,7 +717,7 @@ def modelCourtin11(sigma):
 
 def modelBhattacharya11(sigma, z, deltac_args = {'corrections': False}):
 	"""
-	The mass function model of Bhattacharya et al. 2011.
+	The mass function model of Bhattacharya et al 2011.
 	
 	This model was calibrated between redshift 0 and 2. The authors found that varying 
 	:math:`\\delta_{\\rm c}` does not account for the redshift dependence. Thus, they keep it 
@@ -731,7 +757,7 @@ def modelBhattacharya11(sigma, z, deltac_args = {'corrections': False}):
 
 def modelAngulo12(sigma):
 	"""
-	The mass function model of Angulo et al. 2012.
+	The mass function model of Angulo et al 2012.
 	
 	The model is specified in Equation 2. Note that there is a typo in this equation that was 
 	corrected in other implementations of the model.
@@ -755,7 +781,7 @@ def modelAngulo12(sigma):
 
 def modelWatson13(sigma, z, mdef):
 	"""
-	The mass function model of Watson et al. 2013.
+	The mass function model of Watson et al 2013.
 	
 	This function contains multiple models, namely the redshift-independent model for the FOF mass 
 	function as given in Equation 12, the redshift-evolving fit to the AHF mass function given in 
@@ -822,7 +848,7 @@ def modelWatson13(sigma, z, mdef):
 
 def modelBocquet16(sigma, z, mdef, hydro = True):
 	"""
-	The mass function model of Bocquet et al. 2016.
+	The mass function model of Bocquet et al 2016.
 	
 	The parameters were separately fit for dark matter-only and hydrodynamical simulations. The
 	fits cover three mass definitions (200m, 200c, and 500c); requesting a different definition
@@ -919,7 +945,7 @@ def modelBocquet16(sigma, z, mdef, hydro = True):
 
 def modelDespali16(sigma, z, mdef, deltac_args = {'corrections': True}, ellipsoidal = False):
 	"""
-	The mass function model of Despali et al. 2016.
+	The mass function model of Despali et al 2016.
 	
 	The parameters were fit for a number of different mass definitions, redshifts, and cosmologies.
 	Here, we use the most general parameter set using the rescaling formula for redshift and mass 

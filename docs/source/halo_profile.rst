@@ -36,9 +36,9 @@ class are:
   cosmological information). If a profile object relies on cosmology, the user needs to set a 
   cosmology or an error will be thrown.
 
------------
-Basic usage
------------
+------
+Basics
+------
 
 Almost all profile related functions are encapsulated within profile objects. For example, let us 
 create an NFW profile for a halo with a particular virial mass and concentration::

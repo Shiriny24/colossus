@@ -9,7 +9,7 @@
 This module contains a collection of routines related to the splashback radius.
 
 ---------------------------------------------------------------------------------------------------
-Background
+Basics
 ---------------------------------------------------------------------------------------------------
 
 The splashback radius, :math:`R_{\\rm sp}`, corresponds to the apocenter of particles on their 
@@ -88,20 +88,44 @@ Splashback models
 The following models are supported in this module, and their ID can be passed as the ``model`` 
 parameter to the :func:`splashbackModel` and :func:`splashbackRadius` functions:
 
-============== ==================== =========================== =========================================
-ID             Predicts...          ...as a function of...      Reference
-============== ==================== =========================== =========================================
-adhikari14     Rsp/Msp              (Gamma, z)                  `Adhikari et al. 2014 <http://adsabs.harvard.edu/abs/2014JCAP...11..019A>`_
-more15         Rsp/Msp              (Gamma, z, M) or (z, M)     `More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`_
-shi16          Rsp/Msp              (Gamma, z)                  `Shi 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.459.3711S>`_
-mansfield17    Rsp/Msp, Scatter     (Gamma, z, M)               `Mansfield et al. 2017 <http://adsabs.harvard.edu/abs/2017ApJ...841...34M>`_
-diemer17       Rsp/Msp, Scatter     (Gamma, z, M) or (z, M)     `Diemer et al. 2017 <http://adsabs.harvard.edu/abs/2017ApJ...843..140D>`_
-============== ==================== =========================== =========================================
+.. table::
+	:widths: auto
+
+	============== ==================== =========================== =========================================
+	ID             Predicts...          ...as a function of...      Reference
+	============== ==================== =========================== =========================================
+	adhikari14     Rsp/Msp              (Gamma, z)                  `Adhikari et al. 2014 <http://adsabs.harvard.edu/abs/2014JCAP...11..019A>`_
+	more15         Rsp/Msp              (Gamma, z, M) or (z, M)     `More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`_
+	shi16          Rsp/Msp              (Gamma, z)                  `Shi 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.459.3711S>`_
+	mansfield17    Rsp/Msp, Scatter     (Gamma, z, M)               `Mansfield et al. 2017 <http://adsabs.harvard.edu/abs/2017ApJ...841...34M>`_
+	diemer17       Rsp/Msp, Scatter     (Gamma, z, M) or (z, M)     `Diemer et al. 2017 <http://adsabs.harvard.edu/abs/2017ApJ...843..140D>`_
+	============== ==================== =========================== =========================================
 
 The individual functions for these models are documented towards the bottom of this page. Note that
 the ``diemer17`` model includes a fitting function for the mass accretion rate as a function of 
 peak height and redshift, :func:`modelDiemer17Gamma`.
 
+---------------------------------------------------------------------------------------------------
+Module contents
+---------------------------------------------------------------------------------------------------
+
+.. autosummary:: 
+	SplashbackModel
+	models
+	splashbackModel
+	splashbackRadius
+	modelAdhikari14Deltasp
+	modelAdhikari14RspR200m
+	modelMore15RspR200m
+	modelMore15MspM200m
+	modelShi16Delta
+	modelShi16RspR200m
+	modelMansfield17RspR200m
+	modelMansfield17MspM200m
+	modelDiemer17Gamma
+	modelDiemer17RspR200m
+	modelDiemer17Scatter
+	
 ---------------------------------------------------------------------------------------------------
 Module reference
 ---------------------------------------------------------------------------------------------------
@@ -161,6 +185,8 @@ class SplashbackModel():
 
 models = OrderedDict()
 """
+Dictionary containing a list of models.
+
 An ordered dictionary containing one :class:`SplashbackModel` entry for each model.
 """
 
@@ -206,7 +232,7 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 				statistic = defaults.HALO_SPLASHBACK_STATISTIC,
 				rspdef = defaults.HALO_SPLASHBACK_RSPDEF):
 	"""
-	The splashback radius and other quantities as predicted by various models.
+	The splashback radius, mass, and scatter.
 	
 	Depending on the model, this function can return quantities such as :math:`R_{sp} / R_{\\rm 200m}`,
 	:math:`M_{\\rm sp} / M_{\\rm 200m}`, the splashback overdensity, or the scatter in these 
@@ -379,7 +405,7 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 	if model == 'diemer17':
 		
 		# The model is only valid between the 50th and 87th percentile
-		p = modelDiemer17PercentileValue(rspdef)
+		p = _modelDiemer17PercentileValue(rspdef)
 		if (p > 0.0 and p < 0.5) or p > 0.87:
 			mask[:] = False
 			ret = np.array([])
@@ -692,6 +718,9 @@ def modelShi16RspR200m(Gamma, Om):
 ###################################################################################################
 
 def modelMansfield17RspR200m(Gamma, Om, nu):
+	"""
+	:math:`R_{\\rm sp}` for the ``mansfield17`` model.
+	"""
 
 	M0 = 0.2181
 	M1 = 0.4996
@@ -710,6 +739,9 @@ def modelMansfield17RspR200m(Gamma, Om, nu):
 ###################################################################################################
 
 def modelMansfield17MspM200m(Gamma, Om, nu):
+	"""
+	:math:`M_{\\rm sp}` for the ``mansfield17`` model.
+	"""
 
 	A0 = 0.1925
 	A1 = 1.072
@@ -722,7 +754,7 @@ def modelMansfield17MspM200m(Gamma, Om, nu):
 
 ###################################################################################################
 
-def modelDiemer17PercentileValue(rspdef):
+def _modelDiemer17PercentileValue(rspdef):
 	
 	if rspdef == 'mean':
 		p = -1.0
@@ -854,7 +886,7 @@ def modelDiemer17RspR200m(q_out, Gamma, nu200m, z, rspdef):
 
 	cosmo = cosmology.getCurrent()
 	Om = cosmo.Om(z)
-	p = modelDiemer17PercentileValue(rspdef)
+	p = _modelDiemer17PercentileValue(rspdef)
 		
 	A0 = a0 + p * a0_p
 	B0 = b0 + p * b0_p
@@ -907,7 +939,7 @@ def modelDiemer17Scatter(q_out, Gamma, nu200m, z, rspdef):
 			sigma_nu = -0.012491
 			sigma_p = 0.047344
 
-	p = modelDiemer17PercentileValue(rspdef)	
+	p = _modelDiemer17PercentileValue(rspdef)	
 	ret = sigma_0 + sigma_Gamma * Gamma + sigma_nu * nu200m + sigma_p * p
 
 	return ret

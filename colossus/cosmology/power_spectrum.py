@@ -28,6 +28,17 @@ be passed as the ``model`` parameter to the :func:`transferFunction` function:
 	================== ============================================================================ ======================================
 
 ---------------------------------------------------------------------------------------------------
+Module contents
+---------------------------------------------------------------------------------------------------
+
+.. autosummary::
+	PowerSpectrumModel
+	models
+	transferFunction
+	modelEisenstein98
+	modelEisenstein98ZeroBaryon
+	
+---------------------------------------------------------------------------------------------------
 Module reference
 ---------------------------------------------------------------------------------------------------
 """
@@ -56,6 +67,8 @@ class PowerSpectrumModel():
 
 models = OrderedDict()
 """
+Dictionary containing a list of models.
+
 An ordered dictionary containing one :class:`PowerSpectrumModel` entry for each model.
 """
 
