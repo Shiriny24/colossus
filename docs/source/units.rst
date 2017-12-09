@@ -13,16 +13,16 @@ each top-level module:
 .. table::
    :widths: auto
 
-   =================== ======================================= ======================================= =======================================
-   ``Variable``        ``Cosmology``                           ``Large-scale str.``                    ``Dark matter halos``
-   =================== ======================================= ======================================= =======================================                            
-   ``Length``          Comoving Mpc/h                          Comoving Mpc/h                          Physical kpc/h
-   ``Wavenumber``      Comoving h/Mpc                          Comoving h/Mpc                          Comoving h/Mpc
-   ``Time``            Gigayears                               ---                                     Gigayears
-   ``Mass``            :math:`M_{\odot}/h`                     :math:`M_{\odot}/h`                     :math:`M_{\odot}/h`
-   ``Density``         Physical :math:`M_{\odot} h^2 / kpc^3`  Physical :math:`M_{\odot} h^2 / kpc^3`  Physical :math:`M_{\odot} h^2 / kpc^3`
-   ``Surface density`` ---                                     ---                                     Physical :math:`M_{\odot} h / kpc^2`
-   =================== ======================================= ======================================= =======================================
+   =================== ============================================== ================================================= =======================================
+   ``Variable``        ``Cosmology``                                  ``Large-scale str.``                              ``Dark matter halos``
+   =================== ============================================== ================================================= =======================================                            
+   ``Length``          Comoving Mpc/h                                 Comoving Mpc/h                                    Physical kpc/h
+   ``Wavenumber``      Comoving h/Mpc                                 Comoving h/Mpc                                    Comoving h/Mpc
+   ``Time``            Gigayears                                      ---                                               Gigayears
+   ``Mass``            :math:`M_{\odot}/h`                            :math:`M_{\odot}/h`                               :math:`M_{\odot}/h`
+   ``Density``         Physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`  Physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`     Physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`
+   ``Surface density`` ---                                            ---                                               Physical :math:`M_{\odot} h / {\\rm kpc}^2`
+   =================== ============================================== ================================================= =======================================
 
 Note that, even in the cosmology module, density units are based on physical kpc. Thus, quantities
 such as the mean density of the universe are compatible with the densities computed in the halo 

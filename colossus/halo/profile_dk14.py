@@ -55,7 +55,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	======= ================ ===================================================================================
 	Param.  Symbol           Explanation	
 	======= ================ ===================================================================================
-	rhos	:math:`\\rho_s`   The central scale density, in physical :math:`M_{\odot} h^2 / kpc^3`
+	rhos	:math:`\\rho_s`   The central scale density, in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`
 	rs      :math:`r_s`      The scale radius in physical kpc/h
 	rt      :math:`r_t`      The radius where the profile steepens, in physical kpc/h
 	alpha   :math:`\\alpha`   Determines how quickly the slope of the inner Einasto profile steepens
@@ -106,7 +106,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	rhos: float
-		The central scale density, in physical :math:`M_{\odot} h^2 / kpc^3`
+		The central scale density, in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`
 	rs: float
 		The scale radius in physical kpc/h
 	rt: float
@@ -451,8 +451,8 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		density: array_like
-			Density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions 
-			as r.
+			Density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`; has the same dimensions 
+			as ``r``.
 		"""		
 		
 		inner = self.par['rhos'] * np.exp(-2.0 / self.par['alpha'] * ((r / self.par['rs'])**self.par['alpha'] - 1.0))
@@ -475,7 +475,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		derivative: array_like
-			The linear derivative in physical :math:`M_{\odot} h / kpc^2`; has the same 
+			The linear derivative in physical :math:`M_{\odot} h / {\\rm kpc}^2`; has the same 
 			dimensions as r.
 		"""
 		

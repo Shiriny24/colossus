@@ -44,7 +44,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	rhos: float
-		The central density in physical :math:`M_{\odot} h^2 / kpc^3`.
+		The central density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`.
 	rs: float
 		The scale radius in physical kpc/h.
 	M: float
@@ -123,10 +123,10 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		rhos: array_like
-			The central density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions
-			as M.
+			The central density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`; has the same 
+			dimensions as ``M``.
 		rs: array_like
-			The scale radius in physical kpc/h; has the same dimensions as M.
+			The scale radius in physical kpc/h; has the same dimensions as ``M``.
 		"""
 		
 		rs = mass_so.M_to_R(M, z, mdef) / c
@@ -147,7 +147,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		Parameters
 		-------------------------------------------------------------------------------------------
 		rhos: float
-			The central density in physical :math:`M_{\odot} h^2 / kpc^3`.
+			The central density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`.
 		x: array_like
 			The radius in units of the scale radius, :math:`x=r/r_s`; can be a number or a numpy
 			array.
@@ -155,7 +155,8 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		rho: array_like
-			Density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions as x.
+			Density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`; has the same dimensions 
+			as ``x``.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -182,7 +183,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		mu: array_like
-			Has the same dimensions as x.
+			Has the same dimensions as ``x``.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -205,7 +206,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		Parameters
 		-------------------------------------------------------------------------------------------
 		rhos: float
-			The central density in physical :math:`M_{\odot} h^2 / kpc^3`.
+			The central density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`.
 		rs: float
 			The scale radius in physical kpc/h.
 		x: array_like
@@ -215,7 +216,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		M: array_like
-			The enclosed mass in :math:`M_{\odot}/h`; has the same dimensions as x.
+			The enclosed mass in :math:`M_{\odot}/h`; has the same dimensions as ``x``.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -247,12 +248,12 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		Parameters
 		-------------------------------------------------------------------------------------------
 		rhos: float
-			The central density in physical :math:`M_{\odot} h^2 / kpc^3`.
+			The central density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`.
 		rs: float
 			The scale radius in physical kpc/h.
 		density_threshold: float
-			The desired enclosed density threshold in physical :math:`M_{\odot} h^2 / kpc^3`. This 
-			number can be generated from a mass definition and redshift using the 
+			The desired enclosed density threshold in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`. 
+			This number can be generated from a mass definition and redshift using the 
 			:func:`halo.mass_so.densityThreshold` function. 
 		
 		Returns
@@ -300,8 +301,8 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		density: array_like
-			Density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions 
-			as r.
+			Density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`; has the same dimensions 
+			as ``r``.
 		"""		
 	
 		x = r / self.par['rs']
@@ -323,7 +324,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		derivative: array_like
-			The linear derivative in physical :math:`M_{\odot} h / kpc^2`; has the same 
+			The linear derivative in physical :math:`M_{\odot} h / {\\rm kpc}^2`; has the same 
 			dimensions as r.
 		"""
 
@@ -346,7 +347,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		derivative: array_like
-			The dimensionless logarithmic derivative; has the same dimensions as r.
+			The dimensionless logarithmic derivative; has the same dimensions as ``r``.
 		"""
 
 		x = r / self.par['rs']
@@ -370,7 +371,8 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		M: array_like
-			The mass enclosed within radius r, in :math:`M_{\odot}/h`; has the same dimensions as r.
+			The mass enclosed within radius r, in :math:`M_{\odot}/h`; has the same dimensions as 
+			``r``.
 		"""		
 		
 		x = r / self.par['rs']
@@ -400,7 +402,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		Sigma: array_like
-			The surface density at radius r, in physical :math:`M_{\odot} h/kpc^2`; has the same 
+			The surface density at radius r, in physical :math:`M_{\odot} h/{\\rm kpc}^2`; has the same 
 			dimensions as r.
 		"""
 	

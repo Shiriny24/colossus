@@ -6,7 +6,8 @@
 ###################################################################################################
 
 """
-The majority of profile functions are implemented in this base class.
+The majority of all profile functions are implemented in this base class. Please see 
+:doc:`halo_profile` for a general introduction and :doc:`tutorials` for coding examples.
 """
 
 ###################################################################################################
@@ -36,10 +37,9 @@ class HaloDensityProfile():
 	"""
 	Abstract base class for a halo density profile in physical units.
 	
-	This class provides a general implementation of a halo density profile. In principle, a 
-	particular functional form of the profile can be implemented by inheriting this class and
-	overwriting only the constructor and density method. In practice, there are often faster 
-	implementations for particular forms of the profile.
+	A particular functional form for the density profile can be implemented by inheriting this 
+	class and overwriting the constructor and :func:`density` method. In practice, a number of 
+	other functions should also be overwritten for speed and convenience.
 	
 	Furthermore, this base class provides a general implementation of outer profile terms, 
 	i.e. descriptions of the outer profile beyond the virial radius. Thus, these terms can be
@@ -231,8 +231,8 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		density: array_like
-			Density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions 
-			as r.
+			Density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`; has the same dimensions 
+			as ``r``.
 		"""
 
 		return self.densityInner(r) + self.densityOuter(r)
@@ -255,7 +255,7 @@ class HaloDensityProfile():
 		-------------------------------------------------------------------------------------------
 		density: array_like
 			Density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions 
-			as r.
+			as ``r``.
 		"""		
 		
 		return
@@ -277,8 +277,8 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		density: array_like
-			Density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions 
-			as r.
+			Density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`; has the same dimensions 
+			as ``r``.
 		"""		
 				
 		r_array, is_array = utilities.getArray(r)
@@ -307,12 +307,8 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		derivative: array_like
-			The linear derivative in physical :math:`M_{\odot} h / kpc^2`; has the same 
-			dimensions as r.
-			
-		See also
-		-------------------------------------------------------------------------------------------
-		densityDerivativeLog: The logarithmic derivative of density, :math:`d \log(\\rho) / d \log(r)`. 
+			The linear derivative in physical :math:`M_{\odot} h / {\\rm kpc}^2`; has the same 
+			dimensions as ``r``.
 		"""
 		
 		return self.densityDerivativeLinInner(r) + self.densityDerivativeLinOuter(r)
@@ -334,8 +330,8 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		derivative: array_like
-			The linear derivative in physical :math:`M_{\odot} h / kpc^2`; has the same 
-			dimensions as r.
+			The linear derivative in physical :math:`M_{\odot} h / {\\rm kpc}^2`; has the same 
+			dimensions as ``r``.
 		"""
 		
 		r_use, is_array = utilities.getArray(r)
@@ -364,8 +360,8 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		derivative: array_like
-			The linear derivative in physical :math:`M_{\odot} h / kpc^2`; has the same 
-			dimensions as r.
+			The linear derivative in physical :math:`M_{\odot} h / {\\rm kpc}^2`; has the same 
+			dimensions as ``r``.
 		"""
 		
 		r_array, is_array = utilities.getArray(r)
@@ -394,11 +390,7 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		derivative: array_like
-			The dimensionless logarithmic derivative; has the same dimensions as r.
-			
-		See also
-		-------------------------------------------------------------------------------------------
-		densityDerivativeLin: The linear derivative of density, :math:`d \\rho / dr`.
+			The dimensionless logarithmic derivative; has the same dimensions as ``r``.
 		"""
 
 		drho_dr = self.densityDerivativeLin(r)
@@ -425,7 +417,7 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		derivative: array_like
-			The dimensionless logarithmic derivative; has the same dimensions as r.
+			The dimensionless logarithmic derivative; has the same dimensions as ``r``.
 		"""
 		
 		drho_dr = self.densityDerivativeLinInner(r)
@@ -451,7 +443,7 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		derivative: array_like
-			The dimensionless logarithmic derivative; has the same dimensions as r.
+			The dimensionless logarithmic derivative; has the same dimensions as ``r``.
 		"""		
 		drho_dr = self.densityDerivativeLinOuter(r)
 		rho = self.density(r)
@@ -493,7 +485,8 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		M: array_like
-			The mass enclosed within radius r, in :math:`M_{\odot}/h`; has the same dimensions as r.
+			The mass enclosed within radius ``r``, in :math:`M_{\odot}/h`; has the same dimensions 
+			as ``r``.
 		"""		
 
 		return self._enclosedMass(r, accuracy, self.density)
@@ -514,7 +507,8 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		M: array_like
-			The mass enclosed within radius r, in :math:`M_{\odot}/h`; has the same dimensions as r.
+			The mass enclosed within radius ``r``, in :math:`M_{\odot}/h`; has the same dimensions 
+			as ``r``.
 		"""		
 
 		return self._enclosedMass(r, accuracy, self.densityInner)
@@ -535,7 +529,8 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		M: array_like
-			The mass enclosed within radius r, in :math:`M_{\odot}/h`; has the same dimensions as r.
+			The mass enclosed within radius ``r``, in :math:`M_{\odot}/h`; has the same dimensions 
+			as ``r``.
 		"""		
 
 		return self._enclosedMass(r, accuracy, self.densityOuter)
@@ -565,7 +560,7 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		pdf: array_like
-			The probability for mass to lie within radius r; has the same dimensions as r.
+			The probability for mass to lie within radius ``r``; has the same dimensions as ``r``.
 		"""		
 		
 		Rmax_use = None
@@ -696,8 +691,8 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		Sigma: array_like
-			The surface density at radius r, in physical :math:`M_{\odot} h/kpc^2`; has the same 
-			dimensions as r.
+			The surface density at radius ``r``, in physical :math:`M_{\odot} h/{\\rm kpc}^2`; has the 
+			same dimensions as ``r``.
 		"""
 		
 		sigma = self.surfaceDensityInner(r, interpolate = interpolate, accuracy = accuracy, 
@@ -737,8 +732,8 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		Sigma: array_like
-			The surface density at radius r, in physical :math:`M_{\odot} h/kpc^2`; has the same 
-			dimensions as r.
+			The surface density at radius ``r``, in physical :math:`M_{\odot} h/{\\rm kpc}^2`; has the 
+			same dimensions as ``r``.
 		"""
 		
 		return self._surfaceDensity(r, self.densityInner, interpolate = interpolate, accuracy = accuracy,
@@ -778,8 +773,8 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		Sigma: array_like
-			The surface density at radius r, in physical :math:`M_{\odot} h/kpc^2`; has the same 
-			dimensions as r.
+			The surface density at radius ``r``, in physical :math:`M_{\odot} h/{\\rm kpc}^2`; has the 
+			same dimensions as ``r``.
 		"""
 
 		if utilities.isArray(r):	
@@ -897,8 +892,8 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		DeltaSigma: array_like
-			The differential surface mass density at radius r, in physical 
-			:math:`M_{\odot} h/kpc^2`; has the same dimensions as r.
+			The differential surface mass density at radius ``r``, in physical 
+			:math:`M_{\odot} h/{\\rm kpc}^2`; has the same dimensions as ``r``.
 		"""
 		
 		deltaSigma = self.deltaSigmaInner(r, 
@@ -952,8 +947,8 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		DeltaSigma: array_like
-			The differential surface mass density at radius r, in physical 
-			:math:`M_{\odot} h/kpc^2`; has the same dimensions as r.
+			The differential surface mass density at radius ``r``, in physical 
+			:math:`M_{\odot} h/{\\rm kpc}^2`; has the same dimensions as ``r``.
 		"""
 				
 		return self._deltaSigma(r, self.surfaceDensityInner, interpolate, 
@@ -999,8 +994,8 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		DeltaSigma: array_like
-			The differential surface mass density at radius r, in physical 
-			:math:`M_{\odot} h/kpc^2`; has the same dimensions as r.
+			The differential surface mass density at radius ``r``, in physical 
+			:math:`M_{\odot} h/{\\rm kpc}^2`; has the same dimensions as ``r``.
 		"""
 					
 		return self._deltaSigma(r, self.surfaceDensityOuter, interpolate,
@@ -1021,7 +1016,7 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		vc: float
-			The circular velocity in km / s; has the same dimensions as r.
+			The circular velocity in km / s; has the same dimensions as ``r``.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -1125,7 +1120,8 @@ class HaloDensityProfile():
 		"""
 		The spherical overdensity radius and mass of a given mass definition.
 		
-		This is a wrapper for the RDelta and MDelta functions which returns both radius and mass.
+		This is a wrapper for the :func:`RDelta` and :func:`MDelta` functions which returns both 
+		radius and mass.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -1416,14 +1412,15 @@ class HaloDensityProfile():
 		
 		The data points q at radii r can optionally have error bars, and the user can pass a full 
 		covariance matrix. Please note that not passing any estimate of the uncertainty, i.e. 
-		q_err = q_cov = None, can lead to very poor fit results: the fitter will minimize the 
-		absolute difference between points, strongly favoring the high densities at the center.
+		``q_err = None`` and ``q_cov = None``, can lead to very poor fit results: the fitter will 
+		minimize the absolute difference between points, strongly favoring the high densities at 
+		the center.
 		
 		There are two fundamental methods for performing the fit, a least-squares minimization 
-		(method = leastsq) and a Markov-Chain Monte Carlo (method = mcmc). The MCMC method has some
-		specific options (see below). In either case, the current parameters of the profile instance 
-		serve as an initial guess. Finally, the user can choose to vary only a sub-set of the
-		profile parameters through the ``mask`` parameter.
+		(``method = 'leastsq'``) and a Markov-Chain Monte Carlo (``method = 'mcmc'``). The MCMC 
+		method has some specific options (see below). In either case, the current parameters of 
+		the profile instance serve as an initial guess. Finally, the user can choose to vary only 
+		a sub-set of the profile parameters through the ``mask`` parameter.
 		
 		The function returns a dictionary with outputs that depend on which method is chosen. After
 		this function has completed, the profile instance represents the best-fit profile to the 
@@ -1436,23 +1433,24 @@ class HaloDensityProfile():
 		r: array_like
 			The radii of the data points, in physical kpc/h.
 		q: array_like
-			The data to fit; can either be density in physical :math:`M_{\odot} h^2 / kpc^3`, 
+			The data to fit; can either be density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`, 
 			enclosed mass in :math:`M_{\odot} /h`, or surface density in physical 
-			:math:`M_{\odot} h/kpc^2`. Must have the same dimensions as r.
+			:math:`M_{\odot} h/{\\rm kpc}^2`. Must have the same dimensions as r.
 		quantity: str
-			Indicates which quantity is given in the q input, can be ``rho``, ``M``, ``Sigma``,
-			or ``DeltaSigma``.
+			Indicates which quantity is given in as input in ``q``, can be ``rho``, ``M``, 
+			``Sigma``, or ``DeltaSigma``.
 		q_err: array_like
-			Optional; the uncertainty on the values in q in the same units. If ``method==mcmc``, 
-			either q_err or q_cov must be passed. If ``method==leastsq`` and neither q_err nor 
-			q_cov are passed, the absolute different between data points and fit is minimized. In 
-			this case, the returned chi2 is in units of absolute difference, meaning its value 
-			will depend on the units of q.
+			Optional; the uncertainty on the values in ``q`` in the same units. If 
+			``method == 'mcmc'``, either ``q_err`` or ``q_cov`` must be passed. If 
+			``method == 'leastsq'`` and neither ``q_err`` nor ``q_cov`` are passed, the absolute 
+			different between data points and fit is minimized. In this case, the returned 
+			``chi2`` is in units of absolute difference, meaning its value will depend on the 
+			units of ``q``.
 		q_cov: array_like
-			Optional; the covariance matrix of the elements in q, as a 2-dimensional numpy array. 
-			This array must have dimensions of q**2 and be in units of the square of the units of 
-			q. If q_cov is passed, q_err is ignored since the diagonal elements of q_cov correspond 
-			to q_err**2.
+			Optional; the covariance matrix of the elements in ``q``, as a 2-dimensional numpy 
+			array. This array must have dimensions of q**2 and be in units of the square of the 
+			units of ``q``. If ``q_cov`` is passed, ``q_err`` is ignored since the diagonal 
+			elements of ``q_cov`` correspond to q_err**2.
 		method: str
 			The fitting method; can be ``leastsq`` for a least-squares minimization of ``mcmc``
 			for a Markov-Chain Monte Carlo.
@@ -1466,35 +1464,35 @@ class HaloDensityProfile():
 			number, where 1 has the same effect as True, and 2 outputs large amounts of information
 			such as the fit parameters at each iteration.
 		tolerance: float
-			Only active when ``method==leastsq``. The accuracy to which the best-fit parameters
+			Only active when ``method == 'leastsq'``. The accuracy to which the best-fit parameters
 			are found.
 		maxfev: int
-			Only active when ``method==leastsq``. The maximum number of function evaluations before
+			Only active when ``method == 'leastsq'``. The maximum number of function evaluations before
 			the fit is aborted. If zero, the default value of the scipy leastsq function is used.
 		initial_step: array_like
-			Only active when ``method==mcmc``. The MCMC samples ("walkers") are initially 
+			Only active when ``method == 'mcmc'``. The MCMC samples ("walkers") are initially 
 			distributed in a Gaussian around the initial guess. The width of the Gaussian is given
-			by initial_step, either as an array of length N_par (giving the width of each Gaussian)
-			or as a float number, in which case the width is set to initial_step times the initial
+			by initial_step, either as an array of length ``N_par`` (giving the width of each 
+			Gaussian) or as a float number, in which case the width is set to initial_step times the initial
 			value of the parameter.
 		nwalkers: int
-			Only active when ``method==mcmc``. The number of MCMC samplers that are run in parallel.
+			Only active when ``method == 'mcmc'``. The number of MCMC samplers that are run in parallel.
 		random_seed: int
-			Only active when ``method==mcmc``. If random_seed is not None, it is used to initialize
+			Only active when ``method == 'mcmc'``. If random_seed is not None, it is used to initialize
 			the random number generator. This can be useful for reproducing results.
 		convergence_step: int
-			Only active when ``method==mcmc``. The convergence criteria are computed every
-			convergence_step steps (and output is printed if ``verbose==True``). 
+			Only active when ``method == 'mcmc'``. The convergence criteria are computed every
+			convergence_step steps (and output is printed if ``verbose == True``). 
 		converged_GR: float
-			Only active when ``method==mcmc``. The maximum difference between different chains, 
+			Only active when ``method == 'mcmc'``. The maximum difference between different chains, 
 			according to the Gelman-Rubin criterion. Once the GR indicator is lower than this 
 			number in all parameters, the chain is ended. Setting this number too low leads to
 			very long runtimes, but setting it too high can lead to inaccurate results.
 		best_fit: str
-			Only active when ``method==mcmc``. This parameter determines whether the ``mean`` or 
+			Only active when ``method == 'mcmc'``. This parameter determines whether the ``mean`` or 
 			``median`` value of the likelihood distribution is used as the output parameter set.
 		output_every_n: int
-			Only active when ``method==mcmc``. This parameter determines how frequently the MCMC
+			Only active when ``method == 'mcmc'``. This parameter determines how frequently the MCMC
 			chain outputs information. Only effective if ``verbose == True``.
 		
 		Returns
@@ -1507,38 +1505,40 @@ class HaloDensityProfile():
 				The best-fit result vector. If mask is passed, this vector only contains those 
 				variables that were varied in the fit. 
 			``q_fit``: array_like
-				The fitted profile at the radii of the data points; has the same units as q and the 
-				same dimensions as r.
+				The fitted profile at the radii of the data points; has the same units as ``q``
+				and the same dimensions as ``r``.
 			``chi2``: float
 				The chi^2 of the best-fit profile. If a covariance matrix was passed, the 
-				covariances are taken into account. If no uncertainty was passed at all, chi2 is
-				in units of absolute difference, meaning its value will depend on the units of q.
+				covariances are taken into account. If no uncertainty was passed at all, ``chi2`` 
+				is in units of absolute difference, meaning its value will depend on the units 
+				of ``q``.
 			``ndof``: int
 				The number of degrees of freedom, i.e. the number of fitted data points minus 
 				the number of free parameters.
 			``chi2_ndof``: float
 				The chi^2 per degree of freedom.
 		
-			If ``method==leastsq``, the dictionary additionally contains the following entries:
+			If ``method == 'leastsq'``, the dictionary additionally contains the entries returned 
+			by scipy.optimize.leastsq as well as the following:
 			
 			``nfev``: int
 				The number of function calls used in the fit.
 			``x_err``: array_like
-				An array of dimensions [2, nparams] which contains an estimate of the lower and 
+				An array of dimensions ``[2, nparams]`` which contains an estimate of the lower and 
 				upper uncertainties on the fitted parameters. These uncertainties are computed 
 				from the covariance matrix estimated by the fitter. Please note that this estimate
 				does not exactly correspond to a 68% likelihood. In order to get more statistically
 				meaningful uncertainties, please use the MCMC samples instead of least-squares. In
-				some cases, the fitter fails to return a covariance matrix, in which case x_err is
-				None.
+				some cases, the fitter fails to return a covariance matrix, in which case 
+				``x_err`` is ``None``.
 				
-			as well as the other entries returned by scipy.optimize.leastsq. If ``method==mcmc``,
-			the dictionary contains the following entries:
+			If ``method == 'mcmc'``, the dictionary contains the following entries:
 			
 			``x_initial``: array_like
-				The initial positions of the walkers, in an array of dimensions [nwalkers, nparams].
+				The initial positions of the walkers, in an array of dimensions 
+				``[nwalkers, nparams]``.
 			``chain_full``: array_like
-				A numpy array of dimensions [n_independent_samples, nparams] with the parameters 
+				A numpy array of dimensions ``[n_independent_samples, nparams]`` with the parameters 
 				at each step in the chain. In this thin chain, only every nth step is output, 
 				where n is the auto-correlation time, meaning that the samples in this chain are 
 				truly independent.
@@ -1549,14 +1549,14 @@ class HaloDensityProfile():
 			``R``: array_like
 				A numpy array containing the GR indicator at each step when it was saved.
 			``x_mean``: array_like
-				The mean of the chain for each parameter; has length nparams.
+				The mean of the chain for each parameter; has length ``nparams``.
 			``x_median``: array_like
-				The median of the chain for each parameter; has length nparams.
+				The median of the chain for each parameter; has length ``nparams``.
 			``x_stddev``: array_like
-				The standard deviation of the chain for each parameter; has length nparams.
+				The standard deviation of the chain for each parameter; has length ``nparams``.
 			``x_percentiles``: array_like
 				The lower and upper values of each parameter that contain a certain percentile of 
-				the probability; has dimensions [n_percentages, 2, nparams] where the second 
+				the probability; has dimensions ``[n_percentages, 2, nparams]`` where the second 
 				dimension contains the lower/upper values. 
 		"""						
 		

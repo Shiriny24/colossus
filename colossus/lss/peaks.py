@@ -83,7 +83,7 @@ def lagrangianR(M):
 	Returns
 	-------------------------------------------------------------------------------------------
 	R: array_like
-		The lagrangian radius in comoving Mpc/h; has the same dimensions as M.
+		The lagrangian radius in comoving Mpc/h; has the same dimensions as ``M``.
 
 	See also
 	-------------------------------------------------------------------------------------------
@@ -113,7 +113,7 @@ def lagrangianM(R):
 	Returns
 	-------------------------------------------------------------------------------------------
 	M: array_like
-		The lagrangian mass; has the same dimensions as R.
+		The lagrangian mass; has the same dimensions as ``R``.
 
 	See also
 	-------------------------------------------------------------------------------------------

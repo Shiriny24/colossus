@@ -108,7 +108,7 @@ def transferFunction(k, h, Om0, Ob0, Tcmb0, model = defaults.POWER_SPECTRUM_MODE
 	Returns
 	-------------------------------------------------------------------------------------------
 	Tk: array_like
-		The transfer function; has the same dimensions as k.
+		The transfer function; has the same dimensions as ``k``.
 	"""
 	
 	if model == 'eisenstein98':
@@ -152,7 +152,7 @@ def modelEisenstein98(k, h, Om0, Ob0, Tcmb0):
 	Returns
 	-------------------------------------------------------------------------------------------
 	Tk: array_like
-		The transfer function; has the same dimensions as k.
+		The transfer function; has the same dimensions as ``k``.
 
 	See also
 	-------------------------------------------------------------------------------------------
@@ -280,7 +280,7 @@ def modelEisenstein98ZeroBaryon(k, h, Om0, Ob0, Tcmb0):
 	Returns
 	-------------------------------------------------------------------------------------------
 	Tk: array_like
-		The transfer function; has the same dimensions as k.
+		The transfer function; has the same dimensions as ``k``.
 
 	See also
 	-------------------------------------------------------------------------------------------

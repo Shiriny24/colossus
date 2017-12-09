@@ -50,9 +50,9 @@ G = 4.30172E-6
 ###################################################################################################
 
 RHO_CRIT_0_KPC3 = 2.774848e+02
-"""The critical density of the universe at z = 0 in units of :math:`M_{\odot} h^2 / kpc^3`."""
+"""The critical density of the universe at z = 0 in units of :math:`M_{\odot} h^2 / {\\rm kpc}^3`."""
 RHO_CRIT_0_MPC3 = 2.774848e+11
-"""The critical density of the universe at z = 0 in units of :math:`M_{\odot} h^2 / Mpc^3`."""
+"""The critical density of the universe at z = 0 in units of :math:`M_{\odot} h^2 / {\\rm Mpc}^3`."""
 DELTA_COLLAPSE = 1.68647
 """The linear overdensity threshold for halo collapse according to the spherical top-hat collapse 
 model (`Gunn & Gott 1972 <http://adsabs.harvard.edu/abs/1972ApJ...176....1G>`_). This number 

@@ -143,8 +143,8 @@ def densityThreshold(z, mdef):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	rho: array_like
-		The threshold density in physical :math:`M_{\odot}h^2/kpc^3`; has the same dimensions as 
-		``z``.
+		The threshold density in physical :math:`M_{\odot}h^2/{\\rm kpc}^3`; has the same 
+		dimensions as ``z``.
 
 	See also
 	-----------------------------------------------------------------------------------------------
@@ -252,7 +252,7 @@ def R_to_M(R, z, mdef):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	M: array_like
-		Mass in :math:`M_{\odot}/h`; has the same dimensions as R.
+		Mass in :math:`M_{\odot}/h`; has the same dimensions as ``R``.
 
 	See also
 	-----------------------------------------------------------------------------------------------

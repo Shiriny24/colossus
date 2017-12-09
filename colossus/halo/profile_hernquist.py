@@ -39,7 +39,7 @@ class HernquistProfile(profile_base.HaloDensityProfile):
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	rhos: float
-		The central density in physical :math:`M_{\odot} h^2 / kpc^3`.
+		The central density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`.
 	rs: float
 		The scale radius in physical kpc/h.
 	M: float
@@ -108,10 +108,10 @@ class HernquistProfile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		rhos: array_like
-			The central density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions
-			as M.
+			The central density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`; has the same 
+			dimensions as ``M``.
 		rs: array_like
-			The scale radius in physical kpc/h; has the same dimensions as M.
+			The scale radius in physical kpc/h; has the same dimensions as ``M``.
 		"""
 		
 		rs = mass_so.M_to_R(M, z, mdef) / c
@@ -133,8 +133,8 @@ class HernquistProfile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		density: array_like
-			Density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions 
-			as r.
+			Density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`; has the same dimensions 
+			as ``r``.
 		"""		
 	
 		x = r / self.par['rs']
@@ -158,7 +158,8 @@ class HernquistProfile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		M: array_like
-			The mass enclosed within radius r, in :math:`M_{\odot}/h`; has the same dimensions as r.
+			The mass enclosed within radius r, in :math:`M_{\odot}/h`; has the same dimensions as 
+			``r``.
 		"""		
 		
 		rs = self.par['rs']

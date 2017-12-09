@@ -233,7 +233,7 @@ def concentration(M, mdef, z,
 	Returns
 	-----------------------------------------------------------------------------------------------
 	c: array_like
-		Halo concentration(s) in the mass definition mdef; has the same dimensions as M.
+		Halo concentration(s) in the mass definition mdef; has the same dimensions as ``M``.
 	mask: array_like
 		If ``range_return == True``, the function returns True/False values, where 
 		False indicates that the model was not calibrated at the chosen mass or redshift; has the
@@ -393,9 +393,9 @@ def modelBullock01(M200c, z):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	c200c: array_like
-		Halo concentration; has the same dimensions as M.
+		Halo concentration; has the same dimensions as ``M``.
 	mask: array_like
-		Boolean, has the same dimensions as M. Where ``False``, one or more input parameters were
+		Boolean, has the same dimensions as ``M``. Where ``False``, one or more input parameters were
 		outside the range where the model was calibrated, and the returned concentration may not 
 		be reliable.
 	"""
@@ -454,9 +454,9 @@ def modelDuffy08(M, z, mdef):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	c: array_like
-		Halo concentration; has the same dimensions as M.
+		Halo concentration; has the same dimensions as ``M``.
 	mask: array_like
-		Boolean, has the same dimensions as M. Where ``False``, one or more input parameters were
+		Boolean, has the same dimensions as ``M``. Where ``False``, one or more input parameters were
 		outside the range where the model was calibrated, and the returned concentration may not 
 		be reliable.
 	"""
@@ -509,7 +509,7 @@ def modelKlypin11(Mvir, z):
 	cvir: array_like
 		Halo concentration; has the same dimensions as Mvir.
 	mask: array_like
-		Boolean, has the same dimensions as Mvir. Where ``False``, one or more input parameters were
+		Boolean, has the same dimensions as ``Mvir``. Where ``False``, one or more input parameters were
 		outside the range where the model was calibrated, and the returned concentration may not 
 		be reliable.
 	"""
@@ -542,7 +542,7 @@ def modelPrada12(M200c, z):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	c200c: array_like
-		Halo concentration; has the same dimensions as M200c.
+		Halo concentration; has the same dimensions as ``M200c``.
 	"""
 
 	def cmin(x):
@@ -586,9 +586,9 @@ def modelBhattacharya13(M, z, mdef):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	c: array_like
-		Halo concentration; has the same dimensions as M.
+		Halo concentration; has the same dimensions as ``M``.
 	mask: array_like
-		Boolean, has the same dimensions as M. Where ``False``, one or more input parameters were
+		Boolean, has the same dimensions as ``M``. Where ``False``, one or more input parameters were
 		outside the range where the model was calibrated, and the returned concentration may not 
 		be reliable.
 	"""
@@ -642,9 +642,9 @@ def modelDutton14(M, z, mdef):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	c: array_like
-		Halo concentration; has the same dimensions as M.
+		Halo concentration; has the same dimensions as ``M``.
 	mask: array_like
-		Boolean, has the same dimensions as M. Where ``False``, one or more input parameters were
+		Boolean, has the same dimensions as ``M``. Where ``False``, one or more input parameters were
 		outside the range where the model was calibrated, and the returned concentration may not 
 		be reliable.
 	"""
@@ -706,7 +706,7 @@ def modelDiemer15fromM(M200c, z, statistic = 'median'):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	c200c: array_like
-		Halo concentration; has the same dimensions as M200c.
+		Halo concentration; has the same dimensions as ``M200c``.
 	
 	See also
 	-----------------------------------------------------------------------------------------------
@@ -746,7 +746,7 @@ def modelDiemer15fromNu(nu200c, z, statistic = 'median'):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	c200c: array_like
-		Halo concentration; has the same dimensions as nu200c.
+		Halo concentration; has the same dimensions as ``nu200c``.
 	
 	See also
 	-----------------------------------------------------------------------------------------------
@@ -881,9 +881,9 @@ def modelKlypin16fromM(M, z, mdef):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	c: array_like
-		Halo concentration; has the same dimensions as M.
+		Halo concentration; has the same dimensions as ``M``.
 	mask: array_like
-		Boolean, has the same dimensions as M. Where ``False``, one or more input parameters were
+		Boolean, has the same dimensions as ``M``. Where ``False``, one or more input parameters were
 		outside the range where the model was calibrated, and the returned concentration may not 
 		be reliable.
 	
@@ -959,9 +959,9 @@ def modelKlypin16fromNu(M, z, mdef):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	c: array_like
-		Halo concentration; has the same dimensions as M.
+		Halo concentration; has the same dimensions as ``M``.
 	mask: array_like
-		Boolean, has the same dimensions as M. Where ``False``, one or more input parameters were
+		Boolean, has the same dimensions as ``M``. Where ``False``, one or more input parameters were
 		outside the range where the model was calibrated, and the returned concentration may not 
 		be reliable.
 	

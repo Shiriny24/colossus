@@ -17,7 +17,9 @@ Basics
 
 In Colossus, the cosmology is set globally, and all functions respect that global cosmology. 
 Colossus does not set a default cosmology, meaning that the user must set a cosmology before 
-using any cosmological functions or any other functions that rely on the Cosmology module.
+using any cosmological functions or any other functions that rely on the Cosmology module. This
+documentation contains coding examples of the most common operations. Much more extensive code
+samples can be found in the :doc:`tutorials`.
 
 ***************************************************************************************************
 Setting and getting cosmologies
@@ -170,7 +172,7 @@ Power spectrum models
 
 By default, Colossus relies on fitting functions for the matter power spectrum which, in turn,
 is the basis for the variance and correlation function. These models are implemented in the 
-:mod:`cosmology.power_spectrum` module, documented at the bottom of this file.
+:mod:`~cosmology.power_spectrum` module, documented at the bottom of this file.
 
 ---------------------------------------------------------------------------------------------------
 Derivatives and inverses
@@ -204,7 +206,7 @@ Performance optimization and accuracy
 This module is optimized for fast performance, particularly in computationally intensive
 functions such as the correlation function. Almost all quantities are, by 
 default, tabulated, stored in files, and re-loaded when the same cosmology is set again (see the 
-:mod:`utils.storage` module for details). For some rare applications (for example, MCMC chains 
+:mod:`~utils.storage` module for details). For some rare applications (for example, MCMC chains 
 where functions are evaluated few times, but for a large number of cosmologies), the user can turn 
 this behavior off::
 
@@ -672,7 +674,7 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		E: array_like
-			:math:`H(z) / H_0`; has the same dimensions as z.
+			:math:`H(z) / H_0`; has the same dimensions as ``z``.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -703,7 +705,7 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		H: array_like
-			:math:`H(z)` in units of km/s/Mpc; has the same dimensions as z.
+			:math:`H(z)` in units of km/s/Mpc; has the same dimensions as ``z``.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -733,7 +735,7 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		w: array_like
-			:math:`w(z)`, has the same dimensions as z.
+			:math:`w(z)`, has the same dimensions as ``z``.
 		"""
 	
 		if self.de_model == 'lambda':
@@ -894,7 +896,7 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		tH: float
-			:math:`1/H` in units of Gyr; has the same dimensions as z.
+			:math:`1/H` in units of Gyr; has the same dimensions as ``z``.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -1074,7 +1076,7 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		d: array_like
-			The luminosity distance (or its derivative) in Mpc/h; has the same dimensions as z.
+			The luminosity distance (or its derivative) in Mpc/h; has the same dimensions as ``z``.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -1118,7 +1120,7 @@ class Cosmology(object):
 		-------------------------------------------------------------------------------------------
 		d: array_like
 			The angular diameter distance (or its derivative) in Mpc/h; has the same dimensions as 
-			z.
+			``z``.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -1147,7 +1149,7 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		mu: array_like
-			The distance modulus in magnitudes; has the same dimensions as z.
+			The distance modulus in magnitudes; has the same dimensions as ``z``.
 		"""
 		
 		mu = 5.0 * np.log10(self.luminosityDistance(z) / self.h * 1E5)
@@ -1191,8 +1193,8 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		rho_critical: array_like
-			The critical density in units of physical :math:`M_{\odot} h^2 / kpc^3`; has the same 
-			dimensions as z.
+			The critical density in units of physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`; has 
+			the same dimensions as ``z``.
 		"""
 			
 		return constants.RHO_CRIT_0_KPC3 * self.Ez(z)**2
@@ -1211,8 +1213,8 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		rho_matter: array_like
-			The matter density in units of physical :math:`M_{\odot} h^2 / kpc^3`; has the same 
-			dimensions as z.
+			The matter density in units of physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`; has the 
+			same dimensions as ``z``.
 	
 		See also
 		-------------------------------------------------------------------------------------------
@@ -1235,8 +1237,8 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		rho_baryon: array_like
-			The baryon density in units of physical :math:`M_{\odot} h^2 / kpc^3`; has the same 
-			dimensions as z.
+			The baryon density in units of physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`; has the 
+			same dimensions as ``z``.
 	
 		See also
 		-------------------------------------------------------------------------------------------
@@ -1259,8 +1261,8 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		rho_de: float
-			The dark energy density in units of physical :math:`M_{\odot} h^2 / kpc^3`; has the 
-			same dimensions as z.
+			The dark energy density in units of physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`; has 
+			the same dimensions as ``z``.
 	
 		See also
 		-------------------------------------------------------------------------------------------
@@ -1285,8 +1287,8 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		rho_gamma: array_like
-			The photon density in units of physical :math:`M_{\odot} h^2 / kpc^3`; has the same 
-			dimensions as z.
+			The photon density in units of physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`; has the 
+			same dimensions as ``z``.
 	
 		See also
 		-------------------------------------------------------------------------------------------
@@ -1311,8 +1313,8 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		rho_nu: array_like
-			The neutrino density in units of physical :math:`M_{\odot} h^2 / kpc^3`; has the same 
-			dimensions as z.
+			The neutrino density in units of physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`; has 
+			the same dimensions as ``z``.
 	
 		See also
 		-------------------------------------------------------------------------------------------
@@ -1338,8 +1340,8 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		rho_relativistic: array_like
-			The density of relativistic species in units of physical :math:`M_{\odot} h^2 / kpc^3`; 
-			has the same dimensions as z.
+			The density of relativistic species in units of physical 
+			:math:`M_{\odot} h^2 / {\\rm kpc}^3`; has the same dimensions as ``z``.
 	
 		See also
 		-------------------------------------------------------------------------------------------
@@ -1362,7 +1364,7 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		Omega_matter: array_like
-			Has the same dimensions as z.
+			Has the same dimensions as ``z``.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -1385,7 +1387,7 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		Omega_baryon: array_like
-			Has the same dimensions as z.
+			Has the same dimensions as ``z``.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -1408,7 +1410,7 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		Omega_de: array_like
-			Has the same dimensions as z.
+			Has the same dimensions as ``z``.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -1431,7 +1433,7 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		Omega_gamma: array_like
-			Has the same dimensions as z.
+			Has the same dimensions as ``z``.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -1454,7 +1456,7 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		Omega_nu: array_like
-			Has the same dimensions as z.
+			Has the same dimensions as ``z``.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -1479,7 +1481,7 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		Omega_relativistic: array_like
-			Has the same dimensions as z.
+			Has the same dimensions as ``z``.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -1504,7 +1506,7 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		Omega_curvature: array_like
-			Has the same dimensions as z.
+			Has the same dimensions as ``z``.
 		"""
 					
 		return self.Ok0 * (1.0 + z)**2 / (self.Ez(z))**2
@@ -1549,7 +1551,7 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		D: array_like
-			The linear growth factor; has the same dimensions as z.
+			The linear growth factor; has the same dimensions as ``z``.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -1657,7 +1659,7 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		D: array_like
-			The linear growth factor (or its derivative); has the same dimensions as z.
+			The linear growth factor (or its derivative); has the same dimensions as ``z``.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -2186,9 +2188,9 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		sigma: array_like
-			The rms variance; has the same dimensions as R. If inverse and/or derivative are True, 
-			the inverse, derivative, or derivative of the inverse are returned. If j > 0, those 
-			refer to higher moments.
+			The rms variance; has the same dimensions as ``R``. If inverse and/or derivative are 
+			True, the inverse, derivative, or derivative of the inverse are returned. If j > 0, 
+			those refer to higher moments.
 
 		See also
 		-------------------------------------------------------------------------------------------
@@ -2399,7 +2401,7 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		xi: array_like
-			The correlation function, or its derivative; has the same dimensions as R.
+			The correlation function, or its derivative; has the same dimensions as ``R``.
 
 		See also
 		-------------------------------------------------------------------------------------------

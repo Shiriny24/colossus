@@ -27,6 +27,7 @@ Colossus is developed with the following chief design goals in mind:
 * *Performance:* Computationally intensive routines have been optimized for speed, often using 
   interpolation tables. Virtually all functions accept either numbers or numpy arrays as input.
 
+The easiest way to learn how to use Colossus is to follow the examples in the :doc:`tutorials`.
 While Colossus has been tested extensively, there is no guarantee that it is free of bugs. Use it 
 at your own risk, and please report any errors, inconveniences and unclear documentation to the 
 author.

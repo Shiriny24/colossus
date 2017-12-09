@@ -43,7 +43,7 @@ class SplineProfile(profile_base.HaloDensityProfile):
 	r: numpy array
 		Radii in physical kpc/h.
 	rho: array_like
-		Density at radii r in physical :math:`M_{\odot} h^2 / kpc^3`. Does not have to be passed
+		Density at radii r in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`. Does not have to be passed
 		as long as M is passed.
 	M: array_like
 		Enclosed mass within radii r in :math:`M_{\odot} / h`. Does not have to be passed
@@ -122,8 +122,8 @@ class SplineProfile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		density: array_like
-			Density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions 
-			as r.
+			Density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`; has the same dimensions 
+			as ``r``.
 		"""	
 				
 		return np.exp(self.rho_spline(np.log(r)))
@@ -142,7 +142,7 @@ class SplineProfile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		derivative: array_like
-			The linear derivative in physical :math:`M_{\odot} h / kpc^2`; has the same 
+			The linear derivative in physical :math:`M_{\odot} h / {\\rm kpc}^2`; has the same 
 			dimensions as r.
 		"""
 
@@ -165,7 +165,7 @@ class SplineProfile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		derivative: array_like
-			The dimensionless logarithmic derivative; has the same dimensions as r.
+			The dimensionless logarithmic derivative; has the same dimensions as ``r``.
 		"""
 	
 		return self.rho_spline(np.log(r), nu = 1)
@@ -186,7 +186,8 @@ class SplineProfile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		M: array_like
-			The mass enclosed within radius r, in :math:`M_{\odot}/h`; has the same dimensions as r.
+			The mass enclosed within radius r, in :math:`M_{\odot}/h`; has the same dimensions as 
+			``r``.
 		"""		
 
 		return self.enclosedMassInner(r) + self.enclosedMassOuter(r, accuracy)

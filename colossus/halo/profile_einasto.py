@@ -50,7 +50,7 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	rhos: float
-		The density at the scale radius in physical :math:`M_{\odot} h^2 / kpc^3`.
+		The density at the scale radius in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`.
 	rs: float
 		The scale radius in physical kpc/h.
 	alpha: float
@@ -137,7 +137,7 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		rhos: float
-			The density at the scale radius in physical :math:`M_{\odot} h^2 / kpc^3`.
+			The density at the scale radius in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`.
 		rs: float
 			The scale radius in physical kpc/h.
 		alpha: float
@@ -238,8 +238,8 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		density: array_like
-			Density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions 
-			as r.
+			Density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`; has the same dimensions 
+			as ``r``.
 		"""		
 				
 		rho = self.par['rhos'] * np.exp(-2.0 / self.par['alpha'] * \
@@ -261,7 +261,7 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		derivative: array_like
-			The linear derivative in physical :math:`M_{\odot} h / kpc^2`; has the same 
+			The linear derivative in physical :math:`M_{\odot} h / {\\rm kpc}^2`; has the same 
 			dimensions as r.
 		"""
 
@@ -284,7 +284,7 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		derivative: array_like
-			The dimensionless logarithmic derivative; has the same dimensions as r.
+			The dimensionless logarithmic derivative; has the same dimensions as ``r``.
 		"""
 
 		der = -2.0 * (r / self.par['rs'])**self.par['alpha']

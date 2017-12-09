@@ -214,8 +214,8 @@ def twoHaloTerm(r, M, z, mdef, model = defaults.HALO_BIAS_MODEL):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	rho_2h: array_like
-		The density due to the 2-halo term in physical :math:`M_{\odot}h^2/kpc^3`; has the same 
-		dimensions as ``r``.
+		The density due to the 2-halo term in physical :math:`M_{\odot}h^2/{\\rm kpc}^3`; has the 
+		same dimensions as ``r``.
 	"""	
 	
 	cosmo = cosmology.getCurrent()
