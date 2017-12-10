@@ -10,6 +10,32 @@ This module implements the Navarro-Frenk-White form of the density profile. Plea
 :doc:`halo_profile` for a general introduction to the colossus density profile module.
 
 ---------------------------------------------------------------------------------------------------
+Basics
+---------------------------------------------------------------------------------------------------
+
+The NFW profile (`Navarro et al. 1997 <http://adsabs.harvard.edu/abs/1997ApJ...490..493N>`_) is
+defined by the density function
+	
+	.. math::
+		\\rho(r) = \\frac{\\rho_s}{\\left(\\frac{r}{r_{\\rm s}}\\right) \\left(1 + \\frac{r}{r_s}\\right)^{2}}
+
+The profile class can be initialized by either passing its fundamental parameters 
+:math:`\\rho_{\\rm s}` and :math:`r_{\\rm s}`, but the more convenient initialization is via mass 
+and concentration::
+
+	from colossus.cosmology import cosmology
+	from colossus.halo import profile_nfw
+	
+	cosmology.setCosmology('planck15')
+	p_nfw = profile_einasto.NFWProfile(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir')
+
+The NFW profile class is optimized by using analytical expressions instead of numerical
+calculations wherever possible. The :func:`radiusFromPdf` function covers the common case of 
+drawing random radial positions given an NFW profile.
+
+Please see the :doc:`tutorials` for more code examples.
+
+---------------------------------------------------------------------------------------------------
 Module reference
 ---------------------------------------------------------------------------------------------------
 """
@@ -30,16 +56,11 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	"""
 	The Navarro-Frenk-White profile.
 	
-	The NFW profile is defined by the density function
-	
-	.. math::
-		\\rho(r) = \\frac{\\rho_s}{\\left(\\frac{r}{r_s}\\right) \\left(1 + \\frac{r}{r_s}\\right)^{2}}
-		
 	The constructor accepts either the free parameters in this formula, central density and scale 
 	radius, or a spherical overdensity mass and concentration (in this case the mass definition 
-	and redshift also need to be specified). The density and other commonly used routines are 
-	implemented both as class and as static routines, meaning they can be called without 
-	instantiating the class.
+	and redshift also need to be specified, and a cosmology needs to be set). The density and other 
+	commonly used routines are implemented both as class and as static routines, meaning they can 
+	be called without instantiating the class.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -49,14 +70,14 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		The scale radius in physical kpc/h.
 	M: float
 		A spherical overdensity mass in :math:`M_{\odot}/h` corresponding to the mass
-		definition mdef at redshift z. 
+		definition ``mdef`` at redshift ``z``. 
 	c: float
-		The concentration, :math:`c = R / r_s`, corresponding to the given halo mass and mass 
-		definition.
+		The concentration, :math:`c = R / r_{\\rm s}`, corresponding to the given halo mass and
+		mass definition.
 	z: float
 		Redshift
 	mdef: str
-		The mass definition in which M and c are given. See :doc:`halo_mass` for details.
+		The mass definition in which ``M`` and ``c`` are given. See :doc:`halo_mass` for details.
 	"""
 	
 	###############################################################################################
@@ -101,24 +122,25 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	@classmethod
 	def fundamentalParameters(cls, M, c, z, mdef):
 		"""
-		The fundamental NFW parameters, :math:`\\rho_s` and :math:`r_s`, from mass and 
+		The fundamental NFW parameters, :math:`\\rho_s` and :math:`r_{\\rm s}`, from mass and 
 		concentration.
 		
 		This routine is called in the constructor of the NFW profile class (unless :math:`\\rho_s` 
-		and :math:`r_s` are passed by the user), but can also be called without instantiating an 
-		NFWProfile object.
+		and :math:`r_{\\rm s}` are passed by the user), but can also be called without 
+		instantiating an NFWProfile object.
 	
 		Parameters
 		-------------------------------------------------------------------------------------------
 		M: array_like
 			Spherical overdensity mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
 		c: array_like
-			The concentration, :math:`c = R / r_s`, corresponding to the given halo mass and mass 
-			definition; must have the same dimensions as M.
+			The concentration, :math:`c = R / r_{\\rm s}`, corresponding to the given halo mass and 
+			mass definition; must have the same dimensions as ``M``.
 		z: float
 			Redshift
 		mdef: str
-			The mass definition in which M and c are given. See :doc:`halo_mass` for details.
+			The mass definition in which ``M`` and ``c`` are given. See :doc:`halo_mass` for 
+			details.
 			
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -139,18 +161,18 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	@staticmethod
 	def rho(rhos, x):
 		"""
-		The NFW density as a function of :math:`x=r/r_s`.
+		The NFW density as a function of :math:`x = r/r_{\\rm s}`.
 		
 		This routine can be called without instantiating an NFWProfile object. In most cases, the 
-		:func:`halo.profile_base.HaloDensityProfile.density` function should be used instead.
+		:func:`~halo.profile_base.HaloDensityProfile.density` function should be used instead.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
 		rhos: float
 			The central density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`.
 		x: array_like
-			The radius in units of the scale radius, :math:`x=r/r_s`; can be a number or a numpy
-			array.
+			The radius in units of the scale radius, :math:`x=r/r_{\\rm s}`; can be a number or a 
+			numpy array.
 		
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -170,15 +192,15 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	@staticmethod
 	def mu(x):
 		"""
-		A function of :math:`x=r/r_s` that appears in the NFW enclosed mass.
+		A function of :math:`x=r/r_{\\rm s}` that appears in the NFW enclosed mass.
 
 		This routine can be called without instantiating an NFWProfile object.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
 		x: array_like
-			The radius in units of the scale radius, :math:`x=r/r_s`; can be a number or a numpy
-			array.
+			The radius in units of the scale radius, :math:`x=r/r_{\\rm s}`; can be a number or 
+			a numpy array.
 		
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -187,7 +209,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 
 		See also
 		-------------------------------------------------------------------------------------------
-		M: The enclosed mass in an NFW profile as a function of :math:`x=r/r_s`.
+		M: The enclosed mass in an NFW profile as a function of :math:`x=r/r_{\\rm s}`.
 		halo.profile_base.HaloDensityProfile.enclosedMass: The mass enclosed within radius r.
 		"""
 		
@@ -198,10 +220,10 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	@classmethod
 	def M(cls, rhos, rs, x):
 		"""
-		The enclosed mass in an NFW profile as a function of :math:`x=r/r_s`.
+		The enclosed mass in an NFW profile as a function of :math:`x=r/r_{\\rm s}`.
 
 		This routine can be called without instantiating an NFWProfile object. In most cases, the 
-		:func:`halo.profile_base.HaloDensityProfile.enclosedMass` function should be used instead.
+		:func:`~halo.profile_base.HaloDensityProfile.enclosedMass` function should be used instead.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -210,8 +232,8 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		rs: float
 			The scale radius in physical kpc/h.
 		x: array_like
-			The radius in units of the scale radius, :math:`x=r/r_s`; can be a number or a numpy
-			array.
+			The radius in units of the scale radius, :math:`x=r/r_{\\rm s}`; can be a number or a 
+			numpy array.
 		
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -220,7 +242,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 
 		See also
 		-------------------------------------------------------------------------------------------
-		mu: A function of :math:`x=r/r_s` that appears in the NFW enclosed mass.
+		mu: A function of :math:`x=r/r_{\\rm s}` that appears in the NFW enclosed mass.
 		halo.profile_base.HaloDensityProfile.enclosedMass: The mass enclosed within radius r.
 		"""
 		
@@ -238,7 +260,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	@classmethod
 	def xDelta(cls, rhos, rs, density_threshold, x_guess = 5.0):
 		"""
-		Find :math:`x=r/r_s` where the enclosed density has a particular value.
+		Find :math:`x=r/r_{\\rm s}` where the enclosed density has a particular value.
 		
 		This function is the basis for the RDelta routine, but can 
 		be used without instantiating an NFWProfile object. This is preferable when the function 
@@ -254,13 +276,15 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		density_threshold: float
 			The desired enclosed density threshold in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`. 
 			This number can be generated from a mass definition and redshift using the 
-			:func:`halo.mass_so.densityThreshold` function. 
+			:func:`~halo.mass_so.densityThreshold` function. 
+		x_guess: float
+			An initial guess for :math:`x=r/r_{\\rm s}`.
 		
 		Returns
 		-------------------------------------------------------------------------------------------
 		x: float
-			The radius in units of the scale radius, :math:`x=r/r_s`, where the enclosed density
-			reaches ``density_threshold``. 
+			The radius in units of the scale radius, :math:`x=r/r_{\\rm s}`, where the enclosed 
+			density reaches ``density_threshold``. 
 		"""
 		
 		# A priori, we have no idea at what radius the result will come out, but we need to 
@@ -325,7 +349,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		-------------------------------------------------------------------------------------------
 		derivative: array_like
 			The linear derivative in physical :math:`M_{\odot} h / {\\rm kpc}^2`; has the same 
-			dimensions as r.
+			dimensions as ``r``.
 		"""
 
 		x = r / self.par['rs']
@@ -391,8 +415,9 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		"""
 		The projected surface density at radius r due to the inner profile.
 		
-		This function uses the analytical formula of Lokas & Mamon 2001 rather than numerical 
-		integration.
+		This function uses the analytical formula of 
+		`Lokas & Mamon 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.321..155L>`_ rather than 
+		numerical integration.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -402,8 +427,8 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		Returns
 		-------------------------------------------------------------------------------------------
 		Sigma: array_like
-			The surface density at radius r, in physical :math:`M_{\odot} h/{\\rm kpc}^2`; has the same 
-			dimensions as r.
+			The surface density at radius r, in physical :math:`M_{\odot} h/{\\rm kpc}^2`; has 
+			the same dimensions as ``r``.
 		"""
 	
 		xx = r / self.par['rs']
@@ -549,7 +574,9 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		"""
 		The mass within 4 scale radii, :math:`M_{<4rs}`.
 		
-		See the section on mass definitions for details.
+		This mass definition was suggested by 
+		`More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`_, see the 
+		:doc:`halo_mass_adv` section for details.
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -615,30 +642,32 @@ def radiusFromPdf(M, c, z, mdef, cumulativePdf,
 	assuming an NFW profile. 
 	
 	This function can be useful when assigning radii to satellite galaxies in mock halos, for 
-	example. The function is optimized for speed when M is a large array. The density 
+	example. The function is optimized for speed when ``M`` is a large array. The density 
 	distribution is cut off at the virial radius corresponding to the given mass 
-	definition. For example, if ``mdef == vir``, the NFW profile is cut off at :math:`R_{vir}`. 
-	The accuracy achieved is about 0.2%, unless min_interpolate_pdf is changed to a lower value; 
-	below 0.01, the accuracy of the interpolation drops.
+	definition. For example, if ``mdef == 'vir'``, the NFW profile is cut off at 
+	:math:`R_{\\rm vir}`. The accuracy achieved is about 0.2%, unless ``min_interpolate_pdf`` is 
+	changed to a lower value; below 0.01, the accuracy of the interpolation drops.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	M: array_like
 		Halo mass in units of :math:`M_{\odot}/h`; can be a number or a numpy array.
 	c: array_like
-		Halo concentration, in the same definition as M; must have the same dimensions as M.
+		Halo concentration, in the same definition as ``M``; must have the same dimensions as 
+		``M``.
 	z: float
 		Redshift
 	mdef: str
-		The mass definition in which the halo mass M is given. See :doc:`halo_mass` for details.
+		The mass definition in which the halo mass ``M`` is given. See :doc:`halo_mass` for 
+		details.
 	cumulativePdf: array_like
 		The cumulative pdf that we are seeking. If an array, this array needs to have the same 
-		dimensions as the M array.
+		dimensions as the ``M`` array.
 	c_model: str
-		The model used to evaluate concentration if ``c is None``.
+		The model used to evaluate concentration if ``c == None``.
 	interpolate: bool
 		If ``interpolate == True``, an interpolation table is built before computing the radii. This 
-		is much faster if M is a large array. 
+		is much faster if ``M`` is a large array. 
 	min_interpolate_pdf: float
 		For values of the cumulativePdf that fall below this value, the radius is computed exactly,
 		even if ``interpolation == True``. The reason is that the interpolation becomes unreliable
@@ -648,7 +677,7 @@ def radiusFromPdf(M, c, z, mdef, cumulativePdf,
 	-----------------------------------------------------------------------------------------------
 	r: array_like
 		The radii where the cumulative pdf(s) is/are achieved, in units of physical kpc/h; has the 
-		same dimensions as M.
+		same dimensions as ``M``.
 
 	Warnings
 	-----------------------------------------------------------------------------------------------

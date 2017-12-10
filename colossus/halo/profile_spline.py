@@ -8,6 +8,43 @@
 """
 This module implements a general density profile using spline interpolation. Please see 
 :doc:`halo_profile` for a general introduction to the colossus density profile module.
+	
+---------------------------------------------------------------------------------------------------
+Basics
+---------------------------------------------------------------------------------------------------
+
+This general profile is initialized with an arbitrary array of radii and densities or enclosed 
+masses as input, and interpolates them using a splines (in log space). Note that there are three 
+different ways of specifying the density profile:
+
+* density and mass: Both density and mass are interpolated using splines.
+* density only: In order for the enclosed mass to be defined, the density must be specified 
+  all the way to r = 0. In that case, the mass is computed numerically, stored, and interpolated.
+* mass only: The density is computed as the derivative of the mass, stored, and interpolated.
+
+In the following example, we create an NFW profile and use its density to initialize a spline 
+profile::
+
+	from colossus.cosmology import cosmology
+	from colossus.halo import mass_so
+	from colossus.halo import profile_spline
+	from colossus.halo import profile_nfw
+
+	Mvir = 1E12
+	c = 10.0
+	mdef = 'vir'
+	z = 0.0
+	cosmology.setCosmology('planck15')
+	Rvir = mass_so.M_to_R(Mvir, z, mdef)
+	
+	p_nfw = profile_nfw.NFWProfile(M = Mvir, c = c, mdef = mdef, z = z)
+	r = 10**np.arange(-2.0, 1.0, 0.02) * Rvir
+	rho = p_nfw.density(r)
+	
+	p_spline = profile_spline.SplineProfile(r, rho = rho)
+
+Of course, in this case it would be better to work with the NFW profile directly. Please see the 
+:doc:`tutorials` for more code examples.
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -29,25 +66,16 @@ class SplineProfile(profile_base.HaloDensityProfile):
 	"""
 	An arbitrary density profile using spline interpolation.
 	
-	This class takes an arbitrary array of radii and densities or enclosed masses as input, and 
-	interpolates them using a splines (in log space). Note that there are three different ways of 
-	specifying the density profile:
-	
-	* density and mass: Both density and mass are interpolated using splines.
-	* density only: In order for the enclosed mass to be defined, the density must be specified 
-	  all the way to r = 0. In that case, the mass is computed numerically, stored, and interpolated.
-	* mass only: The density is computed as the derivative of the mass, stored, and interpolated.
-	
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	r: numpy array
 		Radii in physical kpc/h.
 	rho: array_like
-		Density at radii r in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`. Does not have to be passed
-		as long as M is passed.
+		Density at radii r in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`. Does not have to be 
+		passed as long as ``M`` is passed.
 	M: array_like
 		Enclosed mass within radii r in :math:`M_{\odot} / h`. Does not have to be passed
-		as long as rho is passed.
+		as long as ``rho`` is passed.
 
 	Warnings
 	-----------------------------------------------------------------------------------------------

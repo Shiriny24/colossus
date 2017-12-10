@@ -16,12 +16,12 @@ each top-level module:
    =================== ============================================== ================================================= =======================================
    ``Variable``        ``Cosmology``                                  ``Large-scale str.``                              ``Dark matter halos``
    =================== ============================================== ================================================= =======================================                            
-   ``Length``          Comoving Mpc/h                                 Comoving Mpc/h                                    Physical kpc/h
-   ``Wavenumber``      Comoving h/Mpc                                 Comoving h/Mpc                                    Comoving h/Mpc
+   ``Length``          Comoving :math:`{\rm Mpc}/h`                   Comoving :math:`{\rm Mpc}/h`                      Physical :math:`{\rm kpc}/h`
+   ``Wavenumber``      Comoving :math:`h/{\rm Mpc}`                   Comoving :math:`h/{\rm Mpc}`                      Comoving :math:`h/{\rm Mpc}`
    ``Time``            Gigayears                                      ---                                               Gigayears
    ``Mass``            :math:`M_{\odot}/h`                            :math:`M_{\odot}/h`                               :math:`M_{\odot}/h`
-   ``Density``         Physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`  Physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`     Physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`
-   ``Surface density`` ---                                            ---                                               Physical :math:`M_{\odot} h / {\\rm kpc}^2`
+   ``Density``         Physical :math:`M_{\odot} h^2 / {\rm kpc}^3`   Physical :math:`M_{\odot} h^2 / {\rm kpc}^3`      Physical :math:`M_{\odot} h^2 / {\rm kpc}^3`
+   ``Surface density`` ---                                            ---                                               Physical :math:`M_{\odot} h / {\rm kpc}^2`
    =================== ============================================== ================================================= =======================================
 
 Note that, even in the cosmology module, density units are based on physical kpc. Thus, quantities

@@ -10,6 +10,40 @@ This module implements the Einasto form of the density profile. Please see
 :doc:`halo_profile` for a general introduction to the colossus density profile module.
 
 ---------------------------------------------------------------------------------------------------
+Basics
+---------------------------------------------------------------------------------------------------
+
+The Einasto profile (`Einasto 1965 <http://adsabs.harvard.edu/abs/1965TrAlm...5...87E>`_) is 
+defined by the density function
+
+.. math::
+	\\rho(r) = \\rho_s \\exp \\left( -\\frac{2}{\\alpha} \\left[ \\left( \\frac{r}{r_s} \\right)^{\\alpha} - 1 \\right] \\right)
+
+or, alternatively, by a logarithmic slope that evolves with radius as 
+
+.. math::
+	\\frac{d \\log(\\rho)}{d \\log(r)} = -2 \\left( \\frac{r}{r_s} \\right)^{\\alpha}
+
+The third parameter, :math:`\\alpha`, determines how quickly the profile steepens with slope. 
+The Einasto profile class can be initialized from its fundamental parameters :math:`\\rho_{\\rm s}`, 
+:math:`r_{\\rm s}`, and :math:`\\alpha`, but the more convenient initialization is via mass and 
+concentration::
+
+	from colossus.cosmology import cosmology
+	from colossus.halo import profile_einasto
+	
+	cosmology.setCosmology('planck15')
+	p_einasto = profile_einasto.EinastoProfile(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir')
+
+In this case, :math:`\\alpha` is determined automatically using the formula of 
+`Gao et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.387..536G>`_, 
+
+.. math::
+	\\alpha = 0.155 + 0.0095 \\nu_{\\rm vir}^2
+
+Please see the :doc:`tutorials` for more code examples.
+
+---------------------------------------------------------------------------------------------------
 Module reference
 ---------------------------------------------------------------------------------------------------
 """
@@ -30,22 +64,12 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 	"""
 	The Einasto 1965 density profile.
 
-	The Einasto profile is defined by the density function
-	
-	.. math::
-		\\rho(r) = \\rho_s \\exp \\left( -\\frac{2}{\\alpha} \\left[ \\left( \\frac{r}{r_s} \\right)^{\\alpha} - 1 \\right] \\right)
-
-	or, alternatively, by a logarithmic slope that evolves with radius as 
-	
-	.. math::
-		\\frac{d \\log(\\rho)}{d \\log(r)} = -2 \\left( \\frac{r}{r_s} \\right)^{\\alpha}
-	
 	The constructor accepts either the free parameters (the density at the scale radius, the scale 
 	radius, and alpha), or a spherical overdensity mass and concentration (in this case the mass 
 	definition and redshift also need to be specified). In the latter case, the user can specify 
 	alpha or let the constructor compute it from its tight correlation with peak height 
-	(Gao et al. 2008). In the latter case, a cosmology must be set before instantiating the 
-	EinastoProfile object.
+	(`Gao et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.387..536G>`_). In the latter case, 
+	a cosmology must be set before instantiating the profile object.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -57,14 +81,14 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 		The radial dependence of the profile slope.
 	M: float
 		A spherical overdensity mass in :math:`M_{\odot}/h` corresponding to the mass
-		definition mdef at redshift z. 
+		definition ``mdef`` at redshift ``z``. 
 	c: float
-		The concentration, :math:`c = R / r_s`, corresponding to the given halo mass and mass 
-		definition.
+		The concentration, :math:`c = R / r_{\\rm s}`, corresponding to the given halo mass and 
+		mass definition.
 	z: float
 		Redshift
 	mdef: str
-		The mass definition in which M and c are given. See :doc:`halo_mass` for details.
+		The mass definition in which ``M`` and ``c`` are given. See :doc:`halo_mass` for details.
 	"""
 
 	###############################################################################################
@@ -112,26 +136,27 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 
 	def fundamentalParameters(self, M, c, z, mdef, alpha = None):
 		"""
-		The fundamental Einasto parameters, :math:`\\rho_s`, :math:`r_s`, and :math:`\\alpha` from 
-		mass and concentration.
+		The fundamental Einasto parameters, :math:`\\rho_{\\rm s}`, :math:`r_{\\rm s}`, and 
+		:math:`\\alpha` from mass and concentration.
 		
 		This routine is called in the constructor of the Einasto profile class (unless 
-		:math:`\\rho_s`, :math:`r_s` and :math:`\\alpha` are passed by the user), and cannot be
-		called without instantiating an EinastoProfile object.
+		:math:`\\rho_{\\rm s}`, :math:`\\rho_{\\rm s}` and :math:`\\alpha` are passed by the 
+		user), and cannot be called without instantiating an EinastoProfile object.
 	
 		Parameters
 		-------------------------------------------------------------------------------------------
 		M: float
 			Spherical overdensity mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
 		c: float
-			The concentration, :math:`c = R / r_s`, corresponding to the given halo mass and mass 
-			definition; must have the same dimensions as M.
+			The concentration, :math:`c = R / r_{\\rm s}`, corresponding to the given halo mass and 
+			mass definition; must have the same dimensions as ``M``.
 		z: float
 			Redshift
 		mdef: str
-			The mass definition in which M and c are given. See :doc:`halo_mass` for details.
+			The mass definition in which ``M`` and ``c`` are given. See :doc:`halo_mass` for 
+			details.
 		alpha: float
-			The radial dependence of the profile slope; can be None in which case it is 
+			The radial dependence of the profile slope; can be ``None`` in which case it is 
 			approximated.
 			
 		Returns
