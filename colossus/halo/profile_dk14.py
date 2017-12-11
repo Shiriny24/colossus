@@ -16,78 +16,80 @@ Basics
 The DK14 profile (`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_)
 is defined by the following density form:
 
+	.. math::
+		\\rho(r) &= \\rho_{\\rm inner} \\times f_{\\rm trans} + \\rho_{\\rm outer}
+		
+		\\rho_{\\rm inner} &= \\rho_{\\rm Einasto} = \\rho_{\\rm s} \\exp \\left( -\\frac{2}{\\alpha} \\left[ \\left( \\frac{r}{r_{\\rm s}} \\right)^\\alpha -1 \\right] \\right)
+
+		f_{\\rm trans} &= \\left[ 1 + \\left( \\frac{r}{r_{\\rm t}} \\right)^\\beta \\right]^{-\\frac{\\gamma}{\\beta}}
+
 This profile corresponds to an Einasto profile at small radii, and steepens around the virial 
 radius. The profile formula has 6 free parameters, but most of those can be fixed to particular 
-values that depend on the mass and mass accretion rate of a halo. The parameter values, and 
-their dependence on mass etc, are explained in Section 3.3 of Diemer & Kravtsov 2014.
+values that depend on the mass and mass accretion rate of a halo. The parameters have the 
+following meaning:
+
+.. table::
+	:widths: auto
+	
+	======= ==================== ===================================================================================
+	Param.  Symbol               Explanation	
+	======= ==================== ===================================================================================
+	rhos	:math:`\\rho_s`       The central scale density, in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`
+	rs      :math:`r_{\\rm s}`     The scale radius in physical kpc/h
+	alpha   :math:`\\alpha`       Determines how quickly the slope of the inner Einasto profile steepens
+	rt      :math:`r_{\\rm t}`     The radius where the profile steepens beyond the Einasto profile, in physical kpc/h
+	beta    :math:`\\beta`        Sharpness of the steepening
+	gamma	:math:`\\gamma`       Asymptotic negative slope of the steepening term
+	======= ==================== ===================================================================================
 
 There are two ways to initialize a DK14 profile. First, the user can pass the fundamental
-parameters of the profile:
+parameters of the profile listed above. Second, the user can pass a spherical overdensity mass 
+and concentration, the conversion to the native parameters then relies on the calibrations 
+in DK14. In this case, the user can give additional information about the profile that can be 
+used in setting the fundamental parameters. 
 
-======= ================ ===================================================================================
-Param.  Symbol           Explanation	
-======= ================ ===================================================================================
-rhos	:math:`\\rho_s`   The central scale density, in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`
-rs      :math:`r_s`      The scale radius in physical kpc/h
-rt      :math:`r_t`      The radius where the profile steepens, in physical kpc/h
-alpha   :math:`\\alpha`   Determines how quickly the slope of the inner Einasto profile steepens
-beta    :math:`\\beta`    Sharpness of the steepening
-gamma	:math:`\\gamma`   Asymptotic negative slope of the steepening term
-z       :math:`z`        Redshift
-======= ================ ===================================================================================
-
-Alternatively, the user can pass a spherical overdensity mass and concentration, and the 
-conversion to the native parameters then relies on the calibrations in DK14. In that case, 
-the following parameters need to be set:
-
-======= =======================================================
-Param.  Explanation	
-======= =======================================================
-M	    A spherical overdensity mass
-c       The corresponding concentration
-mdef    The mass definition in which M and c are given
-z       Redshift
-======= =======================================================
-
-A number of other parameters can be used to give additional information about the profile
-that can be used to set the internal parameters. The fitting function was calibrated for the 
-median and mean profiles of two types of halo samples, namely samples selected by mass, and 
-samples selected by both mass and mass accretion rate. When a new profile object is created, 
-the user can choose between those by setting ``selected = 'by_mass'`` or 
-``selected = 'by_accretion_rate'``. The latter option results in a more accurate representation
+In particular, the fitting function was calibrated for the median and mean profiles of two 
+types of halo samples, namely samples selected by mass, and samples selected by both mass and 
+mass accretion rate. The user can choose between those by setting ``selected_by = 'M'`` or 
+``selected_by = 'Gamma'``. The latter option results in a more accurate representation
 of the density profile, but the mass accretion rate must be known. 
 
-If the profile is chosen to model halo samples selected by mass (``selected_by = 'M'``),
-we set beta = 4 and gamma = 8. If the sample is selected by both mass and mass 
-accretion rate (``selected_by = 'Gamma'``), we set beta = 6 and gamma = 4. Those choices
-result in a different calibration of the turnover radius rt. In the latter case, both z and 
-Gamma must not be None. See the :func:`deriveParameters` function for more details.
+If the profile is chosen to model halo samples selected by mass, we set 
+:math:`(\\beta, \\gamma) = (4, 8)`. If the sample is selected by both mass and mass 
+accretion rate, we set :math:`(\\beta, \\gamma) = (6, 4)`. Those choices result in a different 
+calibration of the turnover radius :math:`r_{\\rm t}`. In the latter case, both ``z`` and ``Gamma`` 
+must not be ``None``. See the :func:`~halo.profile_dk14.DK14Profile.deriveParameters` function 
+for more details.
 
-PELASE NOTE: While it is possible to create this inner term without any outer profiles, the 
-DK14 profile makes sense only if some description of the outer profile is added. Adding these 
-terms is easy using the wrapper function :func:`getDK14ProfileWithOuterTerms`. Alternatively, the 
-user can pass a list of OuterTerm objects (see documentation of the :mod:`halo.profile_base` 
-parent class).
-
-Some of the outer term parameterizations rely, in turn, on properties of the total profile 
-such as the mass. In those cases, the constructor determines the mass iteratively, taking the
-changing contribution of the outer term into account. However, this procedure can make the 
-constructor slow. Thus, it is generally prefer to initialize the outer terms with fixed 
-parameters (e.g., pivot radius or bias).
-
-
-Unlike other implementations of the density profile, the DK14 profile makes little sense without 
-the addition of a description of the outer profile. Thus, the module contains a convenient 
-wrapper function to create the profile objects, :func:`getDK14ProfileWithOuterTerms`::
-
-	getDK14ProfileWithOuterTerms(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir')
+.. warning::
+	The DK14 profile makes sense only if some description of the outer profile is added. 
 	
-This line will return a DK14 profile object with some default terms already added in. The outer 
-terms can be changed by the user::
+Adding outer terms is easy using the wrapper function :func:`getDK14ProfileWithOuterTerms`::
 
-	getDK14ProfileWithOuterTerms(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir', outer_terms = ['mean', 'cf'])
+	from colossus.cosmology import cosmology
+	from colossus.halo import profile_dk14
 
-Please see the :doc:`tutorials` for more code examples.
+	cosmology.setCosmology('planck15')
+	p = profile_dk14.getDK14ProfileWithOuterTerms(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir')
+	
+This line will return a DK14 profile object with a power-law outer profile and the mean density of
+the universe added by default. Alternatively, the user can pass a list of OuterTerm objects 
+(see documentation of the :class:`~halo.profile_base.HaloDensityProfile` parent class). The user
+can pass additional parameters to the outer profile terms::
+
+	p = profile_dk14.getDK14ProfileWithOuterTerms(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir',
+			power_law_slope = 1.2)
+
+or change the outer terms altogether::
+
+	p = profile_dk14.getDK14ProfileWithOuterTerms(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir', 
+			outer_term_names = ['mean', 'cf'], derive_bias_from = None, bias = 1.2)
+
+Some of the outer term parameterizations (namely the 2-halo term) rely, in turn, on properties of 
+the total profile such as the mass. In those cases, the constructor determines the mass iteratively,
+taking the changing contribution of the outer term into account. This procedure can make the 
+constructor slow. Thus, it is generally preferred to initialize the outer terms with fixed 
+parameters (e.g., pivot radius or bias). Please see the :doc:`tutorials` for more code examples.
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -113,26 +115,29 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	"""
 	The Diemer & Kravtsov 2014 density profile.
 	
+	The redshift must always be passed to this constructor, regardless of whether the 
+	fundamental parameters or a mass and concentration are given.
+	
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	rhos: float
-		The central scale density, in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`
+		The central scale density, in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`.
 	rs: float
-		The scale radius in physical kpc/h
+		The scale radius in physical kpc/h.
 	rt: float
-		The radius where the profile steepens, in physical kpc/h
+		The radius where the profile steepens, in physical kpc/h.
 	alpha: float
-		Determines how quickly the slope of the inner Einasto profile steepens
+		Determines how quickly the slope of the inner Einasto profile steepens.
 	beta: float
-		Sharpness of the steepening
+		Sharpness of the steepening.
 	gamma: float
-		Asymptotic negative slope of the steepening term
+		Asymptotic negative slope of the steepening term.
 	M: float
 		Halo mass in :math:`M_{\odot}/h`.
 	c: float
-		Concentration in the same mass definition as M.
+		Concentration in the same mass definition as ``M``.
 	mdef: str
-		The mass definition to which M corresponds. See :doc:`halo_mass` for details.
+		The mass definition to which ``M`` corresponds. See :doc:`halo_mass` for details.
 	z: float
 		Redshift
 	selected_by: str
@@ -143,10 +148,10 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		The mass accretion rate as defined in DK14. This parameter only needs to be passed if 
 		``selected_by == 'Gamma'``.
 	acc_warn: float
-		If the function achieves a relative accuracy in matching M less than this value, a warning 
-		is printed.
+		If the function achieves a relative accuracy in matching ``M`` less than this value, a 
+		warning is printed.
 	acc_err: float
-		If the function achieves a relative accuracy in matching MDelta less than this value, an 
+		If the function achieves a relative accuracy in matching ``M`` less than this value, an 
 		exception is raised.
 	"""
 	
@@ -220,24 +225,24 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	@staticmethod
 	def deriveParameters(selected_by, nu200m = None, z = None, Gamma = None):
 		"""
-		Calibration of the parameters alpha, beta, gamma, and the turnover radius rt.
+		Calibration of the parameters :math:`\\alpha`, :math:`\\beta`, :math:`\\gamma`, and :math:`r_{\\rm t}`.
 
 		This function determines the values of those parameters in the DK14 profile that can be 
-		calibrated based on mass, and potentially mass accretion rate. 
-
-		If the profile is chosen to model halo samples selected by mass (``selected_by = 'M'``),
-		we set beta = 4 and gamma = 8. If the sample is selected by both mass and mass 
-		accretion rate (``selected_by = 'Gamma'``), we set beta = 6 and gamma = 4. 
+		calibrated based on mass, and potentially mass accretion rate. If the profile is chosen to 
+		model halo samples selected by mass (``selected_by = 'M'``), we set
+		:math:`(\\beta, \\gamma) = (4, 8)`. If the sample is selected by both mass and mass 
+		accretion rate (``selected_by = 'Gamma'``), we set :math:`(\\beta, \\gamma) = (6, 4)`.
 		
-		Those choices result in a different calibration of the turnover radius rt. If 
-		``selected_by = 'M'``, we use Equation 6 in DK14. Though this relation was originally 
-		calibrated for nu = nu_vir, but the difference is small. If ``selected_by = 'Gamma'``, 
-		rt is calibrated from Gamma and z.
+		Those choices result in a different calibration of the turnover radius :math:`r_{\\rm t}`. 
+		If ``selected_by = 'M'``, we use Equation 6 in DK14. Though this relation was originally 
+		calibrated for :math:`\\nu = \\nu_{\\rm vir}`, but the difference is small. If 
+		``selected_by = 'Gamma'``, :math:`r_{\\rm t}` is calibrated from ``Gamma`` and ``z``.
 
 		Finally, the parameter that determines how quickly the Einasto profile steepens with
-		radius, alpha, is calibrated according to the Gao et al. 2008 relation between alpha and 
-		nu. This function was originally calibrated for nu = nu_vir, but the difference is very 
-		small.
+		radius, :math:`\\alpha`, is calibrated according to the 
+		`Gao et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.387..536G>`_ relation. This 
+		function was also originally calibrated for :math:`\\nu = \\nu_{\\rm vir}`, but the 
+		difference is small.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -245,8 +250,8 @@ class DK14Profile(profile_base.HaloDensityProfile):
 			The halo sample to which this profile refers can be selected mass ``M`` or by accretion
 			rate ``Gamma``.
 		nu200m: float
-			The peak height of the halo for which the parameters are to be calibrated, based on
-			M200m. This parameter only needs to be passed if ``selected_by == 'M'``.
+			The peak height of the halo for which the parameters are to be calibrated. This 
+			parameter only needs to be passed if ``selected_by == 'M'``.
 		z: float
 			Redshift
 		Gamma: float
@@ -372,11 +377,11 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		"""
 		Update the profile options after a parameter change.
 		
-		The DK14 profile has one internal option, opt['R200m'], that does not stay in sync with
+		The DK14 profile has one internal option, ``opt['R200m']``, that does not stay in sync with
 		the other profile parameters if they are changed (either inside or outside the constructor). 
-		This function adjusts R200m, in addition to whatever action is taken in the update function 
-		of the super class. Note that this adjustment needs to be done iteratively if any outer
-		profiles rely on R200m.
+		This function adjusts :math:`R_{\\rm 200m}`, in addition to whatever action is taken in the
+		update function of the super class. Note that this adjustment needs to be done iteratively 
+		if any outer profiles rely on :math:`R_{\\rm 200m}`.
 		"""
 
 		# -----------------------------------------------------------------------------------------
@@ -562,7 +567,9 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		"""
 		The mass within 4 scale radii, :math:`M_{<4rs}`.
 		
-		See the section on mass definitions for details.
+		This mass definition was suggested by 
+		`More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`_, see the 
+		:doc:`halo_mass_adv` section for details.
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -578,26 +585,27 @@ class DK14Profile(profile_base.HaloDensityProfile):
 
 	def Rsp(self, search_range = 5.0):
 		"""
-		The splashback radius, :math:`R_{sp}`.
+		The splashback radius, :math:`R_{\\rm sp}`.
 		
-		See the section on mass definitions for details. Operationally, we define :math:`R_{sp}`
-		as the radius where the profile reaches its steepest logarithmic slope.
+		See the :doc:`halo_splashback` section for a detailed description of the splashback radius.
+		Here, we define :math:`R_{\\rm sp}` as the radius where the profile reaches its steepest 
+		logarithmic slope.
 		
 		Parameters
 		-------------------------------------------------------------------------------------------
 		search_range: float
 			When searching for the radius of steepest slope, search within this factor of 
-			:math:`R_{200m}` (optional).
+			:math:`R_{\\rm 200m}` (optional).
 			
 		Returns
 		-------------------------------------------------------------------------------------------
 		Rsp: float
-			The splashback radius, :math:`R_{sp}`, in physical kpc/h.
+			The splashback radius, :math:`R_{\\rm sp}`, in physical kpc/h.
 			
 		See also
 		-------------------------------------------------------------------------------------------
-		RMsp: The splashback radius and mass within, :math:`R_{sp}` and :math:`M_{sp}`.
-		Msp: The mass enclosed within :math:`R_{sp}`, :math:`M_{sp}`.
+		RMsp: The splashback radius and mass within, :math:`R_{\\rm sp}` and :math:`M_{\\rm sp}`.
+		Msp: The mass enclosed within :math:`R_{\\rm sp}`, :math:`M_{\\rm sp}`.
 		"""
 		
 		R200m = self.opt['R200m']
@@ -609,27 +617,29 @@ class DK14Profile(profile_base.HaloDensityProfile):
 
 	def RMsp(self, search_range = 5.0):
 		"""
-		The splashback radius and mass within, :math:`R_{sp}` and :math:`M_{sp}`.
+		The splashback radius and mass within, :math:`R_{\\rm sp}` and :math:`M_{\\rm sp}`.
 		
-		See the section on mass definitions for details.		
+		See the :doc:`halo_splashback` section for a detailed description of the splashback radius.
+		Here, we define :math:`R_{\\rm sp}` as the radius where the profile reaches its steepest 
+		logarithmic slope.
 		
 		Parameters
 		-------------------------------------------------------------------------------------------
 		search_range: float
 			When searching for the radius of steepest slope, search within this factor of 
-			:math:`R_{200m}` (optional).
+			:math:`R_{\\rm 200m}` (optional).
 			
 		Returns
 		-------------------------------------------------------------------------------------------
 		Rsp: float
-			The splashback radius, :math:`R_{sp}`, in physical kpc/h.
+			The splashback radius, :math:`R_{\\rm sp}`, in physical kpc/h.
 		Msp: float
-			The mass enclosed within the splashback radius, :math:`M_{sp}`, in :math:`M_{\odot} / h`.
+			The mass enclosed within the splashback radius, :math:`M_{\\rm sp}`, in :math:`M_{\odot} / h`.
 			
 		See also
 		-------------------------------------------------------------------------------------------
-		Rsp: The splashback radius, :math:`R_{sp}`.
-		Msp: The mass enclosed within :math:`R_{sp}`, :math:`M_{sp}`.
+		Rsp: The splashback radius, :math:`R_{\\rm sp}`.
+		Msp: The mass enclosed within :math:`R_{\\rm sp}`, :math:`M_{\\rm sp}`.
 		"""
 		
 		Rsp = self.Rsp(search_range = search_range)
@@ -641,25 +651,27 @@ class DK14Profile(profile_base.HaloDensityProfile):
 
 	def Msp(self, search_range = 5.0):
 		"""
-		The mass enclosed within :math:`R_{sp}`, :math:`M_{sp}`.
+		The mass enclosed within :math:`R_{\\rm sp}`, :math:`M_{\\rm sp}`.
 		
-		See the section on mass definitions for details.		
+		See the :doc:`halo_splashback` section for a detailed description of the splashback radius.
+		Here, we define :math:`R_{\\rm sp}` as the radius where the profile reaches its steepest 
+		logarithmic slope.
 		
 		Parameters
 		-------------------------------------------------------------------------------------------
 		search_range: float
 			When searching for the radius of steepest slope, search within this factor of 
-			:math:`R_{200m}` (optional).
+			:math:`R_{\\rm 200m}` (optional).
 			
 		Returns
 		-------------------------------------------------------------------------------------------
 		Msp: float
-			The mass enclosed within the splashback radius, :math:`M_{sp}`, in :math:`M_{\odot} / h`.
+			The mass enclosed within the splashback radius, :math:`M_{\\rm sp}`, in :math:`M_{\odot} / h`.
 			
 		See also
 		-------------------------------------------------------------------------------------------
-		Rsp: The splashback radius, :math:`R_{sp}`.
-		RMsp: The splashback radius and mass within, :math:`R_{sp}` and :math:`M_{sp}`.
+		Rsp: The splashback radius, :math:`R_{\\rm sp}`.
+		RMsp: The splashback radius and mass within, :math:`R_{\\rm sp}` and :math:`M_{\\rm sp}`.
 		"""
 		
 		_, Msp = self.RMsp(search_range = search_range)
@@ -759,50 +771,51 @@ def getDK14ProfileWithOuterTerms(outer_term_names = ['mean', 'pl'],
 				# The parameters for the DK14 inner profile
 				**kwargs):
 	"""
-	A convenient wrapper function to create a DK14 profile with one or many outer profile terms.
+	A wrapper function to create a DK14 profile with one or many outer profile terms.
 
 	The DK14 profile only makes sense if some description of the outer profile is added. This
 	function provides a convenient way to construct such profiles without having to set the 
 	properties of the outer terms manually. Valid keys for outer terms include the following.
 	
-	``mean``: The mean density of the universe at redshift z (see the documentation of the 
-	:class:`halo.profile_outer.OuterTermMeanDensity` class).
-	
-	``pl``: A power-law profile in radius (see the documentation of the 
-	:class:`halo.profile_outer.OuterTermPowerLaw` class). For the DK14 profile, the chosen pivot
-	radius is 5 R200m. Note that R200m is set as a profile option in the constructor once, but not
-	adjusted thereafter unless the update() function is called. Thus, in a fit, the fitted norm and
-	slope refer to a pivot of the original R200m until update() is called which adjusts these
-	parameters.
-	
-	Furthermore, the parameters for the power-law outer profile (norm and slope, called be and se
-	in the DK14 paper) exhibit a complicated dependence on halo mass, redshift and cosmology. 
-	At low redshift, and for the cosmology considered in our paper, ``pl_norm = 1.0`` and 
-	``pl_slope = 1.5`` are reasonable values over a wide range of masses (see Figure 18 in DK14), but
-	these values are by no means universal or accurate. 
-	
-	``cf``: The matter-matter correlation function times halo bias (see the documentation of the 
-	:class:`halo.profile_outer.OuterTermCorrelationFunction` class). Here, the user has a choice
-	regarding halo bias: it can enter the profile as a parameter (if ``derive_bias_from == 
-	None`` or it can be derived according to the default model of halo bias based on M200m 
-	(in which case ``derive_bias_from = 'R200m'`` and the bias parameter is ignored).
+	* ``mean``: The mean density of the universe at redshift ``z`` (see the documentation of 
+	  :class:`~halo.profile_outer.OuterTermMeanDensity`).
+	* ``pl``: A power-law profile in radius (see the documentation of 
+	  :class:`~halo.profile_outer.OuterTermPowerLaw`). For the DK14 profile, the chosen pivot
+	  radius is :math:`5 R_{\\rm 200m}`. Note that :math:`R_{\\rm 200m}` is set as a profile option 
+	  in the constructor once, but not adjusted thereafter unless the 
+	  :func:`~halo.profile_dk14.DK14Profile.update` function is called. Thus, in a fit, the fitted 
+	  norm and slope refer to a pivot of the original :math:`R_{\\rm 200m}` until update() is called 
+	  which adjusts these parameters. Furthermore, the parameters for the power-law outer profile 
+	  (norm and slope, called :math:`b_{\\rm e}` and :math:`s_{\\rm e}` in the DK14 paper) exhibit 
+	  a complicated dependence on halo mass, redshift and cosmology. At low redshift, and for the 
+	  cosmology considered in DK14, ``power_law_norm = 1.0`` and ``power_law_slope = 1.5`` are 
+	  reasonable values over a wide range of masses (see Figure 18 in DK14), but these values are 
+	  by no means universal or accurate. 
+	* ``cf``: The matter-matter correlation function times halo bias (see the documentation of 
+  	  :class:`~halo.profile_outer.OuterTermCorrelationFunction`). Here, the user has a choice
+	  regarding halo bias: it can enter the profile as a parameter (if ``derive_bias_from == 
+	  None`` or it can be derived according to the default model of halo bias based on 
+	  :math:`M_{\\rm 200m}` (in which case ``derive_bias_from = 'R200m'`` and the bias parameter 
+	  is ignored). The latter option can make the constructor slow because of the iterative 
+	  evaluation of bias and :math:`M_{\\rm 200m}`.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	outer_term_names: array_like
-		A list of outer profile term identifiers (see above).
+		A list of outer profile term identifiers, can be ``mean``, ``pl``, or ``cf``.
 	power_law_norm: float
-		The normalization of a power-law term (called be in DK14).
+		The normalization of a power-law term (called :math:`b_{\\rm e}` in DK14).
 	power_law_slope: float
-		The slope of a power-law term (called se in DK14).
+		The negative slope of a power-law term (called :math:`s_{\\rm e}` in DK14).
 	power_law_max: float
 		The maximum density contributed by a power-law term.	
 	derive_bias_from: str
-		See cf term section above.
+		See ``cf`` section above.
 	bias: float
-		See cf term section above.
-	**kwargs: keyword arguments
-		The arguments passed to the DK14 profile constructor (i.e., the parameters or M, c etc).
+		See ``cf`` section above.
+	kwargs: kwargs
+		The arguments passed to the DK14 profile constructor (i.e., the fundamental parameters or 
+		``M``, ``c`` etc).
 	"""
 	
 	outer_terms = []

@@ -15,44 +15,44 @@ Basics
 
 The main function in this module, :func:`concentration`, is a wrapper for all models::
 	
-	setCosmology('WMAP9')
-	cvir = concentration(1E12, 'vir', 0.0, model = 'diemer15')
+	from colossus.cosmology import cosmology
+	from colossus.halo import concentration
+	
+	cosmology.setCosmology('planck15')
+	cvir = concentration.concentration(1E12, 'vir', 0.0, model = 'bullock01')
 
 Alternatively, the user can also call the individual model functions directly. However, there are
-two aspects which the concentration() function handles automatically. 
-
-First, many concentration models are only valid over a certain range of masses, redshifts, and 
+two aspects which the :func:`concentration` function handles automatically. First, many 
+concentration models are only valid over a certain range of masses, redshifts, and 
 cosmologies. If the user requests a mass or redshift outside these ranges, the function returns a 
 *soft fail*: the concentration value is computed, but a warning is displayed and/or a False flag
 is returned in a boolean array. If a concentration model cannot be computed, this leads to a *hard
-fail* and a returned value of INVALID_CONCENTRATION (-1).
+fail* and a returned value of ``INVALID_CONCENTRATION`` (-1).
 
 Second, each model was only calibrated for one of a few particular mass definitions, such as 
-:math:`c_{200c}`, :math:`c_{vir}`, or :math:`c_{200m}`. The concentration() function 
+:math:`c_{200c}`, :math:`c_{vir}`, or :math:`c_{200m}`. The :func:`concentration` function 
 automatically converts these definitions to the definition chosen by the user (see :doc:`halo_mass`
 for more information on spherical overdensity masses). For the conversion, we necessarily have to
 assume a particular form of the density profile (see the documentation of the 
-:func:`halo.mass_defs.changeMassDefinition` function). 
+:func:`~halo.mass_defs.changeMassDefinition` function). 
 
 .. warning::
 	The conversion to other mass definitions can degrade the accuracy of the predicted 
-	concentration.
-	
-The conversion to other mass definitions can degrade the accuracy by up to ~15-20% for certain 
-mass definitions, masses, and redshifts. Using the DK14 profile (see :mod:`halo.profile_dk14`) 
-for the mass conversion gives slightly improved results, but the conversion is slower. Please 
-see Appendix C in Diemer & Kravtsov 2015 for details.
+	concentration by up to ~15-20% for certain mass definitions, masses, and redshifts. Using 
+	the DK14 profile (see the :mod:`halo.profile_dk14` module) for the mass conversion gives 
+	slightly improved results, but the conversion is slower. Please see Appendix C in 
+	`Diemer & Kravtsov 2015 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_ for details.
 
 .. warning::
-	The user must ensure that the cosmology is set consistently.
-	
-Many concentration models were calibrated only for one particular cosmology (though the default
-concentration model, 'diemer15', is valid for all masses, redshifts, and cosmologies). Neither the 
-concentration() function nor the invidual model functions issue warnings if the set cosmology does
-not match the concentration model (with the exception of the modelKlypin15fromM() model). For 
-example, it is possible to set a WMAP9 cosmology, and evaluate the Duffy et al. 2008 model which 
-is only valid for a WMAP5 cosmology. When using such models, it is the user's responsibility to 
-ensure consistency with other calculations.
+	The user must ensure that the cosmology is set consistently. Many concentration models were 
+	calibrated only for one particular cosmology (though the default concentration model, 
+	``diemer15``, is valid for all masses, redshifts, and cosmologies). Neither the 
+	:func:`concentration` function nor the invidual model functions issue warnings if the set 
+	cosmology does not match the concentration model (with the exception of the 
+	:func:`modelKlypin16fromM` and :func:`modelKlypin16fromNu` functions). For example, it is 
+	possible to set a WMAP9 cosmology, and evaluate the Duffy et al. 2008 model which is only 
+	valid for a WMAP5 cosmology. When using such models, it is the user's responsibility to ensure 
+	consistency with other calculations.
 
 ---------------------------------------------------------------------------------------------------
 Concentration models
@@ -64,19 +64,19 @@ parameter to the :func:`concentration` function:
 .. table::
 	:widths: auto
 
-	============== ================ ================== =========== ========== ============================================================================
-	ID             Native mdefs     M range (z=0)      z range     Cosmology  Paper
-	============== ================ ================== =========== ========== ============================================================================
-	bullock01	   200c             Almost any         Any         Any        `Bullock et al. 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.321..559B>`_
-	duffy08        200c, vir, 200m  1E11 < M < 1E15    0 < z < 2   WMAP5      `Duffy et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.390L..64D>`_
-	klypin11       vir              3E10 < M < 5E14    0           WMAP7      `Klypin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...740..102K>`_
-	prada12        200c             Any                Any         Any        `Prada et al. 2012 <http://adsabs.harvard.edu/abs/2012MNRAS.423.3018P>`_
-	bhattacharya13 200c, vir, 200m  2E12 < M < 2E15    0 < z < 2   WMAP7      `Bhattacharya et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...32B>`_
-	dutton14       200c, vir        M > 1E10           0 < z < 5   Pl1        `Dutton & Maccio 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.441.3359D>`_
-	diemer15       200c             Any                Any         Any        `Diemer & Kravtsov 2015 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_
-	klypin16_m     200c, vir        M > 1E10           0 < z < 5   Pl1/WMAP7  `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
-	klypin16_nu    200c, vir        M > 1E10           0 < z < 5   Pl1        `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
-	============== ================ ================== =========== ========== ============================================================================
+	============== ================ ================== =========== =============== ============================================================================
+	ID             Native mdefs     M-range (z=0)      z-range     Cosmology       Reference
+	============== ================ ================== =========== =============== ============================================================================
+	bullock01	   200c             Almost any         Any         Any             `Bullock et al. 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.321..559B>`_
+	duffy08        200c, vir, 200m  1E11 < M < 1E15    0 < z < 2   WMAP5           `Duffy et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.390L..64D>`_
+	klypin11       vir              3E10 < M < 5E14    0           WMAP7           `Klypin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...740..102K>`_
+	prada12        200c             Any                Any         Any             `Prada et al. 2012 <http://adsabs.harvard.edu/abs/2012MNRAS.423.3018P>`_
+	bhattacharya13 200c, vir, 200m  2E12 < M < 2E15    0 < z < 2   WMAP7           `Bhattacharya et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...32B>`_
+	dutton14       200c, vir        M > 1E10           0 < z < 5   planck13        `Dutton & Maccio 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.441.3359D>`_
+	diemer15       200c             Any                Any         Any             `Diemer & Kravtsov 2015 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_
+	klypin16_m     200c, vir        M > 1E10           0 < z < 5   planck13/WMAP7  `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
+	klypin16_nu    200c, vir        M > 1E10           0 < z < 5   planck13        `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
+	============== ================ ================== =========== =============== ============================================================================
 
 ---------------------------------------------------------------------------------------------------
 Module contents
@@ -125,19 +125,26 @@ class ConcentrationModel():
 	Characteristics of concentration models.
 	
 	This object contains certain characteristics of a concentration model, most importantly the 
-	mass definitions for which concentration can be output (note that the concentration() function
-	can automatically convert mass definitions). The listing also contains flags for models that
-	are supposed to be universally valid (i.e., at all redshifts, masses, and cosmologies), and 
-	models that implement multiple statistics (mean, median etc).
-
-	The :data:`models` dictionary contains one item of this class for each available model.
+	mass definitions for which concentration can be output (note that the :func:`concentration` 
+	function can automatically convert mass definitions). The :data:`models` dictionary contains 
+	one item of this class for each available model.
 	"""
 	def __init__(self):
 		
-		self.mdefs = []
 		self.func = None
+		self.mdefs = []
+		"""
+		The native mass definition(s) of the model.
+		"""
 		self.universal = False
+		"""
+		Whether this model is universal in the sense that it can be evaluated at any mass or 
+		redshift.
+		"""
 		self.depends_on_statistic = False
+		"""
+		Whether this model can predict different statistics such as mean and median concentration.
+		"""
 		
 		return
 
@@ -197,7 +204,7 @@ def concentration(M, mdef, z,
 	
 	This function encapsulates all the concentration models implemented in this module. It
 	automatically converts between mass definitions if necessary. For some models, a cosmology 
-	must be set (see the documentation of the :mod:`cosmology.cosmology` module).
+	must be set.
 	
 	In some cases, the function cannot return concentrations for the masses, redshift, or cosmology
 	requested due to limitations on a particular concentration model. If so, the mask return 
@@ -210,7 +217,7 @@ def concentration(M, mdef, z,
 	M: array_like
 		Halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
 	mdef: str
-		The mass definition in which the halo mass M is given, and in which c is returned. 
+		The mass definition in which the halo mass ``M`` is given, and in which ``c`` is returned. 
 		See :doc:`halo_mass` for details.
 	z: float
 		Redshift
@@ -220,24 +227,25 @@ def concentration(M, mdef, z,
 		Some models distinguish between the ``mean`` and ``median`` concentration. Note that most 
 		models do not, in which case this parameter is ignored.
 	conversion_profile: str
-		The profile form used to convert from one mass definition to another. See explanation above.
+		The profile form used to convert from one mass definition to another. See the
+		:func:`~halo.mass_defs.changeMassDefinition` function).
 	range_return: bool
 		If ``True``, the function returns a boolean mask indicating the validty of the returned 
 		concentrations.
 	range_warning: bool
 		If ``True``, a warning is thrown if the user requested a mass or redshift where the model is 
-		not calibrated. This warning is suppressed if range_return is True, since it is assumed 
+		not calibrated. This warning is suppressed if ``range_return == True``, since it is assumed 
 		that the user will evaluate the returned mask array to check the validity of the returned
 		concentrations.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
 	c: array_like
-		Halo concentration(s) in the mass definition mdef; has the same dimensions as ``M``.
+		Halo concentration(s) in the mass definition ``mdef``; has the same dimensions as ``M``.
 	mask: array_like
 		If ``range_return == True``, the function returns True/False values, where 
 		False indicates that the model was not calibrated at the chosen mass or redshift; has the
-		same dimensions as M.
+		same dimensions as ``M``.
 	"""
 	
 	guess_factors = [2.0, 5.0, 10.0, 100.0, 10000.0]
@@ -376,12 +384,12 @@ def concentration(M, mdef, z,
 
 def modelBullock01(M200c, z):
 	"""
-	The model of Bullock et al. 2001, MNRAS 321, 559, in the improved version of Maccio et al. 2008,
-	MNRAS 391, 1940.
+	The model of Bullock et al 2001.
 	
-	This model is universal, but limited by the finite growth factor in a given cosmology which 
-	means that the model cannot be evaluated for arbitrarily large masses (halos that will never 
-	collapse).
+	This function implements the improved version of 
+	`Maccio et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.391.1940M>`_. The model is 
+	universal, but limited by the finite growth factor in a given cosmology which means that the 
+	model cannot be evaluated for arbitrarily large masses (halos that will never collapse).
 	  
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -438,8 +446,9 @@ def modelBullock01(M200c, z):
 
 def modelDuffy08(M, z, mdef):
 	"""
-	The power-law fits of Duffy et al. 2008, MNRAS 390, L64. This model was calibrated for a WMAP5
-	cosmology.
+	The model of Duffy et al. 2008.
+	
+	This power-law fit was calibrated for a WMAP5 cosmology.
 	  
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -488,15 +497,15 @@ def modelDuffy08(M, z, mdef):
 
 def modelKlypin11(Mvir, z):
 	"""
-	The power-law fit of Klypin et al. 2011, ApJ 740, 102.
+	The model of Klypin et al 2011.
 	
-	This model was calibrated for the WMAP7 cosmology of the Bolshoi simulation. Note that this 
-	model relies on concentrations that were measured approximately from circular velocities, rather 
+	This power-law fit was calibrated for the WMAP7 cosmology of the Bolshoi simulation. Note 
+	that this model relies on concentrations that were measured from circular velocities, rather 
 	than from a fit to the actual density profiles. Klypin et al. 2011 also give fits at particular 
 	redshifts other than zero. However, there is no clear procedure to interpolate between redshifts, 
 	particularly since the z = 0 relation has a different functional form than the high-z 
 	relations. Thus, we only implement the z = 0 relation here.
-	  
+	
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	Mvir: array_like
@@ -507,11 +516,11 @@ def modelKlypin11(Mvir, z):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	cvir: array_like
-		Halo concentration; has the same dimensions as Mvir.
+		Halo concentration; has the same dimensions as ``Mvir``.
 	mask: array_like
-		Boolean, has the same dimensions as ``Mvir``. Where ``False``, one or more input parameters were
-		outside the range where the model was calibrated, and the returned concentration may not 
-		be reliable.
+		Boolean, has the same dimensions as ``Mvir``. Where ``False``, one or more input parameters 
+		were outside the range where the model was calibrated, and the returned concentration may 
+		not be reliable.
 	"""
 
 	cvir = 9.6 * (Mvir / 1E12)**-0.075
@@ -525,12 +534,12 @@ def modelKlypin11(Mvir, z):
 
 def modelPrada12(M200c, z):
 	"""
-	The model of Prada et al. 2012, MNRAS 423, 3018. 
+	The model of Prada et al 2012.
 	
-	Like the Diemer & Kravtsov 2014 model, this model predicts :math:`c_{200c}` and is based on 
-	the :math:`c-\\nu` relation. The model was calibrated on the Bolshoi and Multidark simulations, 
-	but is in principle applicable to any cosmology. The implementation follows equations 12 to 22 in 
-	Prada et al. 2012. This function uses the exact values for sigma rather than their approximation.
+	This model predicts :math:`c_{200c}` based on the :math:`c-\\nu` relation. The model was 
+	calibrated on the Bolshoi and Multidark simulations, but is in principle applicable to any 
+	cosmology. The implementation follows equations 12 to 22 in Prada et al. 2012. This function 
+	uses the exact values for peak height rather than their approximation.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -570,8 +579,9 @@ def modelPrada12(M200c, z):
 
 def modelBhattacharya13(M, z, mdef):
 	"""
-	The fits of Bhattacharya et al. 2013, ApJ 766, 32. This model was calibrated for a WMAP7 
-	cosmology.
+	The model of Bhattacharya et al 2013.
+	
+	This power-law fit in :math:`c-\\nu` was calibrated for a WMAP7 cosmology.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -588,9 +598,9 @@ def modelBhattacharya13(M, z, mdef):
 	c: array_like
 		Halo concentration; has the same dimensions as ``M``.
 	mask: array_like
-		Boolean, has the same dimensions as ``M``. Where ``False``, one or more input parameters were
-		outside the range where the model was calibrated, and the returned concentration may not 
-		be reliable.
+		Boolean, has the same dimensions as ``M``. Where ``False``, one or more input parameters 
+		were outside the range where the model was calibrated, and the returned concentration may 
+		not be reliable.
 	"""
 
 	cosmo = cosmology.getCurrent()
@@ -626,8 +636,9 @@ def modelBhattacharya13(M, z, mdef):
 
 def modelDutton14(M, z, mdef):
 	"""
-	The power-law fits of Dutton & Maccio 2014, MNRAS 441, 3359. This model was calibrated for the 
-	``planck13`` cosmology.
+	The model of Dutton & Maccio 2014.
+	
+	This power-law fit was calibrated for the ``planck13`` cosmology.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -644,9 +655,9 @@ def modelDutton14(M, z, mdef):
 	c: array_like
 		Halo concentration; has the same dimensions as ``M``.
 	mask: array_like
-		Boolean, has the same dimensions as ``M``. Where ``False``, one or more input parameters were
-		outside the range where the model was calibrated, and the returned concentration may not 
-		be reliable.
+		Boolean, has the same dimensions as ``M``. Where ``False``, one or more input parameters 
+		were outside the range where the model was calibrated, and the returned concentration may 
+		not be reliable.
 	"""
 
 	if mdef == '200c':
@@ -690,9 +701,10 @@ DIEMER15_MEAN_BETA = 0.67
 
 def modelDiemer15fromM(M200c, z, statistic = 'median'):
 	"""
-	The Diemer & Kravtsov 2014 model for concentration, as a function of mass :math:`M_{200c}` and 
-	redhsift. A cosmology must be set before executing this function (see the documentation of the 
-	cosmology module).
+	The model of Diemer & Kravtsov 2015.
+	
+	This universal model in :math:`c_{\\rm 200c}-\\nu` space is a function of peak height and the 
+	slope of the power spectrum. A cosmology must be set before executing this function.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -729,15 +741,16 @@ def modelDiemer15fromM(M200c, z, statistic = 'median'):
 
 def modelDiemer15fromNu(nu200c, z, statistic = 'median'):
 	"""
-	The Diemer & Kravtsov 2014 model for concentration, as a function of peak height 
-	:math:`\\nu_{200c}` and redhsift. A cosmology must be set before executing this function (see 
-	the documentation of the cosmology module).
+	The model of Diemer & Kravtsov 2015.
+	
+	This universal model in :math:`c_{\\rm 200c}-\\nu` space is a function of peak height and the 
+	slope of the power spectrum. A cosmology must be set before executing this function.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	nu200c: array_like
 		Halo peak heights; can be a number or a numpy array. The peak heights must correspond to 
-		:math:`M_{200c}` and a top-hat filter.
+		:math:`M_{\\rm 200c}` and a top-hat filter.
 	z: float
 		Redshift
 	statistic: str
@@ -859,14 +872,13 @@ def _diemer15_n_fromnu(nu, z):
 
 def modelKlypin16fromM(M, z, mdef):
 	"""
-	The mass-based fits of Klypin et al. 2016.
+	The model of Klypin et al 2016, based on mass.
 	
-	Klypin et al. 2016 suggest both peak height-based and mass-based fitting functions for 
-	concentration; this function implements the mass-based version. For this version, the 
-	fits are only given for the ``planck13`` and ``bolshoi`` cosmologies. Thus, the user must set 
-	one of those cosmologies before evaluating this model. The best-fit parameters refer to the 
-	mass-selected samples of all halos (as opposed to :math:`v_{max}`-selected samples, or relaxed 
-	halos).
+	The paper suggests both peak height-based and mass-based fitting functions for concentration; 
+	this function implements the mass-based version. The fits are given for the ``planck13`` and 
+	``bolshoi`` cosmologies. Thus, the user must set one of those cosmologies before evaluating 
+	this model. The best-fit parameters refer to the mass-selected samples of all halos (as 
+	opposed to :math:`v_{max}`-selected samples, or relaxed halos).
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -883,14 +895,15 @@ def modelKlypin16fromM(M, z, mdef):
 	c: array_like
 		Halo concentration; has the same dimensions as ``M``.
 	mask: array_like
-		Boolean, has the same dimensions as ``M``. Where ``False``, one or more input parameters were
-		outside the range where the model was calibrated, and the returned concentration may not 
-		be reliable.
+		Boolean, has the same dimensions as ``M``. Where ``False``, one or more input parameters 
+		were outside the range where the model was calibrated, and the returned concentration may 
+		not be reliable.
 	
 	See also
 	-----------------------------------------------------------------------------------------------
-	modelKlypin16fromNu: An alternative fitting function suggested in the same paper.
+	modelKlypin16fromNu: The model of Klypin et al 2016, based on peak height.
 	"""
+	
 	if not mdef in ['200c', 'vir']:
 		msg = 'Invalid mass definition for Klypin et al 2016 m-based model, %s.' % mdef
 		raise Exception(msg)
@@ -938,13 +951,13 @@ def modelKlypin16fromM(M, z, mdef):
 
 def modelKlypin16fromNu(M, z, mdef):
 	"""
-	The peak height-based fits of Klypin et al. 2016.
+	The model of Klypin et al 2016, based on peak height.
 	
-	Klypin et al. 2016 suggest both peak height-based and mass-based fitting functions for 
-	concentration; this function implements the peak height-based version. For this version, the 
-	fits are only given for the ``planck13`` cosmology. Thus, the user must set this cosmology
-	before evaluating this model. The best-fit parameters refer to the mass-selected samples of 
-	all halos (as opposed to :math:`v_{max}`-selected samples, or relaxed halos).
+	The paper suggests both peak height-based and mass-based fitting functions for concentration; 
+	this function implements the peak height-based version. The fits are given for the ``planck13`` 
+	and ``bolshoi`` cosmologies. Thus, the user must set one of those cosmologies before evaluating 
+	this model. The best-fit parameters refer to the mass-selected samples of all halos (as 
+	opposed to :math:`v_{max}`-selected samples, or relaxed halos).
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -967,7 +980,7 @@ def modelKlypin16fromNu(M, z, mdef):
 	
 	See also
 	-----------------------------------------------------------------------------------------------
-	modelKlypin16fromM: An alternative fitting function suggested in the same paper.
+	modelKlypin16fromM: The model of Klypin et al 2016, based on mass.
 	"""
 
 	if mdef == '200c':
