@@ -239,7 +239,7 @@ from colossus import settings
 from colossus.cosmology import power_spectrum
 from colossus.utils import utilities
 from colossus.utils import constants
-from colossus.utils import storage as storage_unit
+from colossus.utils import storage
 
 ###################################################################################################
 # Global variables for cosmology object and pre-set cosmologies
@@ -480,7 +480,7 @@ class Cosmology(object):
 		self.print_warnings = print_warnings
 		
 		# Create a storage object
-		self.storageUser = storage_unit.StorageUser('cosmology', persistence, self.getName, 
+		self.storageUser = storage.StorageUser('cosmology', persistence, self.getName, 
 									self._getHashableString, self._ensureConsistency)
 				
 		# Lookup table for functions of z. This table runs from the future (a = 200.0) to 

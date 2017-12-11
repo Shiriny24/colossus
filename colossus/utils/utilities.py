@@ -34,7 +34,7 @@ def getHomeDir():
 	Returns
 	-------
 	path : string
-		The home directory, or None if home cannot be found.
+		The home directory, or ``None`` if home cannot be found.
 	"""
 	
 	def decodePath(path):
@@ -100,7 +100,7 @@ def getCodeDir():
 
 def isArray(var):
 	"""
-	Tests whether a variable var is iterable or not.
+	Tests whether a variable is iterable or not.
 
 	Parameters
 	---------------------------
@@ -110,7 +110,7 @@ def isArray(var):
 	Returns
 	-------
 	is_array: boolean
-		Whether var is a numpy array or not.
+		Whether ``var`` is a numpy array or not.
 	"""
 	
 	try:
@@ -138,7 +138,7 @@ def getArray(var):
 	var_ret: numpy array
 		A numpy array with one or more entries.
 	is_array: boolean
-		Whether var is a numpy array or not.
+		Whether ``var`` is a numpy array or not.
 	"""
 		
 	is_array = isArray(var)

@@ -57,7 +57,7 @@ The following changes apply to interfaces across modules:
   respective models (which vary from module to module). This change affects the power 
   spectrum, bias, halo mass function, concentration, and splashback modules. These new model 
   dictionaries replace the previous ``MODELS`` lists that were present in some of the modules.
-* There is a new storage_unit module as part of utilities. The storage parameter in the cosmology
+* There is a new storage module as part of utilities. The storage parameter in the cosmology
   module was renamed to persistence, as was the global setting ``STORAGE`` (renamed to ``PERSISTENCE``).
   The storage module can now be used by other modules or from outside of Colossus.
 

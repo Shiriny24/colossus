@@ -7,43 +7,77 @@
 
 """
 This module provides both non-persistent and persistent storage and interpolation to be used by any
-module in colossus. Both reading and writing can be turned on and off by the user. Each user of 
-the storage module receives their own storage space and a uniquely identifying hash code that can
-be used to detect changes that make it necessary to reset the storage, for example changes in 
-physical parameters to a model. 
+module in Colossus. 
 
 ---------------------------------------------------------------------------------------------------
 Basics
 ---------------------------------------------------------------------------------------------------
 
-The most important step is to set up this storage user class::
+There are two levels of storage: all stored fields are stored in dictionaries in memory. The data
+can be of any type, if persistent storage is used the data must be pickleable. The persistent 
+storage can be turned on and off by the user, both generally and for each field individually. 
 
-	storageUser = storage_unit.StorageUser('myModule', 'rw', self.getName, 
-					self.getHashableString, self.reportChanges)
-									
-where 'rw' indicates that the storage should be both written and read from persistent files, and 
-the rest of the parameters are functions that return a name for the user class (e.g. planck15 for
-a cosmology), getHashableString provides a uniquely identifying string for the user class, and
-reportChanges can be used to react when a change in the hash is detected. Once the user is set up,
-we can add objects easily::
+Each "user" of the storage module receives their own storage space and a uniquely identifying hash 
+code that can be used to detect changes that make it necessary to reset the storage, for example 
+changes in physical parameters to a model. The code example below shows how to set up a storage
+user within a class::
 
-	norm = 5.2
-	storageUser.storeObject('normalization', norm, persistent = True)
-
-where the persistent parameter determines that this object will be written to disk as part of a 
-pickle and loaded next time the same user class (same name and same hash code) is instantiated. 
-Objects are retrieved similarly::
-
-	my_norm = storageUser.getStoredObject('normalization')
+	from colossus.utils import storage
 	
-The storage_unit module offers native support for interpolation tables. For example, if we have 
+	class DemoClass():
+		
+		def __init__(self, some_parameter = 1.5):
+			self.some_parameter = some_parameter
+			self.su = storage.StorageUser('myModule', 'rw', self.getName, self.getHashableString, 
+							self.reportChanges)
+			self.some_data = [2.6, 9.5]
+			self.su.storeObject('test_data', self.some_data, persistent = False)
+			return
+	
+		def getName(self):
+			return 'MyModule'
+	
+		def getHashableString(self):
+			param_string = 'MyModule_%.4f' % (self.some_parameter)
+			return param_string
+			
+		def reportChanges(self):
+			print('Changes in this module detected, storage has been reset.')
+			return
+		
+		def loadData(self):
+			data = self.su.getStoredObject('test_data')
+			return data
+	
+In the constructor, we have given the storage module pointers to three functions that return a
+unique name for this module, a hashable string, and one that should be called when changes are
+detected. The hashable string must change if the previously stored data is to be discarded upon a
+parameter change. In the class above, we discard the field ``some_data`` when a change in 
+``some_parameter`` is detected. The ``persistent`` parameter determines whether this object will 
+be written to disk as part of a pickle and loaded next time the same user class (same name and 
+same hash code) is instantiated. Let us now try loading the data::
+
+	dc = DemoClass()
+	print(dc.loadData())
+	>>> [2.6, 9.5]
+	
+Let us now change ``some_parameter``. The data object is discarded and the load function returns
+``None``, indicating that no valid ``some_data`` for the new hash string was found::
+
+	dc.some_parameter = 1.2
+	print(dc.loadData())
+	>>> 'Changes in this module detected, storage has been reset.'
+	>>> None
+
+The storage module offers native support for interpolation tables. For example, if we have 
 stored a table of variables x and y, we can get a spline interpolator for y(x) or even a reverse
 interpolator for x(y) by calling::
 
 	interp_y_of_x = storageUser.getStoredObject('xy', interpolator = True)
 	interp_x_of_y = storageUser.getStoredObject('xy', interpolator = True, inverse = True)
 
-The getStoredObject() returns None if no object is found.
+The :func:`~utils.storage.StorageUser.getStoredObject` function returns ``None`` if no object is 
+found.
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -72,8 +106,8 @@ class StorageUser():
 		The name of the module to which this user belongs. This name determines the cache sub-
 		directory where files will be stored.
 	persistence: str
-		A combination of 'r' and 'w', e.g. 'rw' or '', indicating whether the storage is read 
-		and/or written from and to disk.
+		A combination of ``'r'`` and ``'w'``, e.g. ``'rw'`` or ``''``, indicating whether the 
+		storage is read and/or written from and to disk.
 	func_name: function
 		A function that takes no parameters and returns the name of the user class.
 	func_hashstring: function
@@ -150,7 +184,7 @@ class StorageUser():
 		Returns
 		-------------------------------------------------------------------------------------------
 		has_changed: bool
-			Returns True if the hash has changed compared to the last stored hash.
+			Returns ``True`` if the hash has changed compared to the last stored hash.
 		"""
 			
 		hash_new = self.getHash()
@@ -202,7 +236,7 @@ class StorageUser():
 		Save an object in memory and/or file storage.
 
 		The object is written to a dictionary in memory, and also to file if ``persistent == True``
-		(unless persistence does not contain 'w'). 
+		(unless persistence does not contain ``'w'``). 
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -211,7 +245,7 @@ class StorageUser():
 		object_data: any
 			The object; can be any picklable data type.
 		persistent: bool
-			If true, store this object on disk (if persistence is activated globally).
+			If ``True``, store this object on disk (if persistence is activated globally).
 		"""
 	
 		if persistent:
@@ -237,33 +271,32 @@ class StorageUser():
 
 		If an object is already stored in memory, return it. If not, try to load it from file, 
 		otherwise return None. If the object is a 2-dimensional table, this function can also 
-		return an interpolator.
-		
-		If the ``path`` parameter is passed, the file is loaded from that file path.
+		return an interpolator. If the ``path`` parameter is passed, the file is loaded from that 
+		file path.
 		
 		Parameters
 		-------------------------------------------------------------------------------------------
 		object_name: str
 			The name of the object to be loaded.
 		interpolator: bool
-			If True, return a spline interpolator instead of the underlying table.
+			If ``True``, return a spline interpolator instead of the underlying table.
 		inverse: bool
 			Return an interpolator that gives x(y) instead of y(x).
 		path: str
-			If not None, data is loaded from this file path (unless it has already been loaded, in
-			which case it is found in memory).
+			If not ``None``, data is loaded from this file path (unless it has already been loaded, 
+			in which case it is found in memory).
 		store_interpolator: bool
-			If True (the default), an interpolator that has been created is temporarily stored so
-			that it does not need to be created again.
+			If ``True`` (the default), an interpolator that has been created is temporarily stored 
+			so that it does not need to be created again.
 		store_path_data: bool
-			If True (the default), data loaded from a file defined by path is stored temporarily
-			so that it does not need to be loaded again.
+			If ``True`` (the default), data loaded from a file defined by path is stored 
+			temporarily so that it does not need to be loaded again.
 	
 		Returns
 		-------------------------------------------------------------------------------------------
 		object_data: any
 			Returns the loaded object (any pickleable data type), or a 
-			scipy.interpolate.InterpolatedUnivariateSpline interpolator object, or None if no 
+			scipy.interpolate.InterpolatedUnivariateSpline interpolator object, or ``None`` if no 
 			object was found.
 		"""
 		
@@ -367,7 +400,7 @@ class StorageUser():
 def getCacheDir(module = None):
 	"""
 	Get a directory for the persistent caching of data. The function attempts to locate the home 
-	directory and (if necessary) create a .colossus sub-directory. In the rare case where that 
+	directory and (if necessary) create a '.colossus' sub-directory. In the rare case where that 
 	fails, the location of this code file is used as a base directory.
 
 	Parameters
@@ -378,7 +411,7 @@ def getCacheDir(module = None):
 	
 	Returns
 	-------
-	path : string
+	path: string
 		The cache directory.
 	"""
 	

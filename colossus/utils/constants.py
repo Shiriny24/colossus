@@ -20,7 +20,7 @@ M_PROTON = 1.67262178e-24
 KB = 1.38064852E-16
 """The Boltzmann constant in erg/K."""
 G_CGS = 6.67408E-8
-"""The gravitational constant G in :math:`cm^3 / g / s^2`."""
+"""The gravitational constant G in :math:`{\\rm cm}^3 / g / s^2`."""
 EV = 1.60218E-12
 """The energy 1 eV in erg."""
 H = 6.62606885E-27
@@ -43,7 +43,7 @@ GYR = 3.1556926E16
 MSUN = 1.98892E33
 """A solar mass, :math:`M_{\odot}`, in grams."""
 G = 4.30172E-6
-"""The gravitational constant G in :math:`kpc \ km^2 / M_{\odot} / s^2`."""
+"""The gravitational constant G in :math:`{\\rm kpc} \ {\\rm km}^2 / M_{\odot} / s^2`."""
 
 ###################################################################################################
 # ASTRONOMY CONSTANTS
