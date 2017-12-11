@@ -163,6 +163,10 @@ class TCComp(CosmologyTestCase):
 		correct = [0.3089, 0.84127672822803978, 0.99360177929557136]
 		self._testRedshiftArray(self.cosmo.Om, correct)
 	
+	def test_Ob(self):
+		correct = [4.860000000000e-02, 1.323601456519e-01, 1.563258221876e-01]
+		self._testRedshiftArray(self.cosmo.Ob, correct)
+	
 	def test_Ode(self):
 		correct = [0.69100883226719656, 0.15815642192549204, 0.00024000493205743255]
 		self._testRedshiftArray(self.cosmo.Ode, correct)
