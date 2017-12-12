@@ -6,7 +6,7 @@
 ###################################################################################################
 
 """
-Global defaults used across colossus.
+Global defaults used across Colossus.
 """
 
 ###################################################################################################
@@ -34,19 +34,19 @@ HALO_MASS_FUNCTION_MODEL = 'watson13'
 HALO_CONCENTRATION_MODEL = 'diemer15'
 """The default concentration model."""
 HALO_CONCENTRATION_STATISTIC = 'median'
-"""The default statistic used (mean or median). This only applies to those models that distinguish
-between mean and median statistics."""
+"""The default statistic used (``mean`` or ``median``). This only applies to those models that 
+distinguish between mean and median statistics."""
 
 HALO_MASS_CONVERSION_PROFILE = 'nfw'
 """The default profile used for mass conversions. Whenever spherical overdensity mass definitions
 are converted into one another, we have to assume a form of the density profile. The simplicity
-of the NFW profile makes this computation very fast."""
+of the :doc:`halo_profile_nfw` makes this computation efficient."""
 
 HALO_SPLASHBACK_MODEL = 'diemer17'
 """The default model for the splashback radius."""
 HALO_SPLASHBACK_STATISTIC = 'median'
-"""The default statistic used (mean or median). This only applies to splashback models that 
-distinguish between mean and median statistics."""
+"""The default statistic used (``mean`` or ``median``). This only applies to splashback models 
+that distinguish between mean and median statistics."""
 HALO_SPLASHBACK_RSPDEF = 'mean'
 """The default definition of Rsp used. This only applies to splashback models that distinguish 
 between different definitions."""
@@ -86,8 +86,9 @@ HALO_PROFILE_DELTA_SIGMA_MIN_R_INTERPOLATE = 1E-6
 ###################################################################################################
 
 HALO_PRPFOLE_DK14_SELECTED_BY = 'M'
-"""The constructor of the DK14 profile sets the profile parameters to either predict the mean 
-profile of halos selected by their mass ('M') or mass accretion rate and mass ('Gamma')."""
+"""The constructor of the :doc:`halo_profile_dk14` sets the profile parameters to either 
+predict the mean profile of halos selected by their mass (``M``) or mass accretion rate and 
+mass (``Gamma``)."""
 HALO_PROFILE_DK14_PL_NORM = 1.0
 """The default normalization of the power-law outer profile for the DK14 profile."""
 HALO_PROFILE_DK14_PL_SLOPE = 1.5

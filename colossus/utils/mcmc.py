@@ -6,8 +6,9 @@
 ###################################################################################################
 
 """
-This module implements an Markov Chain Monte-Carlo sampler based on the Goodman & Weare (2010)
-algorithm. It was written by Andrey Kravtsov and adapted for Colossus by Benedikt Diemer.
+This module implements an Markov Chain Monte-Carlo sampler based on the 
+`Goodman & Weare 2010 <http://adsabs.harvard.edu/abs/2010CAMCS...5...65G>`_ algorithm. It was 
+written by Andrey Kravtsov and adapted for Colossus by Benedikt Diemer.
 
 ---------------------------------------------------------------------------------------------------
 Basics
@@ -21,10 +22,12 @@ take on a form like this::
 Then all we need to do to obtain the best-fit parameters is to make some initial guess for x that
 is stored in the vector x_initial, and run::
 
+	from colossus.utils import MCMC
+
 	args = data, some_other_variables
 	MCMC.run(x_initial, likelihood, args = args)
 	
-The :func:`run` function is a simple wrapper around the main stages of the MCMC samples. If, for
+The :func:`run` function is a wrapper around the main stages of the MCMC sampling process. If, for
 example, we wish to obtain the mean best-fit parameters and plot the output, we can execute the 
 following code::
 
@@ -34,8 +37,19 @@ following code::
 	mean, _, _, _ = MCMC.analyzeChain(chain_thin, param_names = param_names)
 	MCMC.plotChain(chain_full, param_names)
 
-There are numerous more advanced parameters that can be adjusted. Please see the documentation of 
-the individual functions below.
+There are numerous more advanced parameters as listed below. Please see the :doc:`tutorials` for 
+more code examples.
+
+---------------------------------------------------------------------------------------------------
+Module contents
+---------------------------------------------------------------------------------------------------
+
+.. autosummary::
+	run
+	initWalkers
+	runChain
+	analyzeChain
+	plotChain
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -98,20 +112,20 @@ def initWalkers(x_initial,
 		varied in the MCMC run. 
 	initial_step: array_like
 		The width of the Gaussian in parameter i. Can either be a numpy array of the same 
-		length as x_initial, or a number. In the latter case, the number is multiplied with 
-		x_initial, i.e. the same fractional width of the Gaussian is applied in all parameter
+		length as ``x_initial``, or a number. In the latter case, the number is multiplied with 
+		``x_initial``, i.e. the same fractional width of the Gaussian is applied in all parameter
 		dimensions.
 	nwalkers: int
 		The number of walkers created. In this implementation, the walkers are split into two 
 		subgroups, meaning their number must be divisible by two.
 	random_seed: int
-		If not None, this random seed is used when generated the walker positions. 
+		If not ``None``, this random seed is used when generated the walker positions. 
 	
 	Returns
 	-----------------------------------------------------------------------------------------------
 	walkers: array_like
-		A three-dimensional numpy array of dimensions 2, nwalkers/2, nparams. This array can be 
-		passed to the :func:`runChain` function.
+		A three-dimensional numpy array of dimensions [``2, nwalkers/2, nparams]``. This array can 
+		be passed to the :func:`runChain` function.
 	"""
 	
 	if nwalkers % 2:
@@ -147,31 +161,31 @@ def runChain(L_func, walkers, args = (),
 	-----------------------------------------------------------------------------------------------
 	L_func: function
 		The likelihood function which is maximized. This function needs to accept two parameters:
-		a 2-dimensional array with dimensions (N, nparams) where N is an arbitrary number, and the
-		extra arguments given in the args tuple.
+		a 2-dimensional array with dimensions ``[N, nparams]`` where N is an arbitrary number, and 
+		the extra arguments given in the ``args`` tuple.
 	walkers: array_like	
 		A three-dimensional numpy array with the initial coordinates of the walkers. This array
-		must have dimensions [2, nwalkers/2, nparams], and can be generated with the 
+		must have dimensions ``[2, nwalkers/2, nparams]``, and can be generated with the 
 		:func:`initWalkers` function. 
 	args: tuple
 		The extra arguments for the likelihood function.
 	convergence_step: int
 		Save and output (if verbose) the Gelman-Rubin indicator, autocorrelation time etc. every 
-		convergence_step steps. 
+		``convergence_step`` steps. 
 	converged_GR: float
 		The maximum difference between different chains, according to the Gelman-Rubin criterion.
 		Once the GR indicator is lower than this number in all parameters, the chain is ended.
 	verbose: bool
-		If False, this function outputs no information.
+		If ``False``, this function outputs no information.
 	output_every_n: bool
 		Output information about the progress of the chain every n steps. This parameter only has
-		an effect if verbose is True.
+		an effect if ``verbose == True``.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
 	chain_thin: array_like
-		A numpy array of dimensions [n_independent_samples, nparams] with the parameters at each 
-		step in the chain. In this thin chain, only every nth step is output, where n is the 
+		A numpy array of dimensions ``[n_independent_samples, nparams]`` with the parameters at 
+		each step in the chain. In this thin chain, only every nth step is output, where n is the 
 		auto-correlation time, meaning that the samples in this chain are truly independent. The 
 		chain can be analyzed with the :func:`analyzeChain` function.
 	chain_full: array_like
@@ -378,15 +392,15 @@ def analyzeChain(chain, param_names = None, percentiles = [68.27, 95.45, 99.73],
 	Returns
 	-----------------------------------------------------------------------------------------------
 	x_mean: array_like
-		The mean of the chain for each parameter; has length nparams.
+		The mean of the chain for each parameter; has length ``nparams``.
 	x_median: array_like
-		The median of the chain for each parameter; has length nparams.
+		The median of the chain for each parameter; has length ``nparams``.
 	x_stddev: array_like
-		The standard deviation of the chain for each parameter; has length nparams.
+		The standard deviation of the chain for each parameter; has length ``nparams``.
 	x_percentiles: array_like
 		The lower and upper values of each parameter that contain a certain percentile of the 
-		probability; has dimensions [n_percentages, 2, nparams] where the second dimension contains
-		the lower/upper values. 
+		probability; has dimensions ``[n_percentages, 2, nparams]`` where the second dimension 
+		contains the lower/upper values. 
 	"""
 
 	nparams = len(chain[0])
@@ -435,7 +449,7 @@ def plotChain(chain, param_labels):
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	chain: array_like
-		A numpy array of dimensions [nsteps, nparams] with the parameters at each step in the 
+		A numpy array of dimensions ``[nsteps, nparams]`` with the parameters at each step in the 
 		chain. The chain is created by the :func:`runChain` function.
 	param_labels: array_like
 		A list of strings which are used when plotting the parameters. 
