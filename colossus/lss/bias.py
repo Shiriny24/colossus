@@ -195,7 +195,7 @@ def twoHaloTerm(r, M, z, mdef, model = defaults.HALO_BIAS_MODEL):
 	matter correlation function times a linear bias which depends on the peak height of the halo.
 	Sometimes this term includes an additional factor of the mean density which is omitted here. 
 	
-	Note that this 2-halo term is also implemented as an outer profile in the colossus halo module,
+	Note that this 2-halo term is also implemented as an outer profile in the Colossus halo module,
 	see the documentation of :mod:`halo.profile_outer`.
 	
 	Parameters

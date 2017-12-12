@@ -7,7 +7,7 @@
 
 """
 This module implements the profile form of Hernquist (1990). Please see :doc:`halo_profile` for a 
-general introduction to the colossus density profile module.
+general introduction to the Colossus density profile module.
 
 ---------------------------------------------------------------------------------------------------
 Basics

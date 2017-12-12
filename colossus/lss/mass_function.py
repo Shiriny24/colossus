@@ -552,7 +552,7 @@ def modelReed07(sigma, z, deltac_args = {'corrections': True}, exact_n = True):
 	The mass function model of Reed et al 2007.
 	
 	This model takes the changing slope of the power spectrum into account. This slope can be 
-	computed numerically using the colossus interpolation tables, or using the approximation in 
+	computed numerically using the Colossus interpolation tables, or using the approximation in 
 	Equation 14 (the more exact numerical version is the default). The paper gives two expressions 
 	for their mass function, this code uses Equation 11.
 	

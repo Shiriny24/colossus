@@ -7,7 +7,7 @@
 
 """
 This module implements the Einasto form of the density profile. Please see 
-:doc:`halo_profile` for a general introduction to the colossus density profile module.
+:doc:`halo_profile` for a general introduction to the Colossus density profile module.
 
 ---------------------------------------------------------------------------------------------------
 Basics

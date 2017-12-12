@@ -1770,7 +1770,7 @@ class Cosmology(object):
 	# table created here is complicated, with extra resolution around the BAO scale.
 	#
 	# We need to separately treat the cases of models that can cover the entire range of the 
-	# colossus P(k) lookup table, and user-supplied, tabulate 
+	# Colossus P(k) lookup table, and user-supplied, tabulate 
 
 	def _matterPowerSpectrumInterpolator(self, model = defaults.POWER_SPECTRUM_MODEL, 
 										path = None, inverse = False):

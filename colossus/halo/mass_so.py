@@ -21,7 +21,7 @@ vice versa::
 
 The other functions in this module allow us to parse the mass definition strings and compute the 
 density thresholds, but typically the user will not need to evaluate those functions manually
-since most SO-related functions in colossus accept mdef as an argument.
+since most SO-related functions in Colossus accept ``mdef`` as an argument.
 
 ---------------------------------------------------------------------------------------------------
 Module contents
