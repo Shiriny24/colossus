@@ -233,6 +233,7 @@ Module reference
 
 import numpy as np
 import scipy.integrate
+from collections import OrderedDict
 
 from colossus import defaults
 from colossus import settings
@@ -252,7 +253,7 @@ current_cosmo = None
 # The following named cosmologies can be set by calling setCosmology(name). Note that changes in
 # cosmological parameters are tracked to the fourth digit, which is why all parameters are rounded
 # to at most four digits. See documentation at the top of this file for references.
-cosmologies = {}
+cosmologies = OrderedDict()
 cosmologies['planck15-only'] = {'flat': True, 'H0': 67.81, 'Om0': 0.3080, 'Ob0': 0.0484, 'sigma8': 0.8149, 'ns': 0.9677}
 cosmologies['planck15']      = {'flat': True, 'H0': 67.74, 'Om0': 0.3089, 'Ob0': 0.0486, 'sigma8': 0.8159, 'ns': 0.9667}
 cosmologies['planck13-only'] = {'flat': True, 'H0': 67.11, 'Om0': 0.3175, 'Ob0': 0.0490, 'sigma8': 0.8344, 'ns': 0.9624}

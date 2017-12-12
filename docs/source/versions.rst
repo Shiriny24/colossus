@@ -11,11 +11,11 @@ Version 1.2.0 is the version that coincided with the first publication of the co
 arXiv.org. The following major changes were made:
 
 * The documentation was reworked entirely.
-* All functions and parameters that were deprecated in 1.1.0 have been entirely removed from
+* All functions and parameters that were deprecated in 1.1.0 have been removed from
   the code (rather than outputting warnings).
 * The ``qx`` and ``qy`` parameters in the :mod:`halo.splashback` module were renamed to ``q_in`` and
-  ``q_out`` to conform with the rest of the code.
-* A number of other small inconsistencies in splashback radius interface were fixed.
+  ``q_out`` to conform with the rest of the code. A number of other small inconsistencies in 
+  splashback radius interface were fixed.
 
 .. rubric:: Version 1.1.0
 

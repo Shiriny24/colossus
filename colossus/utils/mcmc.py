@@ -22,20 +22,20 @@ take on a form like this::
 Then all we need to do to obtain the best-fit parameters is to make some initial guess for x that
 is stored in the vector x_initial, and run::
 
-	from colossus.utils import MCMC
+	from colossus.utils import mcmc
 
 	args = data, some_other_variables
-	MCMC.run(x_initial, likelihood, args = args)
-	
+	mcmc.run(x_initial, likelihood, args = args)
+
 The :func:`run` function is a wrapper around the main stages of the MCMC sampling process. If, for
 example, we wish to obtain the mean best-fit parameters and plot the output, we can execute the 
 following code::
 
 	args = data, some_other_variables
-	walkers = MCMC.initWalkers(x_initial)
-	chain_thin, chain_full, _ = MCMC.runChain(likelihood, walkers, args = args)
-	mean, _, _, _ = MCMC.analyzeChain(chain_thin, param_names = param_names)
-	MCMC.plotChain(chain_full, param_names)
+	walkers = mcmc.initWalkers(x_initial)
+	chain_thin, chain_full, _ = mcmc.runChain(likelihood, walkers, args = args)
+	mean, _, _, _ = mcmc.analyzeChain(chain_thin, param_names = param_names)
+	mcmc.plotChain(chain_full, param_names)
 
 There are numerous more advanced parameters as listed below. Please see the :doc:`tutorials` for 
 more code examples.
@@ -420,7 +420,7 @@ def analyzeChain(chain, param_names = None, percentiles = [68.27, 95.45, 99.73],
 		for i in range(nparams):
 			
 			utilities.printLine()
-			msg = 'Statistics for parameter %d'
+			msg = 'Statistics for parameter %d' % (i)
 			if param_names is not None:
 				msg += ', %s:' % param_names[i]
 			else:
