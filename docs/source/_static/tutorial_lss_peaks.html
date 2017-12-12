@@ -11787,7 +11787,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Welcome to the colossus peaks tutorial.</p>
+<p>Welcome to the Colossus peaks tutorial.</p>
 
 </div>
 </div>
@@ -11846,9 +11846,9 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Instead of thinking of halos as objects with a particular mass, we can think of them as statistical fluctuations in the Gaussian random field that seeded cosmic structure. In this picture, the mass of a halo can be expressed as a significance or "peak height". In a Gaussian random field, peak height is trivially defined as overdensity, delta, divided by the variance. Halos, however, are non-linearly collapsed objects; what is their overdensity, and what is the corresponding variance?</p>
-<p>We use the approximation of linear collapse to derive a definition. According to the top-hat collapse model (Gunn &amp; Gott 1972), shells of dark matter turn around once they include a certain overdensity, and one can come up with a crude estimate for when they collapse into a "virialized" object. At this point in time, the overdensity enclosed is 1.686 (in an Einstein-de Sitter universe). To compute the variance, we assign the halo a spatial scale corresponding to the radius that enclosed the halo's mass initially, called the Lagrangian radius (which depends on our definition of the halo's mass today).</p>
-<p>By combining these two estimates, we obtain an expression for the peak height, nu = 1.686 / sigma(R, z). Objects with small peak heights have, on average, collapsed in the past. Objects with nu = 1 are collapsing at the current time, and objects with large peak heights have, on average, not yet collapsed. This logic leads to the concept of the non-linear mass scale, i.e., the mass that is currently collapsing which satisfies nu(M_NL) = 1.</p>
+<p>Instead of thinking of halos as objects with a particular mass, we can think of them as statistical fluctuations in the Gaussian random field that seeded cosmic structure. In this picture, the mass of a halo can be expressed as a significance or "peak height", $\nu$. In a Gaussian random field, peak height is trivially defined as overdensity, delta, divided by the variance. Halos, however, are non-linearly collapsed objects; what is their overdensity, and what is the corresponding variance?</p>
+<p>We use the approximation of linear collapse to derive a definition. According to the top-hat collapse model (<a href="http://adsabs.harvard.edu/abs/1972ApJ...176....1G">Gunn &amp; Gott 1972</a>), shells of dark matter turn around once they include a certain overdensity, and one can come up with a crude estimate for when they collapse into a "virialized" object. At this point in time, the overdensity enclosed is $\delta_{\rm c} = 1.686$ (in an Einstein-de Sitter universe). To compute the variance, we assign the halo a spatial scale corresponding to the radius that enclosed the halo's mass initially, called the Lagrangian radius (which depends on our definition of the halo's mass today).</p>
+<p>By combining these two estimates, we obtain an expression for the peak height, $\nu = 1.686 / \sigma(R, z)$. Objects with small peak heights have, on average, collapsed in the past. Objects with $\nu = 1$ are collapsing at the current time, and objects with large peak heights have, on average, not yet collapsed. This logic leads to the concept of the non-linear mass scale, i.e., the mass that is currently collapsing which satisfies $\nu(M_{\rm NL}) = 1$.</p>
 <p>Colossus contains functions to evaluate all of these quantities in the peaks module:</p>
 
 </div>
@@ -12074,7 +12074,7 @@ KAqDgYiIojAYiIgoyv8BjnZpkJ3G0N8AAAAASUVORK5CYII=
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>We see that the change with redshift is less than 1%, so we can happily ignore this effect in the future (and colossus does so by default). Let's now make a plot of the mass that a given peak height corresponds to at different redshifts:</p>
+<p>We see that the change with redshift is less than 1%, so we can happily ignore this effect in the future (and Colossus does so by default). Let's now make a plot of the mass that a given peak height corresponds to at different redshifts:</p>
 
 </div>
 </div>
@@ -12478,8 +12478,8 @@ gGlOQEQkYEoCIiIBUxIQEQmYkoCISMCUBEREAqYkICISsP8Dt2NhfTBY1a8AAAAASUVORK5CYII=
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>All functions related to peak height take extra parameters that determine exactly how the variance and collapse overdensity are computed, for example which filter and power spectrum model are used. Please see the documentation for more information.</p>
-<p>As mentioned above, the non-linear mass is the mass scale of halos that are, on average, collapsing at a given time. By the definition of peak height, that corresponds to nu = 1. The non-linear mass scale grows with time:</p>
+<p>All functions related to peak height take extra parameters that determine exactly how the variance and collapse overdensity are computed, for example which filter and power spectrum model are used. Please see the <a href="https://bdiemer.bitbucket.io/colossus/lss_peaks.html">documentation</a> for more information.</p>
+<p>As mentioned above, the non-linear mass is the mass scale of halos that are, on average, collapsing at a given time. By the definition of peak height, that corresponds to $\nu = 1$. The non-linear mass scale grows with time:</p>
 
 </div>
 </div>
@@ -12676,7 +12676,7 @@ iIiC2P8DVIqOQv+QC6EAAAAASUVORK5CYII=
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Today, the non-linear mass is slightly larger than 1E12.</p>
+<p>Today, the non-linear mass is slightly larger than $10^{12} M_{\odot}/h$.</p>
 
 </div>
 </div>
@@ -12695,7 +12695,7 @@ iIiC2P8DVIqOQv+QC6EAAAAASUVORK5CYII=
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>We can also compute higher-order properties of the density field, such as the average curvature of peaks (see Bardeen et al. 1986 for the mathematical expressions). Note that the curvature can only be computed using a Gaussian rather than top-hat filter because the higher moments of the variance are not well-behaved otherwise. For the plot, we convert back to the usual top-hat based peak height.</p>
+<p>We can also compute higher-order properties of the density field, such as the average curvature of peaks (see <a href="http://adsabs.harvard.edu/abs/1986ApJ...304...15B">Bardeen et al. 1986</a> for the mathematical expressions). Note that the curvature can only be computed using a Gaussian rather than top-hat filter because the higher moments of the variance are not well-behaved otherwise. For the plot, we convert back to the usual top-hat based peak height.</p>
 
 </div>
 </div>
@@ -13187,7 +13187,7 @@ IQzo/wGLommFq3so1AAAAABJRU5ErkJggg==
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>While peak height quantifies how high a fluctuation over the background a halo is, peak curvature tells us something about the shape of the initial peak. However, note the cloud-in-cloud problem (BBKS): not all peaks end up forming halos, particularly small peaks will often get swallowed by other peaks. Thus, the average peak curvature is not necessarily equal to the average curvature of peaks that form halos.</p>
+<p>While peak height quantifies how high a fluctuation over the background a halo is, peak curvature tells us something about the shape of the initial peak. However, note the cloud-in-cloud problem (<a href="http://adsabs.harvard.edu/abs/1986ApJ...304...15B">Bardeen et al. 1986</a>): not all peaks end up forming halos, particularly small peaks will often get swallowed by other peaks. Thus, the average peak curvature is not necessarily equal to the average curvature of peaks that form halos.</p>
 
 </div>
 </div>

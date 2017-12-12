@@ -11787,7 +11787,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Welcome to the Colossus concentration demo. Concentration is defined as the ratio of the outer radius of a halo to the scale radius, a concept that goes back to the Navarro, Frenk &amp; White papers that proposed the NFW density profile. The colossus concentration module implements a number of models for the mean or median concentration of halos.</p>
+<p>Welcome to the Colossus concentration tutorial. Concentration is defined as the ratio of the outer radius of a halo to the scale radius, a concept that goes back to the <a href="http://adsabs.harvard.edu/abs/1997ApJ...490..493N">Navarro, Frenk &amp; White papers</a> that proposed the NFW density profile. The Colossus concentration module implements a number of models for the mean or median concentration of halos.</p>
 
 </div>
 </div>
@@ -11813,7 +11813,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>As always with colossus, we need to set a cosmology.</p>
+<p>As always with Colossus, we need to set a cosmology.</p>
 
 </div>
 </div>
@@ -11908,7 +11908,7 @@ klypin16_nu
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>While there are functions for each of these models, the easier way to use the concentration module is through the unified concentration() interface. This function does a number of things: it converts between mass definitions, checks the validity of models and so on. Let's say we want to use the Bullock et al. 2001 model to get the concentration of a halo with virial mass 1E12 at z = 0.5:</p>
+<p>While there are functions for each of these models, the easier way to use the concentration module is through the unified concentration() interface. This function does a number of things: it converts between mass definitions, checks the validity of models and so on. Let's say we want to use the <a href="http://adsabs.harvard.edu/abs/2001MNRAS.321..559B">Bullock et al. 2001</a> model to get the concentration of a halo with virial mass $10^{12} M_{\odot}/h$ at $z = 0.5$:</p>
 
 </div>
 </div>
@@ -12016,7 +12016,7 @@ klypin16_nu
 <div class="prompt"></div>
 
 <div class="output_subarea output_stream output_stderr output_text">
-<pre>/Users/benedito/University/Codes/colossus_dev/colossus/halo/concentration.py:331: UserWarning: Some masses or redshifts are outside the validity of the concentration model.
+<pre>/Users/benedito/University/Codes/colossus_dev/colossus/halo/concentration.py:374: UserWarning: Some masses or redshifts are outside the validity of the concentration model.
   warnings.warn(&#39;Some masses or redshifts are outside the validity of the concentration model.&#39;)
 </pre>
 </div>
@@ -12042,7 +12042,7 @@ klypin16_nu
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The power-law model of Dutton &amp; Maccio 2014 should probably not be used outside the range of masses where it was constrained. But which masses are valid and which aren't? Using the range_return parameter, we can get the function to return a mask that indicates the validity:</p>
+<p>The power-law model of <a href="http://adsabs.harvard.edu/abs/2014MNRAS.441.3359D">Dutton &amp; Maccio 2014</a> should probably not be used outside the range of masses where it was constrained. But which masses are valid and which aren't? Using the <code>range_return</code> parameter, we can get the function to return a mask that indicates the validity:</p>
 
 </div>
 </div>
@@ -12125,7 +12125,7 @@ klypin16_nu
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The Duffy et al. 2008 model was calibrated for a WMAP5 cosmology, so care needs to be taken if we're working in a Planck 2015 cosmology (as set above). Let's put it all together and compare the models implemented in Colossus:</p>
+<p>The <a href="http://adsabs.harvard.edu/abs/2008MNRAS.390L..64D">Duffy et al. 2008</a> model was calibrated for a WMAP5 cosmology, so care needs to be taken if we're working in a Planck 2015 cosmology (as set above). Let's put it all together and compare the models implemented in Colossus:</p>
 
 </div>
 </div>

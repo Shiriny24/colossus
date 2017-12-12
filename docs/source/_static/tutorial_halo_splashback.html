@@ -11813,7 +11813,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>As always with colossus, we need to set a cosmology:</p>
+<p>As always with Colossus, we need to set a cosmology:</p>
 
 </div>
 </div>
@@ -11883,7 +11883,7 @@ diemer17
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Let's plot the splashback radius predictions of all models as a function of mass accretion rate for a halo with M200m = 1E12 at z = 0. Not all models may be able to predict Rsp at all mass accretion rates, masses, or redshifts, which is why the function returns a mask indicating which input parameters were valid.</p>
+<p>Let's plot the splashback radius predictions of all models as a function of mass accretion rate for a halo with $M_{\rm 200m} = 10^{12} M_{\odot}/h$ at $z = 0$. Not all models may be able to predict $R_{\rm sp}$ at all mass accretion rates, masses, or redshifts, which is why the function returns a mask indicating which input parameters were valid.</p>
 
 </div>
 </div>
@@ -12331,7 +12331,7 @@ CAY+EZFHMPCJiDyCgU9E5BEMfCIij2DgExF5BAOfiMgj/g97PKPepP35QwAAAABJRU5ErkJggg==
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Peak height&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Rsp/R200m&#39;</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">model_name</span> <span class="ow">in</span> <span class="n">splashback</span><span class="o">.</span><span class="n">models</span><span class="p">:</span>
-    <span class="k">if</span> <span class="s1">&#39;nu200m&#39;</span> <span class="ow">in</span> <span class="n">splashback</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">model_name</span><span class="p">]</span><span class="o">.</span><span class="n">qx</span><span class="p">:</span>
+    <span class="k">if</span> <span class="s1">&#39;nu200m&#39;</span> <span class="ow">in</span> <span class="n">splashback</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">model_name</span><span class="p">]</span><span class="o">.</span><span class="n">q_in</span><span class="p">:</span>
         <span class="n">RspR200m</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="n">splashback</span><span class="o">.</span><span class="n">splashbackModel</span><span class="p">(</span><span class="s1">&#39;RspR200m&#39;</span><span class="p">,</span> <span class="n">nu200m</span> <span class="o">=</span> <span class="n">nu200m</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">z</span><span class="p">,</span> 
                                     <span class="n">model</span> <span class="o">=</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">rspdef</span> <span class="o">=</span> <span class="s1">&#39;percentile75&#39;</span><span class="p">,</span> <span class="n">statistic</span> <span class="o">=</span> <span class="s1">&#39;median&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">nu200m</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span> <span class="n">RspR200m</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">model_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39;\_&#39;</span><span class="p">))</span>
@@ -12590,6 +12590,91 @@ MXwRkSChwBcRCRIKfBGRIKHAFxEJEgp8EZEgocAXEQkS/z9FTYwTLlkCcwAAAABJRU5ErkJggg==
 >
 </div>
 
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>For convenience, the <code>splashbackRadius()</code> function provides a wrapper to compute the splashback radius and mass in physical coordinates rather than the ratios provided by the models:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">z</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">mdef</span> <span class="o">=</span> <span class="s1">&#39;vir&#39;</span>
+<span class="n">Mvir</span> <span class="o">=</span> <span class="mf">1E12</span>
+<span class="n">cvir</span> <span class="o">=</span> <span class="mf">10.0</span>
+
+<span class="n">Rsp</span><span class="p">,</span> <span class="n">Msp</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">splashback</span><span class="o">.</span><span class="n">splashbackRadius</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">mdef</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="n">Mvir</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">cvir</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">Rsp</span><span class="p">,</span> <span class="n">Msp</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+<div class="prompt"></div>
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>288.01847453 1.2021782699e+12
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In this case, we did not tell the function what the mass accretion rate is. This worked because the default model, <code>diemer17</code>, can predict $R_{\rm sp} as a function of only the halo mass as well. However, the estimate will be much more accurate if we also provide a mass accretion rate:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">Rsp</span><span class="p">,</span> <span class="n">Msp</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">splashback</span><span class="o">.</span><span class="n">splashbackRadius</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">mdef</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="n">Mvir</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">cvir</span><span class="p">,</span> <span class="n">Gamma</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">Rsp</span><span class="p">,</span> <span class="n">Msp</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+<div class="prompt"></div>
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>220.798927071 997175166925.0
+</pre>
+</div>
 </div>
 
 </div>

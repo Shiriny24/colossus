@@ -11787,7 +11787,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Colossus includes a basic MCMC fitting module based on the Goodman &amp; Weare 2010 algorithm, contributed by Andrey Kravtsov.</p>
+<p>Colossus includes a basic MCMC fitting module based on the <a href="http://adsabs.harvard.edu/abs/2010CAMCS...5...65G">Goodman &amp; Weare 2010</a> algorithm, contributed by Andrey Kravtsov.</p>
 
 </div>
 </div>
@@ -11845,7 +11845,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Running the MCMC is easy now: we need to decide on an initial guess for the parameters and a number of "walkers" (chains run in parallel). Running this code should take less than a minute on a modern laptop. The runChain() function takes more optional arguments than shown in the code below. By default, the MCMC is stopped when the Gelman-Rubin criterion is below a certain number in all parameters.</p>
+<p>Running the MCMC is easy now: we need to decide on an initial guess for the parameters and a number of "walkers" (chains run in parallel).</p>
 
 </div>
 </div>
@@ -11855,11 +11855,34 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">param_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;x1&#39;</span><span class="p">,</span> <span class="s1">&#39;x2&#39;</span><span class="p">]</span>
+<span class="n">x_initial</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+<span class="n">n_params</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">param_names</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We could just use the <code>run()</code> function to complete all the following steps in one function call, but for the sake of demonstration, let's break it down into the main steps.</p>
+<p>First, the <code>runChain()</code> function does the actual MCMC sampling. It takes more optional arguments than shown in the code below. By default, the MCMC is stopped when the Gelman-Rubin criterion is below a certain number in all parameters. Running this code should take less than a minute on a modern laptop.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="inner_cell">
+    <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">colossus.utils</span> <span class="k">import</span> <span class="n">mcmc</span>
 
-<span class="n">param_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;x1&#39;</span><span class="p">,</span> <span class="s1">&#39;x2&#39;</span><span class="p">]</span>
-<span class="n">n_params</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">param_names</span><span class="p">)</span>
-<span class="n">x_initial</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">n_params</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
 <span class="n">walkers</span> <span class="o">=</span> <span class="n">mcmc</span><span class="o">.</span><span class="n">initWalkers</span><span class="p">(</span><span class="n">x_initial</span><span class="p">,</span> <span class="n">nwalkers</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span> <span class="n">random_seed</span> <span class="o">=</span> <span class="mi">156</span><span class="p">)</span>
 <span class="n">chain_thin</span><span class="p">,</span> <span class="n">chain_full</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">mcmc</span><span class="o">.</span><span class="n">runChain</span><span class="p">(</span><span class="n">likelihood</span><span class="p">,</span> <span class="n">walkers</span><span class="p">)</span>
 </pre></div>
@@ -11938,7 +11961,7 @@ Independent samples (thin chain):          12572
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">mcmc</span><span class="o">.</span><span class="n">analyzeChain</span><span class="p">(</span><span class="n">chain_thin</span><span class="p">,</span> <span class="n">param_names</span> <span class="o">=</span> <span class="n">param_names</span><span class="p">);</span>
@@ -11957,7 +11980,7 @@ Independent samples (thin chain):          12572
 
 <div class="output_subarea output_stream output_stdout output_text">
 <pre>-------------------------------------------------------------------------------------
-Statistics for parameter %d, x1:
+Statistics for parameter 0, x1:
 Mean:              -5.000e-03
 Median:            -1.595e-02
 Std. dev.:         +9.745e-01
@@ -11965,7 +11988,7 @@ Std. dev.:         +9.745e-01
 95.5% interval:    -1.925e+00 .. +1.986e+00
 99.7% interval:    -2.819e+00 .. +3.151e+00
 -------------------------------------------------------------------------------------
-Statistics for parameter %d, x2:
+Statistics for parameter 1, x2:
 Mean:              -1.308e-02
 Median:            -1.386e-02
 Std. dev.:         +1.952e+00
@@ -11985,14 +12008,14 @@ Std. dev.:         +1.952e+00
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The plotChain() function additionally creates a plot which elucidates the individual and joint likelihood distributions of the parameters:</p>
+<p>The <code>plotChain()</code> function additionally creates a plot which elucidates the individual and joint likelihood distributions of the parameters:</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">mcmc</span><span class="o">.</span><span class="n">plotChain</span><span class="p">(</span><span class="n">chain_full</span><span class="p">,</span> <span class="n">param_names</span><span class="p">)</span>
