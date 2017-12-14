@@ -36,9 +36,8 @@ author.
 Citing Colossus
 ***************
 
-If you use Colossus for a publication, please cite Diemer & Kravtsov 2015 
-(`ApJ 799, 108 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_)
-and/or the `ASCL entry <http://adsabs.harvard.edu/abs/2015ascl.soft01016D>`_. Many Colossus 
+If you use Colossus for a publication, please cite the code paper 
+(`Diemer 2017 <https://arxiv.org/abs/1712.04512>`_). Many Colossus 
 routines implement the results of other papers. If you use such
 routines, please take care to cite the relevant papers as well (they will be mentioned in the 
 function and/or module documentation).
