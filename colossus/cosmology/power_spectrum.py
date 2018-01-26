@@ -159,6 +159,9 @@ def modelEisenstein98(k, h, Om0, Ob0, Tcmb0):
 	modelEisenstein98ZeroBaryon: The zero-baryon transfer function according to Eisenstein & Hu 1998.
 	"""
 
+	if np.abs(np.min(Ob0)) < 1E-20:
+		raise Exception('The Eisenstein & Hu 98 transfer function cannot be computed for Ob0 = 0.')
+
 	# Define shorter expressions
 	omc = Om0 - Ob0
 	ombom0 = Ob0 / Om0
@@ -292,7 +295,7 @@ def modelEisenstein98ZeroBaryon(k, h, Om0, Ob0, Tcmb0):
 	om0h2 = Om0 * h2
 	ombh2 = Ob0 * h2
 	theta2p7 = Tcmb0 / 2.7
-
+	
 	# Convert kh from hMpc^-1 to Mpc^-1
 	kh = k * h
 
