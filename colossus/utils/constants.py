@@ -25,6 +25,8 @@ EV = 1.60218E-12
 """The energy 1 eV in erg."""
 H = 6.62606885E-27
 """The planck constant in erg s."""
+RYDBERG = 13.605693009
+"""The Rydberg constant in eV."""
 
 ###################################################################################################
 # ASTRONOMY UNIT CONVERSIONS
