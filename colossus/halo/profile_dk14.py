@@ -681,12 +681,25 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	###############################################################################################
 
 	# When fitting the DK14 profile, use a mixture of linear and logarithmic parameters. Only 
-	# conver the parameters for the inner profile though.
+	# convert the parameters for the inner profile though.
+
+	def _getLogMask(self, mask):
+
+		mask_inner = mask[:self.N_par_inner]
+		N_par_fit = np.count_nonzero(mask)
+		N_par_fit_inner = np.count_nonzero(mask_inner)
+
+		log_mask = np.zeros((N_par_fit), np.bool)
+		log_mask[:N_par_fit_inner] = self.fit_log_mask[mask_inner]
+		
+		return log_mask
+	
+	###############################################################################################
 
 	def _fitConvertParams(self, p, mask):
 		
 		p_fit = p.copy()
-		log_mask = self.fit_log_mask[mask[:6]]
+		log_mask = self._getLogMask(mask)
 		p_fit[log_mask] = np.log(p_fit[log_mask])
 
 		return p_fit
@@ -696,7 +709,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	def _fitConvertParamsBack(self, p, mask):
 		
 		p_def = p.copy()
-		log_mask = self.fit_log_mask[mask[:6]]
+		log_mask = self._getLogMask(mask)
 		p_def[log_mask] = np.exp(p_def[log_mask])
 
 		return p_def

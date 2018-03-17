@@ -66,9 +66,12 @@ class HaloDensityProfile():
 		# For some functions, such as Vmax, we need an intial guess for a radius (in kpc/h).
 		self.r_guess = 100.0
 		
-		# The parameters of the profile are stored in a dictionary
+		# The parameters of the profile are stored in a dictionary. We separately store the number
+		# of parameters for the inner profile because the total number may include additional 
+		# parameters of the outer profile.
 		self.par = collections.OrderedDict()
 		self.N_par = len(self.par_names)
+		self.N_par_inner = len(self.par_names)
 		for name in self.par_names:
 			self.par[name] = None
 
@@ -86,7 +89,7 @@ class HaloDensityProfile():
 		self.quantities['Sigma'] = self.surfaceDensity
 		self.quantities['DeltaSigma'] = self.deltaSigma
 
-		# Now we also add any parameters for the 2-halo term(s)
+		# Now we also add any parameters for the outer term(s)
 		self._outer_terms = copy.copy(outer_terms)
 		self.N_outer = len(self._outer_terms)
 		self._outer_par_positions = []
