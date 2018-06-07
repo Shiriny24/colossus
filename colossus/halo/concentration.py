@@ -73,9 +73,11 @@ parameter to the :func:`concentration` function:
 	prada12        200c             Any                Any         Any             `Prada et al. 2012 <http://adsabs.harvard.edu/abs/2012MNRAS.423.3018P>`_
 	bhattacharya13 200c, vir, 200m  2E12 < M < 2E15    0 < z < 2   WMAP7           `Bhattacharya et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...32B>`_
 	dutton14       200c, vir        M > 1E10           0 < z < 5   planck13        `Dutton & Maccio 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.441.3359D>`_
-	diemer15       200c             Any                Any         Any             `Diemer & Kravtsov 2015 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_
+	diemer15_orig  200c             Any                Any         Any             `Diemer & Kravtsov 2015 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_
+	diemer15       200c             Any                Any         Any             Not yet available (joyce18)
 	klypin16_m     200c, vir        M > 1E10           0 < z < 5   planck13/WMAP7  `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
 	klypin16_nu    200c, vir        M > 1E10           0 < z < 5   planck13        `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
+	joyce18        200c             Any                Any         Any             Not yet available (joyce18)
 	============== ================ ================== =========== =============== ============================================================================
 
 ---------------------------------------------------------------------------------------------------
@@ -96,6 +98,7 @@ Module contents
 	modelDiemer15fromNu
 	modelKlypin16fromM
 	modelKlypin16fromNu
+	modelJoyce18
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -117,6 +120,7 @@ from colossus.cosmology import cosmology
 from colossus.lss import peaks
 from colossus.halo import mass_so
 from colossus.halo import mass_defs
+from colossus.halo import profile_nfw
 
 ###################################################################################################
 
@@ -176,6 +180,11 @@ models['bhattacharya13'].mdefs = ['200c', 'vir', '200m']
 models['dutton14'] = ConcentrationModel()
 models['dutton14'].mdefs = ['200c', 'vir']
 
+models['diemer15_orig'] = ConcentrationModel()
+models['diemer15_orig'].mdefs = ['200c']
+models['diemer15_orig'].universal = True
+models['diemer15_orig'].depends_on_statistic = True
+
 models['diemer15'] = ConcentrationModel()
 models['diemer15'].mdefs = ['200c']
 models['diemer15'].universal = True
@@ -186,6 +195,11 @@ models['klypin16_m'].mdefs = ['200c', 'vir']
 
 models['klypin16_nu'] = ConcentrationModel()
 models['klypin16_nu'].mdefs = ['200c', 'vir']
+
+models['joyce18'] = ConcentrationModel()
+models['joyce18'].mdefs = ['200c']
+models['joyce18'].universal = True
+models['joyce18'].depends_on_statistic = True
 
 ###################################################################################################
 
@@ -681,25 +695,7 @@ def modelDutton14(M, z, mdef):
 # DIEMER & KRAVTSOV 2015 MODEL
 ###################################################################################################
 
-DIEMER15_KAPPA = 0.69
-
-DIEMER15_MEDIAN_PHI_0 = 6.58
-DIEMER15_MEDIAN_PHI_1 = 1.37
-DIEMER15_MEDIAN_ETA_0 = 6.82
-DIEMER15_MEDIAN_ETA_1 = 1.42
-DIEMER15_MEDIAN_ALPHA = 1.12
-DIEMER15_MEDIAN_BETA = 1.69
-
-DIEMER15_MEAN_PHI_0 = 7.14
-DIEMER15_MEAN_PHI_1 = 1.60
-DIEMER15_MEAN_ETA_0 = 4.10
-DIEMER15_MEAN_ETA_1 = 0.75
-DIEMER15_MEAN_ALPHA = 1.40
-DIEMER15_MEAN_BETA = 0.67
-
-###################################################################################################
-
-def modelDiemer15fromM(M200c, z, statistic = 'median'):
+def modelDiemer15fromM(M200c, z, statistic = 'median', original_params = False):
 	"""
 	The model of Diemer & Kravtsov 2015.
 	
@@ -714,6 +710,9 @@ def modelDiemer15fromM(M200c, z, statistic = 'median'):
 		Redshift
 	statistic: str
 		Can be ``mean`` or ``median``.
+	original_params: bool
+		If ``True``, use the parameters given in the original paper. By default, use the updated
+		parameters.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -730,16 +729,24 @@ def modelDiemer15fromM(M200c, z, statistic = 'median'):
 	if cosmo.power_law:
 		n = cosmo.power_law_n * M200c / M200c
 	else:
-		n = _diemer15_n_fromM(M200c)
+		n = _diemer15_n_fromM(M200c, original_params = original_params)
 	
 	nu = peaks.peakHeight(M200c, z)
-	c200c = _diemer15(nu, n, statistic)
+	c200c = _diemer15(nu, n, statistic, original_params = original_params)
 
 	return c200c
 
 ###################################################################################################
 
-def modelDiemer15fromNu(nu200c, z, statistic = 'median'):
+# Wrapper function for using the old DK15 parameters.
+
+def _modelDiemer15fromM_orig(M200c, z, statistic = 'median'):
+
+	return modelDiemer15fromM(M200c, z, statistic = statistic, original_params = True)
+
+###################################################################################################
+
+def modelDiemer15fromNu(nu200c, z, statistic = 'median', original_params = False):
 	"""
 	The model of Diemer & Kravtsov 2015.
 	
@@ -755,6 +762,9 @@ def modelDiemer15fromNu(nu200c, z, statistic = 'median'):
 		Redshift
 	statistic: str
 		Can be ``mean`` or ``median``.
+	original_params: bool
+		If ``True``, use the parameters given in the original paper. By default, use the updated
+		parameters.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -771,9 +781,9 @@ def modelDiemer15fromNu(nu200c, z, statistic = 'median'):
 	if cosmo.power_law:
 		n = cosmo.power_law_n * nu200c / nu200c
 	else:
-		n = _diemer15_n_fromnu(nu200c, z)
+		n = _diemer15_n_fromnu(nu200c, z, original_params = original_params)
 	
-	ret = _diemer15(nu200c, n, statistic)
+	ret = _diemer15(nu200c, n, statistic, original_params = original_params)
 
 	return ret
 
@@ -782,7 +792,36 @@ def modelDiemer15fromNu(nu200c, z, statistic = 'median'):
 # The universal prediction of the Diemer & Kravtsov 2014 model for a given peak height, power 
 # spectrum slope, and statistic.
 
-def _diemer15(nu, n, statistic = 'median'):
+def _diemer15(nu, n, statistic = 'median', original_params = False):
+	
+	if original_params:
+		DIEMER15_MEDIAN_PHI_0 = 6.58
+		DIEMER15_MEDIAN_PHI_1 = 1.37
+		DIEMER15_MEDIAN_ETA_0 = 6.82
+		DIEMER15_MEDIAN_ETA_1 = 1.42
+		DIEMER15_MEDIAN_ALPHA = 1.12
+		DIEMER15_MEDIAN_BETA  = 1.69
+		
+		DIEMER15_MEAN_PHI_0 = 7.14
+		DIEMER15_MEAN_PHI_1 = 1.60
+		DIEMER15_MEAN_ETA_0 = 4.10
+		DIEMER15_MEAN_ETA_1 = 0.75
+		DIEMER15_MEAN_ALPHA = 1.40
+		DIEMER15_MEAN_BETA  = 0.67
+	else:
+		DIEMER15_MEDIAN_PHI_0 = 7.23
+		DIEMER15_MEDIAN_PHI_1 = 1.52
+		DIEMER15_MEDIAN_ETA_0 = 6.65
+		DIEMER15_MEDIAN_ETA_1 = 1.30
+		DIEMER15_MEDIAN_ALPHA = 1.07
+		DIEMER15_MEDIAN_BETA  = 1.95
+
+		DIEMER15_MEAN_PHI_0 = 7.10
+		DIEMER15_MEAN_PHI_1 = 1.55
+		DIEMER15_MEAN_ETA_0 = 4.92
+		DIEMER15_MEAN_ETA_1 = 0.87
+		DIEMER15_MEAN_ALPHA = 1.23
+		DIEMER15_MEAN_BETA  = 1.18
 
 	if statistic == 'median':
 		floor = DIEMER15_MEDIAN_PHI_0 + n * DIEMER15_MEDIAN_PHI_1
@@ -805,7 +844,12 @@ def _diemer15(nu, n, statistic = 'median'):
 
 # Compute the characteristic wavenumber for a particular halo mass.
 
-def _diemer15_k_R(M):
+def _diemer15_k_R(M, original_params = False):
+	
+	if original_params:
+		DIEMER15_KAPPA = 0.69
+	else:
+		DIEMER15_KAPPA = 1.00
 
 	cosmo = cosmology.getCurrent()
 	rho0 = cosmo.rho_m(0.0)
@@ -848,9 +892,9 @@ def _diemer15_n(k_R):
 
 # Wrapper for the function above which accepts M instead of k.
 
-def _diemer15_n_fromM(M):
+def _diemer15_n_fromM(M, original_params = False):
 
-	k_R = _diemer15_k_R(M)
+	k_R = _diemer15_k_R(M, original_params = original_params)
 	n = _diemer15_n(k_R)
 	
 	return n
@@ -859,10 +903,10 @@ def _diemer15_n_fromM(M):
 
 # Wrapper for the function above which accepts nu instead of M.
 
-def _diemer15_n_fromnu(nu, z):
+def _diemer15_n_fromnu(nu, z, original_params = False):
 
 	M = peaks.massFromPeakHeight(nu, z)
-	n = _diemer15_n_fromM(M)
+	n = _diemer15_n_fromM(M, original_params = original_params)
 	
 	return n
 
@@ -1008,6 +1052,107 @@ def modelKlypin16fromNu(M, z, mdef):
 	return c, mask
 
 ###################################################################################################
+
+def _joyce18_neff(nu, z, kappa):
+
+	cosmo = cosmology.getCurrent()
+
+	rho0 = cosmo.rho_m(0.0)
+	cosmology.setCurrent(cosmo)
+	M_L = peaks.massFromPeakHeight(nu, z, 'tophat')
+	R_L = (3.0 * M_L / 4.0 / np.pi / rho0) ** (1.0 / 3.0) / 1000.0
+		
+	fR = kappa * R_L
+	n_eff = -2.0 * cosmo.sigma(fR, z, ps_args = {'model': 'eisenstein98_zb'}, derivative = True) - 3.0
+	
+	return n_eff
+
+###################################################################################################
+
+def _joyce18_alphaeff(z):
+
+	cosmo = cosmology.getCurrent()
+	D = cosmo.growthFactor(z, derivative = 0)
+	dDdz = cosmo.growthFactor(z, derivative = 1)
+	alpha_eff = -dDdz * (1.0 + z) / D
+	
+	return alpha_eff
+
+###################################################################################################
+
+# The G(c) inverse function that needs to be mumerically inverted
+
+def _joyce18_func(c, nu, n_eff, A_n, B_n):
+	
+	lhs = c / profile_nfw.NFWProfile.mu(c)**((5.0 + n_eff) / 6.0)
+	rhs = A_n / nu * (1.0 + nu**2 / B_n)
+	ret = lhs - rhs
+	
+	return ret
+
+###################################################################################################
+
+def modelJoyce18(M200c, z, statistic = 'median'):
+	"""
+	The model of ...
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	M200c: array_like
+		Halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
+	z: float
+		Redshift
+	statistic: str
+		Can be ``mean`` or ``median``.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	c200c: array_like
+		Halo concentration; has the same dimensions as ``M200c``.
+	"""
+
+	kappa             = 0.48
+	a_0               = 2.53
+	a_1               = 1.72
+	b_0               = 3.82
+	b_1               = 1.78
+	c_alpha           = 0.24
+	
+	# Compute peak height, n_eff, and alpha_eff
+	nu = peaks.peakHeight(M200c, z)
+	n_eff = _joyce18_neff(nu, z, kappa)
+	alpha_eff = _joyce18_alphaeff(z)
+
+	is_array = utilities.isArray(nu)
+	if not is_array:
+		nu = np.array([nu])
+		n_eff = np.array([n_eff])
+		alpha_eff = np.array([alpha_eff])
+	
+	# Compute input parameters
+	A_n = a_0 * (1.0 + a_1 * (n_eff + 3.0))
+	B_n = b_0 * (1.0 + b_1 * (n_eff + 3.0))
+	C_alpha = 1.0 - c_alpha * (1.0 - alpha_eff)
+	
+	# Invert G(c) function
+	c200c = np.zeros_like(nu)
+	for i in range(len(nu)):
+		args = (nu[i], n_eff[i], A_n[i], B_n[i])
+		c_min = 0.4
+		if _joyce18_func(c_min, *args) < 0.0:
+			c200c[i] = scipy.optimize.brentq(_joyce18_func, c_min, 50.0, args = args)
+		else:
+			c200c[i] = -1.0
+	
+	# Multiply with C(alpha) dependence
+	c200c *= C_alpha
+	
+	if not is_array:
+		c200c = c200c[0]
+
+	return c200c
+
+###################################################################################################
 # Pointers to model functions
 ###################################################################################################
 
@@ -1017,8 +1162,10 @@ models['klypin11'].func = modelKlypin11
 models['prada12'].func = modelPrada12
 models['bhattacharya13'].func = modelBhattacharya13
 models['dutton14'].func = modelDutton14
+models['diemer15_orig'].func = _modelDiemer15fromM_orig
 models['diemer15'].func = modelDiemer15fromM
 models['klypin16_m'].func = modelKlypin16fromM
 models['klypin16_nu'].func = modelKlypin16fromNu
+models['joyce18'].func = modelJoyce18
 
 ###################################################################################################

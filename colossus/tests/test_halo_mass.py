@@ -146,9 +146,9 @@ class TCMassAdv(test_colossus.ColosssusTestCase):
 	def test_changeMassDefinitionCModel(self):
 		z1 = 0.98
 		M1 = [1.5E8, 1.1E15]
-		correct_M = [1.298368729361e+08, 8.790756509777e+14]
-		correct_R = [4.939164908490e+00, 9.343930392894e+02]
-		correct_c = [9.074728024515e+00, 3.666625693650e+00]
+		correct_M = [1.300759798157e+08, 8.907013105920e+14]
+		correct_R = [4.942195028918e+00, 9.384940883880e+02]
+		correct_c = [9.337765491831e+00, 4.124318111641e+00]
 		for i in range(len(M1)):
 			M, R, c = mass_adv.changeMassDefinitionCModel(M1[i], z1, 'vir', '300c')
 			self.assertAlmostEqual(M, correct_M[i])
