@@ -77,6 +77,7 @@ parameter to the :func:`concentration` function:
 	diemer15       200c             Any                Any         Any             Not yet available (joyce18)
 	klypin16_m     200c, vir        M > 1E10           0 < z < 5   planck13/WMAP7  `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
 	klypin16_nu    200c, vir        M > 1E10           0 < z < 5   planck13        `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
+	child18        200c             ???                ???         ???             `Child et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2018ApJ...859...55C/abstract>`_
 	joyce18        200c             Any                Any         Any             Not yet available (joyce18)
 	============== ================ ================== =========== =============== ============================================================================
 
@@ -98,6 +99,7 @@ Module contents
 	modelDiemer15fromNu
 	modelKlypin16fromM
 	modelKlypin16fromNu
+	modelChild18
 	modelJoyce18
 
 ---------------------------------------------------------------------------------------------------
@@ -196,6 +198,9 @@ models['klypin16_m'].mdefs = ['200c', 'vir']
 models['klypin16_nu'] = ConcentrationModel()
 models['klypin16_nu'].mdefs = ['200c', 'vir']
 
+models['child18'] = ConcentrationModel()
+models['child18'].mdefs = ['200c']
+
 models['joyce18'] = ConcentrationModel()
 models['joyce18'].mdefs = ['200c']
 models['joyce18'].universal = True
@@ -212,7 +217,7 @@ def concentration(M, mdef, z,
 				model = defaults.HALO_CONCENTRATION_MODEL, 
 				statistic = defaults.HALO_CONCENTRATION_STATISTIC,
 				conversion_profile = defaults.HALO_MASS_CONVERSION_PROFILE, 
-				range_return = False, range_warning = True):
+				range_return = False, range_warning = True, **kwargs):
 	"""
 	Concentration as a function of halo mass and redshift.
 	
@@ -225,6 +230,10 @@ def concentration(M, mdef, z,
 	parameter contains a boolean list indicating which elements are valid. It is highly recommended
 	that you switch this functionality on by setting ``range_return = True`` if you are not sure
 	about the concentration model used.
+	
+	Some of the individual concentration model functions take additional parameters, e.g., they
+	are calibrated for different halo samples. These parameters can be passed through this function
+	as keyword args. Please see the documentations of the individual functions for details.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -251,6 +260,9 @@ def concentration(M, mdef, z,
 		not calibrated. This warning is suppressed if ``range_return == True``, since it is assumed 
 		that the user will evaluate the returned mask array to check the validity of the returned
 		concentrations.
+	kwargs: kwargs
+		Extra arguments passed to the function of the particular model. See the documentation of 
+		those functions for valid arguments.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -268,12 +280,12 @@ def concentration(M, mdef, z,
 	# ---------------------------------------------------------------------------------------------
 	# Evaluate the concentration model
 
-	def evaluateC(func, M, universal, args):
+	def evaluateC(func, M, universal, args, kwargs):
 		if not universal:
-			c, mask = func(M, *args)
+			c, mask = func(M, *args, **kwargs)
 		else:
 			mask = None
-			c = func(M, *args)
+			c = func(M, *args, **kwargs)
 		return c, mask
 	
 	# ---------------------------------------------------------------------------------------------
@@ -281,7 +293,7 @@ def concentration(M, mdef, z,
 	# corresponding mass in the user's mass definition is M_desired.
 	def eq(MDelta, M_desired, mdef_model, func, universal, args):
 		
-		cDelta, _ = evaluateC(func, MDelta, universal, args)
+		cDelta, _ = evaluateC(func, MDelta, universal, args, kwargs)
 		if cDelta < 0.0:
 			return np.nan
 		Mnew, _, _ = mass_defs.changeMassDefinition(MDelta, cDelta, z, mdef_model, mdef)
@@ -310,7 +322,7 @@ def concentration(M, mdef, z,
 		
 		if len(mdefs_model) > 1:
 			args = args + (mdef,)
-		c, mask = evaluateC(func, M, universal, args)
+		c, mask = evaluateC(func, M, universal, args, kwargs)
 		
 		# Generate a mask if the model doesn't return one
 		if universal and range_return:
@@ -370,7 +382,7 @@ def concentration(M, mdef, z,
 				mask[i] = False
 			
 			else:
-				cDelta, mask_element = evaluateC(func, MDelta, universal, args)
+				cDelta, mask_element = evaluateC(func, MDelta, universal, args, kwargs)
 				_, _, c[i] = mass_defs.changeMassDefinition(MDelta, cDelta, z, mdef_model,
 										mdef, profile = conversion_profile)
 				if not universal:
@@ -809,19 +821,19 @@ def _diemer15(nu, n, statistic = 'median', original_params = False):
 		DIEMER15_MEAN_ALPHA = 1.40
 		DIEMER15_MEAN_BETA  = 0.67
 	else:
-		DIEMER15_MEDIAN_PHI_0 = 7.23
-		DIEMER15_MEDIAN_PHI_1 = 1.52
-		DIEMER15_MEDIAN_ETA_0 = 6.65
-		DIEMER15_MEDIAN_ETA_1 = 1.30
-		DIEMER15_MEDIAN_ALPHA = 1.07
-		DIEMER15_MEDIAN_BETA  = 1.95
+		DIEMER15_MEDIAN_PHI_0 = 6.58
+		DIEMER15_MEDIAN_PHI_1 = 1.27
+		DIEMER15_MEDIAN_ETA_0 = 7.28
+		DIEMER15_MEDIAN_ETA_1 = 1.56
+		DIEMER15_MEDIAN_ALPHA = 1.08
+		DIEMER15_MEDIAN_BETA  = 1.77
 
-		DIEMER15_MEAN_PHI_0 = 7.10
-		DIEMER15_MEAN_PHI_1 = 1.55
-		DIEMER15_MEAN_ETA_0 = 4.92
-		DIEMER15_MEAN_ETA_1 = 0.87
-		DIEMER15_MEAN_ALPHA = 1.23
-		DIEMER15_MEAN_BETA  = 1.18
+		DIEMER15_MEAN_PHI_0 = 6.66
+		DIEMER15_MEAN_PHI_1 = 1.37
+		DIEMER15_MEAN_ETA_0 = 5.41
+		DIEMER15_MEAN_ETA_1 = 1.06
+		DIEMER15_MEAN_ALPHA = 1.22
+		DIEMER15_MEAN_BETA  = 1.22
 
 	if statistic == 'median':
 		floor = DIEMER15_MEDIAN_PHI_0 + n * DIEMER15_MEDIAN_PHI_1
@@ -1001,7 +1013,8 @@ def modelKlypin16fromNu(M, z, mdef):
 	this function implements the peak height-based version. The fits are given for the ``planck13`` 
 	and ``bolshoi`` cosmologies. Thus, the user must set one of those cosmologies before evaluating 
 	this model. The best-fit parameters refer to the mass-selected samples of all halos (as 
-	opposed to :math:`v_{max}`-selected samples, or relaxed halos).
+	opposed to :math:`v_{max}`-selected samples, or relaxed halos). The fits refer to median 
+	concentrations at fixed mass and redshift.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -1050,6 +1063,73 @@ def modelKlypin16fromNu(M, z, mdef):
 	mask = (M > 1E10) & (z <= z_bins[-1])
 
 	return c, mask
+
+###################################################################################################
+
+def modelChild18(M200c, z, halo_sample = 'individual_all'):
+	"""
+	The model of Child et al 2018.
+	
+	The authors suggest multiple fitting functions, multiple ways to define the halo sample, and
+	concetration measured by multiple profile fits. By default, this function represents Equation 18 
+	using the parameters for individual halos (as opposed to stacks) and all halos (as opposed to 
+	relaxed halos). Other samples can be selected with the ``halo_sample`` parameter.
+	
+	The mass definition is 200c for this model. The halo sample used reaches 2.1E11 
+	:math:`M_{\odot}/h`, this function returns a mask indicating this mass range.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	M200c: array_like
+		Halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
+	z: float
+		Redshift
+	halo_sample: str
+		Can be ``individual_all`` (default), ``individual_relaxed`` (the mean concentration of 
+		individual, relaxed halos), ``stacked_nfw`` (the stacked profile with with an NFW profile), 
+		and ``stacked_einasto`` (the stacked profile with with an Einasto profile).
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	c: array_like
+		Halo concentration; has the same dimensions as ``M``.
+	mask: array_like
+		Boolean, has the same dimensions as ``M``. Where ``False``, one or more input parameters were
+		outside the range where the model was calibrated, and the returned concentration may not 
+		be reliable.
+	"""
+
+	if halo_sample == 'individual_all':
+		m = -0.10
+		A = 3.44
+		b = 430.49
+		c0 = 3.19
+	elif halo_sample == 'individual_relaxed':
+		m = -0.09
+		A = 2.88
+		b = 1644.53
+		c0 = 3.54
+	elif halo_sample == 'stacked_nfw':
+		m = -0.07
+		A = 4.61
+		b = 638.65
+		c0 = 3.59
+	elif halo_sample == 'stacked_einasto':
+		m = -0.01
+		A = 63.2
+		b = 431.48
+		c0 = 3.36
+	else:
+		raise Exception('Unknown halo sample for child18 concentration model, %s.' % (halo_sample))
+
+	mask = (M200c >= 2.1E11)
+	
+	Mstar = peaks.nonLinearMass(z)
+	M_MT = M200c / (Mstar * b)
+	
+	c200c = c0 + A * (M_MT**m * (1.0 + M_MT)**-m - 1.0)
+
+	return c200c, mask
 
 ###################################################################################################
 
@@ -1111,13 +1191,23 @@ def modelJoyce18(M200c, z, statistic = 'median'):
 		Halo concentration; has the same dimensions as ``M200c``.
 	"""
 
-	kappa             = 0.48
-	a_0               = 2.53
-	a_1               = 1.72
-	b_0               = 3.82
-	b_1               = 1.78
-	c_alpha           = 0.24
-	
+	if statistic == 'median':
+		kappa             = 0.43
+		a_0               = 2.44
+		a_1               = 1.83
+		b_0               = 3.17
+		b_1               = 2.35
+		c_alpha           = 0.21
+	elif statistic == 'mean':
+		kappa             = 0.44
+		a_0               = 2.36
+		a_1               = 1.75
+		b_0               = 3.36
+		b_1               = 1.86
+		c_alpha           = 0.20
+	else:
+		raise Exception('Statistic %s not implmented in joyce18 model.' % statistic)
+
 	# Compute peak height, n_eff, and alpha_eff
 	nu = peaks.peakHeight(M200c, z)
 	n_eff = _joyce18_neff(nu, z, kappa)
@@ -1166,6 +1256,7 @@ models['diemer15_orig'].func = _modelDiemer15fromM_orig
 models['diemer15'].func = modelDiemer15fromM
 models['klypin16_m'].func = modelKlypin16fromM
 models['klypin16_nu'].func = modelKlypin16fromNu
+models['child18'].func = modelChild18
 models['joyce18'].func = modelJoyce18
 
 ###################################################################################################
