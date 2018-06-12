@@ -863,9 +863,7 @@ def _diemer15_k_R(M, original_params = False):
 	else:
 		DIEMER15_KAPPA = 1.00
 
-	cosmo = cosmology.getCurrent()
-	rho0 = cosmo.rho_m(0.0)
-	R = (3.0 * M / 4.0 / np.pi / rho0)**(1.0 / 3.0) / 1000.0
+	R = peaks.lagrangianR(M)
 	k_R = 2.0 * np.pi / R * DIEMER15_KAPPA
 
 	return k_R
@@ -1136,14 +1134,10 @@ def modelChild18(M200c, z, halo_sample = 'individual_all'):
 def _joyce18_neff(nu, z, kappa):
 
 	cosmo = cosmology.getCurrent()
-
-	rho0 = cosmo.rho_m(0.0)
-	cosmology.setCurrent(cosmo)
 	M_L = peaks.massFromPeakHeight(nu, z, 'tophat')
-	R_L = (3.0 * M_L / 4.0 / np.pi / rho0) ** (1.0 / 3.0) / 1000.0
-		
-	fR = kappa * R_L
-	n_eff = -2.0 * cosmo.sigma(fR, z, ps_args = {'model': 'eisenstein98_zb'}, derivative = True) - 3.0
+	R_L = peaks.lagrangianR(M_L)
+	n_eff = -2.0 * cosmo.sigma(kappa * R_L, z, 
+					ps_args = {'model': 'eisenstein98_zb'}, derivative = True) - 3.0
 	
 	return n_eff
 
