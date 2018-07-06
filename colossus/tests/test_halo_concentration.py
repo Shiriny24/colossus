@@ -77,7 +77,7 @@ class TCConcentration(test_colossus.ColosssusTestCase):
 			msg = 'Failure in model = %s' % (k)
 			c = concentration.concentration(M, mdef, z = z, model = k, range_return = False, 
 										range_warning = False)
-			if k == 'joyce18':
+			if k == 'diemer18':
 				self.assertAlmostEqual(c, 6.797378928036e+00, msg = msg)
 			elif k == 'child18':
 				self.assertAlmostEqual(c, 6.695456033242e+00, msg = msg)

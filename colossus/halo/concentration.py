@@ -74,11 +74,11 @@ parameter to the :func:`concentration` function:
 	bhattacharya13 200c, vir, 200m  2E12 < M < 2E15    0 < z < 2   WMAP7           `Bhattacharya et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...32B>`_
 	dutton14       200c, vir        M > 1E10           0 < z < 5   planck13        `Dutton & Maccio 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.441.3359D>`_
 	diemer15_orig  200c             Any                Any         Any             `Diemer & Kravtsov 2015 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_
-	diemer15       200c             Any                Any         Any             Not yet available (joyce18)
+	diemer15       200c             Any                Any         Any             Diemer and Joyce 2018 (in prep.)
 	klypin16_m     200c, vir        M > 1E10           0 < z < 5   planck13/WMAP7  `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
 	klypin16_nu    200c, vir        M > 1E10           0 < z < 5   planck13        `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
 	child18        200c             ???                ???         ???             `Child et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2018ApJ...859...55C/abstract>`_
-	joyce18        200c             Any                Any         Any             Not yet available (joyce18)
+	diemer18        200c             Any                Any         Any            Diemer and Joyce 2018 (in prep.)
 	============== ================ ================== =========== =============== ============================================================================
 
 ---------------------------------------------------------------------------------------------------
@@ -100,7 +100,7 @@ Module contents
 	modelKlypin16fromM
 	modelKlypin16fromNu
 	modelChild18
-	modelJoyce18
+	modelDiemer18
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -201,10 +201,10 @@ models['klypin16_nu'].mdefs = ['200c', 'vir']
 models['child18'] = ConcentrationModel()
 models['child18'].mdefs = ['200c']
 
-models['joyce18'] = ConcentrationModel()
-models['joyce18'].mdefs = ['200c']
-models['joyce18'].universal = True
-models['joyce18'].depends_on_statistic = True
+models['diemer18'] = ConcentrationModel()
+models['diemer18'].mdefs = ['200c']
+models['diemer18'].universal = True
+models['diemer18'].depends_on_statistic = True
 
 ###################################################################################################
 
@@ -1131,7 +1131,7 @@ def modelChild18(M200c, z, halo_sample = 'individual_all'):
 
 ###################################################################################################
 
-def _joyce18_neff(nu, z, kappa):
+def _diemer18_neff(nu, z, kappa):
 
 	cosmo = cosmology.getCurrent()
 	M_L = peaks.massFromPeakHeight(nu, z, 'tophat')
@@ -1143,7 +1143,7 @@ def _joyce18_neff(nu, z, kappa):
 
 ###################################################################################################
 
-def _joyce18_alphaeff(z):
+def _diemer18_alphaeff(z):
 
 	cosmo = cosmology.getCurrent()
 	D = cosmo.growthFactor(z, derivative = 0)
@@ -1156,7 +1156,7 @@ def _joyce18_alphaeff(z):
 
 # The G(c) inverse function that needs to be mumerically inverted
 
-def _joyce18_func(c, nu, n_eff, A_n, B_n):
+def _diemer18_func(c, nu, n_eff, A_n, B_n):
 	
 	lhs = c / profile_nfw.NFWProfile.mu(c)**((5.0 + n_eff) / 6.0)
 	rhs = A_n / nu * (1.0 + nu**2 / B_n)
@@ -1166,7 +1166,7 @@ def _joyce18_func(c, nu, n_eff, A_n, B_n):
 
 ###################################################################################################
 
-def modelJoyce18(M200c, z, statistic = 'median'):
+def modelDiemer18(M200c, z, statistic = 'median'):
 	"""
 	The model of ...
 	
@@ -1200,12 +1200,12 @@ def modelJoyce18(M200c, z, statistic = 'median'):
 		b_1               = 1.86
 		c_alpha           = 0.20
 	else:
-		raise Exception('Statistic %s not implmented in joyce18 model.' % statistic)
+		raise Exception('Statistic %s not implmented in diemer18 model.' % statistic)
 
 	# Compute peak height, n_eff, and alpha_eff
 	nu = peaks.peakHeight(M200c, z)
-	n_eff = _joyce18_neff(nu, z, kappa)
-	alpha_eff = _joyce18_alphaeff(z)
+	n_eff = _diemer18_neff(nu, z, kappa)
+	alpha_eff = _diemer18_alphaeff(z)
 
 	is_array = utilities.isArray(nu)
 	if not is_array:
@@ -1223,8 +1223,8 @@ def modelJoyce18(M200c, z, statistic = 'median'):
 	for i in range(len(nu)):
 		args = (nu[i], n_eff[i], A_n[i], B_n[i])
 		c_min = 0.4
-		if _joyce18_func(c_min, *args) < 0.0:
-			c200c[i] = scipy.optimize.brentq(_joyce18_func, c_min, 50.0, args = args)
+		if _diemer18_func(c_min, *args) < 0.0:
+			c200c[i] = scipy.optimize.brentq(_diemer18_func, c_min, 50.0, args = args)
 		else:
 			c200c[i] = -1.0
 	
@@ -1251,6 +1251,6 @@ models['diemer15'].func = modelDiemer15fromM
 models['klypin16_m'].func = modelKlypin16fromM
 models['klypin16_nu'].func = modelKlypin16fromNu
 models['child18'].func = modelChild18
-models['joyce18'].func = modelJoyce18
+models['diemer18'].func = modelDiemer18
 
 ###################################################################################################
