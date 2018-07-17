@@ -1134,7 +1134,7 @@ def modelChild18(M200c, z, halo_sample = 'individual_all'):
 def _diemer18_neff(nu, z, kappa):
 
 	cosmo = cosmology.getCurrent()
-	M_L = peaks.massFromPeakHeight(nu, z, 'tophat')
+	M_L = peaks.massFromPeakHeight(nu, z)
 	R_L = peaks.lagrangianR(M_L)
 	n_eff = -2.0 * cosmo.sigma(kappa * R_L, z, 
 					ps_args = {'model': 'eisenstein98_zb'}, derivative = True) - 3.0

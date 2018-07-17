@@ -261,7 +261,7 @@ def massFromPeakHeight(nu, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.
 
 	cosmo = cosmology.getCurrent()
 	sigma = collapseOverdensity(z = z, **deltac_args) / nu
-	R = cosmo.sigma(sigma, z, inverse = True, **sigma_args)
+	R = cosmo.sigma(sigma, z, inverse = True, ps_args = ps_args, **sigma_args)
 	M = lagrangianM(R)
 	
 	return M
@@ -305,7 +305,8 @@ def nonLinearMass(z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARG
 	massFromPeakHeight: Halo mass from peak height.
 	"""
 
-	return massFromPeakHeight(1.0, z, sigma_args = sigma_args, deltac_args = deltac_args)
+	return massFromPeakHeight(1.0, z, 
+							ps_args = ps_args, sigma_args = sigma_args, deltac_args = deltac_args)
 
 ###################################################################################################
 # Peak curvature routines
@@ -479,9 +480,9 @@ def peakCurvature(M, z, exact = False, ps_args = defaults.PS_ARGS,
 	cosmo = cosmology.getCurrent()
 
 	R = lagrangianR(M)
-	sigma0 = cosmo.sigma(R, z, j = 0, **sigma_args)
-	sigma1 = cosmo.sigma(R, z, j = 1, **sigma_args)
-	sigma2 = cosmo.sigma(R, z, j = 2, **sigma_args)
+	sigma0 = cosmo.sigma(R, z, j = 0, ps_args = ps_args, **sigma_args)
+	sigma1 = cosmo.sigma(R, z, j = 1, ps_args = ps_args, **sigma_args)
+	sigma2 = cosmo.sigma(R, z, j = 2, ps_args = ps_args, **sigma_args)
 
 	if exact:
 		return _peakCurvatureExactFromSigma(sigma0, sigma1, sigma2, z, deltac_args = deltac_args)
