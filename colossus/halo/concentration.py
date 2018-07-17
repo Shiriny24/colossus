@@ -1137,7 +1137,7 @@ def _diemer18_neff(nu, z, kappa):
 	M_L = peaks.massFromPeakHeight(nu, z)
 	R_L = peaks.lagrangianR(M_L)
 	n_eff = -2.0 * cosmo.sigma(kappa * R_L, z, 
-					ps_args = {'model': 'eisenstein98_zb'}, derivative = True) - 3.0
+					ps_args = {'model': 'eisenstein98'}, derivative = True) - 3.0
 	
 	return n_eff
 
@@ -1186,18 +1186,18 @@ def modelDiemer18(M200c, z, statistic = 'median'):
 	"""
 
 	if statistic == 'median':
-		kappa             = 0.43
-		a_0               = 2.44
-		a_1               = 1.83
-		b_0               = 3.17
-		b_1               = 2.35
+		kappa             = 0.41
+		a_0               = 2.45
+		a_1               = 1.82
+		b_0               = 3.20
+		b_1               = 2.30
 		c_alpha           = 0.21
 	elif statistic == 'mean':
-		kappa             = 0.44
-		a_0               = 2.36
-		a_1               = 1.75
-		b_0               = 3.36
-		b_1               = 1.86
+		kappa             = 0.42
+		a_0               = 2.37
+		a_1               = 1.74
+		b_0               = 3.39
+		b_1               = 1.82
 		c_alpha           = 0.20
 	else:
 		raise Exception('Statistic %s not implmented in diemer18 model.' % statistic)
