@@ -7,7 +7,7 @@ See below for a listing of the most important code and interface changes in Colo
 .. rubric:: Version 1.2.1
 
 * Bug fix: the ``ps_args`` parameter was not used in the :func:`lss.peaks.massFromPeakHeight` and :func:`lss.peaks.peakCurvature` functions.
-* Added the concetration model of Diemer and Joyce 2018.       
+* The halo concentration model of Diemer and Joyce 2018 was added, and the Diemer and Kravtsov 2015 model was updated according to Diemer and Joyce 2018.
 
 .. rubric:: Version 1.2.0
 
