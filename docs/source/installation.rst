@@ -2,9 +2,15 @@
 Installation
 ============
 
-You can install Colossus either using one of the common python package manager pip, or by downloading
-the code directly. Colossus is compatible with both Python 2.7 and Python 3.x. However, the code is 
-developed and mostly tested in Python 3, which is thus the recommended version.
+You can install Colossus either using one of the common python package manager pip, or by downloading the code directly. 
+
+.. rubric:: Requirements
+
+Colossus is compatible with both Python 2.7 and Python 3.x. However, the code is developed and mostly tested in Python 3, which is thus the recommended version. Colossus requires the following standard packages:
+
+* `numpy <http://www.numpy.org/>`_
+* `scipy <https://www.scipy.org/>`_
+* `six <https://pypi.org/project/six/>`_
 
 .. rubric:: Package installation
 
@@ -20,32 +26,34 @@ You might need to prefix this command with ``sudo``. To update the code, execute
 
     pip install --upgrade colossus
 
-For more information, please see the 
-`pip documentation <https://packaging.python.org/tutorials/installing-packages/>`_.
+For more information, please see the `pip documentation <https://packaging.python.org/tutorials/installing-packages/>`_.
 
 .. rubric:: Repository installation
 
-If you want to edit the code, you might prefer to clone the public BitBucket repository 
-https://bitbucket.org/bdiemer/colossus by executing
+If you want to edit the code, you might prefer to clone the public BitBucket repository https://bitbucket.org/bdiemer/colossus by executing
 
 .. code:: shell
 
    hg clone https://bitbucket.org/bdiemer/colossus
 
-For this method, you will need the version control system Mercurial (hg), which you can 
-download `here <http://mercurial.selenic.com/>`_. You need to manually add colossus
-to your ``$PYTHONPATH`` variable. You can update the code by pulling changes from the 
-repository,
+For this method, you will need the version control system Mercurial (hg), which you can download `here <http://mercurial.selenic.com/>`_. You can update the code by pulling changes from the repository,
 
 .. code:: shell
 
    hg pull
    hg up
 
+You will also need to manually include Colossus in your ``$PYTHONPATH`` variable, for example by adding this command to your shell's initialization script (e.g., ``bashrc``):
+
+.. code:: shell
+   
+   export PYTHONPATH=$PYTHONPATH:/Users/me/code/colossus
+
+where the path is, of course, replaced with the location of Colossus on your system.
+
 .. rubric:: Running unit tests
 
-After installing Colossus, you should run its suite of unit tests to ensure the code works
-as expected. In python, execute::
+After installing Colossus, you should run its suite of unit tests to ensure the code works as expected. In python, execute::
 
     from colossus.tests import run_tests
     

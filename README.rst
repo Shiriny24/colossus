@@ -1,9 +1,7 @@
 Colossus
 ========
 
-Colossus is an astrophysics toolkit, the name is an acronym for **CO**\ smology, ha\ **LO**\ , 
-and large-**S**\ cale **S**\ tr\ **U**\ cture tool\ **S**\ . Please consult the 
-`Online Documentation <https://bdiemer.bitbucket.io/colossus/>`_ for details.
+Colossus is an astrophysics toolkit, the name is an acronym for **CO**\ smology, ha\ **LO**\ , and large-**S**\ cale **S**\ tr\ **U**\ cture tool\ **S**\ . Please consult the `Online Documentation <https://bdiemer.bitbucket.io/colossus/>`_ for details.
 
 Installation
 ------------
@@ -14,15 +12,13 @@ The easiest way to install Colossus is by executing:
 
     pip install colossus
 
-You might need to prefix this command with ``sudo``. Alternatively, you can clone the BitBucket 
-repository by executing:
+You might need to prefix this command with ``sudo``. Alternatively, you can clone the BitBucket repository by executing:
 
 .. code:: shell
 
     hg clone https://bitbucket.org/bdiemer/colossus
 
-After installing colossus, you should run its unit test suite to ensure that the code works as 
-expected. In python, execute:
+After installing colossus, you should run its unit test suite to ensure that the code works as expected. In python, execute:
 
 .. code:: shell
 
@@ -52,10 +48,6 @@ Author:        Benedikt Diemer (benedikt.diemer@cfa.harvard.edu)
 
 Contributors:  Matt Becker, Andrey Kravtsov
 
-License:       MIT. Copyright (c) 2014-2017
+License:       MIT. Copyright (c) 2014-2018
 
-If you use Colossus for a publication, please cite the code paper 
-(`Diemer 2017 <https://arxiv.org/abs/1712.04512>`_). Many Colossus 
-routines implement the results of other papers. If you use such
-routines, please take care to cite the relevant papers as well (they will be mentioned in the 
-function and/or module documentation).
+If you use Colossus for a publication, please cite the code paper (`Diemer 2017 <https://arxiv.org/abs/1712.04512>`_). Many Colossus routines implement the results of other papers. If you use such routines, please take care to cite the relevant papers as well (they will be mentioned in the function and/or module documentation).

@@ -86,7 +86,7 @@ from colossus.halo import profile_nfw
 def evolveSO(M_i, c_i, z_i, mdef_i, z_f, mdef_f, 
 				profile = defaults.HALO_MASS_CONVERSION_PROFILE, profile_args = {}):
 	"""
-	Evolve the spherical overdensity radius for a fixed profile.
+	Evolve the spherical overdensity radius for a fixed density profile.
 	
 	This function computes the evolution of spherical overdensity mass and radius due to a changing 
 	reference density, redshift, or both. The user passes the mass and concentration of the density 
@@ -201,11 +201,13 @@ def evolveSO(M_i, c_i, z_i, mdef_i, z_f, mdef_f,
 def changeMassDefinition(M, c, z, mdef_in, mdef_out, 
 						profile = defaults.HALO_MASS_CONVERSION_PROFILE, profile_args = {}):
 	"""
-	Change the spherical overdensity mass definition.
+	Change the spherical overdensity mass definition assuming a fixed density profile.
 	
-	This function is a special case of the more general evolveSO function; here, the redshift
-	is fixed, but we change the mass definition. This leads to a different spherical overdensity
-	radius, mass, and concentration.
+	This function is a special case of the more general :func:`evolveSO` function. We assume a 
+	density profile fixed in physical coordinates and at a fixed redshift, but we change the mass 
+	definition. This leads to a different spherical overdensity radius, mass, and concentration.
+	By default, the density profile is assumed to be an NFW profile, but other profiles can be 
+	specified.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------

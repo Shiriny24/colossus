@@ -25,13 +25,15 @@ Of course, the function accepts numpy arrays for the mass parameter. By default,
 is returned as :math:`f(\\sigma)`, the natural units in Press-Schechter theory, where
 
 .. math::
-	\\frac{dn}{d \\ln(M)} = f(\\sigma) \\frac{\\rho_0}{M} \\frac{d \\ln(\\sigma^{-1})}{d \\ln(M)} 
+	\\frac{dn}{d \\ln(M)} = f(\\sigma) \\frac{\\rho_0}{M} \\frac{d \\ln(\\sigma^{-1})}{d \\ln(M)} .
 
-where :math:`\\sigma` is the variance on the lagrangian size scale of the halo mass in question
-(see :func:`~cosmology.cosmology.Cosmology.sigma`). The function can also return the mass function in other units,
-namely :math:`dn/d\\ln(M)` (indicated by ``q_out = dndlnM``) and :math:`M^2 dn/dM` (indicated by 
-``q_out = M2dndM``). These conversions can be performed separately using the 
-:func:`convertMassFunction` function.
+Here, :math:`\\rho_0` is the matter density at :math:`z = 0` and :math:`\\sigma` is the variance 
+on the lagrangian size scale of the halo mass in question (see 
+:func:`~cosmology.cosmology.Cosmology.sigma`). The function can also return the mass function 
+in other units, namely as the number density per logarithmic interval in mass, :math:`dn/d\\ln(M)` 
+(units of :math:`({\\rm Mpc}/h)^{-3}`, indicated by ``q_out = dndlnM``) and as 
+:math:`M^2 / \\rho_0 dn/dM` (dimensionless, indicated by ``q_out = M2dndM``). These conversions 
+can separately be performed separately using the :func:`convertMassFunction` function.
 
 ---------------------------------------------------------------------------------------------------
 Mass function models
@@ -246,6 +248,7 @@ def massFunction(x, z, q_in = 'M', q_out = 'f', mdef = 'fof',
 		Either ``M``, ``sigma``, or ``nu`` indicating which is passed for the ``x`` parameter.
 	q_out: str
 		The units in which the mass function is returned; can be ``f``, ``dndlnM``, or ``M2dndM``.
+		See the `Basics`_ section for details on these units.
 	mdef: str
 		The mass definition in which the halo mass M is given (or from which the variance or peak
 		height were computed). The returned mass function refers to this mass definition. Please 
@@ -339,7 +342,7 @@ def convertMassFunction(mfunc, M, z, q_in, q_out,
 		Redshift
 	q_in: str
 		The units in which the mass function is input; can be ``f``, ``dndlnM``, or ``M2dndM``. See
-		Basic Usage section for the meaning of these units.
+		`Basics`_ section for the meaning of these units.
 	q_out: str
 		The units in which the mass function is returned; see above.
 	ps_args: dict
