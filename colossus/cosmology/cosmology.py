@@ -2488,7 +2488,10 @@ def setCosmology(cosmo_name, params = None):
 		param_dict['power_law_n'] = n
 		if params is not None:
 			param_dict.update(params)
-			
+
+	elif cosmo_name == 'powerlaw':
+		raise Exception('Power-law cosmology must be called with slope n, e.g. powerlaw_-1.5.')
+		
 	elif cosmo_name in cosmologies:		
 		param_dict = cosmologies[cosmo_name].copy()
 		if params is not None:
