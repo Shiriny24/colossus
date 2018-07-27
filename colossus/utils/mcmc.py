@@ -28,17 +28,15 @@ is stored in the vector x_initial, and run::
 	mcmc.run(x_initial, likelihood, args = args)
 
 The :func:`run` function is a wrapper around the main stages of the MCMC sampling process. If, for
-example, we wish to obtain the mean best-fit parameters and plot the output, we can execute the 
-following code::
+example, we wish to obtain the mean best-fit parameters, we can execute the following code::
 
 	args = data, some_other_variables
 	walkers = mcmc.initWalkers(x_initial)
 	chain_thin, chain_full, _ = mcmc.runChain(likelihood, walkers, args = args)
 	mean, _, _, _ = mcmc.analyzeChain(chain_thin, param_names = param_names)
-	mcmc.plotChain(chain_full, param_names)
 
 There are numerous more advanced parameters as listed below. Please see the :doc:`tutorials` for 
-more code examples.
+more code examples, including a function to plot MCMC chains generated with this module.
 
 ---------------------------------------------------------------------------------------------------
 Module contents
@@ -49,7 +47,6 @@ Module contents
 	initWalkers
 	runChain
 	analyzeChain
-	plotChain
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -57,9 +54,6 @@ Module reference
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm
-import matplotlib.gridspec as gridspec
 
 from colossus.utils import utilities
 from colossus import defaults
@@ -435,82 +429,5 @@ def analyzeChain(chain, param_names = None, percentiles = [68.27, 95.45, 99.73],
 					% (percentiles[j], x_percentiles[j, 0, i], x_percentiles[j, 1, i])))
 
 	return x_mean, x_median, x_stddev, x_percentiles
-
-###################################################################################################
-
-def plotChain(chain, param_labels):
-	"""
-	Plot a summary of an MCMC chain.
-	
-	This function creates a triangle plot with a 2D histogram for each combination of parameters,
-	and a 1D histogram for each parameter. The plot is not automatically saved or shown, the user
-	can determine how to use the plot after executing this function.
-	
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	chain: array_like
-		A numpy array of dimensions ``[nsteps, nparams]`` with the parameters at each step in the 
-		chain. The chain is created by the :func:`runChain` function.
-	param_labels: array_like
-		A list of strings which are used when plotting the parameters. 
-	"""
-
-	nsamples = len(chain)
-	nparams = len(chain[0])
-
-	# Prepare panels
-	margin_lb = 1.0
-	margin_rt = 0.5
-	panel_size = 2.5
-	size = nparams * panel_size + margin_lb + margin_rt
-	fig = plt.figure(figsize = (size, size))
-	gs = gridspec.GridSpec(nparams, nparams)
-	margin_lb_frac = margin_lb / size
-	margin_rt_frac = margin_rt / size
-	plt.subplots_adjust(left = margin_lb_frac, bottom = margin_lb_frac, right = 1.0 - margin_rt_frac,
-					top = 1.0 - margin_rt_frac, hspace = margin_rt_frac, wspace = margin_rt_frac)
-	panels = [[None for dummy in range(nparams)] for dummy in range(nparams)] 
-	for i in range(nparams):
-		for j in range(nparams):
-			if i >= j:
-				pan = fig.add_subplot(gs[i, j])
-				panels[i][j] = pan
-				if i < nparams - 1:
-					pan.set_xticklabels([])
-				else:
-					plt.xlabel(param_labels[j])
-				if j > 0:
-					pan.set_yticklabels([])
-				else:
-					plt.ylabel(param_labels[i])
-			else:
-				panels[i][j] = None
-					
-	# Plot 1D histograms
-	nbins = min(50, nsamples / 20.0)
-	minmax = np.zeros((nparams, 2), np.float)
-	for i in range(nparams):
-		ci = chain[:, i]
-		plt.sca(panels[i][i])
-		_, bins, _ = plt.hist(ci, bins = nbins)
-		minmax[i, 0] = bins[0]
-		minmax[i, 1] = bins[-1]
-		diff = minmax[i, 1] - minmax[i, 0]
-		minmax[i, 0] -= 0.03 * diff
-		minmax[i, 1] += 0.03 * diff
-		plt.xlim(minmax[i, 0], minmax[i, 1])
-	
-	# Plot 2D histograms
-	for i in range(nparams):
-		ci = chain[:, i]
-		for j in range(nparams):
-			cj = chain[:, j]
-			if i > j:
-				plt.sca(panels[i][j])
-				plt.hist2d(cj, ci, bins = 100, norm = LogNorm(), normed = 1)
-				plt.ylim(minmax[i, 0], minmax[i, 1])
-				plt.xlim(minmax[j, 0], minmax[j, 1])
-
-	return
 
 ###################################################################################################
