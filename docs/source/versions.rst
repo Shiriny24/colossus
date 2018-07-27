@@ -10,6 +10,7 @@ See below for a listing of the most important code and interface changes in Colo
 * The halo concentration model of Diemer and Joyce 2018 was added, and the Diemer and Kravtsov 2015 model was updated according to Diemer and Joyce 2018.
 * Numerous small improvements were made in the documentation.
 * The function ``plotChain`` was removed from the :doc:`utils_mcmc` module to avoid including the ``matplotlib`` library. The function is still available as part of the `MCMC tutorial <_static/tutorial_utils_mcmc.html>`_.
+* The Planck 2018 cosmology was added (and can be used by setting ``planck18`` or ``planck18-only`` for the cosmology).
 
 .. rubric:: Version 1.2.0
 

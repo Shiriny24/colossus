@@ -102,6 +102,8 @@ The following sets of cosmological parameters can be chosen using the
 	============== ================================================================================ =========== =======================================
 	ID             Paper                                                                            Location    Explanation
 	============== ================================================================================ =========== =======================================
+	planck18-only  `Planck Collab. 2018 <https://arxiv.org/abs/1807.06209>`_                        Table 2     Best-fit, Planck only (column 5) 					
+	planck18       `Planck Collab. 2018 <https://arxiv.org/abs/1807.06209>`_ 	                    Table 2     Best-fit with BAO (column 6)			
 	planck15-only  `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`_     Table 4     Best-fit, Planck only (column 2) 					
 	planck15       `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`_ 	Table 4     Best-fit with ext (column 6)			
 	planck13-only  `Planck Collab. 2013 <http://adsabs.harvard.edu/abs/2014A%26A...571A..16P>`_     Table 2     Best-fit, Planck only 					
@@ -254,6 +256,8 @@ current_cosmo = None
 # cosmological parameters are tracked to the fourth digit, which is why all parameters are rounded
 # to at most four digits. See documentation at the top of this file for references.
 cosmologies = OrderedDict()
+cosmologies['planck18-only'] = {'flat': True, 'H0': 67.36, 'Om0': 0.3153, 'Ob0': 0.0493, 'sigma8': 0.8111, 'ns': 0.9649}
+cosmologies['planck18']      = {'flat': True, 'H0': 67.66, 'Om0': 0.3111, 'Ob0': 0.0490, 'sigma8': 0.8102, 'ns': 0.9665}
 cosmologies['planck15-only'] = {'flat': True, 'H0': 67.81, 'Om0': 0.3080, 'Ob0': 0.0484, 'sigma8': 0.8149, 'ns': 0.9677}
 cosmologies['planck15']      = {'flat': True, 'H0': 67.74, 'Om0': 0.3089, 'Ob0': 0.0486, 'sigma8': 0.8159, 'ns': 0.9667}
 cosmologies['planck13-only'] = {'flat': True, 'H0': 67.11, 'Om0': 0.3175, 'Ob0': 0.0490, 'sigma8': 0.8344, 'ns': 0.9624}
