@@ -1534,7 +1534,11 @@ class Cosmology(object):
 		* In the matter-dark energy regime, we evaluate :math:`D_+(z)` 
 		  through integration as defined in 
 		  `Eisenstein & Hu 1999 <http://adsabs.harvard.edu/abs/1999ApJ...511....5E>`_, Equation 8 
-		  (see also `Heath 1977 <http://adsabs.harvard.edu/abs/1977MNRAS.179..351H>`_). 
+		  (see also `Heath 1977 <http://adsabs.harvard.edu/abs/1977MNRAS.179..351H>`_) for 
+		  LCDM cosmologies. For cosmologies where :math:`w(z) \\neq -1`, this expression is not
+		  valid and we instead solve the ordinary differential equation for the evolution of the
+		  growth factor (Equation 8 in 
+		  `Linder & Jenkins 2003 <https://ui.adsabs.harvard.edu//#abs/2003MNRAS.346..573L/abstract>`_).
 		
 		At the transition between the integral and analytic approximation regimes, the two 
 		expressions do not quite match up, with differences of the order <1E-3. in order to avoid
@@ -1569,6 +1573,7 @@ class Cosmology(object):
 		interpolates and is thus much faster.
 		"""
 
+		# -----------------------------------------------------------------------------------------
 		# The growth factor integral uses E(z), but is not designed to take relativistic species
 		# into account. Thus, using the standard E(z) leads to wrong results. Instead, we pretend
 		# that the small radiation content at low z behaves like a cosmological constant which 
@@ -1584,9 +1589,48 @@ class Cosmology(object):
 			E = np.sqrt(sum)
 			return E
 
-		# The integrand
+		# -----------------------------------------------------------------------------------------
+		# The integrand for the integral expression for the growth factor
+		
 		def integrand(z):
 			return (1.0 + z) / (Ez_D(z))**3
+
+		# -----------------------------------------------------------------------------------------
+		# Compute the growth factor by integrating the ODEs. This is necessary for non-LCDM dark
+		# energy where the integral expression is not valid.
+	
+		def growthFactorFromODE(z_eval):
+
+			# This function implements equation 8 in Linder & Jenkins 2003. 		
+			def derivatives(a, y):
+		
+				z = 1.0 / a - 1.0
+				D = y[0]
+				Dp = y[1]
+				
+				wa = self.wz(z)
+				Xa = self.Om(z) / self.Ode(z)
+				
+				t1 = -1.5 * (1 - wa / (1 + Xa)) / a
+				t2 = 1.5 * Xa / (1 + Xa) / a**2
+				
+				return [Dp, t1 * Dp + t2 * D]
+		
+			# Regardless of what redshifts are requested, we need to start integrating at high z
+			# where we know the initial conditions.
+			a_eval = 1.0 / (1.0 + z_eval)
+			a_min = np.fmin(np.min(a_eval), 1E-3)
+			a_max = np.max(a_eval)
+
+			# The stringent accuracy limit is necessary, there are noticeable errors in the solution 
+			# for lower atol. The solution should always converge to D ~ a at very low a.
+			dic = scipy.integrate.solve_ivp(derivatives, (a_min, a_max), [a_min, 1.0], 
+										t_eval = a_eval, atol = 1E-6, rtol = 1E-6)
+			D = dic['y'][0, :]
+		
+			return D
+
+		# -----------------------------------------------------------------------------------------
 
 		# Create a transition regime centered around z = 10 in log space
 		z_switch = 10.0
@@ -1602,9 +1646,13 @@ class Cosmology(object):
 		mask2 = z_arr > (zt2)
 		mask3 = mask1 & mask2
 		
-		# Compute D from integration at low redshift
+		# Compute D from integration at low redshift, or integrate ODEs in the case of non-LCDM
+		# dark energy.
 		z1 = z_arr[mask1]
-		D[mask1] = 5.0 / 2.0 * self.Om0 * Ez_D(z1) * self._integral(integrand, z1, np.inf)
+		if self.de_model == 'lambda':
+			D[mask1] = 5.0 / 2.0 * self.Om0 * Ez_D(z1) * self._integral(integrand, z1, np.inf)
+		else:
+			D[mask1] = growthFactorFromODE(z1)
 		D1 = D[mask3]
 		
 		# Compute D analytically at high redshift.
