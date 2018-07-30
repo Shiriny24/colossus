@@ -820,8 +820,6 @@ class Cosmology(object):
 
 	def _zInterpolator(self, table_name, func, inverse = False, future = True):
 
-		log_table = True
-
 		table_name = table_name + '_%s' % (self.name) 
 		interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, inverse = inverse)
 		
@@ -830,20 +828,15 @@ class Cosmology(object):
 				print("Computing lookup table in z.")
 			
 			if future:
-				log_min = np.log10(1.0 + self.z_min_compute)
+				log_min = np.log(1.0 + self.z_min_compute)
 			else:
 				log_min = 0.0
-			log_max = np.log10(1.0 + self.z_max_compute)
-			bin_width = (log_max - log_min) / self.z_Nbins
-			
-			zp1_log_table = np.arange(log_min, log_max + bin_width, bin_width)
-			z_table = 10**zp1_log_table - 1.0
+			log_max = np.log(1.0 + self.z_max_compute)
+			zp1_log_table = np.linspace(log_min, log_max, self.z_Nbins)
+			z_table = np.exp(zp1_log_table) - 1.0
 			x_table = func(z_table)
 			
-			if log_table:
-				self.storageUser.storeObject(table_name, np.array([zp1_log_table, x_table]))
-			else:
-				self.storageUser.storeObject(table_name, np.array([z_table, x_table]))
+			self.storageUser.storeObject(table_name, np.array([zp1_log_table, x_table]))
 				
 			if self.print_info:
 				print("Lookup table completed.")
@@ -853,7 +846,10 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	# General container for methods that are functions of z and use interpolation
+	# General container for methods that are functions of z and use interpolation. This function is
+	# somewhat complicated because redshift is stored in a logarithmic table, leading to various
+	# complications with derivatives, inverses and so on. The logarithmic spacing leads to a better
+	# interpolation accuracy though.
 	
 	def _zFunction(self, table_name, func, z, inverse = False, future = True, derivative = 0):
 
@@ -866,10 +862,12 @@ class Cosmology(object):
 			# the result function. But even if we are evaluating a z-function it's good to check 
 			# the limits on the interpolator. For example, some functions can be evaluated in the
 			# future while others cannot.
-			#min_ = interpolator.get_knots()[0]
-			#max_ = interpolator.get_knots()[-1]
-			min_ = 10**interpolator.get_knots()[0] - 1.0
-			max_ = 10**interpolator.get_knots()[-1] - 1.0
+			if inverse:
+				min_ = interpolator.get_knots()[0]
+				max_ = interpolator.get_knots()[-1]
+			else:
+				min_ = np.exp(interpolator.get_knots()[0]) - 1.0
+				max_ = np.exp(interpolator.get_knots()[-1]) - 1.0
 			
 			if np.min(z) < min_:
 				if inverse:
@@ -885,12 +883,37 @@ class Cosmology(object):
 					msg = "Redshift z = %.3f outside range of interpolation table (max. z is %.3f)." % (np.max(z), max_)
 				raise Exception(msg)
 
-			#ret = interpolator(z, nu = derivative)
-			ret = interpolator(np.log10(z + 1.0), nu = derivative)
-			
 			if inverse:
-				ret = 10**ret - 1.0
+				f = z
+				ln_zp1 = interpolator(f, nu = 0)
+				zp1 = np.exp(ln_zp1)
+				
+				if derivative == 0:
+					ret = zp1 - 1.0
+				elif derivative == 1:
+					dx_df = interpolator(f, nu = 1)
+					ret = dx_df * zp1
+				elif derivative == 2:
+					dx_df = interpolator(f, nu = 1)
+					dx2_df2 = interpolator(f, nu = 2)
+					ret = (dx2_df2 + dx_df**2) * zp1
+				elif derivative > 2:
+					raise Exception('Only the first and second derivatives are implemented.')
 			
+			else:			
+				zp1 = 1.0 + z
+				ln_zp1 = np.log(zp1)
+				x = ln_zp1
+				ret = interpolator(x, nu = derivative)
+				
+				if derivative == 1:
+					ret /= zp1
+				elif derivative == 2:
+					df_dx = interpolator(ln_zp1, nu = 1)
+					ret = (ret - df_dx) / (1.0 + z)**2
+				elif derivative > 2:
+					raise Exception('Only the first and second derivatives are implemented.')
+				
 		else:
 			if derivative > 0:
 				raise Exception("Derivative can only be evaluated if interpolation == True.")
@@ -1120,12 +1143,14 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	def angularDiameterDistance(self, z, derivative = 0, inverse = False):
+	def angularDiameterDistance(self, z, derivative = 0):
 		"""
 		The angular diameter distance to redshift z.
 		
 		The angular diameter distance is the transverse distance that, at redshift z, corresponds 
-		to an angle of one radian.
+		to an angle of one radian. Note that the inverse is not available for this function 
+		because it is not strictly increasing or decreasing with redshift, making its inverse
+		multi-valued.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -1133,9 +1158,6 @@ class Cosmology(object):
 			Redshift, where :math:`-0.995 < z < 200`; can be a number or a numpy array.
 		derivative: int
 			If greater than 0, evaluate the nth derivative, :math:`d^nD/dz^n`.
-		inverse: bool
-			If True, evaluate :math:`z(D)` instead of :math:`D(z)`. In this case, the ``z`` field
-			must contain the angular diameter distance in Mpc/h.
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -1150,7 +1172,7 @@ class Cosmology(object):
 		"""
 
 		d = self._zFunction('angdiamdist', self._angularDiameterDistanceExact, z,
-						future = False, derivative = derivative, inverse = inverse)
+						future = False, derivative = derivative, inverse = False)
 		
 		return d
 
