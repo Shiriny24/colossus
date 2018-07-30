@@ -820,6 +820,8 @@ class Cosmology(object):
 
 	def _zInterpolator(self, table_name, func, inverse = False, future = True):
 
+		log_table = True
+
 		table_name = table_name + '_%s' % (self.name) 
 		interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, inverse = inverse)
 		
@@ -833,10 +835,16 @@ class Cosmology(object):
 				log_min = 0.0
 			log_max = np.log10(1.0 + self.z_max_compute)
 			bin_width = (log_max - log_min) / self.z_Nbins
-			z_table = 10**np.arange(log_min, log_max + bin_width, bin_width) - 1.0
+			
+			zp1_log_table = np.arange(log_min, log_max + bin_width, bin_width)
+			z_table = 10**zp1_log_table - 1.0
 			x_table = func(z_table)
 			
-			self.storageUser.storeObject(table_name, np.array([z_table, x_table]))
+			if log_table:
+				self.storageUser.storeObject(table_name, np.array([zp1_log_table, x_table]))
+			else:
+				self.storageUser.storeObject(table_name, np.array([z_table, x_table]))
+				
 			if self.print_info:
 				print("Lookup table completed.")
 			interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, inverse = inverse)
@@ -858,8 +866,10 @@ class Cosmology(object):
 			# the result function. But even if we are evaluating a z-function it's good to check 
 			# the limits on the interpolator. For example, some functions can be evaluated in the
 			# future while others cannot.
-			min_ = interpolator.get_knots()[0]
-			max_ = interpolator.get_knots()[-1]
+			#min_ = interpolator.get_knots()[0]
+			#max_ = interpolator.get_knots()[-1]
+			min_ = 10**interpolator.get_knots()[0] - 1.0
+			max_ = 10**interpolator.get_knots()[-1] - 1.0
 			
 			if np.min(z) < min_:
 				if inverse:
@@ -875,11 +885,17 @@ class Cosmology(object):
 					msg = "Redshift z = %.3f outside range of interpolation table (max. z is %.3f)." % (np.max(z), max_)
 				raise Exception(msg)
 
-			ret = interpolator(z, nu = derivative)				
+			#ret = interpolator(z, nu = derivative)
+			ret = interpolator(np.log10(z + 1.0), nu = derivative)
+			
+			if inverse:
+				ret = 10**ret - 1.0
 			
 		else:
 			if derivative > 0:
 				raise Exception("Derivative can only be evaluated if interpolation == True.")
+			if inverse:
+				raise Exception("Inverse can only be evaluated if interpolation == True.")
 
 			ret = func(z)
 		
@@ -1537,7 +1553,7 @@ class Cosmology(object):
 		  (see also `Heath 1977 <http://adsabs.harvard.edu/abs/1977MNRAS.179..351H>`_) for 
 		  LCDM cosmologies. For cosmologies where :math:`w(z) \\neq -1`, this expression is not
 		  valid and we instead solve the ordinary differential equation for the evolution of the
-		  growth factor (Equation 8 in 
+		  growth factor (Equation 11 in 
 		  `Linder & Jenkins 2003 <https://ui.adsabs.harvard.edu//#abs/2003MNRAS.346..573L/abstract>`_).
 		
 		At the transition between the integral and analytic approximation regimes, the two 
@@ -1601,20 +1617,20 @@ class Cosmology(object):
 	
 		def growthFactorFromODE(z_eval):
 
-			# This function implements equation 8 in Linder & Jenkins 2003. 		
-			def derivatives(a, y):
+			# This function implements equation 11 in Linder & Jenkins 2003. 		
+			def derivatives_G(a, y):
 		
 				z = 1.0 / a - 1.0
-				D = y[0]
-				Dp = y[1]
+				G = y[0]
+				Gp = y[1]
 				
 				wa = self.wz(z)
 				Xa = self.Om(z) / self.Ode(z)
 				
-				t1 = -1.5 * (1 - wa / (1 + Xa)) / a
-				t2 = 1.5 * Xa / (1 + Xa) / a**2
+				t1 = -(3.5 - 1.5 * wa / (1.0 + Xa)) / a
+				t2 = -1.5 * (1.0 - wa) / (1.0 + Xa) / a**2
 				
-				return [Dp, t1 * Dp + t2 * D]
+				return [Gp, t1 * Gp + t2 * G]
 		
 			# Regardless of what redshifts are requested, we need to start integrating at high z
 			# where we know the initial conditions.
@@ -1624,28 +1640,34 @@ class Cosmology(object):
 
 			# The stringent accuracy limit is necessary, there are noticeable errors in the solution 
 			# for lower atol. The solution should always converge to D ~ a at very low a.
-			dic = scipy.integrate.solve_ivp(derivatives, (a_min, a_max), [a_min, 1.0], 
+			dic = scipy.integrate.solve_ivp(derivatives_G, (a_min, a_max), [1.0, 0.0], 
 										t_eval = a_eval, atol = 1E-6, rtol = 1E-6)
-			D = dic['y'][0, :]
-		
+			G = dic['y'][0, :]
+			D = G * a_eval
+			
 			return D
 
 		# -----------------------------------------------------------------------------------------
 
-		# Create a transition regime centered around z = 10 in log space
-		z_switch = 10.0
-		trans_width = 2.0
-		zt1 = z_switch * trans_width
-		zt2 = z_switch / trans_width
-		
-		# Split into late (1), early (2) and a transition interval (3)
 		z_arr, is_array = utilities.getArray(z)
-		a = 1.0 / (1.0 + z_arr)
 		D = np.zeros_like(z_arr)
-		mask1 = z_arr < (zt1)
-		mask2 = z_arr > (zt2)
-		mask3 = mask1 & mask2
 		
+		# Create a transition regime centered around z = 10 in log space, but only if relativistic
+		# species are present.
+		if self.relspecies:
+			z_switch = 10.0
+			trans_width = 2.0
+			zt1 = z_switch * trans_width
+			zt2 = z_switch / trans_width
+			
+			# Split into late (1), early (2) and a transition interval (3)
+			a = 1.0 / (1.0 + z_arr)
+			mask1 = z_arr < (zt1)
+			mask2 = z_arr > (zt2)
+			mask3 = mask1 & mask2
+		else:
+			mask1 = np.ones_like(z_arr, np.bool)
+			
 		# Compute D from integration at low redshift, or integrate ODEs in the case of non-LCDM
 		# dark energy.
 		z1 = z_arr[mask1]
@@ -1653,25 +1675,23 @@ class Cosmology(object):
 			D[mask1] = 5.0 / 2.0 * self.Om0 * Ez_D(z1) * self._integral(integrand, z1, np.inf)
 		else:
 			D[mask1] = growthFactorFromODE(z1)
-		D1 = D[mask3]
-		
+
 		# Compute D analytically at high redshift.
-		a2 = a[mask2]
-		if self.relspecies:
+		if self.relspecies:	
+			D1 = D[mask3]
+			a2 = a[mask2]
 			x = a2 / self.a_eq
 			term1 = np.sqrt(1.0 + x)
 			term2 = 2.0 * term1 + (2.0 / 3.0 + x) * np.log((term1 - 1.0) / (term1 + 1.0))
 			D[mask2] = a2 + 2.0 / 3.0 * self.a_eq + self.a_eq / (2.0 * np.log(2.0) - 3.0) * term2
-		else:
-			D[mask2] = a2
-		D2 = D[mask3]
-
-		# Average in transition regime
-		at1 = np.log(1.0 / (zt1 + 1.0))
-		at2 = np.log(1.0 / (zt2 + 1.0))
-		dloga = at2 - at1
-		loga = np.log(a[mask3])
-		D[mask3] = (D1 * (loga - at1) + D2 * (at2 - loga)) / dloga
+			D2 = D[mask3]
+	
+			# Average in transition regime
+			at1 = np.log(1.0 / (zt1 + 1.0))
+			at2 = np.log(1.0 / (zt2 + 1.0))
+			dloga = at2 - at1
+			loga = np.log(a[mask3])
+			D[mask3] = (D1 * (loga - at1) + D2 * (at2 - loga)) / dloga
 
 		# Reduce array to number if necessary
 		if not is_array:
