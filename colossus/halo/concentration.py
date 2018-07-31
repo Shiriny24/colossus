@@ -447,7 +447,8 @@ def modelBullock01(M200c, z):
 	# Get an inverse interpolator to determine D+ from z. This is an advanced use of the internal
 	# table system of the cosmology class.
 	cosmo = cosmology.getCurrent()
-	interp = cosmo._zInterpolator('growthfactor', cosmo._growthFactorExact, inverse = True, future = True)
+	interp = cosmo._zInterpolator('lnzp1_growthfactor', cosmo._growthFactorExact, 
+								inverse = True, future = True)
 	Dmin = interp.get_knots()[0]
 	Dmax = interp.get_knots()[-1]
 
@@ -461,7 +462,8 @@ def modelBullock01(M200c, z):
 	H0 = cosmo.Hz(z)
 	for i in range(N):
 		if mask[i]:
-			zc = interp(D_target[i])
+			lnzp1 = interp(D_target[i])
+			zc = np.exp(lnzp1) - 1.0
 			Hc = cosmo.Hz(zc)
 			c200c[i] = K * (Hc / H0)**0.6666
 		else:

@@ -36,8 +36,14 @@ Changes in the large-scale structure module:
 
 Changes in the halo module:
 
-* The halo concentration model of Diemer and Joyce 2018 was added, and the Diemer and Kravtsov
-  2015 model was updated according to Diemer and Joyce 2018.
+* The halo concentration models of Ludlow et al. 2016, Child et al. 2018, and Diemer and Joyce 2018 
+  were added.
+* The Diemer and Kravtsov 2015 model was updated according to Diemer and Joyce 2018.
+* The default concentation model remains the original Diemer & Kravtsov 2015 model, without the
+  improvements of Diemer and Joyce 2018. In a near-future release, the default concentration 
+  model will switch to their new model which will influence a few functions such as 
+  :func:`~halo.mass_adv.changeMassDefinitionCModel`. However, the numerical differences to the 
+  previous default model are small.
 
 Other changes:
 

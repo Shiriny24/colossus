@@ -78,8 +78,7 @@ class TCConcentration(test_colossus.ColosssusTestCase):
 			c = concentration.concentration(M, mdef, z = z, model = k, range_return = False, 
 										range_warning = False)
 			if k == 'bullock01':
-				#self.assertAlmostEqual(c, 6.835712511065e+00, msg = msg)
-				self.assertAlmostEqual(c, 5.371238064602e+00, msg = msg)
+				self.assertAlmostEqual(c, 6.835409271561e+00, msg = msg)
 			elif k == 'duffy08':
 				self.assertAlmostEqual(c, 5.8441337918319354, msg = msg)
 			elif k == 'klypin11':
