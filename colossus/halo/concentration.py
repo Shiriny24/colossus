@@ -1233,7 +1233,16 @@ def modelChild18(M200c, z, halo_sample = 'individual_all'):
 
 def modelDiemer18(M200c, z, statistic = 'median'):
 	"""
-	The model of ...
+	The model of Diemer & Joyce 2018 (in prep.).
+	
+	This model improves on the Diemer & Kravtsov 2015 model in a number of ways. First, it is based
+	on a mathematical derivation of the evolution of concentration at the low-mass end. This more
+	physically motivated functional form allows fewer free parameters (six instead of seven). 
+	Second, because of the improved functional form, the model improves the fit, particularly to
+	scale-free cosmologies. Finally, the new model fixed a slight numerical bug in the DK15 model.
+	
+	This model implementation is currently rather slow, the code will be improved in a future
+	release.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
