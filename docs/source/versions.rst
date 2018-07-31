@@ -5,7 +5,7 @@ What's new?
 See below for a listing of the most important code and interface changes in Colossus, starting with
 version 1.1.0.
 
-.. rubric:: Version 1.2.1
+.. rubric:: Version 1.2.2
 
 This version fixes several bugs and adds new features. Changes in the cosmology module include:
 
@@ -52,9 +52,9 @@ Other changes:
   `MCMC tutorial <_static/tutorial_utils_mcmc.html>`_.
 * Numerous small improvements were made in the documentation. 
 
-.. rubric:: Version 1.2.0
+.. rubric:: Version 1.2.1
 
-Version 1.2.0 is the version that coincided with the first publication of the code paper on
+Version 1.2.1 is the version that coincided with the first publication of the code paper on
 arXiv.org. The following major changes were made:
 
 * The documentation was reworked entirely.
