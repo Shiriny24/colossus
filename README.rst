@@ -46,7 +46,7 @@ License & Citing
 
 Author:        Benedikt Diemer (benedikt.diemer@cfa.harvard.edu)
 
-Contributors:  Matt Becker, Andrey Kravtsov
+Contributors:  Matt Becker, Andrey Kravtsov, Steven Murray
 
 License:       MIT. Copyright (c) 2014-2018
 
