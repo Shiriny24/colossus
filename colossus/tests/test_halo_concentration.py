@@ -39,31 +39,31 @@ class TCConcentration(test_colossus.ColosssusTestCase):
 			for j in range(len(mdefs)):
 
 				c, mask = concentration.concentration(M_one, mdefs[j], z = z, model = k, range_return = True, range_warning = False)
-				self.assertNotIsInstance(c, np.ndarray, 'Concentration should be scalar float.')
-				self.assertNotIsInstance(mask, np.ndarray, 'Mask should be scalar bool.')
+				self.assertNotIsInstance(c, np.ndarray, 'Concentration should be scalar float, model %s, mdef %s.' % (k, mdefs[j]))
+				self.assertNotIsInstance(mask, np.ndarray, 'Mask should be scalar bool, model %s, mdef %s.' % (k, mdefs[j]))
 			
 				c, mask = concentration.concentration(M_one_array, mdefs[j], z = z, model = k, range_return = True, range_warning = False)
-				self.assertIsInstance(c, np.ndarray, 'Concentration should be an array with one element.')
-				self.assertIsInstance(mask, np.ndarray, 'Mask should be an array with one element.')
-				self.assertEqual(len(c), 1, 'Concentration should be an array with one element.')
-				self.assertEqual(len(mask), 1, 'Mask should be an array with one element.')
+				self.assertIsInstance(c, np.ndarray, 'Concentration should be an array with one element, model %s, mdef %s.' % (k, mdefs[j]))
+				self.assertIsInstance(mask, np.ndarray, 'Mask should be an array with one element, model %s, mdef %s.' % (k, mdefs[j]))
+				self.assertEqual(len(c), 1, 'Concentration should be an array with one element, model %s, mdef %s.' % (k, mdefs[j]))
+				self.assertEqual(len(mask), 1, 'Mask should be an array with one element, model %s, mdef %s.' % (k, mdefs[j]))
 
 				c, mask = concentration.concentration(M_many, mdefs[j], z = z, model = k, range_return = True, range_warning = False)
-				self.assertIsInstance(c, np.ndarray, 'Concentration should be an array with multiple elements.')
-				self.assertIsInstance(mask, np.ndarray, 'Mask should be an array with multiple elements.')
-				self.assertEqual(len(c), N_array, 'Concentration should be an array with multiple elements.')
-				self.assertEqual(len(mask), N_array, 'Mask should be an array with multiple elements.')
+				self.assertIsInstance(c, np.ndarray, 'Concentration should be an array with multiple elements, model %s, mdef %s.' % (k, mdefs[j]))
+				self.assertIsInstance(mask, np.ndarray, 'Mask should be an array with multiple elements, model %s, mdef %s.' % (k, mdefs[j]))
+				self.assertEqual(len(c), N_array, 'Concentration should be an array with multiple elements, model %s, mdef %s.' % (k, mdefs[j]))
+				self.assertEqual(len(mask), N_array, 'Mask should be an array with multiple elements, model %s, mdef %s.' % (k, mdefs[j]))
 
 				c = concentration.concentration(M_one, mdefs[j], z = z, model = k, range_return = False, range_warning = False)
-				self.assertNotIsInstance(c, np.ndarray, 'Concentration should be scalar float.')
+				self.assertNotIsInstance(c, np.ndarray, 'Concentration should be scalar float, model %s, mdef %s.' % (k, mdefs[j]))
 			
 				c = concentration.concentration(M_one_array, mdefs[j], z = z, model = k, range_return = False, range_warning = False)
-				self.assertIsInstance(c, np.ndarray, 'Concentration should be an array with one element.')
-				self.assertEqual(len(c), 1, 'Concentration should be an array with one element.')
+				self.assertIsInstance(c, np.ndarray, 'Concentration should be an array with one element, model %s, mdef %s.' % (k, mdefs[j]))
+				self.assertEqual(len(c), 1, 'Concentration should be an array with one element, model %s, mdef %s.' % (k, mdefs[j]))
 				
 				c = concentration.concentration(M_many, mdefs[j], z = z, model = k, range_return = False, range_warning = False)
-				self.assertIsInstance(c, np.ndarray, 'Concentration should be an array with multiple elements.')
-				self.assertEqual(len(c), N_array, 'Concentration should be an array with multiple elements.')
+				self.assertIsInstance(c, np.ndarray, 'Concentration should be an array with multiple elements, model %s, mdef %s.' % (k, mdefs[j]))
+				self.assertEqual(len(c), N_array, 'Concentration should be an array with multiple elements, model %s, mdef %s.' % (k, mdefs[j]))
 
 	###############################################################################################
 
@@ -77,31 +77,33 @@ class TCConcentration(test_colossus.ColosssusTestCase):
 			msg = 'Failure in model = %s' % (k)
 			c = concentration.concentration(M, mdef, z = z, model = k, range_return = False, 
 										range_warning = False)
-			if k == 'diemer18':
-				self.assertAlmostEqual(c, 6.799715715382e+00, msg = msg)
-			elif k == 'child18':
-				self.assertAlmostEqual(c, 6.695234756753e+00, msg = msg)
-			elif k == 'klypin16_nu':
-				self.assertAlmostEqual(c, 6.458807474480e+00, msg = msg)
-			elif k == 'klypin16_m':
-				self.assertAlmostEqual(c, 6.2107920072554768, msg = msg)
+			if k == 'bullock01':
+				#self.assertAlmostEqual(c, 6.835712511065e+00, msg = msg)
+				self.assertAlmostEqual(c, 5.371238064602e+00, msg = msg)
+			elif k == 'duffy08':
+				self.assertAlmostEqual(c, 5.8441337918319354, msg = msg)
+			elif k == 'klypin11':
+				self.assertAlmostEqual(c, 9.3289793383381223, msg = msg)
+			elif k == 'prada12':
+				self.assertAlmostEqual(c, 7.553695295377e+00, msg = msg)
+			elif k == 'bhattacharya13':
+				self.assertAlmostEqual(c, 5.862307277961e+00, msg = msg)
+			elif k == 'dutton14':
+				self.assertAlmostEqual(c, 7.5907186889384706, msg = msg)
 			elif k == 'diemer15':
 				self.assertAlmostEqual(c, 6.818418444826e+00, msg = msg)
 			elif k == 'diemer15_orig':
 				self.assertAlmostEqual(c, 6.650272575815e+00, msg = msg)
-			elif k == 'dutton14':
-				self.assertAlmostEqual(c, 7.5907186889384706, msg = msg)
-			elif k == 'bhattacharya13':
-				self.assertAlmostEqual(c, 5.862307277961e+00, msg = msg)
-			elif k == 'prada12':
-				self.assertAlmostEqual(c, 7.553695295377e+00, msg = msg)
-			elif k == 'klypin11':
-				self.assertAlmostEqual(c, 9.3289793383381223, msg = msg)
-			elif k == 'duffy08':
-				self.assertAlmostEqual(c, 5.8441337918319354, msg = msg)
-			elif k == 'bullock01':
-				#self.assertAlmostEqual(c, 6.835712511065e+00, msg = msg)
-				self.assertAlmostEqual(c, 5.371238064602e+00, msg = msg)
+			elif k == 'klypin16_nu':
+				self.assertAlmostEqual(c, 6.458807474480e+00, msg = msg)
+			elif k == 'klypin16_m':
+				self.assertAlmostEqual(c, 6.2107920072554768, msg = msg)
+			elif k == 'ludlow16':
+				self.assertAlmostEqual(c, 7.622996512353e+00, msg = msg)
+			elif k == 'child18':
+				self.assertAlmostEqual(c, 6.695234756753e+00, msg = msg)
+			elif k == 'diemer18':
+				self.assertAlmostEqual(c, 6.799715715382e+00, msg = msg)
 			else:
 				msg = 'Unknown model, %s.' % k
 				raise Exception(msg)

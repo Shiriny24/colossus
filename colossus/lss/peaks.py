@@ -49,6 +49,7 @@ Module contents
 	massFromPeakHeight
 	nonLinearMass
 	peakCurvature
+	powerSpectrumSlope
 
 ---------------------------------------------------------------------------------------------------
 Module reference

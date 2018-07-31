@@ -77,8 +77,9 @@ parameter to the :func:`concentration` function:
 	diemer15       200c             Any                Any         Any             Diemer and Joyce 2018 (in prep.)
 	klypin16_m     200c, vir        M > 1E10           0 < z < 5   planck13/WMAP7  `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
 	klypin16_nu    200c, vir        M > 1E10           0 < z < 5   planck13        `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
-	child18        200c             ???                ???         ???             `Child et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2018ApJ...859...55C/abstract>`_
-	diemer18        200c             Any                Any         Any            Diemer and Joyce 2018 (in prep.)
+	ludlow16       200c             Any                Any         Any             `Ludlow et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2016MNRAS.460.1214L/abstract>`_
+	child18        200c             M > 2.1E11         0 < z < 4   WMAP7           `Child et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2018ApJ...859...55C/abstract>`_
+	diemer18       200c             Any                Any         Any             Diemer and Joyce 2018 (in prep.)
 	============== ================ ================== =========== =============== ============================================================================
 
 ---------------------------------------------------------------------------------------------------
@@ -99,6 +100,7 @@ Module contents
 	modelDiemer15fromNu
 	modelKlypin16fromM
 	modelKlypin16fromNu
+	modelLudlow16
 	modelChild18
 	modelDiemer18
 
@@ -123,6 +125,7 @@ from colossus.lss import peaks
 from colossus.halo import mass_so
 from colossus.halo import mass_defs
 from colossus.halo import profile_nfw
+from colossus.halo import profile_einasto
 
 ###################################################################################################
 
@@ -197,6 +200,10 @@ models['klypin16_m'].mdefs = ['200c', 'vir']
 
 models['klypin16_nu'] = ConcentrationModel()
 models['klypin16_nu'].mdefs = ['200c', 'vir']
+
+models['ludlow16'] = ConcentrationModel()
+models['ludlow16'].mdefs = ['200c']
+models['ludlow16'].universal = False
 
 models['child18'] = ConcentrationModel()
 models['child18'].mdefs = ['200c']
@@ -1064,6 +1071,97 @@ def modelKlypin16fromNu(M, z, mdef):
 
 ###################################################################################################
 
+def modelLudlow16(M200c, z):
+	"""
+	The model of Ludlow et al 2016.
+	
+	This function finds the solution by brute-force computation of a large array of concentrations.
+	This technique is efficient if M200c is a large array, but inefficient for few values. 
+	Moreover, the function assumes a LCDM cosmology and is not strictly valid for wCDM or other
+	DE models. The code was adapted from a routine by Steven Murray.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	M200c: array_like
+		Halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
+	z: float
+		Redshift
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	c: array_like
+		Halo concentration; has the same dimensions as ``M200c``.
+	mask: array_like
+		Boolean, has the same dimensions as ``M200c``. Where ``False``, one or more input 
+		parameters were outside the range where the model was calibrated, and the returned 
+		concentration may not be reliable.
+	"""
+	
+	f = 0.02
+	C = 650.0
+	
+	cosmo = cosmology.getCurrent()
+
+	# Make sure we are dealing with an array
+	M200c, is_array = utilities.getArray(M200c)
+
+	# We solve this model by computing Equations 6 and 7 in Ludlow+16 for a large range of
+	# concentrations. 
+	c_array = np.logspace(0, 2, 200)
+	
+	# Use an Einasto profile with alpha = 0.18
+	p_ein = profile_einasto.EinastoProfile(M = 1E12, c = 1.0, z = z, mdef = '200c', alpha = 0.18)
+	rs_ein = p_ein.par['rs']
+	M_ratio = p_ein.enclosedMassInner(rs_ein) / p_ein.enclosedMassInner(rs_ein * c_array)
+	
+	# Formation density in units of critical density. We invert this to find the formation redshift
+	# as a function.
+	rho_f_rho_c = 200.0 * c_array**3 * M_ratio / C
+	
+	# This equation is a slight of hand. Actually, we should numerically solve for the redshift 
+	# where the critical density is rho_f_rho_c * rho_c(now). This is not implemented in the 
+	# cosmology module though. Instead, we assume a simple LCDM cosmology with no relativistic
+	# species, a case for which we can solve the equation directly for the formation redshift.
+	# We also need to cut the c array at this point because not all concentrations will lead to 
+	# defined formation redshifts.
+	t1 = (rho_f_rho_c * (cosmo.Om0 * (1.0 + z)**3 + cosmo.Ode0) - cosmo.Ode0) / cosmo.Om0
+	mask_c_array = (t1 > 0.0)
+	zf = t1[mask_c_array]**(1.0 / 3.0) - 1.0
+	c_array = c_array[mask_c_array]
+	M_ratio = M_ratio[mask_c_array]
+
+	# We can now solve Equation 7 numerically. Note that there are terms which have the length
+	# of our artificial c array and terms of the length of M200c. We compute the right hand side
+	# for each combination.
+	sigma2_fM = cosmo.sigma(peaks.lagrangianR(f * M200c), 0.0)**2
+	sigma2_M = cosmo.sigma(peaks.lagrangianR(M200c), 0.0)**2
+	delta_z = constants.DELTA_COLLAPSE / cosmo.growthFactor(z)
+	delta_zf = constants.DELTA_COLLAPSE / cosmo.growthFactor(zf)
+	rhs = scipy.special.erfc(np.outer(delta_zf - delta_z , 1.0 / np.sqrt(2.0 * (sigma2_fM - sigma2_M))))
+
+	# We can now find the solution by interpolation: the concentration in the c_array vector
+	# appears where lhs - rhs = 0.
+	c200c = np.zeros_like(M200c)
+	mask = np.ones_like(M200c, np.bool)
+	for i in range(len(M200c)):
+		lhs_rhs = M_ratio - rhs[:, i]
+		mask_nan = np.logical_not(np.isnan(lhs_rhs))
+		lhs_rhs = lhs_rhs[mask_nan]
+		if (np.count_nonzero(lhs_rhs < 0.0) == 0) or (np.count_nonzero(lhs_rhs > 0.0) == 0):
+			mask[i] = False
+			c200c[i] = INVALID_CONCENTRATION
+		else:
+			c200c[i] = np.interp(0.0, lhs_rhs, c_array[mask_nan])
+
+	# Convert back to scalar if necessary
+	if not is_array:
+		c200c = c200c[0]
+		mask = mask[0]
+
+	return c200c, mask
+
+###################################################################################################
+
 def modelChild18(M200c, z, halo_sample = 'individual_all'):
 	"""
 	The model of Child et al 2018.
@@ -1120,7 +1218,7 @@ def modelChild18(M200c, z, halo_sample = 'individual_all'):
 	else:
 		raise Exception('Unknown halo sample for child18 concentration model, %s.' % (halo_sample))
 
-	mask = (M200c >= 2.1E11)
+	mask = (M200c >= 2.1E11) & (z >= 0.0) & (z <= 4.0)
 	
 	Mstar = peaks.nonLinearMass(z)
 	M_MT = M200c / (Mstar * b)
@@ -1128,41 +1226,6 @@ def modelChild18(M200c, z, halo_sample = 'individual_all'):
 	c200c = c0 + A * (M_MT**m * (1.0 + M_MT)**-m - 1.0)
 
 	return c200c, mask
-
-###################################################################################################
-
-def _diemer18_neff(nu, z, kappa):
-
-	cosmo = cosmology.getCurrent()
-	M_L = peaks.massFromPeakHeight(nu, z)
-	R_L = peaks.lagrangianR(M_L)
-	n_eff = -2.0 * cosmo.sigma(kappa * R_L, z, 
-					ps_args = {'model': 'eisenstein98'}, derivative = True) - 3.0
-	
-	return n_eff
-
-###################################################################################################
-
-def _diemer18_alphaeff(z):
-
-	cosmo = cosmology.getCurrent()
-	D = cosmo.growthFactor(z, derivative = 0)
-	dDdz = cosmo.growthFactor(z, derivative = 1)
-	alpha_eff = -dDdz * (1.0 + z) / D
-	
-	return alpha_eff
-
-###################################################################################################
-
-# The G(c) inverse function that needs to be mumerically inverted
-
-def _diemer18_func(c, nu, n_eff, A_n, B_n):
-	
-	lhs = c / profile_nfw.NFWProfile.mu(c)**((5.0 + n_eff) / 6.0)
-	rhs = A_n / nu * (1.0 + nu**2 / B_n)
-	ret = lhs - rhs
-	
-	return ret
 
 ###################################################################################################
 
@@ -1185,6 +1248,31 @@ def modelDiemer18(M200c, z, statistic = 'median'):
 		Halo concentration; has the same dimensions as ``M200c``.
 	"""
 
+	# ---------------------------------------------------------------------------------------------
+	# The G(c) inverse function that needs to be mumerically inverted
+	
+	def _diemer18_func(c, nu, n_eff, A_n, B_n):
+		
+		lhs = c / profile_nfw.NFWProfile.mu(c)**((5.0 + n_eff) / 6.0)
+		rhs = A_n / nu * (1.0 + nu**2 / B_n)
+		ret = lhs - rhs
+		
+		return ret
+
+	# ---------------------------------------------------------------------------------------------
+	# The logarithmic derivative of the growth factor
+
+	def alpha_eff(z):
+	
+		cosmo = cosmology.getCurrent()
+		D = cosmo.growthFactor(z, derivative = 0)
+		dDdz = cosmo.growthFactor(z, derivative = 1)
+		alpha_eff = -dDdz * (1.0 + z) / D
+		
+		return alpha_eff
+
+	# ---------------------------------------------------------------------------------------------
+
 	if statistic == 'median':
 		kappa             = 0.41
 		a_0               = 2.45
@@ -1204,8 +1292,8 @@ def modelDiemer18(M200c, z, statistic = 'median'):
 
 	# Compute peak height, n_eff, and alpha_eff
 	nu = peaks.peakHeight(M200c, z)
-	n_eff = _diemer18_neff(nu, z, kappa)
-	alpha_eff = _diemer18_alphaeff(z)
+	n_eff = peaks.powerSpectrumSlope(nu, z, slope_type = 'sigma', scale = kappa)
+	alpha_eff = alpha_eff(z)
 
 	is_array = utilities.isArray(nu)
 	if not is_array:
@@ -1250,6 +1338,7 @@ models['diemer15_orig'].func = _modelDiemer15fromM_orig
 models['diemer15'].func = modelDiemer15fromM
 models['klypin16_m'].func = modelKlypin16fromM
 models['klypin16_nu'].func = modelKlypin16fromNu
+models['ludlow16'].func = modelLudlow16
 models['child18'].func = modelChild18
 models['diemer18'].func = modelDiemer18
 
