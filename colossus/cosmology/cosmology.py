@@ -991,7 +991,7 @@ class Cosmology(object):
 		age: The age of the universe at redshift z.
 		"""
 		
-		t = self._zFunction('lookbacktime', self._lookbackTimeExact, z, derivative = derivative,
+		t = self._zFunction('lnzp1_lookbacktime', self._lookbackTimeExact, z, derivative = derivative,
 						inverse = inverse)
 		
 		return t
@@ -1032,7 +1032,7 @@ class Cosmology(object):
 		lookbackTime: The lookback time since z.
 		"""
 
-		t = self._zFunction('age', self._ageExact, z, derivative = derivative, inverse = inverse)
+		t = self._zFunction('lnzp1_age', self._ageExact, z, derivative = derivative, inverse = inverse)
 		
 		return t
 	
@@ -1128,7 +1128,7 @@ class Cosmology(object):
 		angularDiameterDistance: The angular diameter distance to redshift z.
 		"""
 		
-		d = self._zFunction('luminositydist', self._luminosityDistanceExact, z,
+		d = self._zFunction('lnzp1_luminositydist', self._luminosityDistanceExact, z,
 						future = False, derivative = derivative, inverse = inverse)
 		
 		return d
@@ -1171,7 +1171,7 @@ class Cosmology(object):
 		luminosityDistance: The luminosity distance to redshift z.
 		"""
 
-		d = self._zFunction('angdiamdist', self._angularDiameterDistanceExact, z,
+		d = self._zFunction('lnzp1_angdiamdist', self._angularDiameterDistanceExact, z,
 						future = False, derivative = derivative, inverse = False)
 		
 		return d
@@ -1767,7 +1767,7 @@ class Cosmology(object):
 		if derivative == 0 and np.max(np.abs(z)) < 1E-10:
 			D = np.ones_like(z)
 		else:
-			D = self._zFunction('growthfactor', self._growthFactorExact, z, derivative = derivative,
+			D = self._zFunction('lnzp1_growthfactor', self._growthFactorExact, z, derivative = derivative,
 						inverse = inverse)
 
 		return D
