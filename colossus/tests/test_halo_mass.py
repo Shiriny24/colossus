@@ -108,9 +108,9 @@ class TCMassDefs(test_colossus.ColosssusTestCase):
 		z2 = 3.1
 		M1 = [1.5E8, 1.1E15]
 		c1 = 4.6
-		correct_M = [4.111592480994e+07, 4.333529117746e+14]
-		correct_R = [2.094499980659e+00, 4.592236498407e+02]
-		correct_c = [1.266219385882e+00, 1.428956587502e+00]
+		correct_M = [4.111590598167e+07, 4.333366706306e+14]
+		correct_R = [2.094499660947e+00, 4.592179128610e+02]
+		correct_c = [1.266219192602e+00, 1.428938735863e+00]
 		for i in range(len(M1)):
 			t = profile_outer.OuterTermPowerLaw(norm = 1.0, slope = 1.5, pivot = 'R200m', 
 											pivot_factor = 5.0, z = 0.0)
@@ -146,9 +146,9 @@ class TCMassAdv(test_colossus.ColosssusTestCase):
 	def test_changeMassDefinitionCModel(self):
 		z1 = 0.98
 		M1 = [1.5E8, 1.1E15]
-		correct_M = [1.300959533173e+08, 8.822145496524e+14]
-		correct_R = [4.942447978228e+00, 9.355038580165e+02]
-		correct_c = [9.360280180576e+00, 3.782329757854e+00]
+		correct_M = [1.300960636382e+08, 8.822134699684e+14]
+		correct_R = [4.942449375287e+00, 9.355034763826e+02]
+		correct_c = [9.360404774798e+00, 3.782289017792e+00]
 		for i in range(len(M1)):
 			M, R, c = mass_adv.changeMassDefinitionCModel(M1[i], z1, 'vir', '300c')
 			self.assertAlmostEqual(M, correct_M[i])

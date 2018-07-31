@@ -28,11 +28,11 @@ class TCBias(test_colossus.ColosssusTestCase):
 		self.assertAlmostEqual(bias.haloBiasFromNu(3.0, 1.0, '200c', model = 'sheth01'), 4.720384850956e+00)
 	
 	def test_haloBias(self):
-		self.assertAlmostEqual(bias.haloBias(2.3E12, 1.0, '200c'), 1.552991796791e+00)
+		self.assertAlmostEqual(bias.haloBias(2.3E12, 1.0, '200c'), 1.552959971584e+00)
 		
 	def test_twoHaloTerm(self):
 		r = np.array([0.012, 0.18, 2.05])
-		correct = np.array([2.622669497365e+04, 7.223891617509e+03, 1.089652009720e+03])
+		correct = np.array([2.622692657787e+04, 7.223955410670e+03, 1.089661632282e+03])
 		self.assertAlmostEqualArray(bias.twoHaloTerm(r, 2.3E12, 1.0, '200c'), correct)
 	
 	def test_biasModels(self):

@@ -235,19 +235,19 @@ class TCInterp(CosmologyTestCase):
 		self.assertAlmostEqual(self.cosmo.sigma(12.5, 0.0), 5.892448500561e-01)
 
 	def test_ZDerivative(self):
-		correct = [-14.431423683052429, -3.0331864799122887, -0.012861392030709832]
+		correct = [-1.443561688659e+01, -3.025536156424e+00, -1.281102065439e-02]
 		self.assertAlmostEqualArray(self.cosmo.age(TEST_Z, derivative = 1), correct)		
 
 	def test_ZDerivative2(self):
-		correct = [20.668766775933239, 3.0310718810786343, 0.0015163247225108648]
+		correct = [2.112577677848e+01, 2.994339523099e+00, 1.532142754901e-03]
 		self.assertAlmostEqualArray(self.cosmo.age(TEST_Z, derivative = 2), correct)		
 
 	def test_ZInverse(self):
-		correct = [0.0067749101503343997, 29.812799507392906]
+		correct = [6.738530459850e-03, 2.981581730191e+01]
 		self.assertAlmostEqualArray(self.cosmo.age(TEST_AGE, inverse = True), correct)		
 
 	def test_ZInverseDerivative(self):
-		correct = [-0.069866754435913142, -204.97494464862859]
+		correct = [-6.998050778719e-02, -2.036515876830e+02]
 		self.assertAlmostEqualArray(self.cosmo.age(TEST_AGE, inverse = True, derivative = 1), correct)		
 
 ###################################################################################################

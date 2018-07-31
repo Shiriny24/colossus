@@ -65,10 +65,10 @@ class TCPeaksInterp(test_colossus.ColosssusTestCase):
 
 	def test_massFromPeakHeight(self):
 		self.assertAlmostEqual(peaks.massFromPeakHeight(TEST_NU, 0.0), 2.072364902494e+12)
-		self.assertAlmostEqual(peaks.massFromPeakHeight(TEST_NU, TEST_Z2), 5.932394446473e+04)
+		self.assertAlmostEqual(peaks.massFromPeakHeight(TEST_NU, TEST_Z2), 5.957957717347e+04)
 
 	def test_nonLinearMass(self):
-		self.assertAlmostEqual(peaks.nonLinearMass(1.1), 9.830911710403e+10)
+		self.assertAlmostEqual(peaks.nonLinearMass(1.1), 9.833599421102e+10)
 
 ###################################################################################################
 # TRIGGER

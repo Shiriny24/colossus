@@ -54,8 +54,8 @@ class TCSplashbackRadius(test_colossus.ColosssusTestCase):
 		z = 0.1
 		mdef = '200m'
 		Rsp, Msp, mask = splashback.splashbackRadius(z, mdef, R = R, model = 'more15')
-		correct_rsp = [1.072356135890e+03, 1.271008459317e+03]
-		correct_msp = [7.894864613531e+13, 1.414956486665e+14]
+		correct_rsp = [1.072344532566e+03, 1.270993853254e+03]
+		correct_msp = [7.894813512008e+13, 1.414946580407e+14]
 		for i in range(len(R)):
 			self.assertEqual(mask[i], True)
 			self.assertAlmostEqual(Rsp[i], correct_rsp[i])
@@ -67,8 +67,8 @@ class TCSplashbackRadius(test_colossus.ColosssusTestCase):
 		mdef = 'vir'
 		Rsp, Msp, mask = splashback.splashbackRadius(z, mdef, R = R, 
 									model = 'more15', c_model = 'diemer15')
-		correct_rsp = [1.238634424507e+03, 1.464958168554e+03]
-		correct_msp = [1.294183978367e+14, 2.322216934132e+14]
+		correct_rsp = [1.238620952246e+03, 1.464941227836e+03]
+		correct_msp = [1.294177327458e+14, 2.322203235920e+14]
 		for i in range(len(R)):
 			self.assertEqual(mask[i], True)
 			self.assertAlmostEqual(Rsp[i], correct_rsp[i])

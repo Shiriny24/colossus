@@ -31,7 +31,7 @@ class TCMassFunction(test_colossus.ColosssusTestCase):
 		delta_c = peaks.collapseOverdensity()
 		sigma = delta_c / nu
 		
-		correct = 4.431947671729e-01
+		correct = 4.431994181910e-01
 		
 		mf = mass_function.massFunction(M, z, q_in = 'M', mdef = 'fof', model = 'press74')
 		self.assertAlmostEqual(mf, correct, msg = 'Quantity M.')			
@@ -47,15 +47,15 @@ class TCMassFunction(test_colossus.ColosssusTestCase):
 		M = 1E13
 		z = 0.2
 		
-		correct = 4.496495945252e-01
+		correct = 4.496414343625e-01
 		mf = mass_function.massFunction(M, z, q_in = 'M', mdef = 'fof', model = 'press74', q_out = 'f')
 		self.assertAlmostEqual(mf, correct, msg = 'Quantity f.')			
 
-		correct = 6.780828402927e-04
+		correct = 6.780705345630e-04
 		mf = mass_function.massFunction(M, z, q_in = 'M', mdef = 'fof', model = 'press74', q_out = 'dndlnM')
 		self.assertAlmostEqual(mf, correct, msg = 'Quantity dndlnM.')			
 
-		correct = 7.910895495636e-02
+		correct = 7.910751930078e-02
 		mf = mass_function.massFunction(M, z, q_in = 'M', mdef = 'fof', model = 'press74', q_out = 'M2dndM')
 		self.assertAlmostEqual(mf, correct, msg = 'Quantity M2dndM.')			
 				
@@ -108,13 +108,13 @@ class TCMassFunction(test_colossus.ColosssusTestCase):
 				continue
 			
 			if k == 'tinker08':
-				correct = [2.510123722597e-01, 4.610389828419e-05]
+				correct = [2.510110624301e-01, 4.611808159773e-05]
 			elif k == 'watson13':
-				correct = [1.621422015658e-01, 4.426408818190e-05]
+				correct = [1.621415008597e-01, 4.427873341813e-05]
 			elif k == 'bocquet16':
-				correct = [2.836179846056e-01, 3.831538467894e-05]
+				correct = [2.836178412101e-01, 3.832756307994e-05]
 			elif k == 'despali16':
-				correct = [2.566898002718e-01, 6.640792417212e-05]
+				correct = [2.566878298120e-01, 6.642693089794e-05]
 			else:
 				msg = 'Unknown model, %s.' % k
 				raise Exception(msg)
