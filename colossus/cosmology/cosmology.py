@@ -30,11 +30,11 @@ used in multiple ways:
 
 * Set one of the pre-defined cosmologies::
 	
-	setCosmology('planck15')
+	setCosmology('planck18')
 
 * Set one of the pre-defined cosmologies, but overwrite certain parameters::
 	
-	setCosmology('planck15', {'print_warnings': False})
+	setCosmology('planck18', {'print_warnings': False})
 
 * Add a new cosmology to the global list of available cosmologies. This has the advantage that the 
   new cosmology can be set from anywhere in the code. Only the main cosmological parameters are 
@@ -67,7 +67,7 @@ The current cosmology can also be set to an already existing cosmology object, f
 switching between cosmologies::
 
 	cosmo1 = setCosmology('WMAP9')
-	cosmo2 = setCosmology('planck15')
+	cosmo2 = setCosmology('planck18')
 	setCurrent(cosmo1)
 
 The user can change the cosmological parameters of an existing cosmology object at run-time, but 
@@ -142,7 +142,7 @@ dark energy as a cosmological constant and contain no curvature. To add curvatur
 flatness must be overwritten, and the dark energy content of the universe must be set (which is 
 otherwise computed from the matter and relativistic contributions)::
 
-	params = cosmologies['planck15']
+	params = cosmologies['planck18']
 	params['flat'] = False
 	params['Ode0'] = 0.75
 	cosmo = setCosmology('planck_curvature', params)
@@ -152,7 +152,7 @@ namely a cosmological constant (:math:`w=-1`), a constant :math:`w`, a linearly 
 :math:`w(z) = w_0 + w_a (1 - a)`, and arbitrary user-supplied functions for :math:`w(z)`. To set, 
 for example, a linearly varying EOS, we change the ``de_model`` parameter::
 
-	params = cosmologies['planck15']
+	params = cosmologies['planck18']
 	params['de_model'] = 'w0wa'
 	params['w0'] = -0.8
 	params['wa'] = 0.1
@@ -163,7 +163,7 @@ We can implement more exotic models by supplying an arbitrary function::
 	def wz_func(z):
 		return -1.0 + 0.1 * z
 		
-	params = cosmologies['planck15']
+	params = cosmologies['planck18']
 	params['de_model'] = 'user'
 	params['wz_function'] = wz_func
 	cosmo = setCosmology('planck_wz', params)
@@ -212,7 +212,7 @@ default, tabulated, stored in files, and re-loaded when the same cosmology is se
 where functions are evaluated few times, but for a large number of cosmologies), the user can turn 
 this behavior off::
 
-	cosmo = Cosmology.setCosmology('planck15', {'interpolation': False, 'persistence': ''})
+	cosmo = Cosmology.setCosmology('planck18', {'interpolation': False, 'persistence': ''})
 
 For more details, please see the documentation of the ``interpolation`` and ``persistence`` 
 parameters. In order to turn off the interpolation temporarily, the user can simply switch the 

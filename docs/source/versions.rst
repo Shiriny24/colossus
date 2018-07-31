@@ -7,13 +7,13 @@ See below for a listing of the most important code and interface changes in Colo
 .. rubric:: Version 1.2.1
 
 * The halo concentration model of Diemer and Joyce 2018 was added, and the Diemer and Kravtsov 2015 model was updated according to Diemer and Joyce 2018.
-* Numerous small improvements were made in the documentation.
-* The function ``plotChain`` was removed from the :doc:`utils_mcmc` module to avoid including the ``matplotlib`` library. The function is still available as part of the `MCMC tutorial <_static/tutorial_utils_mcmc.html>`_.
 * The Planck 2018 cosmology was added (and can be used by setting ``planck18`` or ``planck18-only`` for the cosmology).
-* Bug fix: the growth factor was incorrect for :math:`w \neq -1` cosmologies, an error that has been rectified in this release (thanks to Lehman Garrison for catching this bug).
-* Bug fix: the ``ps_args`` parameter was not used in the :func:`lss.peaks.massFromPeakHeight` and :func:`lss.peaks.peakCurvature` functions (thanks to Michael Joyce for catching this bug).
-* The ``inverse`` option was removed from the :func:`cosmology.cosmology.angularDiameterDistance` function because the inverse is multi-valued and leads to an error.
+* Major bug fix: the growth factor was incorrect for :math:`w \neq -1` cosmologies, an error that has been rectified in this release (thanks to Lehman Garrison for catching this bug).
+* Bug fix: the ``ps_args`` parameter was not used in the :func:`~lss.peaks.massFromPeakHeight` and :func:`~lss.peaks.peakCurvature` functions (thanks to Michael Joyce for catching this bug).
 * The redshift interpolation tables in the cosmology module are now spaced equally in :math:`\ln(1 + z)` rather than :math:`z`. This change reduces the interpolation errors slightly and, more importantly, leads to less ringing in the first derivatives of some quantities, namely the linear growth factor. The new interpolation tables carry different names than the old ones, meaning that old cache files do not need to be deleted as the two tables can co-exist. Due to the changed tables (and the changes to the growth factor), some cosmology functions can exhibit differences of the order 0.1% compared to the previous version.
+* The ``inverse`` option was removed from the :func:`~cosmology.cosmology.Cosmology.angularDiameterDistance` function because the inverse is multi-valued and leads to an error. 
+* The function ``plotChain`` was removed from the :doc:`utils_mcmc` module to avoid including the ``matplotlib`` library. The function is still available as part of the `MCMC tutorial <_static/tutorial_utils_mcmc.html>`_.
+* Numerous small improvements were made in the documentation. 
 
 .. rubric:: Version 1.2.0
 
