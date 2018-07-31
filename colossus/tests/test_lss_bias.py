@@ -41,8 +41,14 @@ class TCBias(test_colossus.ColosssusTestCase):
 			msg = 'Failure in model = %s' % (k)
 			if k == 'cole89':
 				correct = 5.743636115674e+00
+			elif k == 'jing98':
+				correct = 5.747378709709e+00
 			elif k == 'sheth01':
 				correct = 4.720384850956e+00
+			elif k == 'seljak04':
+				correct = 1.874154472781e+01
+			elif k == 'pillepich10':
+				correct = 4.793683473192e+00
 			elif k == 'tinker10':
 				correct = 5.290627688108e+00
 			else:

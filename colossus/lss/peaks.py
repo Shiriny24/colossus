@@ -454,7 +454,7 @@ def peakCurvature(M, z, exact = False, ps_args = defaults.PS_ARGS,
 	Returns
 	-------------------------------------------------------------------------------------------
 	nu: array_like
-		Peak height; has the same dimensions as M.
+		Peak height; has the same dimensions as ``M``.
 	gamma: array_like
 		An intermediate parameter, :math:`\\gamma = \\sigma_1^2 / (\\sigma_0 \\sigma_2)` (see
 		Equation 4.6a in BBKS); has the same dimensions as ``M``.
@@ -488,5 +488,72 @@ def peakCurvature(M, z, exact = False, ps_args = defaults.PS_ARGS,
 		return _peakCurvatureExactFromSigma(sigma0, sigma1, sigma2, z, deltac_args = deltac_args)
 	else:
 		return _peakCurvatureApproxFromSigma(sigma0, sigma1, sigma2, z, deltac_args = deltac_args)
+
+###################################################################################################
+
+def powerSpectrumSlope(nu, z, slope_type = 'P', scale = 1.0, 
+					ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARGS):
+	"""
+	The slope of the linear matter power spectrum for halos of a given peak height.
+	
+	In a Gaussian random field, the abundance and shape of the peaks are determined only by the
+	power spectrum. The slope of this power spectrum evolves with scale in realistic cosmologies,
+	meaning that peaks of different peak height form in a field with a locally different slope
+	which can affect their shape, the abundance of sub-structure and so on. 
+	
+	This function calculates an effective slope :math:`n_{\\rm eff}` using a number of possible
+	methods, namely the slope of the power spectrum (``slope_type = 'P'``),
+
+	.. math::
+		n_{\\rm eff} = \\left. \\frac{d \\ln(P)}{d \\ln(k)} \\right \\vert_{k = f 2 \\pi / R_{\\rm L}}
+	
+	or the slope of the variance (``slope_type = 'sigma'``),
+	
+	.. math::
+		n_{\\rm eff} = -2 \\left. \\frac{d \\ln \\sigma(R)}{d \\ln R} \\right \\vert_{R = f R_{\\rm L}} - 3
+	
+	where :math:`f` is the ``scale`` parameter given by the user and :math:`R_{\\rm L}` is the 
+	Lagrangian radius corresponding to the given peak height and redshift. Interpolation must be
+	activated in the cosmology as this function uses derivatives.
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	nu: array_like
+		Peak height; can be a number or a numpy array.
+	z: float
+		Redshift.
+	slope_type: str
+		The type of slope function, can be ``P`` or ``sigma`` (see above).
+	scale: float
+		Scales where the slope is evaluated, see above.
+	ps_args: dict
+		Arguments passed to the :func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum` 
+		function.
+	sigma_args: dict
+		Arguments passed to the :func:`~cosmology.cosmology.Cosmology.sigma` function.
+
+	Returns
+	-------------------------------------------------------------------------------------------
+	n_eff: array_like
+		Effective slope of the power spectrum; has the same dimensions as ``nu``.	
+	"""
+	
+	cosmo = cosmology.getCurrent()
+
+	M_L = massFromPeakHeight(nu, z)
+	R_L = lagrangianR(M_L)
+	
+	if slope_type == 'P':
+		k_R = 2.0 * np.pi / R_L * scale
+		n_eff = cosmo.matterPowerSpectrum(k_R, derivative = True, **ps_args)
+	
+	elif slope_type == 'sigma':
+		n_eff = -2.0 * cosmo.sigma(scale * R_L, z, derivative = True, 
+								ps_args = ps_args, **sigma_args) - 3.0
+
+	else:
+		raise Exception('Unknown power spectrum slope type, %s.' % slope_type)
+	
+	return n_eff
 
 ###################################################################################################

@@ -38,10 +38,15 @@ number of different papers. The rest of the models was calibrated using numerica
 	ID             Parameters                  z-dependence                Reference
 	============== =========================== =========================== =========================================
 	cole89         M/nu                        No                          `Cole & Kaiser 1989 <http://adsabs.harvard.edu/abs/1989MNRAS.237.1127C>`_, `Mo & White 1996 <http://adsabs.harvard.edu/abs/1996MNRAS.282..347M>`_
+	jing98         M/nu, z                     Through non-linear mass     `Jing 1998 <http://adsabs.harvard.edu/abs/1998ApJ...503L...9J>`_
 	sheth01        M/nu                        No                          `Sheth et al. 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.323....1S>`_
+	seljak04       M/nu, z                     Through non-linear mass     `Seljak & Warren 2004 <http://adsabs.harvard.edu/abs/2004MNRAS.355..129S>`_
+	pillepich10    M/nu                        No                          `Pillepich et al. 2010 <http://adsabs.harvard.edu/abs/2010MNRAS.402..191P>`_
 	tinker10       M/nu, z, mdef               Through mass definition     `Tinker et al. 2010 <http://adsabs.harvard.edu/abs/2010ApJ...724..878T>`_       
 	============== =========================== =========================== =========================================
 
+The z-dependence column indicates whether a model predicts a bias that varies with redshift at 
+fixed peak height. At fixed mass, all models predict a strongly varying bias.
 The `Tinker et al. 2010 <http://adsabs.harvard.edu/abs/2010ApJ...724..878T>`_ model was 
 calibrated for a range of overdensities with respect to the mean density of the universe. Thus, 
 depending on the mass definition used, this model can predict a slight redshift evolution.
@@ -57,7 +62,10 @@ Module contents
 	haloBiasFromNu
 	twoHaloTerm
 	modelCole89
+	modelJing98
 	modelSheth01
+	modelSeljak04
+	modelPillepich10
 	modelTinker10
 	
 ---------------------------------------------------------------------------------------------------
@@ -100,14 +108,17 @@ An ordered dictionary containing one :class:`HaloBiasModel` entry for each model
 """
 
 models['cole89'] = HaloBiasModel()
+models['jing98'] = HaloBiasModel()
 models['sheth01'] = HaloBiasModel()
+models['seljak04'] = HaloBiasModel()
+models['pillepich10'] = HaloBiasModel()
 models['tinker10'] = HaloBiasModel()
 
 ###################################################################################################
 # HALO BIAS
 ###################################################################################################
 
-def haloBiasFromNu(nu, z = None, mdef = None, model = defaults.HALO_BIAS_MODEL):
+def haloBiasFromNu(nu, z = None, mdef = None, model = defaults.HALO_BIAS_MODEL, **kwargs):
 	"""
 	The halo bias at a given peak height. 
 
@@ -124,6 +135,9 @@ def haloBiasFromNu(nu, z = None, mdef = None, model = defaults.HALO_BIAS_MODEL):
 		Only necessary for certain models. See :doc:`halo_mass` for details.
 	model: str
 		The bias model used.
+	kwargs: kwargs
+		Extra arguments passed to the function of the particular model. See the documentation of 
+		those functions for valid arguments.
 	
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -136,11 +150,17 @@ def haloBiasFromNu(nu, z = None, mdef = None, model = defaults.HALO_BIAS_MODEL):
 	"""
 	
 	if model == 'cole89':
-		bias = modelCole89(nu)
+		bias = modelCole89(nu, **kwargs)
+	elif model == 'jing98':
+		bias = modelJing98(nu, z, **kwargs)
 	elif model == 'sheth01':
-		bias = modelSheth01(nu)
+		bias = modelSheth01(nu, **kwargs)
+	elif model == 'seljak04':
+		bias = modelSeljak04(nu, z, **kwargs)
+	elif model == 'pillepich10':
+		bias = modelPillepich10(nu, **kwargs)
 	elif model == 'tinker10':
-		bias = modelTinker10(nu, z, mdef)
+		bias = modelTinker10(nu, z, mdef, **kwargs)
 	else:
 		msg = 'Unkown model, %s.' % (model)
 		raise Exception(msg)
@@ -149,7 +169,7 @@ def haloBiasFromNu(nu, z = None, mdef = None, model = defaults.HALO_BIAS_MODEL):
 
 ###################################################################################################
 
-def haloBias(M, z, mdef = None, model = defaults.HALO_BIAS_MODEL):
+def haloBias(M, z, mdef = None, model = defaults.HALO_BIAS_MODEL, **kwargs):
 	"""
 	The halo bias at a given mass. 
 
@@ -168,6 +188,9 @@ def haloBias(M, z, mdef = None, model = defaults.HALO_BIAS_MODEL):
 		See :doc:`halo_mass` for details.
 	model: str
 		The bias model used.
+	kwargs: kwargs
+		Extra arguments passed to the function of the particular model. See the documentation of 
+		those functions for valid arguments.
 
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -180,7 +203,7 @@ def haloBias(M, z, mdef = None, model = defaults.HALO_BIAS_MODEL):
 	"""
 		
 	nu = peaks.peakHeight(M, z)
-	bias = haloBiasFromNu(nu, z = z, mdef = mdef, model = model)
+	bias = haloBiasFromNu(nu, z = z, mdef = mdef, model = model, **kwargs)
 	
 	return bias
 
@@ -245,11 +268,47 @@ def modelCole89(nu):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	bias: array_like
-		Halo bias; has the same dimensions as ``nu`` or ``z``.
+		Halo bias; has the same dimensions as ``nu``.
 	"""
 	
 	delta_c = peaks.collapseOverdensity()
 	bias = 1.0 + (nu**2 - 1.0) / delta_c
+	
+	return bias
+
+###################################################################################################
+
+def modelJing98(nu, z):
+	"""
+	A bias model calibrated on scale-free simulations.
+	
+	This bias model relies on the slope of the power spectrum. It was calibrated on scale-free
+	simulations with a power-law power spectrum, but is also applicable to LCDM cosmologies. Note
+	that in the original notation, the peak height is only valid for scale-free models, but it is 
+	stated in Section 3 that one should use the properly defined peak height for CDM cosmologies,
+	as well as the effective slope as defined here.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	nu: array_like
+		Peak height; can be a number or a numpy array.
+	z: float
+		Redshift.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	bias: array_like
+		Halo bias; has the same dimensions as ``nu``.
+	"""
+	
+	#M = peaks.massFromPeakHeight(nu, z)
+	#Mstar = peaks.nonLinearMass(z)
+	n_eff = peaks.powerSpectrumSlope(nu, z, slope_type = 'P', scale = 1.0,
+									ps_args = {'model': 'eisenstein98_zb'})
+	#nu_sf = (M / Mstar)**((n_eff + 3.0) / 6.0)
+	delta_c = peaks.collapseOverdensity()
+
+	bias = (0.5 / nu**4 + 1.0)**(0.06 - 0.02 * n_eff) * (1.0 + (nu**2 - 1.0) / delta_c)
 	
 	return bias
 
@@ -267,7 +326,7 @@ def modelSheth01(nu):
 	Returns
 	-----------------------------------------------------------------------------------------------
 	bias: array_like
-		Halo bias; has the same dimensions as ``nu`` or ``z``.
+		Halo bias; has the same dimensions as ``nu``.
 	"""
 	
 	a = 0.707
@@ -279,6 +338,73 @@ def modelSheth01(nu):
 	t1 = b * (1.0 - c) * (1.0 - 0.5 * c)
 	delta_sc = peaks.collapseOverdensity()
 	bias = 1.0 +  1.0 / (roota * delta_sc) * (roota * anu2 + roota * b * anu2**(1.0 - c) - anu2c / (anu2c + t1))
+
+	return bias
+
+###################################################################################################
+
+def modelSeljak04(nu, z, cosmo_term = False):
+	"""
+	A numerically calibrated bias model.
+	
+	This bias model corresponds to Equation 5 in 
+	`Seljak & Warren 2004 <http://adsabs.harvard.edu/abs/2004MNRAS.355..129S>`_. If 
+	``cosmo_term == True``, Equation 6 is used. Colossus currently does not implement a running of
+	the spectral index, the corresponding parameter :math:`\\alpha_{\\rm s}` is thus set to zero.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	nu: array_like
+		Peak height; can be a number or a numpy array.
+	z: float
+		Redshift.
+	cosmo_term: bool
+		Include the cosmological term of Equation 6.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	bias: array_like
+		Halo bias; has the same dimensions as ``nu``.
+	"""
+	
+	M = peaks.massFromPeakHeight(nu, z)
+	Mstar = peaks.nonLinearMass(z)
+	x = M / Mstar
+
+	bias = 0.53 + 0.39 * x**0.45 + 0.13 / (40.0 * x + 1.0) + 5E-4 * x**1.5
+	
+	if cosmo_term:
+		cosmo = cosmology.getCurrent()
+		Om = cosmo.Om0
+		sigma8 = cosmo.sigma8
+		h = cosmo.h
+		ns = cosmo.ns
+		alphas = 0.0
+		t = 0.4 * (Om - 0.3 + ns - 1.0) + 0.3 * (sigma8 - 0.9 + h - 0.7) + 0.8 * alphas
+		bias += np.log10(x) * t
+	
+	return bias
+
+###################################################################################################
+
+def modelPillepich10(nu):
+	"""
+	The halo bias model of Pillepich et al 2010. 
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	nu: array_like
+		Peak height; can be a number or a numpy array.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	bias: array_like
+		Halo bias; has the same dimensions as ``nu``.
+	"""
+	
+	sigma = peaks.collapseOverdensity() / nu
+	
+	bias = 0.647 -0.540 / sigma + 1.614 / sigma**2
 
 	return bias
 

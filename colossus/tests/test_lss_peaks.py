@@ -19,6 +19,7 @@ TEST_Z2 = 5.4
 TEST_M = 3E12
 TEST_R = 1.245
 TEST_NU = 0.89
+TEST_SLOPE_SCALE = 2.2
 
 ###################################################################################################
 # TEST CASE 1: STANDARD PEAK FUNCTIONS
@@ -69,6 +70,16 @@ class TCPeaksInterp(test_colossus.ColosssusTestCase):
 
 	def test_nonLinearMass(self):
 		self.assertAlmostEqual(peaks.nonLinearMass(1.1), 9.833599421102e+10)
+
+	def test_powerSpectrumSlope(self):
+		self.assertAlmostEqual(peaks.powerSpectrumSlope(TEST_NU, 0.0, slope_type = 'P', 
+								scale = 1.0), -2.492990825082e+00)
+		self.assertAlmostEqual(peaks.powerSpectrumSlope(TEST_NU, 0.0, slope_type = 'sigma', 
+								scale = 1.0), -2.069673766363e+00)
+		self.assertAlmostEqual(peaks.powerSpectrumSlope(TEST_NU, 0.0, slope_type = 'P', 
+								scale = TEST_SLOPE_SCALE), -2.581375393787e+00)
+		self.assertAlmostEqual(peaks.powerSpectrumSlope(TEST_NU, 0.0, slope_type = 'sigma', 
+								scale = TEST_SLOPE_SCALE), -1.873258111430e+00)
 
 ###################################################################################################
 # TRIGGER
