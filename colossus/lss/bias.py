@@ -285,8 +285,10 @@ def modelJing98(nu, z):
 	This bias model relies on the slope of the power spectrum. It was calibrated on scale-free
 	simulations with a power-law power spectrum, but is also applicable to LCDM cosmologies. Note
 	that in the original notation, the peak height is only valid for scale-free models, but it is 
-	stated in Section 3 that one should use the properly defined peak height for CDM cosmologies,
-	as well as the effective slope as defined here.
+	stated in Section 3 that one should use the properly defined peak height for CDM cosmologies.
+	
+	Moreover, we use the zero-baryon approximation to the power spectrum of Eisenstein & Hu to
+	avoid wiggles in the slope.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -301,11 +303,8 @@ def modelJing98(nu, z):
 		Halo bias; has the same dimensions as ``nu``.
 	"""
 	
-	#M = peaks.massFromPeakHeight(nu, z)
-	#Mstar = peaks.nonLinearMass(z)
 	n_eff = peaks.powerSpectrumSlope(nu, z, slope_type = 'P', scale = 1.0,
 									ps_args = {'model': 'eisenstein98_zb'})
-	#nu_sf = (M / Mstar)**((n_eff + 3.0) / 6.0)
 	delta_c = peaks.collapseOverdensity()
 
 	bias = (0.5 / nu**4 + 1.0)**(0.06 - 0.02 * n_eff) * (1.0 + (nu**2 - 1.0) / delta_c)
