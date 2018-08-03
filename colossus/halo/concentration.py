@@ -1252,6 +1252,19 @@ def modelChild18(M200c, z, halo_sample = 'individual_all'):
 
 ###################################################################################################
 
+# The effective exponent of linear growth, the logarithmic derivative of the growth factor.
+
+def _diemer18_alpha_eff(z):
+
+	cosmo = cosmology.getCurrent()
+	D = cosmo.growthFactor(z, derivative = 0)
+	dDdz = cosmo.growthFactor(z, derivative = 1)
+	alpha_eff = -dDdz * (1.0 + z) / D
+	
+	return alpha_eff
+
+###################################################################################################
+
 def modelDiemer18(M200c, z, statistic = 'median'):
 	"""
 	The model of Diemer & Joyce 2018 (in prep.).
@@ -1372,18 +1385,6 @@ def modelDiemer18(M200c, z, statistic = 'median'):
 		return interp_Gc, interp_Gmin, interp_Gmax
 
 	# ---------------------------------------------------------------------------------------------
-	# The logarithmic derivative of the growth factor
-
-	def alpha_eff(z):
-	
-		cosmo = cosmology.getCurrent()
-		D = cosmo.growthFactor(z, derivative = 0)
-		dDdz = cosmo.growthFactor(z, derivative = 1)
-		alpha_eff = -dDdz * (1.0 + z) / D
-		
-		return alpha_eff
-
-	# ---------------------------------------------------------------------------------------------
 
 	if statistic == 'median':
 		kappa             = 0.41
@@ -1405,7 +1406,7 @@ def modelDiemer18(M200c, z, statistic = 'median'):
 	# Compute peak height, n_eff, and alpha_eff
 	nu = peaks.peakHeight(M200c, z)
 	n_eff = peaks.powerSpectrumSlope(nu, z, slope_type = 'sigma', scale = kappa)
-	alpha_eff = alpha_eff(z)
+	alpha_eff = _diemer18_alpha_eff(z)
 
 	is_array = utilities.isArray(nu)
 	if not is_array:
