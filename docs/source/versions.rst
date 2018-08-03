@@ -5,6 +5,11 @@ What's new?
 See below for a listing of the most important code and interface changes in Colossus, starting with
 version 1.1.0.
 
+.. rubric:: Version 1.2.3
+
+* The Diemer and Joyce 2018 concentration model is presented in its published form. The routine was
+  sped up through a pre-computed, stored interpolation table.
+
 .. rubric:: Version 1.2.2
 
 This version fixes several bugs and adds new features. Changes in the cosmology module include:

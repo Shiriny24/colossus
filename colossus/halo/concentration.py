@@ -119,6 +119,7 @@ from collections import OrderedDict
 
 from colossus.utils import utilities
 from colossus.utils import constants
+from colossus.utils import storage
 from colossus import defaults
 from colossus.cosmology import cosmology
 from colossus.lss import peaks
@@ -210,13 +211,33 @@ models['child18'].mdefs = ['200c']
 
 models['diemer18'] = ConcentrationModel()
 models['diemer18'].mdefs = ['200c']
-models['diemer18'].universal = True
+models['diemer18'].universal = False
 models['diemer18'].depends_on_statistic = True
 
 ###################################################################################################
 
 INVALID_CONCENTRATION = -1.0
 """The concentration value returned if the model routine fails to compute."""
+
+###################################################################################################
+# STORAGE SYSTEM
+###################################################################################################
+
+storageUser = None
+
+def _getName():
+	return "concentration"
+
+def _getHash():
+	return "concentration"
+
+def _getStorageUser():
+
+	global storageUser
+	if storageUser is None:
+		storageUser = storage.StorageUser('halo.concentration', 'rw', _getName, _getHash, None)
+	
+	return storageUser
 
 ###################################################################################################
 
@@ -1241,8 +1262,9 @@ def modelDiemer18(M200c, z, statistic = 'median'):
 	Second, because of the improved functional form, the model improves the fit, particularly to
 	scale-free cosmologies. Finally, the new model fixed a slight numerical bug in the DK15 model.
 	
-	This model implementation is currently rather slow, the code will be improved in a future
-	release.
+	The first time this model is ever called, it will compute a lookup table (in three dimensions)
+	for c(G, n) where G is the left-hand side of the c-M model equation. This table then serves as
+	a lookup and avoids having to numerically solve the equation.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -1260,15 +1282,94 @@ def modelDiemer18(M200c, z, statistic = 'median'):
 	"""
 
 	# ---------------------------------------------------------------------------------------------
-	# The G(c) inverse function that needs to be mumerically inverted
+	# The G(c) inverse function that needs to be mumerically inverted is tabulated, the table 
+	# inverted to give c(G, n). This is a little tricky because G(c) has a minimum that depends on
+	# n.
 	
-	def _diemer18_func(c, nu, n_eff, A_n, B_n):
+	def computeGcTable():
+	
+		n_G = 80
+		n_n = 40
+		n_c = 80
+
+		n = np.linspace(-4.0, 0.0, n_n)
+		c = np.linspace(-1.0, 3.0, n_c)
 		
-		lhs = c / profile_nfw.NFWProfile.mu(c)**((5.0 + n_eff) / 6.0)
-		rhs = A_n / nu * (1.0 + nu**2 / B_n)
-		ret = lhs - rhs
+		# The left hand side of the equation in DJ18
+		lin_c = 10**c
+		lhs = np.log10(lin_c[:, None] / profile_nfw.NFWProfile.mu(lin_c[:, None])**((5.0 + n) / 6.0))
 		
-		return ret
+		# At very low concentration and shallow slopes, the LHS begins to rise again. This will cause
+		# issues with the inversion. We set those parts of the curve to the minimum concentration of 
+		# a given n bin.
+		mask_ascending = np.ones_like(lhs, np.bool)
+		mask_ascending[:-1, :] = (np.diff(lhs, axis = 0) > 0.0)
+		
+		# Create a table of c as a function of G and n. First, use the absolute min and max of G as 
+		# the table range
+		G_min = np.min(lhs)
+		G_max = np.max(lhs)
+		G = np.linspace(G_min, G_max, n_G)
+		
+		gc_table = np.ones((n_G, n_n), np.float) * -10.0
+		mins = np.zeros_like(n)
+		maxs = np.zeros_like(n)
+		for i in range(n_n):
+			
+			# We interpolate only the ascending values to get c(G)
+			mask_ = mask_ascending[:, i]
+			lhs_ = lhs[mask_, i]
+			mins[i] = np.min(lhs_)
+			maxs[i] = np.max(lhs_)
+			interp = scipy.interpolate.InterpolatedUnivariateSpline(lhs_, c[mask_])
+		
+			# Not all G exist for all n
+			mask = (G >= mins[i]) & (G <= maxs[i])
+			res = interp(G[mask])
+			gc_table[mask, i] = res
+	
+			mask_low = (G < mins[i])
+			gc_table[mask_low, i] = np.min(res)
+			mask_high = (G > maxs[i])
+			gc_table[mask_high, i] = np.max(res)
+
+		# Store the objects using the storage module. An interpolator will automatically be 
+		# created.
+		storageUser = _getStorageUser()
+		object_data = (G, n, gc_table)
+		storageUser.storeObject('diemer18_Gc', object_data = object_data, persistent = True)
+		object_data = np.array([n, mins])
+		storageUser.storeObject('diemer18_Gmin', object_data = object_data, persistent = True)
+		object_data = np.array([n, maxs])
+		storageUser.storeObject('diemer18_Gmax', object_data = object_data, persistent = True)
+
+		return
+
+	# ---------------------------------------------------------------------------------------------
+	# Try to load the interpolators from storage. If they do not exist, create them.
+	
+	def getGcTable():
+		
+		storageUser = _getStorageUser()
+		
+		interp_Gc = storageUser.getStoredObject('diemer18_Gc', interpolator = True, 
+											store_interpolator = True)
+		if interp_Gc is None:
+			computeGcTable()
+			interp_Gc = storageUser.getStoredObject('diemer18_Gc', interpolator = True, 
+											store_interpolator = True)
+		
+		interp_Gmin = storageUser.getStoredObject('diemer18_Gmin', interpolator = True, 
+											store_interpolator = True)
+		interp_Gmax = storageUser.getStoredObject('diemer18_Gmax', interpolator = True, 
+											store_interpolator = True)
+
+		# These interpolators are created at the same time as the Gc interpolator. If they do not
+		# exist, something went wrong.
+		if interp_Gmin is None or interp_Gmax is None:
+			raise Exception('Loading table for diemer18 concentration model failed.')
+		
+		return interp_Gc, interp_Gmin, interp_Gmax
 
 	# ---------------------------------------------------------------------------------------------
 	# The logarithmic derivative of the growth factor
@@ -1312,28 +1413,27 @@ def modelDiemer18(M200c, z, statistic = 'median'):
 		n_eff = np.array([n_eff])
 		alpha_eff = np.array([alpha_eff])
 	
-	# Compute input parameters
+	# Compute input parameters and the right-hand side of the c-M equation. We use interpolation
+	# tables to find the concentration at which the equation gives that RHS.
 	A_n = a_0 * (1.0 + a_1 * (n_eff + 3.0))
 	B_n = b_0 * (1.0 + b_1 * (n_eff + 3.0))
 	C_alpha = 1.0 - c_alpha * (1.0 - alpha_eff)
+	rhs = np.log10(A_n / nu * (1.0 + nu**2 / B_n))
 	
-	# Invert G(c) function
-	c200c = np.zeros_like(nu)
-	for i in range(len(nu)):
-		args = (nu[i], n_eff[i], A_n[i], B_n[i])
-		c_min = 0.4
-		if _diemer18_func(c_min, *args) < 0.0:
-			c200c[i] = scipy.optimize.brentq(_diemer18_func, c_min, 50.0, args = args)
-		else:
-			c200c[i] = -1.0
+	# Get interpolation table
+	interp_Gc, interp_Gmin, interp_Gmax = getGcTable()
 	
-	# Multiply with C(alpha) dependence
-	c200c *= C_alpha
-	
+	# Mask out values of rhs for which do not exist. The interpolator will still work because it
+	# is based on a full grid of G values, but we mask out the invalid array elements.
+	mask = (rhs >= interp_Gmin(n_eff)) & (rhs <= interp_Gmax(n_eff))
+	c200c = 10**interp_Gc(rhs, n_eff, grid = False) * C_alpha
+	c200c[np.logical_not(mask)] = INVALID_CONCENTRATION
+
 	if not is_array:
 		c200c = c200c[0]
+		mask = mask[0]
 
-	return c200c
+	return c200c, mask
 
 ###################################################################################################
 # Pointers to model functions

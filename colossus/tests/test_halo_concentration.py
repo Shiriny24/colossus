@@ -102,7 +102,7 @@ class TCConcentration(test_colossus.ColosssusTestCase):
 			elif k == 'child18':
 				self.assertAlmostEqual(c, 6.695234756753e+00, msg = msg)
 			elif k == 'diemer18':
-				self.assertAlmostEqual(c, 6.799715715382e+00, msg = msg)
+				self.assertAlmostEqual(c, 6.799716955823e+00, msg = msg)
 			else:
 				msg = 'Unknown model, %s.' % k
 				raise Exception(msg)

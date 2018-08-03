@@ -279,9 +279,13 @@ class StorageUser():
 		object_name: str
 			The name of the object to be loaded.
 		interpolator: bool
-			If ``True``, return a spline interpolator instead of the underlying table.
+			If ``True``, return a spline interpolator instead of the underlying table. For this to
+			work, the object data must either be an array of dimensionality ``[2, n]`` or a tuple
+			with three entries of the format ``(x, y, z[x, y])`` where ``x`` and ``y`` are 
+			ascending arrays and ``z`` is of dimensionality ``len(x), len(y)``.
 		inverse: bool
-			Return an interpolator that gives x(y) instead of y(x).
+			Return an interpolator that gives x(y) instead of y(x). This parameter only works for
+			a 1-dimensional interpolator (see ``interpolator`` above).
 		path: str
 			If not ``None``, data is loaded from this file path (unless it has already been loaded, 
 			in which case it is found in memory).
@@ -322,7 +326,8 @@ class StorageUser():
 		# First, check for changes in the hash. If changes are detected, first call the user's 
 		# change callback function and then reset the storage.
 		if self.checkForChangedHash():
-			self.func_changed()
+			if self.func_changed is not None:
+				self.func_changed()
 			self.resetStorage()
 			
 		# Compute object name. If the object contains a file path, we need to isolate 
@@ -377,22 +382,37 @@ class StorageUser():
 			
 			else:
 				
-				# Convert and store in temporary storage.
-				if inverse: 
+				# Guess the type of interpolator we are trying to create. 
+				if isinstance(object_raw, tuple) and len(object_raw) == 3:
 					
-					# There is a subtlety: the spline interpolator can't deal with decreasing 
-					# x-values, so if the y-values are decreasing, we reverse their order.
-					if object_raw[1][-1] < object_raw[1][0]:
-						object_raw = object_raw[:, ::-1]
+					if inverse:
+						raise Exception('Inverse 2D interpolator is not possible.')
 					
-					object_data = scipy.interpolate.InterpolatedUnivariateSpline(object_raw[1],
-																				object_raw[0])
+					object_data = scipy.interpolate.RectBivariateSpline(object_raw[0], object_raw[1], 
+												object_raw[2], kx = 3, ky = 3)
+
+				elif isinstance(object_raw, np.ndarray) and len(object_raw.shape) == 2 \
+					and object_raw.shape[0] == 2:
+				
+					# Convert and store in temporary storage.
+					if inverse: 
+						
+						# There is a subtlety: the spline interpolator can't deal with decreasing 
+						# x-values, so if the y-values are decreasing, we reverse their order.
+						if object_raw[1][-1] < object_raw[1][0]:
+							object_raw = object_raw[:, ::-1]
+						
+						object_data = scipy.interpolate.InterpolatedUnivariateSpline(object_raw[1],
+																					object_raw[0])
+					else:
+						object_data = scipy.interpolate.InterpolatedUnivariateSpline(object_raw[0],
+																					object_raw[1])
 				else:
-					object_data = scipy.interpolate.InterpolatedUnivariateSpline(object_raw[0],
-																				object_raw[1])
+					raise Exception('Trying to generate interpolator from mismatched data.')
+						
 				if store_interpolator:
 					self.storage_temp[object_id] = object_data
-		
+
 		return object_data
 
 ###################################################################################################
