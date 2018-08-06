@@ -688,14 +688,13 @@ def modelAdhikari14RspR200m(Delta, c, z):
 	"""
 
 	cosmo = cosmology.getCurrent()
-	RspR200m = Delta  * 0.0
 	rho_m = cosmo.rho_m(z)
-	for i in range(len(Delta)):
-		prof = profile_nfw.NFWProfile(M = 1E10, c = c[i], mdef = 'vir', z = z)
-		x = prof.xDelta(prof.par['rhos'], prof.par['rs'], Delta[i] * rho_m)
-		Rsp = x * prof.par['rs']
-		R200m = prof.RDelta(z, '200m')
-		RspR200m[i] = Rsp / R200m
+	rhos, rs = profile_nfw.NFWProfile.fundamentalParameters(1E10, c, z, 'vir')
+	xsp = profile_nfw.NFWProfile.xDelta(rhos, Delta * rho_m)
+	Rsp = xsp * rs
+	x200m = profile_nfw.NFWProfile.xDelta(rhos, 200.0 * rho_m)
+	R200m = x200m * rs
+	RspR200m = Rsp / R200m
 	MspM200m = Delta * RspR200m**3 / 200.0
 	
 	return RspR200m, MspM200m

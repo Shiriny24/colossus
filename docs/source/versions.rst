@@ -9,6 +9,11 @@ version 1.1.0.
 
 * The Diemer and Joyce 2018 concentration model is presented in its published form. The routine was
   sped up through a pre-computed, stored interpolation table.
+* The :func:`~profile_nfw.NFWProfile.xDelta` function in the :doc:`halo_profile_nfw` module was
+  restructured completely. It now uses an interpolation table instead of root finding which means
+  that it now allows numpy arrays as input and makes it orders of magnitude faster (depending on 
+  the size of the input). The accuracy of the interpolation is better than 1E-7. The function 
+  interface has two fewer parameters.  
 
 .. rubric:: Version 1.2.2
 

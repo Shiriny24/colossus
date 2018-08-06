@@ -33,12 +33,31 @@ class TCSplashbackModel(test_colossus.ColosssusTestCase):
 		self.assertAlmostEqual(rsp, 1.424416723584)
 
 	def test_modelGammaArray(self):
-		Gamma = np.array([0.2, 1.2, 4.1])
-		correct_rsp = [1.470326774861, 1.239462644843, 8.750736226357e-01]
-		rsp, mask = splashback.splashbackModel('RspR200m', Gamma = Gamma, z = 0.1, model = 'more15')
-		for i in range(len(Gamma)):
-			self.assertEqual(mask[i], True)
-			self.assertAlmostEqual(rsp[i], correct_rsp[i])
+		Gamma = np.array([0.5, 4.1])
+		z = 0.1
+		mdef = '200m'
+		R200m_test = 900.0
+		R200m = np.ones_like(Gamma)* R200m_test
+		models = splashback.models
+		for k in models.keys():
+			msg = 'Failure in model = %s' % (k)
+			Rsp, _, mask = splashback.splashbackRadius(z, mdef, Gamma = Gamma, R = R200m, model = k)
+			RspR200m = Rsp / R200m_test
+			
+			if k == 'adhikari14':
+				correct_rsp = [1.269417774113e+00, 8.167315805978e-01]
+			elif k == 'more15':
+				correct_rsp = [1.392934317089e+00, 8.750736226357e-01]
+			elif k == 'shi16':
+				correct_rsp = [1.334955458442e+00, 6.672045990854e-01]
+			elif k == 'mansfield17':
+				correct_rsp = [1.386075126745e+00, 1.138968512092e+00]
+			elif k == 'diemer17':
+				correct_rsp = [1.232502327747e+00, 7.998382581962e-01]
+			
+			for i in range(len(Gamma)):
+				self.assertEqual(mask[i], True, msg = msg)
+				self.assertAlmostEqual(RspR200m[i], correct_rsp[i], msg = msg)
 	
 ###################################################################################################
 # TEST CASE: SPLASHBACK RADIUS
@@ -67,8 +86,8 @@ class TCSplashbackRadius(test_colossus.ColosssusTestCase):
 		mdef = 'vir'
 		Rsp, Msp, mask = splashback.splashbackRadius(z, mdef, R = R, 
 									model = 'more15', c_model = 'diemer15')
-		correct_rsp = [1.238620952246e+03, 1.464941227836e+03]
-		correct_msp = [1.294177327458e+14, 2.322203235920e+14]
+		correct_rsp = [1.238620949024e+03, 1.464941206737e+03]
+		correct_msp = [1.294177315832e+14, 2.322203118359e+14]
 		for i in range(len(R)):
 			self.assertEqual(mask[i], True)
 			self.assertAlmostEqual(Rsp[i], correct_rsp[i])

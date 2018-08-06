@@ -51,8 +51,8 @@ class TCBase(test_colossus.ColosssusTestCase):
 		self.MAX_DIFF_VCIRC = 1E-8
 		self.MAX_DIFF_RMAX = 1E-3
 		self.MAX_DIFF_VMAX = 1E-8
-		self.MAX_DIFF_SO_R = 1E-8
-		self.MAX_DIFF_SO_M = 1E-8
+		self.MAX_DIFF_SO_R = 1E-7
+		self.MAX_DIFF_SO_M = 1E-7
 	
 	def test_base_nfw(self, verbose = False):
 

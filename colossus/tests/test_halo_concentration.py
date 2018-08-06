@@ -78,31 +78,31 @@ class TCConcentration(test_colossus.ColosssusTestCase):
 			c = concentration.concentration(M, mdef, z = z, model = k, range_return = False, 
 										range_warning = False)
 			if k == 'bullock01':
-				self.assertAlmostEqual(c, 6.835409271561e+00, msg = msg)
+				self.assertAlmostEqual(c, 6.835409057048e+00, msg = msg)
 			elif k == 'duffy08':
-				self.assertAlmostEqual(c, 5.8441337918319354, msg = msg)
+				self.assertAlmostEqual(c, 5.844133619011e+00, msg = msg)
 			elif k == 'klypin11':
-				self.assertAlmostEqual(c, 9.3289793383381223, msg = msg)
+				self.assertAlmostEqual(c, 9.328978854869e+00, msg = msg)
 			elif k == 'prada12':
-				self.assertAlmostEqual(c, 7.553695295377e+00, msg = msg)
+				self.assertAlmostEqual(c, 7.553695166528e+00, msg = msg)
 			elif k == 'bhattacharya13':
-				self.assertAlmostEqual(c, 5.862307277961e+00, msg = msg)
+				self.assertAlmostEqual(c, 5.862307012282e+00, msg = msg)
 			elif k == 'dutton14':
-				self.assertAlmostEqual(c, 7.5907186889384706, msg = msg)
+				self.assertAlmostEqual(c, 7.590718273862e+00, msg = msg)
 			elif k == 'diemer15':
-				self.assertAlmostEqual(c, 6.818418444826e+00, msg = msg)
+				self.assertAlmostEqual(c, 6.818418096548e+00, msg = msg)
 			elif k == 'diemer15_orig':
-				self.assertAlmostEqual(c, 6.650272575815e+00, msg = msg)
+				self.assertAlmostEqual(c, 6.650272351897e+00, msg = msg)
 			elif k == 'klypin16_nu':
-				self.assertAlmostEqual(c, 6.458807474480e+00, msg = msg)
+				self.assertAlmostEqual(c, 6.458807208648e+00, msg = msg)
 			elif k == 'klypin16_m':
-				self.assertAlmostEqual(c, 6.2107920072554768, msg = msg)
+				self.assertAlmostEqual(c, 6.210791674864e+00, msg = msg)
 			elif k == 'ludlow16':
-				self.assertAlmostEqual(c, 7.622996512353e+00, msg = msg)
+				self.assertAlmostEqual(c, 7.622996172955e+00, msg = msg)
 			elif k == 'child18':
-				self.assertAlmostEqual(c, 6.695234756753e+00, msg = msg)
+				self.assertAlmostEqual(c, 6.695234425706e+00, msg = msg)
 			elif k == 'diemer18':
-				self.assertAlmostEqual(c, 6.799716955823e+00, msg = msg)
+				self.assertAlmostEqual(c, 6.799716573337e+00, msg = msg)
 			else:
 				msg = 'Unknown model, %s.' % k
 				raise Exception(msg)

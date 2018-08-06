@@ -49,6 +49,14 @@ from colossus.halo import mass_so
 from colossus.halo import profile_base
 
 ###################################################################################################
+# Global variables for x-equation lookup table
+###################################################################################################
+
+x_interpolator = None
+x_interpolator_min = None
+x_interpolator_max = None
+
+###################################################################################################
 # NFW PROFILE
 ###################################################################################################
 
@@ -80,14 +88,6 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		The mass definition in which ``M`` and ``c`` are given. See :doc:`halo_mass` for details.
 	"""
 	
-	###############################################################################################
-	# CONSTANTS
-	###############################################################################################
-
-	# See the xDelta function for the meaning of these constants
-	XDELTA_GUESS_FACTORS = [5.0, 10.0, 20.0, 100.0, 10000.0]
-	XDELTA_N_GUESS_FACTORS = len(XDELTA_GUESS_FACTORS)
-
 	###############################################################################################
 	# CONSTRUCTOR
 	###############################################################################################
@@ -258,7 +258,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	###############################################################################################
 	
 	@classmethod
-	def xDelta(cls, rhos, rs, density_threshold, x_guess = 5.0):
+	def xDelta(cls, rhos, density_threshold):
 		"""
 		Find :math:`x=r/r_{\\rm s}` where the enclosed density has a particular value.
 		
@@ -267,45 +267,58 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		needs to be evaluated many times, for example when converting a large number of mass 
 		definitions.
 		
+		The function uses an interpolation table that makes it orders of magnitude faster than 
+		root finding (depending on the size of the ``rhos`` and ``density_threshold`` arrays).
+		
 		Parameters
 		-------------------------------------------------------------------------------------------
-		rhos: float
-			The central density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`.
-		rs: float
-			The scale radius in physical kpc/h.
-		density_threshold: float
+		rhos: array_like
+			The central density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`; can be a number 
+			or a numpy array.
+		density_threshold: array_like
 			The desired enclosed density threshold in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`. 
 			This number can be generated from a mass definition and redshift using the 
-			:func:`~halo.mass_so.densityThreshold` function. 
-		x_guess: float
-			An initial guess for :math:`x=r/r_{\\rm s}`.
+			:func:`~halo.mass_so.densityThreshold` function. Can be a number or a numpy array,
+			if both ``density_threshold`` and ``rhos`` are arrays, they must have the same 
+			size.
 		
 		Returns
 		-------------------------------------------------------------------------------------------
-		x: float
+		x: array_like
 			The radius in units of the scale radius, :math:`x=r/r_{\\rm s}`, where the enclosed 
-			density reaches ``density_threshold``. 
+			density reaches ``density_threshold``. Has the same dimensions as ``rhos`` and/or
+			``density_threshold``.
 		"""
+	
+		global x_interpolator
+		global x_interpolator_min
+		global x_interpolator_max
 		
-		# A priori, we have no idea at what radius the result will come out, but we need to 
-		# provide lower and upper limits for the root finder. To balance stability and performance,
-		# we do so iteratively: if there is no result within relatively aggressive limits, we 
-		# try again with more conservative limits.
-		args = rhos, density_threshold
-		x = None
-		i = 0
-		while x is None and i < cls.XDELTA_N_GUESS_FACTORS:
-			try:
-				xmin = x_guess / cls.XDELTA_GUESS_FACTORS[i]
-				xmax = x_guess * cls.XDELTA_GUESS_FACTORS[i]
-				x = scipy.optimize.brentq(cls._thresholdEquationX, xmin, xmax, args)
-			except Exception:
-				i += 1
+		# If the interpolator has not been created, create it. We could theoretically store the
+		# table in persistent storage but creating the table is so fast that this makes little 
+		# sense. The large number of evaluation points ensures a accuracy of better than 1E-7
+		# in xDelta.
+		if x_interpolator is None:
+			table_x = np.logspace(4.0, -4.0, 1000)
+			table_y = cls.mu(table_x) * 3.0 / table_x**3
+			x_interpolator = scipy.interpolate.InterpolatedUnivariateSpline(table_y, table_x, k = 3)
+			
+			knots = x_interpolator.get_knots()
+			x_interpolator_min = knots[0]
+			x_interpolator_max = knots[-1]
+
+		# Compute the density ratio that is used to look up x. If it is outside the interpolator's
+		# range, throw an error.
+		y = density_threshold / rhos
 		
-		if x is None:
-			msg = 'Could not determine x where the density threshold %.2f is satisfied.' \
-				% (density_threshold)
-			raise Exception(msg)
+		if np.min(y) < x_interpolator_min:
+			raise Exception('Requested overdensity %.2e cannot be evaluated for scale density %.2e, out of range.' \
+						% (np.min(y), x_interpolator_min))
+		if np.max(y) > x_interpolator_max:
+			raise Exception('Requested overdensity %.2e cannot be evaluated for scale density %.2e, out of range.' \
+						% (np.max(y), x_interpolator_max))
+		
+		x = x_interpolator(y)
 		
 		return x
 		
@@ -563,7 +576,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		"""		
 	
 		density_threshold = mass_so.densityThreshold(z, mdef)
-		x = self.xDelta(self.par['rhos'], self.par['rs'], density_threshold)
+		x = self.xDelta(self.par['rhos'], density_threshold)
 		R = x * self.par['rs']
 		
 		return R
