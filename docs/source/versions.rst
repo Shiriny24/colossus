@@ -13,7 +13,8 @@ version 1.1.0.
   restructured completely. It now uses an interpolation table instead of root finding which means
   that it now allows numpy arrays as input and makes it orders of magnitude faster (depending on 
   the size of the input). The accuracy of the interpolation is better than 1E-7. The function 
-  interface has two fewer parameters.  
+  interface has two fewer parameters. 
+* The cosmology of the Multidark-Planck simulations was added.
 
 .. rubric:: Version 1.2.2
 

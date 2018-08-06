@@ -99,34 +99,35 @@ The following sets of cosmological parameters can be chosen using the
 .. table::
 	:widths: auto
 
-	============== ================================================================================ =========== =======================================
-	ID             Paper                                                                            Location    Explanation
-	============== ================================================================================ =========== =======================================
-	planck18-only  `Planck Collab. 2018 <https://arxiv.org/abs/1807.06209>`_                        Table 2     Best-fit, Planck only (column 5) 					
-	planck18       `Planck Collab. 2018 <https://arxiv.org/abs/1807.06209>`_ 	                    Table 2     Best-fit with BAO (column 6)			
-	planck15-only  `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`_     Table 4     Best-fit, Planck only (column 2) 					
-	planck15       `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`_ 	Table 4     Best-fit with ext (column 6)			
-	planck13-only  `Planck Collab. 2013 <http://adsabs.harvard.edu/abs/2014A%26A...571A..16P>`_     Table 2     Best-fit, Planck only 					
-	planck13       `Planck Collab. 2013 <http://adsabs.harvard.edu/abs/2014A%26A...571A..16P>`_     Table 5     Best-fit with BAO etc. 					
-	WMAP9-only     `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`_       Table 2     Max. likelihood, WMAP only 				
-	WMAP9-ML       `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`_       Table 2     Max. likelihood, with eCMB, BAO and H0 	
-	WMAP9          `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`_       Table 4     Best-fit, with eCMB, BAO and H0 		
-	WMAP7-only     `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`_       Table 1     Max. likelihood, WMAP only 				
-	WMAP7-ML       `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`_       Table 1     Max. likelihood, with BAO and H0 		
-	WMAP7 	       `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`_	    Table 1     Best-fit, with BAO and H0 				
-	WMAP5-only     `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`_	    Table 1     Max. likelihood, WMAP only 			
-	WMAP5-ML       `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`_	    Table 1     Max. likelihood, with BAO and SN 		
-	WMAP5 	       `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`_	    Table 1     Best-fit, with BAO and SN 			
-	WMAP3-ML       `Spergel et al. 2007 <http://adsabs.harvard.edu/abs/2007ApJS..170..377S>`_       Table 2     Max.likelihood, WMAP only 				
-	WMAP3          `Spergel et al. 2007 <http://adsabs.harvard.edu/abs/2007ApJS..170..377S>`_       Table 5     Best fit, WMAP only 					
-	WMAP1-ML       `Spergel et al. 2003 <http://adsabs.harvard.edu/abs/2003ApJS..148..175S>`_       Table 1/4   Max.likelihood, WMAP only 				
-	WMAP1          `Spergel et al. 2003 <http://adsabs.harvard.edu/abs/2003ApJS..148..175S>`_       Table 7/4   Best fit, WMAP only 					
-	illustris      `Vogelsberger et al. 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.444.1518V>`_  --          Cosmology of the Illustris simulation
-	bolshoi	       `Klypin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...740..102K>`_        --          Cosmology of the Bolshoi simulation
-	millennium     `Springel et al. 2005 <http://adsabs.harvard.edu/abs/2005Natur.435..629S>`_      --          Cosmology of the Millennium simulation 
-	EdS            --                                                                               --          Einstein-de Sitter cosmology
-	powerlaw       --                                                                               --          Default settings for power-law cosms.
-	============== ================================================================================ =========== =======================================
+	================== ================================================================================ =========== ===============================================
+	ID                 Paper                                                                            Location    Explanation
+	================== ================================================================================ =========== ===============================================
+	planck18-only      `Planck Collab. 2018 <https://arxiv.org/abs/1807.06209>`_                        Table 2     Best-fit, Planck only (column 5) 					
+	planck18           `Planck Collab. 2018 <https://arxiv.org/abs/1807.06209>`_ 	                    Table 2     Best-fit with BAO (column 6)			
+	planck15-only  	   `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`_     Table 4     Best-fit, Planck only (column 2) 					
+	planck15           `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`_ 	Table 4     Best-fit with ext (column 6)			
+	planck13-only      `Planck Collab. 2013 <http://adsabs.harvard.edu/abs/2014A%26A...571A..16P>`_     Table 2     Best-fit, Planck only 					
+	planck13           `Planck Collab. 2013 <http://adsabs.harvard.edu/abs/2014A%26A...571A..16P>`_     Table 5     Best-fit with BAO etc. 					
+	WMAP9-only         `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`_       Table 2     Max. likelihood, WMAP only 				
+	WMAP9-ML           `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`_       Table 2     Max. likelihood, with eCMB, BAO and H0 	
+	WMAP9              `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`_       Table 4     Best-fit, with eCMB, BAO and H0 		
+	WMAP7-only         `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`_       Table 1     Max. likelihood, WMAP only 				
+	WMAP7-ML           `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`_       Table 1     Max. likelihood, with BAO and H0 		
+	WMAP7 	           `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`_	    Table 1     Best-fit, with BAO and H0 				
+	WMAP5-only         `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`_	    Table 1     Max. likelihood, WMAP only 			
+	WMAP5-ML           `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`_	    Table 1     Max. likelihood, with BAO and SN 		
+	WMAP5 	           `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`_	    Table 1     Best-fit, with BAO and SN 			
+	WMAP3-ML           `Spergel et al. 2007 <http://adsabs.harvard.edu/abs/2007ApJS..170..377S>`_       Table 2     Max.likelihood, WMAP only 				
+	WMAP3              `Spergel et al. 2007 <http://adsabs.harvard.edu/abs/2007ApJS..170..377S>`_       Table 5     Best fit, WMAP only 					
+	WMAP1-ML           `Spergel et al. 2003 <http://adsabs.harvard.edu/abs/2003ApJS..148..175S>`_       Table 1/4   Max.likelihood, WMAP only 				
+	WMAP1              `Spergel et al. 2003 <http://adsabs.harvard.edu/abs/2003ApJS..148..175S>`_       Table 7/4   Best fit, WMAP only 					
+	illustris          `Vogelsberger et al. 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.444.1518V>`_  --          Cosmology of the Illustris simulation
+	bolshoi	           `Klypin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...740..102K>`_        --          Cosmology of the Bolshoi simulation
+	multidark-planck   `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_        Table 1     Cosmology of the Multidark-Planck simulations
+	millennium         `Springel et al. 2005 <http://adsabs.harvard.edu/abs/2005Natur.435..629S>`_      --          Cosmology of the Millennium simulation 
+	EdS                --                                                                               --          Einstein-de Sitter cosmology
+	powerlaw           --                                                                               --          Default settings for power-law cosms.
+	================== ================================================================================ =========== ===============================================
 
 Those cosmologies that refer to particular simulations (such as ``bolshoi`` and ``millennium``) are
 generally set to ignore relativistic species, i.e. photons and neutrinos, because they are not
@@ -256,30 +257,31 @@ current_cosmo = None
 # cosmological parameters are tracked to the fourth digit, which is why all parameters are rounded
 # to at most four digits. See documentation at the top of this file for references.
 cosmologies = OrderedDict()
-cosmologies['planck18-only'] = {'flat': True, 'H0': 67.36, 'Om0': 0.3153, 'Ob0': 0.0493, 'sigma8': 0.8111, 'ns': 0.9649}
-cosmologies['planck18']      = {'flat': True, 'H0': 67.66, 'Om0': 0.3111, 'Ob0': 0.0490, 'sigma8': 0.8102, 'ns': 0.9665}
-cosmologies['planck15-only'] = {'flat': True, 'H0': 67.81, 'Om0': 0.3080, 'Ob0': 0.0484, 'sigma8': 0.8149, 'ns': 0.9677}
-cosmologies['planck15']      = {'flat': True, 'H0': 67.74, 'Om0': 0.3089, 'Ob0': 0.0486, 'sigma8': 0.8159, 'ns': 0.9667}
-cosmologies['planck13-only'] = {'flat': True, 'H0': 67.11, 'Om0': 0.3175, 'Ob0': 0.0490, 'sigma8': 0.8344, 'ns': 0.9624}
-cosmologies['planck13']      = {'flat': True, 'H0': 67.77, 'Om0': 0.3071, 'Ob0': 0.0483, 'sigma8': 0.8288, 'ns': 0.9611}
-cosmologies['WMAP9-only']    = {'flat': True, 'H0': 69.70, 'Om0': 0.2814, 'Ob0': 0.0464, 'sigma8': 0.8200, 'ns': 0.9710}
-cosmologies['WMAP9-ML']      = {'flat': True, 'H0': 69.70, 'Om0': 0.2821, 'Ob0': 0.0461, 'sigma8': 0.8170, 'ns': 0.9646}
-cosmologies['WMAP9']         = {'flat': True, 'H0': 69.32, 'Om0': 0.2865, 'Ob0': 0.0463, 'sigma8': 0.8200, 'ns': 0.9608}
-cosmologies['WMAP7-only']    = {'flat': True, 'H0': 70.30, 'Om0': 0.2711, 'Ob0': 0.0451, 'sigma8': 0.8090, 'ns': 0.9660}
-cosmologies['WMAP7-ML']      = {'flat': True, 'H0': 70.40, 'Om0': 0.2715, 'Ob0': 0.0455, 'sigma8': 0.8100, 'ns': 0.9670}
-cosmologies['WMAP7']         = {'flat': True, 'H0': 70.20, 'Om0': 0.2743, 'Ob0': 0.0458, 'sigma8': 0.8160, 'ns': 0.9680}
-cosmologies['WMAP5-only']    = {'flat': True, 'H0': 72.40, 'Om0': 0.2495, 'Ob0': 0.0432, 'sigma8': 0.7870, 'ns': 0.9610}
-cosmologies['WMAP5-ML']      = {'flat': True, 'H0': 70.20, 'Om0': 0.2769, 'Ob0': 0.0459, 'sigma8': 0.8170, 'ns': 0.9620}
-cosmologies['WMAP5']         = {'flat': True, 'H0': 70.50, 'Om0': 0.2732, 'Ob0': 0.0456, 'sigma8': 0.8120, 'ns': 0.9600}
-cosmologies['WMAP3-ML']      = {'flat': True, 'H0': 73.20, 'Om0': 0.2370, 'Ob0': 0.0414, 'sigma8': 0.7560, 'ns': 0.9540}
-cosmologies['WMAP3']         = {'flat': True, 'H0': 73.50, 'Om0': 0.2342, 'Ob0': 0.0413, 'sigma8': 0.7420, 'ns': 0.9510}
-cosmologies['WMAP1-ML']      = {'flat': True, 'H0': 68.00, 'Om0': 0.3136, 'Ob0': 0.0497, 'sigma8': 0.9000, 'ns': 0.9700}
-cosmologies['WMAP1']         = {'flat': True, 'H0': 72.00, 'Om0': 0.2700, 'Ob0': 0.0463, 'sigma8': 0.9000, 'ns': 0.9900}
-cosmologies['illustris']     = {'flat': True, 'H0': 70.40, 'Om0': 0.2726, 'Ob0': 0.0456, 'sigma8': 0.8090, 'ns': 0.9630, 'relspecies': False}
-cosmologies['bolshoi']       = {'flat': True, 'H0': 70.00, 'Om0': 0.2700, 'Ob0': 0.0469, 'sigma8': 0.8200, 'ns': 0.9500, 'relspecies': False}
-cosmologies['millennium']    = {'flat': True, 'H0': 73.00, 'Om0': 0.2500, 'Ob0': 0.0450, 'sigma8': 0.9000, 'ns': 1.0000, 'relspecies': False}
-cosmologies['EdS']           = {'flat': True, 'H0': 70.00, 'Om0': 1.0000, 'Ob0': 0.0000, 'sigma8': 0.8200, 'ns': 1.0000, 'relspecies': False}
-cosmologies['powerlaw']      = {'flat': True, 'H0': 70.00, 'Om0': 1.0000, 'Ob0': 0.0000, 'sigma8': 0.8200, 'ns': 1.0000, 'relspecies': False}
+cosmologies['planck18-only']    = {'flat': True, 'H0': 67.36, 'Om0': 0.3153, 'Ob0': 0.0493, 'sigma8': 0.8111, 'ns': 0.9649}
+cosmologies['planck18']      	= {'flat': True, 'H0': 67.66, 'Om0': 0.3111, 'Ob0': 0.0490, 'sigma8': 0.8102, 'ns': 0.9665}
+cosmologies['planck15-only'] 	= {'flat': True, 'H0': 67.81, 'Om0': 0.3080, 'Ob0': 0.0484, 'sigma8': 0.8149, 'ns': 0.9677}
+cosmologies['planck15']      	= {'flat': True, 'H0': 67.74, 'Om0': 0.3089, 'Ob0': 0.0486, 'sigma8': 0.8159, 'ns': 0.9667}
+cosmologies['planck13-only'] 	= {'flat': True, 'H0': 67.11, 'Om0': 0.3175, 'Ob0': 0.0490, 'sigma8': 0.8344, 'ns': 0.9624}
+cosmologies['planck13']      	= {'flat': True, 'H0': 67.77, 'Om0': 0.3071, 'Ob0': 0.0483, 'sigma8': 0.8288, 'ns': 0.9611}
+cosmologies['WMAP9-only']       = {'flat': True, 'H0': 69.70, 'Om0': 0.2814, 'Ob0': 0.0464, 'sigma8': 0.8200, 'ns': 0.9710}
+cosmologies['WMAP9-ML']         = {'flat': True, 'H0': 69.70, 'Om0': 0.2821, 'Ob0': 0.0461, 'sigma8': 0.8170, 'ns': 0.9646}
+cosmologies['WMAP9']         	= {'flat': True, 'H0': 69.32, 'Om0': 0.2865, 'Ob0': 0.0463, 'sigma8': 0.8200, 'ns': 0.9608}
+cosmologies['WMAP7-only']    	= {'flat': True, 'H0': 70.30, 'Om0': 0.2711, 'Ob0': 0.0451, 'sigma8': 0.8090, 'ns': 0.9660}
+cosmologies['WMAP7-ML']      	= {'flat': True, 'H0': 70.40, 'Om0': 0.2715, 'Ob0': 0.0455, 'sigma8': 0.8100, 'ns': 0.9670}
+cosmologies['WMAP7']         	= {'flat': True, 'H0': 70.20, 'Om0': 0.2743, 'Ob0': 0.0458, 'sigma8': 0.8160, 'ns': 0.9680}
+cosmologies['WMAP5-only']    	= {'flat': True, 'H0': 72.40, 'Om0': 0.2495, 'Ob0': 0.0432, 'sigma8': 0.7870, 'ns': 0.9610}
+cosmologies['WMAP5-ML']      	= {'flat': True, 'H0': 70.20, 'Om0': 0.2769, 'Ob0': 0.0459, 'sigma8': 0.8170, 'ns': 0.9620}
+cosmologies['WMAP5']         	= {'flat': True, 'H0': 70.50, 'Om0': 0.2732, 'Ob0': 0.0456, 'sigma8': 0.8120, 'ns': 0.9600}
+cosmologies['WMAP3-ML']      	= {'flat': True, 'H0': 73.20, 'Om0': 0.2370, 'Ob0': 0.0414, 'sigma8': 0.7560, 'ns': 0.9540}
+cosmologies['WMAP3']         	= {'flat': True, 'H0': 73.50, 'Om0': 0.2342, 'Ob0': 0.0413, 'sigma8': 0.7420, 'ns': 0.9510}
+cosmologies['WMAP1-ML']         = {'flat': True, 'H0': 68.00, 'Om0': 0.3136, 'Ob0': 0.0497, 'sigma8': 0.9000, 'ns': 0.9700}
+cosmologies['WMAP1']            = {'flat': True, 'H0': 72.00, 'Om0': 0.2700, 'Ob0': 0.0463, 'sigma8': 0.9000, 'ns': 0.9900}
+cosmologies['illustris']        = {'flat': True, 'H0': 70.40, 'Om0': 0.2726, 'Ob0': 0.0456, 'sigma8': 0.8090, 'ns': 0.9630, 'relspecies': False}
+cosmologies['bolshoi']          = {'flat': True, 'H0': 70.00, 'Om0': 0.2700, 'Ob0': 0.0469, 'sigma8': 0.8200, 'ns': 0.9500, 'relspecies': False}
+cosmologies['multidark-planck'] = {'flat': True, 'H0': 67.80, 'Om0': 0.3070, 'Ob0': 0.0480, 'sigma8': 0.8290, 'ns': 0.9600, 'relspecies': False}
+cosmologies['millennium']    	= {'flat': True, 'H0': 73.00, 'Om0': 0.2500, 'Ob0': 0.0450, 'sigma8': 0.9000, 'ns': 1.0000, 'relspecies': False}
+cosmologies['EdS']           	= {'flat': True, 'H0': 70.00, 'Om0': 1.0000, 'Ob0': 0.0000, 'sigma8': 0.8200, 'ns': 1.0000, 'relspecies': False}
+cosmologies['powerlaw']      	= {'flat': True, 'H0': 70.00, 'Om0': 1.0000, 'Ob0': 0.0000, 'sigma8': 0.8200, 'ns': 1.0000, 'relspecies': False}
 
 ###################################################################################################
 # Cosmology class
