@@ -61,7 +61,7 @@ calibration of the turnover radius :math:`r_{\\rm t}`. In the latter case, both 
 must not be ``None``. See the :func:`~halo.profile_dk14.DK14Profile.deriveParameters` function 
 for more details.
 
-.. warning::
+.. note::
 	The DK14 profile makes sense only if some description of the outer profile is added. 
 	
 Adding outer terms is easy using the wrapper function :func:`getDK14ProfileWithOuterTerms`::

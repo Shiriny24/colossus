@@ -36,14 +36,14 @@ for more information on spherical overdensity masses). For the conversion, we ne
 assume a particular form of the density profile (see the documentation of the 
 :func:`~halo.mass_defs.changeMassDefinition` function). 
 
-.. warning::
+.. note::
 	The conversion to other mass definitions can degrade the accuracy of the predicted 
 	concentration by up to ~15-20% for certain mass definitions, masses, and redshifts. Using 
 	the DK14 profile (see the :mod:`halo.profile_dk14` module) for the mass conversion gives 
 	slightly improved results, but the conversion is slower. Please see Appendix C in 
 	`Diemer & Kravtsov 2015 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_ for details.
 
-.. warning::
+.. note::
 	The user must ensure that the cosmology is set consistently. Many concentration models were 
 	calibrated only for one particular cosmology (though the default concentration model, 
 	``diemer15``, is valid for all masses, redshifts, and cosmologies). Neither the 
@@ -74,13 +74,17 @@ parameter to the :func:`concentration` function:
 	bhattacharya13 200c, vir, 200m  2E12 < M < 2E15    0 < z < 2   WMAP7           `Bhattacharya et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...32B>`_
 	dutton14       200c, vir        M > 1E10           0 < z < 5   planck13        `Dutton & Maccio 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.441.3359D>`_
 	diemer15_orig  200c             Any                Any         Any             `Diemer & Kravtsov 2015 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_
-	diemer15       200c             Any                Any         Any             Diemer and Joyce 2018 (in prep.)
+	diemer15       200c             Any                Any         Any             Diemer & Joyce 2018 (in prep.)
 	klypin16_m     200c, vir        M > 1E10           0 < z < 5   planck13/WMAP7  `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
 	klypin16_nu    200c, vir        M > 1E10           0 < z < 5   planck13        `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
 	ludlow16       200c             Any                Any         Any             `Ludlow et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2016MNRAS.460.1214L/abstract>`_
 	child18        200c             M > 2.1E11         0 < z < 4   WMAP7           `Child et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2018ApJ...859...55C/abstract>`_
-	diemer18       200c             Any                Any         Any             Diemer and Joyce 2018 (in prep.)
+	diemer18       200c             Any                Any         Any             Diemer & Joyce 2018 (in prep.)
 	============== ================ ================== =========== =============== ============================================================================
+
+The original version of the ``diemer15`` model suffered from a small numerical error, a corrected
+set of parameters is given in Diemer & Joyce 2018. The differences between the models are less than
+5%, but the original model should be used only for the purpose of backwards compatibility.
 
 ---------------------------------------------------------------------------------------------------
 Module contents
