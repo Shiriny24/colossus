@@ -74,17 +74,19 @@ parameter to the :func:`concentration` function:
 	bhattacharya13 200c, vir, 200m  2E12 < M < 2E15    0 < z < 2   WMAP7           `Bhattacharya et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...32B>`_
 	dutton14       200c, vir        M > 1E10           0 < z < 5   planck13        `Dutton & Maccio 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.441.3359D>`_
 	diemer15_orig  200c             Any                Any         Any             `Diemer & Kravtsov 2015 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_
-	diemer15       200c             Any                Any         Any             Diemer & Joyce 2018 (in prep.)
+	diemer15       200c             Any                Any         Any             `Diemer & Joyce 2018 <https://ui.adsabs.harvard.edu/?#abs/2018arXiv180907326D>`_
 	klypin16_m     200c, vir        M > 1E10           0 < z < 5   planck13/WMAP7  `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
 	klypin16_nu    200c, vir        M > 1E10           0 < z < 5   planck13        `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
 	ludlow16       200c             Any                Any         Any             `Ludlow et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2016MNRAS.460.1214L/abstract>`_
 	child18        200c             M > 2.1E11         0 < z < 4   WMAP7           `Child et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2018ApJ...859...55C/abstract>`_
-	diemer18       200c             Any                Any         Any             Diemer & Joyce 2018 (in prep.)
+	diemer18       200c             Any                Any         Any             `Diemer & Joyce 2018 <https://ui.adsabs.harvard.edu/?#abs/2018arXiv180907326D>`_
 	============== ================ ================== =========== =============== ============================================================================
 
 The original version of the ``diemer15`` model suffered from a small numerical error, a corrected
-set of parameters is given in Diemer & Joyce 2018. The differences between the models are less than
-5%, but the original model should be used only for the purpose of backwards compatibility.
+set of parameters is given in 
+`Diemer & Joyce 2018 <https://ui.adsabs.harvard.edu/?#abs/2018arXiv180907326D>`_. The differences 
+between the models are less than 5%, but the original model should be used only for the purpose 
+of backwards compatibility.
 
 ---------------------------------------------------------------------------------------------------
 Module contents
@@ -1271,7 +1273,7 @@ def _diemer18_alpha_eff(z):
 
 def modelDiemer18(M200c, z, statistic = 'median'):
 	"""
-	The model of Diemer & Joyce 2018 (in prep.).
+	The model of Diemer & Joyce 2018.
 	
 	This model improves on the Diemer & Kravtsov 2015 model in a number of ways. First, it is based
 	on a mathematical derivation of the evolution of concentration at the low-mass end. This more

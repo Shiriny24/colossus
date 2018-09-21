@@ -7,7 +7,8 @@ version 1.1.0.
 
 .. rubric:: Version 1.2.3
 
-* The Diemer and Joyce 2018 concentration model is presented in its published form. The routine was
+* The `Diemer & Joyce 2018 <https://ui.adsabs.harvard.edu/?#abs/2018arXiv180907326D>`_
+  concentration model is presented in its published form. The routine was
   sped up through a pre-computed, stored interpolation table.
 * The :func:`~profile_nfw.NFWProfile.xDelta` function in the :doc:`halo_profile_nfw` module was
   restructured completely. It now uses an interpolation table instead of root finding which means
