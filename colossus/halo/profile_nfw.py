@@ -27,7 +27,7 @@ and concentration::
 	from colossus.halo import profile_nfw
 	
 	cosmology.setCosmology('planck15')
-	p_nfw = profile_einasto.NFWProfile(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir')
+	p_nfw = profile_nfw.NFWProfile(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir')
 
 The NFW profile class is optimized by using analytical expressions instead of numerical
 calculations wherever possible. The :func:`radiusFromPdf` function covers the common case of 
