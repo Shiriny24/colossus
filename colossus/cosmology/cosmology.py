@@ -300,7 +300,10 @@ class Cosmology(object):
 	A few cosmological parameters are free in principle, but are well constrained and have a 
 	sub-dominant impact on the computations. For such parameters, default values are pre-set so 
 	that the user does not have to choose them manually. This includes the CMB temperature today 
-	(``Tcmb0`` = 2.7255 K) and the effective number of neutrino species (``Neff`` = 3.046). These 
+	(``Tcmb0`` = 2.7255 K, 
+	`Fixsen 2009 <https://ui.adsabs.harvard.edu//#abs/2009ApJ...707..916F/abstract>`_) 
+	and the effective number of neutrino species (``Neff`` = 3.046, 
+	`Planck Collaboration 2018 <https://arxiv.org/abs/1807.06209>`_). These 
 	values are compatible with the most recent observational measurements and can be changed by 
 	the user if necessary.
 	
@@ -1090,7 +1093,11 @@ class Cosmology(object):
 			else:
 				sqrt_Ok0 = np.sqrt(-self.Ok0)
 				d = np.sin(sqrt_Ok0 * d) / sqrt_Ok0
-			
+		
+		# Note that the formula is c/H0 * integral(1/E(z)). The H0 is not written here because the
+		# distance returned is in /h units. The 1E-7 factor comes from the conversion between the 
+		# speed of light in cm/s to km/s and H0 = 100 * h.
+		
 		d *= constants.C * 1E-7
 		
 		return d
