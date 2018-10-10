@@ -858,7 +858,7 @@ class HaloDensityProfile():
 					max_r_interpolate = defaults.HALO_PROFILE_SURFACE_DENSITY_MAX_R_INTERPOLATE,
 					max_r_integrate = defaults.HALO_PROFILE_SURFACE_DENSITY_MAX_R_INTEGRATE):
 		"""
-		The differential surface mass density at radius r.
+		The excess surface density at radius r.
 		
 		This quantity is useful in weak lensing studies, and is defined as 
 		:math:`\\Delta\\Sigma(R) = \\Sigma(<R)-\\Sigma(R)` where :math:`\\Sigma(<R)` is the 
@@ -895,7 +895,7 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		DeltaSigma: array_like
-			The differential surface mass density at radius ``r``, in physical 
+			The excess surface density at radius ``r``, in physical 
 			:math:`M_{\odot} h/{\\rm kpc}^2`; has the same dimensions as ``r``.
 		"""
 		
@@ -920,7 +920,7 @@ class HaloDensityProfile():
 					max_r_interpolate = defaults.HALO_PROFILE_SURFACE_DENSITY_MAX_R_INTERPOLATE,
 					max_r_integrate = defaults.HALO_PROFILE_SURFACE_DENSITY_MAX_R_INTEGRATE):
 		"""
-		The differential surface mass density at radius r due to the inner profile.
+		The excess surface density at radius r due to the inner profile.
 		
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -950,7 +950,7 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		DeltaSigma: array_like
-			The differential surface mass density at radius ``r``, in physical 
+			The excess surface density at radius ``r``, in physical 
 			:math:`M_{\odot} h/{\\rm kpc}^2`; has the same dimensions as ``r``.
 		"""
 				
@@ -967,7 +967,7 @@ class HaloDensityProfile():
 					max_r_interpolate = defaults.HALO_PROFILE_SURFACE_DENSITY_MAX_R_INTERPOLATE,
 					max_r_integrate = defaults.HALO_PROFILE_SURFACE_DENSITY_MAX_R_INTEGRATE):
 		"""
-		The differential surface mass density at radius r due to the outer profile.
+		The excess surface density at radius r due to the outer profile.
 		
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -997,7 +997,7 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		DeltaSigma: array_like
-			The differential surface mass density at radius ``r``, in physical 
+			The excess surface density at radius ``r``, in physical 
 			:math:`M_{\odot} h/{\\rm kpc}^2`; has the same dimensions as ``r``.
 		"""
 					

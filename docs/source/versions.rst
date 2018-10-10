@@ -29,7 +29,7 @@ This version corresponds to the published version of the code paper.
 * The `Diemer & Joyce 2018 <https://ui.adsabs.harvard.edu/?#abs/2018arXiv180907326D>`_
   concentration model is presented in its published form. The routine was
   sped up through a pre-computed, stored interpolation table.
-* The :func:~profile_nfw.NFWProfile.xDelta` function in the :doc:`halo_profile_nfw` module was
+* The :func:`~halo.profile_nfw.NFWProfile.xDelta` function in the :doc:`halo_profile_nfw` module was
   restructured completely. It now uses an interpolation table instead of root finding which means
   that it now allows numpy arrays as input and makes it orders of magnitude faster (depending on 
   the size of the input). The accuracy of the interpolation is better than 1E-7. The function 
