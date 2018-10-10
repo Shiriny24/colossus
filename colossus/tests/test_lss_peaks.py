@@ -44,11 +44,11 @@ class TCPeaks(test_colossus.ColosssusTestCase):
 		self.assertAlmostEqual(peaks.peakHeight(TEST_M, TEST_Z2), 4.741905393957e+00)
 
 	def test_peakCurvature(self):
-		correct = [[1.728777200283e+00, 6.498395946425e-01, 2.377044934137e+00, 1.253617059077e+00, 3.186369656037e-01], 
-				[8.689469782353e+00, 6.498395946425e-01, 5.948308808583e+00, 3.015472875606e-01, 8.350272130432e+00]]
+		correct = [[1.402987612490e+00, 6.309114160170e-01, 2.286755334446e+00, 1.401594433196e+00, -6.603934180583e-02], 
+				[7.051931539673e+00, 6.309114160170e-01, 4.862932250560e+00, 4.137881372093e-01, 6.618235519961e+00]]
 		for j in range(2):
 			z = [0.0, TEST_Z2][j]
-			res = peaks.peakCurvature(TEST_M, z)
+			res = peaks.peakCurvature(TEST_M, z, exact = False)
 			for i in range(5):
 				self.assertAlmostEqual(res[i], correct[j][i])
 

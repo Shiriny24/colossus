@@ -2056,8 +2056,25 @@ class Cosmology(object):
 		"""
 		The Fourier transform of certain filter functions.
 		
-		This function is dimensionless, the input units are k in comoving h/Mpc and R in comoving 
-		Mpc/h. Please see the documentation of the :func:`sigma` function for details.
+		The main use of the filter function is in computing the variance, please see the 
+		documentation of the :func:`sigma` function for details. This function is dimensionless, 
+		the input units are k in comoving h/Mpc and R in comoving Mpc/h. Available filters are
+		``tophat``,
+		
+		.. math::
+			\\tilde{W}_{\\rm tophat} = \\frac{3}{(kR)^3} \\left[ \\sin(kR) - kR \\times \\cos(kR) \\right] \,,
+			
+		a ``gaussian`` filter,
+		
+		.. math::
+			\\tilde{W}_{\\rm gaussian} = \\exp \\left[ \\frac{-(kR)^2}{2} \\right] \\,,
+			
+		and a ``sharp-k`` filter,
+		
+		.. math::
+			\\tilde{W}_{\\rm sharp-k} = \\Theta(1 - kR) \,,	
+		
+		where :math:`\\Theta` is the Heaviside step function.	
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -2087,7 +2104,7 @@ class Cosmology(object):
 			ret = np.heaviside(1.0 - x, 1.0)
 			
 		elif filt == 'gaussian':
-			ret = np.exp(-x**2)
+			ret = np.exp(-x**2 * 0.5)
 		
 		else:
 			msg = "Invalid filter, %s." % (filt)
@@ -2251,7 +2268,8 @@ class Cosmology(object):
 			\\sigma^2(R,z) = \\frac{1}{2 \\pi^2} \\int_0^{\\infty} k^2 k^{2j} P(k,z) |\\tilde{W}(kR)|^2 dk
 
 		where :math:`\\tilde{W}(kR)` is the Fourier transform of the :func:`filterFunction`, and 
-		:math:`P(k,z) = D_+^2(z)P(k,0)` is the :func:`matterPowerSpectrum`. 
+		:math:`P(k,z) = D_+^2(z)P(k,0)` is the :func:`matterPowerSpectrum`. See the documentation
+		of :func:`filterFunction` for possible filters.
 		
 		By default, the power spectrum is computed using the transfer function approximation of 
 		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_ (see the 

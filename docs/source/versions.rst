@@ -5,6 +5,25 @@ What's new?
 See below for a listing of the most important code and interface changes in Colossus, starting with
 version 1.1.0.
 
+.. rubric:: Version 1.2.4
+
+This version corresponds to the published version of the code paper.
+
+* The Gaussian filter in the :func:`~cosmology.cosmology.Cosmology.filterFunction` (used to compute 
+  the variance of the linear power spectrum, :func:`~cosmology.cosmology.Cosmology.sigma`) was 
+  changed by a factor of two to adhere to the common definition.
+ 
+  .. note::
+    This change of the Gaussian filter represents a significant, not backward-compatible change.
+    If you use the Gaussian filter in ANY of your calculations, please check your results -- they 
+    will be affected. Before re-computing your results, please remove all temporary cosmology 
+    files in ``~/.colossus/cache/cosmology`` to make sure that the change has taken effect.
+
+  .. note::
+    Due to the change in the Gaussian filter, the return of the 
+    :func:`~lss.peaks.peakCurvature` function has changed. If you use this function, please check
+    your results (and follow the procedure described in the note above).
+
 .. rubric:: Version 1.2.3
 
 * The `Diemer & Joyce 2018 <https://ui.adsabs.harvard.edu/?#abs/2018arXiv180907326D>`_
