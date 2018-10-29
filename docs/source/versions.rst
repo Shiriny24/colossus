@@ -23,6 +23,7 @@ This version corresponds to the published version of the code paper.
     Due to the change in the Gaussian filter, the return of the 
     :func:`~lss.peaks.peakCurvature` function has changed. If you use this function, please check
     your results (and follow the procedure described in the note above).
+* Many small fixes to the documentation, thanks to Jerry Maggioncalda for his careful proofreading!
 
 .. rubric:: Version 1.2.3
 

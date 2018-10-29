@@ -25,39 +25,45 @@ samples can be found in the :doc:`tutorials`.
 Setting and getting cosmologies
 ***************************************************************************************************
 
+First, we import the cosmology module::
+
+	from colossus.cosmology import cosmology
+	
 Setting a cosmology is almost always achieved with the :func:`setCosmology` function, which can be 
 used in multiple ways:
 
 * Set one of the pre-defined cosmologies::
 	
-	setCosmology('planck18')
+	cosmology.setCosmology('planck18')
 
 * Set one of the pre-defined cosmologies, but overwrite certain parameters::
 	
-	setCosmology('planck18', {'print_warnings': False})
+	cosmology.setCosmology('planck18', {'print_warnings': False})
 
 * Add a new cosmology to the global list of available cosmologies. This has the advantage that the 
   new cosmology can be set from anywhere in the code. Only the main cosmological parameters are 
   mandatory, all other parameters can be left to their default values::
 	
 	params = {'flat': True, 'H0': 67.2, 'Om0': 0.31, 'Ob0': 0.049, 'sigma8': 0.81, 'ns': 0.95}
-	addCosmology('myCosmo', params)
-	cosmo = setCosmology('myCosmo')
+	cosmology.addCosmology('myCosmo', params)
+	cosmo = cosmology.setCosmology('myCosmo')
 
 * Set a new cosmology without adding it to the global list of available cosmologies::
 	
 	params = {'flat': True, 'H0': 67.2, 'Om0': 0.31, 'Ob0': 0.049, 'sigma8': 0.81, 'ns': 0.95}
-	cosmo = setCosmology('myCosmo', params)
+	cosmo = cosmology.setCosmology('myCosmo', params)
 
 * Set a self-similar cosmology with a power-law power spectrum of a certain slope, and the 
   default settings set in the ``powerlaw`` cosmology::
 	
-	cosmo = setCosmology('powerlaw_-2.60')
+	cosmo = cosmology.setCosmology('powerlaw_-2.60')
 
 Whichever way a cosmology is set, the current cosmology is stored in a global variable and 
 can be obtained at any time::
 	
-	cosmo = getCurrent()
+	cosmo = cosmology.getCurrent()
+
+For more extensive examples, please see the :doc:`tutorials`.
 
 ***************************************************************************************************
 Changing and switching cosmologies
@@ -66,16 +72,16 @@ Changing and switching cosmologies
 The current cosmology can also be set to an already existing cosmology object, for example when
 switching between cosmologies::
 
-	cosmo1 = setCosmology('WMAP9')
-	cosmo2 = setCosmology('planck18')
-	setCurrent(cosmo1)
+	cosmo1 = cosmology.setCosmology('WMAP9')
+	cosmo2 = cosmology.setCosmology('planck18')
+	cosmology.setCurrent(cosmo1)
 
 The user can change the cosmological parameters of an existing cosmology object at run-time, but 
 MUST call the update function :func:`~cosmology.cosmology.Cosmology.checkForChangedCosmology` 
 directly after the changes. This function ensures that the parameters are consistent (e.g., 
 flatness) and that no outdated cached quantities are used::
 
-	cosmo = setCosmology('WMAP9')
+	cosmo = cosmology.setCosmology('WMAP9')
 	cosmo.Om0 = 0.31
 	cosmo.checkForChangedCosmology()
 
@@ -143,31 +149,31 @@ dark energy as a cosmological constant and contain no curvature. To add curvatur
 flatness must be overwritten, and the dark energy content of the universe must be set (which is 
 otherwise computed from the matter and relativistic contributions)::
 
-	params = cosmologies['planck18']
+	params = cosmology.cosmologies['planck18']
 	params['flat'] = False
 	params['Ode0'] = 0.75
-	cosmo = setCosmology('planck_curvature', params)
+	cosmo = cosmology.setCosmology('planck_curvature', params)
 	
 Multiple models for the dark energy equation of state parameter :math:`w(z)` are implemented, 
 namely a cosmological constant (:math:`w=-1`), a constant :math:`w`, a linearly varying 
 :math:`w(z) = w_0 + w_a (1 - a)`, and arbitrary user-supplied functions for :math:`w(z)`. To set, 
 for example, a linearly varying EOS, we change the ``de_model`` parameter::
 
-	params = cosmologies['planck18']
+	params = cosmology.cosmologies['planck18']
 	params['de_model'] = 'w0wa'
 	params['w0'] = -0.8
 	params['wa'] = 0.1
-	cosmo = setCosmology('planck_w0wa', params)
+	cosmo = cosmology.setCosmology('planck_w0wa', params)
 
 We can implement more exotic models by supplying an arbitrary function::
 
 	def wz_func(z):
 		return -1.0 + 0.1 * z
 		
-	params = cosmologies['planck18']
+	params = cosmology.cosmologies['planck18']
 	params['de_model'] = 'user'
 	params['wz_function'] = wz_func
-	cosmo = setCosmology('planck_wz', params)
+	cosmo = cosmology.setCosmology('planck_wz', params)
 
 ---------------------------------------------------------------------------------------------------
 Power spectrum models
@@ -213,7 +219,7 @@ default, tabulated, stored in files, and re-loaded when the same cosmology is se
 where functions are evaluated few times, but for a large number of cosmologies), the user can turn 
 this behavior off::
 
-	cosmo = Cosmology.setCosmology('planck18', {'interpolation': False, 'persistence': ''})
+	cosmo = cosmology.setCosmology('planck18', {'interpolation': False, 'persistence': ''})
 
 For more details, please see the documentation of the ``interpolation`` and ``persistence`` 
 parameters. In order to turn off the interpolation temporarily, the user can simply switch the 

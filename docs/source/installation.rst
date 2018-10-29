@@ -2,7 +2,7 @@
 Installation
 ============
 
-You can install Colossus either using one of the common python package manager pip, or by downloading the code directly. 
+You can install Colossus either using the common python package manager pip or by downloading the code directly. 
 
 .. rubric:: Requirements
 
@@ -11,6 +11,8 @@ Colossus is compatible with both Python 2.7 and Python 3.x. However, the code is
 * `numpy <http://www.numpy.org/>`_
 * `scipy <https://www.scipy.org/>`_
 * `six <https://pypi.org/project/six/>`_
+
+Some tutorial notebooks also use other packages, for example matplotlib for plotting.
 
 .. rubric:: Package installation
 
@@ -26,7 +28,7 @@ You might need to prefix this command with ``sudo``. To update the code, execute
 
     pip install --upgrade colossus
 
-For more information, please see the `pip documentation <https://packaging.python.org/tutorials/installing-packages/>`_.
+If the numpy and scipy packages are not already installed, you can similarly install them with the pip command. For more information, please see the `pip documentation <https://packaging.python.org/tutorials/installing-packages/>`_.
 
 .. rubric:: Repository installation
 
@@ -49,7 +51,9 @@ You will also need to manually include Colossus in your ``$PYTHONPATH`` variable
    
    export PYTHONPATH=$PYTHONPATH:/Users/me/code/colossus
 
-where the path is, of course, replaced with the location of Colossus on your system.
+where the path is, of course, replaced with the location of Colossus on your system. 
+
+If, for some reason, you wish to avoid using mercurial or pip, you can install Colossus manually by downloading the current repository contents as a `zip file <https://bitbucket.org/bdiemer/colossus/downloads/>`_. The disadvantage of this method is that it makes updating the code relatively cumbersome.
 
 .. rubric:: Running unit tests
 
@@ -70,4 +74,4 @@ The output should look something like this::
    
    OK
            
-If any errors occur, please send the output to the author.
+If any errors occur, please send the output to the `author <http://www.benediktdiemer.com/contact/>`_.

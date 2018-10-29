@@ -15,13 +15,16 @@ Basics
 
 For example, we can compute the spherical overdensity radius of a halo with particular mass or
 vice versa::
-
-	R200m = M_to_R(1E12, 0.0, '200m')
-	Mvir = R_to_M(400.0, 1.5, 'vir')
+	
+	from colossus.halo import mass_so
+	
+	R200m = mass_so.M_to_R(1E12, 0.0, '200m')
+	Mvir = mass_so.R_to_M(400.0, 1.5, 'vir')
 
 The other functions in this module allow us to parse the mass definition strings and compute the 
 density thresholds, but typically the user will not need to evaluate those functions manually
-since most SO-related functions in Colossus accept ``mdef`` as an argument.
+since most SO-related functions in Colossus accept ``mdef`` as an argument. Please see the 
+:doc:`tutorials` for more extensive code examples.
 
 ---------------------------------------------------------------------------------------------------
 Module contents

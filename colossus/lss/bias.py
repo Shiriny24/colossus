@@ -17,12 +17,17 @@ Basics
 Bias can be evaluated as a function of either mass or peak height. The parameters that need to be 
 passed depend on the bias model to some degree, and on whether the mass needs to be converted to 
 peak height first::
-
+	
+	from colossus.lss import peaks
+	from colossus.lss import bias
+	
 	M = 1E14
 	z = 0.0
 	nu = peaks.peakHeight(M, z)
 	b = bias.haloBiasFromNu(nu, model = 'sheth01')
 	b = bias.haloBias(M, model = 'tinker10', z = z, mdef = 'vir')
+
+Please see the :doc:`tutorials` for more extensive code examples.
 
 ---------------------------------------------------------------------------------------------------
 Bias models

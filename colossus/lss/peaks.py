@@ -23,8 +23,11 @@ redshift, and should thus be collapsing. Halos of smaller peak height have, on a
 collapsed in the past, and halos of higher peak height will, on average, collapse in the future.
 The peak height of a halo is easy to evaluate in Colossus using the :func:`peakHeight` 
 function::
+
+	from colossus.cosmology import cosmology
+	from colossus.lss import peaks
 	
-	setCosmology('planck15')
+	cosmology.setCosmology('planck15')
 	nu = peaks.peakHeight(M, z)
 
 The inverse function :func:`massFromPeakHeight` converts peak height to mass. Internally, the 
@@ -35,7 +38,8 @@ cosmology. Finally, the variance is computed using the
 those options can be passed to any function related to peak height. The 
 :func:`nonLinearMass` is defined as the mass where peak height is unity at a given redshift, i.e., 
 the mass of a halo that is typically collapsing at the current time. Finally, 
-:func:`peakCurvature` is a higher-order property of peaks that describes their shape.
+:func:`peakCurvature` is a higher-order property of peaks that describes their shape. Please see 
+the :doc:`tutorials` for more extensive code examples.
 
 ---------------------------------------------------------------------------------------------------
 Module contents

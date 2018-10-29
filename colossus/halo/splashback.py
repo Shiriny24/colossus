@@ -60,6 +60,9 @@ over either a fixed time interval as in
 over a dynamical time. Please consult the model papers for details. The following code example 
 shows how to calculate :math:`R_{\\rm sp}/R_{\\rm 200m}` when only the mass of a halo is known::
 
+	from colossus.lss import peaks
+	from colossus.halo import splashback
+
 	M200m = 1E12
 	z = 0.5
 	nu200m = peaks.peakHeight(M200m, z)
@@ -74,7 +77,7 @@ All functions take numpy arrays as well as float values, though with certain res
 below). The ``mask`` return variable indicates whether the chosen model could be evaluated given 
 the input parameters. If not (e.g., because the redshift of peak height were outside a model's 
 range), ``mask`` (or certain elements of it) will be False and the corresponding elements of 
-``RspR200m`` will be missing.
+``RspR200m`` will be missing. Please see the :doc:`tutorials` for more extensive code examples.
 
 ---------------------------------------------------------------------------------------------------
 Splashback models

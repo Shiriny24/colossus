@@ -19,13 +19,15 @@ radius and mass definitions based on this profile. These functions include chang
 definition at fixed redshift, changing redshift at fixed overdensity ("pseudo-evolution"), or
 changing both.
 
-One common application is to convert one spherical overdensity mass definitions to another (at 
+One common application is to convert one spherical overdensity mass definition to another (at 
 fixed redshift)::
+	
+	from colossus.halo import mass_defs
 	
 	Mvir = 1E12
 	cvir = 10.0
 	z = 1.0
-	M200m, R200m, c200m = changeMassDefinition(Mvir, cvir, z, 'vir', '200m')
+	M200m, R200m, c200m = mass_defs.changeMassDefinition(Mvir, cvir, z, 'vir', '200m')
 	
 Here we assumed a halo with :math:`M_{vir}=10^{12} M_{\odot}/h` and :math:`c_{vir} = 10` at z=1, 
 and converted it to the 200m mass definition. For convenience, the new radius and concentration 
@@ -44,7 +46,7 @@ example we compute the pseudo-evolution of a halo with virial mass
 	c_ini = 10.0
 	z_ini = 1.0
 	z_final = 0.0
-	M, R, c = pseudoEvolve(M_ini, c_ini, 'vir', z_ini, z_final)
+	M, R, c = mass_defs.pseudoEvolve(M_ini, c_ini, 'vir', z_ini, z_final)
 	
 Here we have assumed that the halo has a concentration :math:`c_{vir} = 10` at z=1. By default, 
 an NFW density profile is assumed, but the user can also pass another profile object. 
@@ -53,7 +55,7 @@ Often, we do not know the concentration of a halo and wish to estimate it using 
 mass model. This can be done using the :doc:`halo_concentration` module, but there is also 
 a convenient wrapper for the :func:`changeMassDefinition` function, 
 :func:`~halo.mass_adv.changeMassDefinitionCModel`. This function is located in a different module 
-to avoid circular imports.
+to avoid circular imports. Please see the :doc:`tutorials` for more extensive code examples.
 
 ---------------------------------------------------------------------------------------------------
 Module contents

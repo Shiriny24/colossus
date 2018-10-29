@@ -17,9 +17,12 @@ This module implements a number of models for the halo mass function. The easies
 use of the module is through the :func:`massFunction` function, a wrapper for all individual
 models::
 	
-	setCosmology('WMAP9')
-	mfunc_so = massFunction(1E12, 0.0, mdef = 'vir', model = 'tinker08')
-	mfunc_fof = massFunction(1E12, 0.0, mdef = 'fof', model = 'watson13')
+	from colossus.cosmology import cosmology
+	from colossus.lss import mass_function
+	
+	cosmology.setCosmology('WMAP9')
+	mfunc_so = mass_function.massFunction(1E12, 0.0, mdef = 'vir', model = 'tinker08')
+	mfunc_fof = mass_function.massFunction(1E12, 0.0, mdef = 'fof', model = 'watson13')
 
 Of course, the function accepts numpy arrays for the mass parameter. By default, the mass function 
 is returned as :math:`f(\\sigma)`, the natural units in Press-Schechter theory, where
@@ -33,7 +36,8 @@ on the lagrangian size scale of the halo mass in question (see
 in other units, namely as the number density per logarithmic interval in mass, :math:`dn/d\\ln(M)` 
 (units of :math:`({\\rm Mpc}/h)^{-3}`, indicated by ``q_out = dndlnM``) and as 
 :math:`M^2 / \\rho_0 dn/dM` (dimensionless, indicated by ``q_out = M2dndM``). These conversions 
-can separately be performed separately using the :func:`convertMassFunction` function.
+can separately be performed separately using the :func:`convertMassFunction` function. Please see 
+the :doc:`tutorials` for more extensive code examples.
 
 ---------------------------------------------------------------------------------------------------
 Mass function models

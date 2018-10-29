@@ -16,9 +16,11 @@ The :func:`~halo.mass_defs.changeMassDefinition()` function needs to be given th
 a halo. For convenience, the following function uses a concentration model to estimate the 
 concentration::
 
+	from colossus.halo import mass_adv
+	
 	Mvir = 1E12
 	z = 1.0
-	M200m, R200m, c200m = changeMassDefinitionCModel(Mvir, z, 'vir', '200m')
+	M200m, R200m, c200m = mass_adv.changeMassDefinitionCModel(Mvir, z, 'vir', '200m')
 	
 By default, the function uses the default concentration model (see the :doc:`halo_concentration` 
 module), but the user can choose a different model. This function is not included in the 
@@ -36,7 +38,7 @@ mass within four scale radii::
 	Mvir = 1E12
 	cvir = 8.0
 	z = 1.0
-	M_inner = M4rs(Mvir, z, 'vir', c = cvir)
+	M_inner = mass_adv.M4rs(Mvir, z, 'vir', c = cvir)
 
 This mass definition quantifies the mass in the inner part of the halo. During the fast accretion 
 regime, this mass definition tracks :math:`M_{vir}`, but when the halo stops accreting it 

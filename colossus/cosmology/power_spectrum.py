@@ -8,7 +8,8 @@
 """
 This module implements models for the matter power spectrum, or more exactly, for the transfer 
 function. Generally speaking, the transfer function should be evaluated using the 
-:func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum` function.
+:func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum` function. This module is automatically
+imported with the cosmology module.
 
 ---------------------------------------------------------------------------------------------------
 Power spectrum models

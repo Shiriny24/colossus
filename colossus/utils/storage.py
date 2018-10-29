@@ -14,8 +14,10 @@ Basics
 ---------------------------------------------------------------------------------------------------
 
 There are two levels of storage: all stored fields are stored in dictionaries in memory. The data
-can be of any type, if persistent storage is used the data must be pickleable. The persistent 
-storage can be turned on and off by the user, both generally and for each field individually. 
+can be of any type, if persistent storage is used the data must be 
+`pickleable <https://docs.python.org/3/library/pickle.html#what-can-be-pickled-and-unpickled>`_. 
+The persistent storage can be turned on and off by the user, both generally and for each field 
+individually. 
 
 Each "user" of the storage module receives their own storage space and a uniquely identifying hash 
 code that can be used to detect changes that make it necessary to reset the storage, for example 
@@ -73,10 +75,11 @@ The storage module offers native support for interpolation tables. For example, 
 stored a table of variables x and y, we can get a spline interpolator for y(x) or even a reverse
 interpolator for x(y) by calling::
 
-	interp_y_of_x = storageUser.getStoredObject('xy', interpolator = True)
-	interp_x_of_y = storageUser.getStoredObject('xy', interpolator = True, inverse = True)
+	interp_y_of_x = su.getStoredObject('xy', interpolator = True)
+	interp_x_of_y = su.getStoredObject('xy', interpolator = True, inverse = True)
 
-The :func:`~utils.storage.StorageUser.getStoredObject` function returns ``None`` if no object is 
+where ``su`` is a ``StorageUser`` object. The 
+:func:`~utils.storage.StorageUser.getStoredObject` function returns ``None`` if no object is 
 found.
 
 ---------------------------------------------------------------------------------------------------
