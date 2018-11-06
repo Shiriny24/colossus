@@ -1,6 +1,7 @@
 from setuptools import setup
+import io
 
-with open('README.rst', encoding = 'utf-8') as f:
+with io.open('README.rst', encoding = 'utf-8') as f:
 	long_description = f.read()
 	
 setup(name = 'colossus',
@@ -11,7 +12,7 @@ setup(name = 'colossus',
 	author = 'Benedikt Diemer',
 	author_email = 'benedikt.diemer@cfa.harvard.edu',
 	license = 'MIT',
-	requires = ['numpy', 'scipy'],
+	requires = ['numpy', 'scipy', 'six'],
 	packages = ['colossus', 
 				'colossus.cosmology', 
 				'colossus.lss', 
@@ -31,6 +32,8 @@ setup(name = 'colossus',
 				'Programming Language :: Python :: 3.3',
 				'Programming Language :: Python :: 3.4',
 				'Programming Language :: Python :: 3.5',
+				'Programming Language :: Python :: 3.6',
+				'Programming Language :: Python :: 3.7',
 				'Topic :: Scientific/Engineering :: Astronomy',
 				'Topic :: Scientific/Engineering :: Physics'
 				],
