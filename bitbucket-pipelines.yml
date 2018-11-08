@@ -14,7 +14,7 @@ pipelines:
           - pip install numpy scipy six
           - python setup.py install
           - python colossus/tests/run_tests.py
-     - step:
+    - step:
         name: Python3.5
         image: python:3.5
         script:
