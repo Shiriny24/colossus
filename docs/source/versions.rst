@@ -24,6 +24,8 @@ This version corresponds to the published version of the code paper.
     :func:`~lss.peaks.peakCurvature` function has changed. If you use this function, please check
     your results (and follow the procedure described in the note above).
 * Many small fixes to the documentation, thanks to Jerry Maggioncalda for his careful proofreading!
+* Activated continuous integration (i.e., automatically running the unit test suite after every
+  commit). Thanks to Joseph Kuruvilla for setting that up!
 
 .. rubric:: Version 1.2.3
 
