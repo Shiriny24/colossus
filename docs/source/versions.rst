@@ -5,6 +5,12 @@ What's new?
 See below for a listing of the most important code and interface changes in Colossus, starting with
 version 1.1.0.
 
+.. rubric:: Version 1.2.5
+
+* Added the mass function model of Comparat et al 2017 to the :doc:`lss_mass_function` module.
+* Added the bias models of Bhattacharya et al 2011 and Comparat et al 2017 to the :doc:`lss_bias`
+  module. Thanks to Johan Comparat for the suggestion!
+
 .. rubric:: Version 1.2.4
 
 This version corresponds to the published version of the code paper.
