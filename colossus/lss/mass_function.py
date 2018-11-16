@@ -1022,8 +1022,11 @@ def modelComparat17(sigma):
 	This model was calibrated only at redshift 0, and for the virial SO mass definition. The 
 	cosmology used is the ``multidark-planck`` cosmology (which is very close to ``planck13``). 
 	Outside of this redshift and cosmology, the model relies on the universality of the mass
-	function. The functional form is the same as in the Bhattacharya et al 2011 model, but
-	without their redshift dependence.
+	function. 
+	
+	The functional form is the same as in the Bhattacharya et al 2011 model, but without their 
+	redshift dependence. The parameters used here are updated compared to the published version of 
+	the paper.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -1040,10 +1043,10 @@ def modelComparat17(sigma):
 	nu = delta_c / sigma
 	nu2 = nu**2
 
-	A = 0.280
-	a = 0.903
-	p = 0.640
-	q = 1.695
+	A = 0.324
+	a = 0.897
+	p = 0.624
+	q = 1.589
 
 	f = A * np.sqrt(2 / np.pi) * np.exp(-a * nu2 * 0.5) * (1.0 + (a * nu2)**-p) * (nu * np.sqrt(a))**q
 

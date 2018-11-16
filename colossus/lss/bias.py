@@ -511,7 +511,8 @@ def modelComparat17(nu):
 	
 	This model is equivalent to the Bhattacharya et al 2011 model in that it uses the same
 	functional form and that its best-fit parameters are derived from a fit to the mass function
-	rather than bias itself. However, this model does not depend on redshift.
+	rather than bias itself. However, this model does not depend on redshift. The parameters used 
+	here are updated compared to the published version of the paper.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -526,9 +527,9 @@ def modelComparat17(nu):
 
 	delta_c = peaks.collapseOverdensity()
 
-	a = 0.903
-	p = 0.640
-	q = 1.695
+	a = 0.897
+	p = 0.624
+	q = 1.589
 
 	bias = 1.0 + (a * nu**2 - q) / delta_c + 2.0 * p / delta_c / (1.0 + (a * nu**2)**p)
 
