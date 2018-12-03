@@ -96,7 +96,7 @@ class TCMassFunction(test_colossus.ColosssusTestCase):
 			self.assertAlmostEqualArray(mass_function.massFunction(np.array([1E8, 1E15]), 0.0, 
 								q_in = 'M', mdef = 'fof', model = k), correct, msg = msg)
 
-	def test_hmfModelsSO(self):
+	def test_hmfModelsSO_200m(self):
 		models = mass_function.models
 		for k in models.keys():
 			msg = 'Failure in model = %s.' % (k)
@@ -115,6 +115,32 @@ class TCMassFunction(test_colossus.ColosssusTestCase):
 				correct = [2.836178412101e-01, 3.832756307994e-05]
 			elif k == 'despali16':
 				correct = [2.566878298120e-01, 6.642693089794e-05]
+			else:
+				msg = 'Unknown model, %s.' % k
+				raise Exception(msg)
+			
+			self.assertAlmostEqualArray(mass_function.massFunction(np.array([1E8, 1E15]), z, 
+								q_in = 'M', mdef = mdef, model = k), correct, msg = msg)
+
+	def test_hmfModelsSO_vir(self):
+		models = mass_function.models
+		for k in models.keys():
+			msg = 'Failure in model = %s.' % (k)
+			
+			mdef = 'vir'
+			z = 1.0
+			
+			if not (('*' in models[k].mdefs) or (mdef in models[k].mdefs)):
+				continue
+			
+			if k == 'tinker08':
+				correct = [2.509254068511e-01, 4.540789859771e-05]
+			elif k == 'watson13':
+				correct = [1.613528810685e-01, 4.366870740478e-05]
+			elif k == 'despali16':
+				correct = [2.566102311495e-01, 6.539189884732e-05]
+			elif k == 'comparat17':
+				correct = [2.449553401913e-01, 2.342956829892e-05]
 			else:
 				msg = 'Unknown model, %s.' % k
 				raise Exception(msg)
