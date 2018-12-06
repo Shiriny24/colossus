@@ -48,6 +48,8 @@ number of different papers. The rest of the models was calibrated using numerica
 	seljak04       M/nu, z                     Through non-linear mass     `Seljak & Warren 2004 <http://adsabs.harvard.edu/abs/2004MNRAS.355..129S>`_
 	pillepich10    M/nu                        No                          `Pillepich et al. 2010 <http://adsabs.harvard.edu/abs/2010MNRAS.402..191P>`_
 	tinker10       M/nu, z, mdef               Through mass definition     `Tinker et al. 2010 <http://adsabs.harvard.edu/abs/2010ApJ...724..878T>`_       
+	bhattacharya11 M/nu, z                     Yes                         `Bhattacharya et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...732..122B>`_
+	comparat17     M/nu                        No                          `Comparat et al. 2017 <https://ui.adsabs.harvard.edu//#abs/2017MNRAS.469.4157C/abstract>`_
 	============== =========================== =========================== =========================================
 
 The z-dependence column indicates whether a model predicts a bias that varies with redshift at 
@@ -72,6 +74,8 @@ Module contents
 	modelSeljak04
 	modelPillepich10
 	modelTinker10
+	modelBhattacharya11
+	modelComparat17
 	
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -118,6 +122,8 @@ models['sheth01'] = HaloBiasModel()
 models['seljak04'] = HaloBiasModel()
 models['pillepich10'] = HaloBiasModel()
 models['tinker10'] = HaloBiasModel()
+models['bhattacharya11'] = HaloBiasModel()
+models['comparat17'] = HaloBiasModel()
 
 ###################################################################################################
 # HALO BIAS
@@ -166,6 +172,10 @@ def haloBiasFromNu(nu, z = None, mdef = None, model = defaults.HALO_BIAS_MODEL, 
 		bias = modelPillepich10(nu, **kwargs)
 	elif model == 'tinker10':
 		bias = modelTinker10(nu, z, mdef, **kwargs)
+	elif model == 'bhattacharya11':
+		bias = modelBhattacharya11(nu, z, **kwargs)
+	elif model == 'comparat17':
+		bias = modelComparat17(nu, **kwargs)
 	else:
 		msg = 'Unkown model, %s.' % (model)
 		raise Exception(msg)
@@ -456,6 +466,73 @@ def modelTinker10(nu, z, mdef):
 	
 	bias = 1.0 - A * nu**a / (nu**a + constants.DELTA_COLLAPSE**a) + B * nu**b + C * nu**c
 	
+	return bias
+
+###################################################################################################
+
+def modelBhattacharya11(nu, z):
+	"""
+	A bias model based on a mass function calibration.
+	
+	This bias model is derived using the peak-background split logic of Sheth & Tormen 1999, but 
+	with the updated and z-dependent best-fit parameters derived for the mass function. The 
+	authors note that this bias function does not match the numerical results as well as direct
+	calibrations.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	nu: array_like
+		Peak height; can be a number or a numpy array.
+	z: float
+		Redshift.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	bias: array_like
+		Halo bias; has the same dimensions as ``nu``.
+	"""
+
+	delta_c = peaks.collapseOverdensity()
+
+	zp1 = 1.0 + z
+	a = 0.788 * zp1**-0.01
+	p = 0.807
+	q = 1.795
+
+	bias = 1.0 + (a * nu**2 - q) / delta_c + 2.0 * p / delta_c / (1.0 + (a * nu**2)**p)
+
+	return bias
+
+###################################################################################################
+
+def modelComparat17(nu):
+	"""
+	A bias model based on a mass function calibration.
+	
+	This model is equivalent to the Bhattacharya et al 2011 model in that it uses the same
+	functional form and that its best-fit parameters are derived from a fit to the mass function
+	rather than bias itself. However, this model does not depend on redshift. The parameters used 
+	here are updated compared to the published version of the paper.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	nu: array_like
+		Peak height; can be a number or a numpy array.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	bias: array_like
+		Halo bias; has the same dimensions as ``nu``.
+	"""
+
+	delta_c = peaks.collapseOverdensity()
+
+	a = 0.897
+	p = 0.624
+	q = 1.589
+
+	bias = 1.0 + (a * nu**2 - q) / delta_c + 2.0 * p / delta_c / (1.0 + (a * nu**2)**p)
+
 	return bias
 
 ###################################################################################################

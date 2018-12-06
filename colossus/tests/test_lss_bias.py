@@ -51,6 +51,10 @@ class TCBias(test_colossus.ColosssusTestCase):
 				correct = 4.793683473192e+00
 			elif k == 'tinker10':
 				correct = 5.290627688108e+00
+			elif k == 'bhattacharya11':
+				correct = 4.275927523958e+00
+			elif k == 'comparat17':
+				correct = 5.002797628469e+00
 			else:
 				msg = 'Unknown model, %s.' % k
 				raise Exception(msg)

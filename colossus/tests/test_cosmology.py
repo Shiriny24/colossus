@@ -225,7 +225,7 @@ class TCInterp(CosmologyTestCase):
 	def setUp(self):
 		self.cosmo_name = 'planck15'
 		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': True, 
-															'persistence': 'rw'})
+															'persistence': ''})
 
 	###############################################################################################
 	# Function tests
@@ -257,7 +257,8 @@ class TCInterp(CosmologyTestCase):
 class TCNotFlat1(CosmologyTestCase):
 
 	def setUp(self):
-		c = {'flat': False, 'H0': 70.00, 'Om0': 0.2700, 'Ode0': 0.7, 'Ob0': 0.0469, 'sigma8': 0.8200, 'ns': 0.9500, 'relspecies': True}
+		c = {'flat': False, 'H0': 70.00, 'Om0': 0.2700, 'Ode0': 0.7, 'Ob0': 0.0469, 'sigma8': 0.8200, 
+				'ns': 0.9500, 'relspecies': True, 'persistence': ''}
 		cosmology.addCosmology('myCosmo', c)
 		self.assertTrue('myCosmo' in cosmology.cosmologies)
 		cosmology.setCosmology('myCosmo')
@@ -280,7 +281,8 @@ class TCNotFlat1(CosmologyTestCase):
 class TCNotFlat2(CosmologyTestCase):
 
 	def setUp(self):
-		c = {'flat': False, 'H0': 70.00, 'Om0': 0.2700, 'Ode0': 0.8, 'Ob0': 0.0469, 'sigma8': 0.8200, 'ns': 0.9500, 'relspecies': True}
+		c = {'flat': False, 'H0': 70.00, 'Om0': 0.2700, 'Ode0': 0.8, 'Ob0': 0.0469, 'sigma8': 0.8200, 
+			'ns': 0.9500, 'relspecies': True, 'persistence': ''}
 		cosmology.addCosmology('myCosmo', c)
 		self.assertTrue('myCosmo' in cosmology.cosmologies)
 		cosmology.setCosmology('myCosmo')
@@ -304,7 +306,7 @@ class TCDarkEnergy1(CosmologyTestCase):
 
 	def setUp(self):
 		c = {'flat': True, 'H0': 70.00, 'Om0': 0.2700, 'Ob0': 0.0469, 'sigma8': 0.8200, 
-			'ns': 0.9500, 'relspecies': True, 'de_model': 'w0wa', 'w0': -0.7, 'wa': 0.2}
+			'ns': 0.9500, 'relspecies': True, 'de_model': 'w0wa', 'w0': -0.7, 'wa': 0.2, 'persistence': ''}
 		cosmology.addCosmology('myCosmo', c)
 		self.assertTrue('myCosmo' in cosmology.cosmologies)
 		cosmology.setCosmology('myCosmo')
@@ -322,7 +324,7 @@ class TCDarkEnergy2(CosmologyTestCase):
 
 	def setUp(self):
 		c = {'flat': True, 'H0': 70.00, 'Om0': 0.2700, 'Ob0': 0.0469, 'sigma8': 0.8200, 
-			'ns': 0.9500, 'relspecies': True, 'de_model': 'w0', 'w0': -0.7}
+			'ns': 0.9500, 'relspecies': True, 'de_model': 'w0', 'w0': -0.7, 'persistence': ''}
 		cosmology.addCosmology('myCosmo', c)
 		self.assertTrue('myCosmo' in cosmology.cosmologies)
 		cosmology.setCosmology('myCosmo')
@@ -344,7 +346,8 @@ class TCDarkEnergy3(CosmologyTestCase):
 
 	def setUp(self):
 		c = {'flat': True, 'H0': 70.00, 'Om0': 0.2700, 'Ob0': 0.0469, 'sigma8': 0.8200, 
-			'ns': 0.9500, 'relspecies': True, 'de_model': 'user', 'wz_function': wz_func}
+			'ns': 0.9500, 'relspecies': True, 'de_model': 'user', 'wz_function': wz_func,
+			'persistence': ''}
 		cosmology.addCosmology('myCosmo', c)
 		self.assertTrue('myCosmo' in cosmology.cosmologies)
 		cosmology.setCosmology('myCosmo')
@@ -353,6 +356,29 @@ class TCDarkEnergy3(CosmologyTestCase):
 	def test_Ez(self):
 		self.assertAlmostEqual(self.cosmo.wz(0.5), -6.333333333333e-01)
 		self.assertAlmostEqual(self.cosmo.Ez(1.2), 2.143355324420e+00)
+
+###################################################################################################
+# TEST CASE 8: GROWTH FACTOR IN w0CDM
+###################################################################################################
+
+class TCDarkEnergyGrowthFactor(CosmologyTestCase):
+
+	def setUp(self):
+		pass
+	
+	def test_growthFactorFromODE(self):
+		z = np.array([1.0, 0.5, 2.0, -0.9, 3.0, 120.0, 0.0])
+		for k in range(2):
+			interpolation = (k == 1)
+			my_cosmo_1 = {'flat': True, 'H0': 100 * 0.693, 'Om0': 0.287, 'Ob0': 0.043, 'sigma8': 0.820, 'ns': 1, 
+						'persistence': '', 'interpolation': interpolation}
+			my_cosmo_2 = {'flat': True, 'H0': 100 * 0.693, 'Om0': 0.287, 'Ob0': 0.043, 'sigma8': 0.820, 'ns': 1, 
+						'persistence': '', 'interpolation': interpolation, "de_model": "w0", "w0": -1.0}
+			cosmo1 = cosmology.setCosmology('test_1', my_cosmo_1)
+			D1 = cosmo1.growthFactor(z)
+			cosmo2 = cosmology.setCosmology('test_2', my_cosmo_2)
+			D2 = cosmo2.growthFactor(z)
+			self.assertAlmostEqualArray(D1, D2, places = 4)
 
 ###################################################################################################
 # TRIGGER

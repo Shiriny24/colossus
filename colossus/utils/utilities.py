@@ -133,7 +133,7 @@ def isArray(var):
 	except TypeError:
 		is_array = False
 	else:
-		is_array = True
+		is_array = (not isinstance(var, dict))
 		
 	return is_array
 

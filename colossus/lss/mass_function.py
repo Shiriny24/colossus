@@ -63,6 +63,7 @@ angulo12       fof  	        No          `Angulo et al. 2012 <http://adsabs.harv
 watson13       fof, any SO      Yes (SO)    `Watson et al. 2013 <http://adsabs.harvard.edu/abs/2013MNRAS.433.1230W>`_
 bocquet16      200m,200c,500c   Yes         `Bocquet et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.456.2361B>`_
 despali16      Any SO           Yes         `Despali et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.456.2486D>`_
+comparat17     vir              No          `Comparat et al. 2017 <https://ui.adsabs.harvard.edu//#abs/2017MNRAS.469.4157C/abstract>`_
 ============== ================ =========== ======================================
 
 Note that the mass definition (set to ``fof`` by default) needs to match one of the allowed mass 
@@ -105,6 +106,7 @@ Module contents
 	modelWatson13
 	modelBocquet16
 	modelDespali16
+	modelComparat17
 	
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -220,6 +222,9 @@ models['despali16'] = HaloMassFunctionModel()
 models['despali16'].mdefs = ['*']
 models['despali16'].z_dependence = True
 models['despali16'].mdef_dependence = True
+
+models['comparat17'] = HaloMassFunctionModel()
+models['comparat17'].mdefs = ['vir']
 
 ###################################################################################################
 
@@ -1009,6 +1014,45 @@ def modelDespali16(sigma, z, mdef, deltac_args = {'corrections': True}, ellipsoi
 	return f
 
 ###################################################################################################
+
+def modelComparat17(sigma):
+	"""
+	The mass function model of Comparat et al 2017.
+	
+	This model was calibrated only at redshift 0, and for the virial SO mass definition. The 
+	cosmology used is the ``multidark-planck`` cosmology (which is very close to ``planck13``). 
+	Outside of this redshift and cosmology, the model relies on the universality of the mass
+	function. 
+	
+	The functional form is the same as in the Bhattacharya et al 2011 model, but without their 
+	redshift dependence. The parameters used here are updated compared to the published version of 
+	the paper.
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	sigma: array_like
+		Variance; can be a number or a numpy array.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	f: array_like
+		The halo mass function :math:`f(\\sigma)`, has the same dimensions as ``sigma``.
+	"""
+		
+	delta_c = peaks.collapseOverdensity()
+	nu = delta_c / sigma
+	nu2 = nu**2
+
+	A = 0.324
+	a = 0.897
+	p = 0.624
+	q = 1.589
+
+	f = A * np.sqrt(2 / np.pi) * np.exp(-a * nu2 * 0.5) * (1.0 + (a * nu2)**-p) * (nu * np.sqrt(a))**q
+
+	return f
+
+###################################################################################################
 # Pointers to model functions
 ###################################################################################################
 
@@ -1026,5 +1070,6 @@ models['angulo12'].func = modelAngulo12
 models['watson13'].func = modelWatson13
 models['bocquet16'].func = modelBocquet16
 models['despali16'].func = modelDespali16
+models['comparat17'].func = modelComparat17
 
 ###################################################################################################

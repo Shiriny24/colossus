@@ -284,7 +284,7 @@ cosmologies['WMAP1-ML']         = {'flat': True, 'H0': 68.00, 'Om0': 0.3136, 'Ob
 cosmologies['WMAP1']            = {'flat': True, 'H0': 72.00, 'Om0': 0.2700, 'Ob0': 0.0463, 'sigma8': 0.9000, 'ns': 0.9900}
 cosmologies['illustris']        = {'flat': True, 'H0': 70.40, 'Om0': 0.2726, 'Ob0': 0.0456, 'sigma8': 0.8090, 'ns': 0.9630, 'relspecies': False}
 cosmologies['bolshoi']          = {'flat': True, 'H0': 70.00, 'Om0': 0.2700, 'Ob0': 0.0469, 'sigma8': 0.8200, 'ns': 0.9500, 'relspecies': False}
-cosmologies['multidark-planck'] = {'flat': True, 'H0': 67.80, 'Om0': 0.3070, 'Ob0': 0.0480, 'sigma8': 0.8290, 'ns': 0.9600, 'relspecies': False}
+cosmologies['multidark-planck'] = {'flat': True, 'H0': 67.77, 'Om0': 0.3071, 'Ob0': 0.0482, 'sigma8': 0.8288, 'ns': 0.9600, 'relspecies': False}
 cosmologies['millennium']    	= {'flat': True, 'H0': 73.00, 'Om0': 0.2500, 'Ob0': 0.0450, 'sigma8': 0.9000, 'ns': 1.0000, 'relspecies': False}
 cosmologies['EdS']           	= {'flat': True, 'H0': 70.00, 'Om0': 1.0000, 'Ob0': 0.0000, 'sigma8': 0.8200, 'ns': 1.0000, 'relspecies': False}
 cosmologies['powerlaw']      	= {'flat': True, 'H0': 70.00, 'Om0': 1.0000, 'Ob0': 0.0000, 'sigma8': 0.8200, 'ns': 1.0000, 'relspecies': False}
@@ -1672,8 +1672,12 @@ class Cosmology(object):
 			# Regardless of what redshifts are requested, we need to start integrating at high z
 			# where we know the initial conditions.
 			a_eval = 1.0 / (1.0 + z_eval)
-			a_min = np.fmin(np.min(a_eval), 1E-3)
-			a_max = np.max(a_eval)
+			a_min = np.fmin(np.min(a_eval), 1E-3) * 0.99
+			a_max = np.max(a_eval) * 1.01
+			
+			# For the solve_ivp function to work, the evaluation time array needs to be sorted.
+			idxs = np.argsort(a_eval)
+			a_eval = a_eval[idxs]
 
 			# The stringent accuracy limit is necessary, there are noticeable errors in the solution 
 			# for lower atol. The solution should always converge to D ~ a at very low a.
@@ -1682,6 +1686,11 @@ class Cosmology(object):
 			G = dic['y'][0, :]
 			D = G * a_eval
 			
+			# Revert array to original order
+			idxs_reverse = np.zeros_like(idxs)
+			idxs_reverse[idxs] = np.arange(0, len(idxs), 1)
+			D = D[idxs_reverse]
+
 			return D
 
 		# -----------------------------------------------------------------------------------------
@@ -1711,7 +1720,8 @@ class Cosmology(object):
 		if self.de_model == 'lambda':
 			D[mask1] = 5.0 / 2.0 * self.Om0 * Ez_D(z1) * self._integral(integrand, z1, np.inf)
 		else:
-			D[mask1] = growthFactorFromODE(z1)
+			if np.count_nonzero(mask1) > 0:
+				D[mask1] = growthFactorFromODE(z1)
 
 		# Compute D analytically at high redshift.
 		if self.relspecies:	
