@@ -1672,8 +1672,12 @@ class Cosmology(object):
 			# Regardless of what redshifts are requested, we need to start integrating at high z
 			# where we know the initial conditions.
 			a_eval = 1.0 / (1.0 + z_eval)
-			a_min = np.fmin(np.min(a_eval), 1E-3)
-			a_max = np.max(a_eval)
+			a_min = np.fmin(np.min(a_eval), 1E-3) * 0.99
+			a_max = np.max(a_eval) * 1.01
+			
+			# For the solve_ivp function to work, the evaluation time array needs to be sorted.
+			idxs = np.argsort(a_eval)
+			a_eval = a_eval[idxs]
 
 			# The stringent accuracy limit is necessary, there are noticeable errors in the solution 
 			# for lower atol. The solution should always converge to D ~ a at very low a.
@@ -1682,6 +1686,11 @@ class Cosmology(object):
 			G = dic['y'][0, :]
 			D = G * a_eval
 			
+			# Revert array to original order
+			idxs_reverse = np.zeros_like(idxs)
+			idxs_reverse[idxs] = np.arange(0, len(idxs), 1)
+			D = D[idxs_reverse]
+
 			return D
 
 		# -----------------------------------------------------------------------------------------
@@ -1711,7 +1720,8 @@ class Cosmology(object):
 		if self.de_model == 'lambda':
 			D[mask1] = 5.0 / 2.0 * self.Om0 * Ez_D(z1) * self._integral(integrand, z1, np.inf)
 		else:
-			D[mask1] = growthFactorFromODE(z1)
+			if np.count_nonzero(mask1) > 0:
+				D[mask1] = growthFactorFromODE(z1)
 
 		# Compute D analytically at high redshift.
 		if self.relspecies:	
