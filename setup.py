@@ -5,7 +5,7 @@ with io.open('README.rst', encoding = 'utf-8') as f:
 	long_description = f.read()
 	
 setup(name = 'colossus',
-	version = '1.2.4',
+	version = '1.2.5',
 	description = 'Cosmology, halo, and large-scale structure tools',
 	long_description = long_description,
 	url = 'https://bitbucket.org/bdiemer/colossus',

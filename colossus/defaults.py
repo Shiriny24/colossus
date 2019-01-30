@@ -31,7 +31,7 @@ HALO_BIAS_MODEL = 'tinker10'
 HALO_MASS_FUNCTION_MODEL = 'watson13'
 """The default halo mass function model."""
 
-HALO_CONCENTRATION_MODEL = 'diemer15_orig'
+HALO_CONCENTRATION_MODEL = 'diemer19'
 """The default concentration model."""
 HALO_CONCENTRATION_STATISTIC = 'median'
 """The default statistic used (``mean`` or ``median``). This only applies to those models that 
