@@ -79,12 +79,12 @@ parameter to the :func:`concentration` function:
 	klypin16_nu    200c, vir        M > 1E10           0 < z < 5   planck13        `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
 	ludlow16       200c             Any                Any         Any             `Ludlow et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2016MNRAS.460.1214L/abstract>`_
 	child18        200c             M > 2.1E11         0 < z < 4   WMAP7           `Child et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2018ApJ...859...55C/abstract>`_
-	diemer18       200c             Any                Any         Any             `Diemer & Joyce 2018 <https://ui.adsabs.harvard.edu/?#abs/2018arXiv180907326D>`_
+	diemer19       200c             Any                Any         Any             `Diemer & Joyce 2019 <https://ui.adsabs.harvard.edu//#abs/2018arXiv180907326D/abstract>`_
 	============== ================ ================== =========== =============== ============================================================================
 
 The original version of the ``diemer15`` model suffered from a small numerical error, a corrected
 set of parameters is given in 
-`Diemer & Joyce 2018 <https://ui.adsabs.harvard.edu/?#abs/2018arXiv180907326D>`_. The differences 
+`Diemer & Joyce 2019 <https://ui.adsabs.harvard.edu//#abs/2018arXiv180907326D/abstract>`_. The differences 
 between the models are less than 5%, but the original model should be used only for the purpose 
 of backwards compatibility.
 
@@ -108,7 +108,7 @@ Module contents
 	modelKlypin16fromNu
 	modelLudlow16
 	modelChild18
-	modelDiemer18
+	modelDiemer19
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -215,10 +215,10 @@ models['ludlow16'].universal = False
 models['child18'] = ConcentrationModel()
 models['child18'].mdefs = ['200c']
 
-models['diemer18'] = ConcentrationModel()
-models['diemer18'].mdefs = ['200c']
-models['diemer18'].universal = False
-models['diemer18'].depends_on_statistic = True
+models['diemer19'] = ConcentrationModel()
+models['diemer19'].mdefs = ['200c']
+models['diemer19'].universal = False
+models['diemer19'].depends_on_statistic = True
 
 ###################################################################################################
 
@@ -1260,7 +1260,7 @@ def modelChild18(M200c, z, halo_sample = 'individual_all'):
 
 # The effective exponent of linear growth, the logarithmic derivative of the growth factor.
 
-def _diemer18_alpha_eff(z):
+def _diemer19_alpha_eff(z):
 
 	cosmo = cosmology.getCurrent()
 	D = cosmo.growthFactor(z, derivative = 0)
@@ -1271,9 +1271,9 @@ def _diemer18_alpha_eff(z):
 
 ###################################################################################################
 
-def modelDiemer18(M200c, z, statistic = 'median'):
+def modelDiemer19(M200c, z, statistic = 'median'):
 	"""
-	The model of Diemer & Joyce 2018.
+	The model of Diemer & Joyce 2019.
 	
 	This model improves on the Diemer & Kravtsov 2015 model in a number of ways. First, it is based
 	on a mathematical derivation of the evolution of concentration at the low-mass end. This more
@@ -1356,11 +1356,11 @@ def modelDiemer18(M200c, z, statistic = 'median'):
 		# created.
 		storageUser = _getStorageUser()
 		object_data = (G, n, gc_table)
-		storageUser.storeObject('diemer18_Gc', object_data = object_data, persistent = True)
+		storageUser.storeObject('diemer19_Gc', object_data = object_data, persistent = True)
 		object_data = np.array([n, mins])
-		storageUser.storeObject('diemer18_Gmin', object_data = object_data, persistent = True)
+		storageUser.storeObject('diemer19_Gmin', object_data = object_data, persistent = True)
 		object_data = np.array([n, maxs])
-		storageUser.storeObject('diemer18_Gmax', object_data = object_data, persistent = True)
+		storageUser.storeObject('diemer19_Gmax', object_data = object_data, persistent = True)
 
 		return
 
@@ -1371,22 +1371,22 @@ def modelDiemer18(M200c, z, statistic = 'median'):
 		
 		storageUser = _getStorageUser()
 		
-		interp_Gc = storageUser.getStoredObject('diemer18_Gc', interpolator = True, 
+		interp_Gc = storageUser.getStoredObject('diemer19_Gc', interpolator = True, 
 											store_interpolator = True)
 		if interp_Gc is None:
 			computeGcTable()
-			interp_Gc = storageUser.getStoredObject('diemer18_Gc', interpolator = True, 
+			interp_Gc = storageUser.getStoredObject('diemer19_Gc', interpolator = True, 
 											store_interpolator = True)
 		
-		interp_Gmin = storageUser.getStoredObject('diemer18_Gmin', interpolator = True, 
+		interp_Gmin = storageUser.getStoredObject('diemer19_Gmin', interpolator = True, 
 											store_interpolator = True)
-		interp_Gmax = storageUser.getStoredObject('diemer18_Gmax', interpolator = True, 
+		interp_Gmax = storageUser.getStoredObject('diemer19_Gmax', interpolator = True, 
 											store_interpolator = True)
 
 		# These interpolators are created at the same time as the Gc interpolator. If they do not
 		# exist, something went wrong.
 		if interp_Gmin is None or interp_Gmax is None:
-			raise Exception('Loading table for diemer18 concentration model failed.')
+			raise Exception('Loading table for diemer19 concentration model failed.')
 		
 		return interp_Gc, interp_Gmin, interp_Gmax
 
@@ -1407,12 +1407,12 @@ def modelDiemer18(M200c, z, statistic = 'median'):
 		b_1               = 1.82
 		c_alpha           = 0.20
 	else:
-		raise Exception('Statistic %s not implmented in diemer18 model.' % statistic)
+		raise Exception('Statistic %s not implmented in diemer19 model.' % statistic)
 
 	# Compute peak height, n_eff, and alpha_eff
 	nu = peaks.peakHeight(M200c, z)
 	n_eff = peaks.powerSpectrumSlope(nu, z, slope_type = 'sigma', scale = kappa)
-	alpha_eff = _diemer18_alpha_eff(z)
+	alpha_eff = _diemer19_alpha_eff(z)
 
 	is_array = utilities.isArray(nu)
 	if not is_array:
@@ -1458,6 +1458,6 @@ models['klypin16_m'].func = modelKlypin16fromM
 models['klypin16_nu'].func = modelKlypin16fromNu
 models['ludlow16'].func = modelLudlow16
 models['child18'].func = modelChild18
-models['diemer18'].func = modelDiemer18
+models['diemer19'].func = modelDiemer19
 
 ###################################################################################################
