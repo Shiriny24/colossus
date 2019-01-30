@@ -43,7 +43,7 @@ Author:        Benedikt Diemer (benedikt.diemer@cfa.harvard.edu)
 
 Contributors:  Matt Becker, Andrey Kravtsov, Steven Murray
 
-License:       MIT. Copyright (c) 2014-2018
+License:       MIT. Copyright (c) 2014-2019
 
 If you use Colossus for a publication, please cite the code paper 
 ([Diemer 2017](https://arxiv.org/abs/1712.04512)). Many Colossus routines implement the 

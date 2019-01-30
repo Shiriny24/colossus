@@ -7,6 +7,16 @@ version 1.1.0.
 
 .. rubric:: Version 1.2.5
 
+* Renamed the ``diemer18`` concentration model to ``diemer19`` to match the publication date. 
+* Changed the default concentration model from ``diemer15_orig`` to ``diemer19``. 
+
+  .. note::
+    This changes the output of all functions that use the default concentration model, namely
+    :func:`~halo.concentration.concentration`, :func:`~halo.mass_adv.changeMassDefinitionCModel`, 
+    and :func:`~halo.splashback.splashbackRadius`. If the user has specified a concentration model
+    (which is possible in all these functions), the output will not change.
+
+* Fixed bug in wCDM growth factor calculation. 
 * Added the mass function model of Comparat et al 2017 to the :doc:`lss_mass_function` module.
 * Added the bias models of Bhattacharya et al 2011 and Comparat et al 2017 to the :doc:`lss_bias`
   module. Thanks to Johan Comparat for the suggestion!
