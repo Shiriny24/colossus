@@ -5,6 +5,11 @@ What's new?
 See below for a listing of the most important code and interface changes in Colossus, starting with
 version 1.1.0.
 
+.. rubric:: Version 1.2.6
+
+* Fixed bug in the Bocquet et al. 2016 mass function for the M200c and M500c mass definitions
+  (thanks to Michelle Ntampaka for catching this!).
+
 .. rubric:: Version 1.2.5
 
 * Renamed the ``diemer18`` concentration model to ``diemer19`` to match the publication date. 

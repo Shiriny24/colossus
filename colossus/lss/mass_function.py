@@ -876,7 +876,9 @@ def modelBocquet16(sigma, z, mdef, hydro = True):
 	
 	The parameters were separately fit for dark matter-only and hydrodynamical simulations. The
 	fits cover three mass definitions (200m, 200c, and 500c); requesting a different definition
-	raises an exception.
+	raises an exception. Note that, beyond different best-fit parameters, the 200c and 500c 
+	mass functions rely on a conversion that depends explicitly on redshift, cosmology, and 
+	halo mass (rather than peak height).
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -962,6 +964,35 @@ def modelBocquet16(sigma, z, mdef, hydro = True):
 	c = c0 * zp1**cz
 	
 	f = A * ((sigma / b)**-a + 1.0) * np.exp(-c / sigma**2)
+
+	if mdef in ['200c', '500c']:
+		cosmo = cosmology.getCurrent()
+		Omega_m = cosmo.Om(z)
+		delta_c = peaks.collapseOverdensity()
+		nu = delta_c / sigma
+		MDelta = peaks.massFromPeakHeight(nu, z)
+		ln_MDelta_Msun = np.log(MDelta / cosmo.h)
+		
+	if mdef == '200c':
+		gamma0 = 3.54E-2 + Omega_m**0.09
+		gamma1 = 4.56E-2 + 2.68E-2 / Omega_m
+		gamma2 = 0.721 + 3.50E-2 / Omega_m
+		gamma3 = 0.628 + 0.164 / Omega_m
+		delta0 = -1.67E-2 + 2.18E-2 * Omega_m
+		delta1 = 6.52E-3 - 6.86E-3 * Omega_m
+		gamma = gamma0 + gamma1 * np.exp(-((gamma2 - z) / gamma3)**2)
+		delta = delta0 + delta1 * z
+		M200c_M200m = gamma + delta * ln_MDelta_Msun
+		f *= M200c_M200m
+
+	elif mdef == '500c':
+		alpha0 = 0.880 + 0.329 * Omega_m
+		alpha1 = 1.00 + 4.31E-2 / Omega_m
+		alpha2 = -0.365 + 0.254 / Omega_m
+		alpha = alpha0 * (alpha1 * z + alpha2) / (z + alpha2)
+		beta = -1.7E-2 + 3.74E-3 * Omega_m
+		M500c_M200m = alpha + beta * ln_MDelta_Msun
+		f *= M500c_M200m
 	
 	return f
 
