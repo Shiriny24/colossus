@@ -8,7 +8,7 @@ version 1.1.0.
 .. rubric:: Version 1.2.7
 
 * Removed reference to packaging package by adding manual version comparison function.
-* Added unit tests for versioning.
+* Added unit tests for versioning and storage.
 * Added unit tests for derived constants.
 
 .. rubric:: Version 1.2.6

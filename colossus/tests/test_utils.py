@@ -30,6 +30,11 @@ class TCVersions(test_colossus.ColosssusTestCase):
 		self.assertEqual(utilities.versionIsOlder('1.0.0', '2.0.0') , False)
 		self.assertEqual(utilities.versionIsOlder('1.0.0', '1.1.0') , False)
 		self.assertEqual(utilities.versionIsOlder('1.0.0', '1.0.1') , False)
+		
+	def test_get_version(self):
+		v = utilities.getVersion()
+		is_older = utilities.versionIsOlder('1.0.0', v)
+		self.assertEqual(is_older, False)
 
 ###################################################################################################
 # TEST CASE: CONSTANTS
