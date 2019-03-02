@@ -23,9 +23,10 @@ from colossus.tests import test_halo_splashback
 suites = []
 
 # Utils
-suites.append(unittest.TestLoader().loadTestsFromTestCase(test_utils.TCGen))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_utils.TCVersions))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_utils.TCConstants))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_utils.TCStorageNonPersistent))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_utils.TCStoragePersistent))
 
 # Cosmology
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCComp))

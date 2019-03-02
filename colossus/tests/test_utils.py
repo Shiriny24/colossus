@@ -14,17 +14,9 @@ from colossus.utils import utilities
 from colossus.utils import constants
 
 ###################################################################################################
-# TEST CASES
+# TEST CASE: VERSIONS
 ###################################################################################################
 
-class TCGen(test_colossus.ColosssusTestCase):
-
-	def setUp(self):
-		pass
-	
-	def test_home_dir(self):
-		self.assertNotEqual(storage.getCacheDir(), None)
-		
 class TCVersions(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
@@ -38,6 +30,10 @@ class TCVersions(test_colossus.ColosssusTestCase):
 		self.assertEqual(utilities.versionIsOlder('1.0.0', '2.0.0') , False)
 		self.assertEqual(utilities.versionIsOlder('1.0.0', '1.1.0') , False)
 		self.assertEqual(utilities.versionIsOlder('1.0.0', '1.0.1') , False)
+
+###################################################################################################
+# TEST CASE: CONSTANTS
+###################################################################################################
 
 class TCConstants(test_colossus.ColosssusTestCase):
 
@@ -69,6 +65,65 @@ class TCConstants(test_colossus.ColosssusTestCase):
 		deltac_const = constants.DELTA_COLLAPSE
 		self.assertAlmostEqual(deltac_const, deltac_deriv, places = 5)
 
+###################################################################################################
+# TEST CASE: STORAGE
+###################################################################################################
+
+class TestStorageClass():
+	
+	def __init__(self, some_parameter = 1.5, persistent = False):
+		self.some_parameter = some_parameter
+		self.some_data = [2.6, 9.5]
+		self.su = storage.StorageUser('unit_test', 'rw', self.getName, self.getHashableString, self.reportChanges)
+		self.su.storeObject('test_data', self.some_data, persistent = persistent)
+		return
+
+	def getName(self):
+		return 'unit_test'
+
+	def getHashableString(self):
+		param_string = 'unit_test_%.4f' % (self.some_parameter)
+		return param_string
+		
+	def reportChanges(self):
+		return
+	
+	def loadData(self):
+		data = self.su.getStoredObject('test_data')
+		return data
+
+class TCStorageNonPersistent(test_colossus.ColosssusTestCase):
+	
+	def setUp(self):
+		self.dc = TestStorageClass(persistent = False)
+	
+	def test_storage_dir(self):
+		self.assertNotEqual(storage.getCacheDir(), None)
+
+	def test_storage(self):
+		d = self.dc.loadData()
+		self.assertAlmostEqual(d[0], 2.6)
+		self.assertAlmostEqual(d[1], 9.5)
+		self.dc.some_parameter = 1.2
+		d = self.dc.loadData()
+		self.assertEqual(d, None)
+		
+class TCStoragePersistent(test_colossus.ColosssusTestCase):
+	
+	def setUp(self):
+		self.dc = TestStorageClass(persistent = True)
+	
+	def test_storage_dir(self):
+		self.assertNotEqual(storage.getCacheDir(), None)
+
+	def test_storage(self):
+		d = self.dc.loadData()
+		self.assertAlmostEqual(d[0], 2.6)
+		self.assertAlmostEqual(d[1], 9.5)
+		self.dc.some_parameter = 1.2
+		d = self.dc.loadData()
+		self.assertEqual(d, None)
+		
 ###################################################################################################
 # TRIGGER
 ###################################################################################################
