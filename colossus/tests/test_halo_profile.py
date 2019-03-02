@@ -43,7 +43,7 @@ TEST_N_DIGITS_LOW = 4
 class TCBase(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
-		cosmology.setCosmology('WMAP9')
+		cosmology.setCosmology('WMAP9', {'persistence': ''})
 		self.MAX_DIFF_RHO = 1E-8
 		self.MAX_DIFF_M = 1E-8
 		self.MAX_DIFF_DER = 1E-2
@@ -267,7 +267,7 @@ class TCBase(test_colossus.ColosssusTestCase):
 class TCInner(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
-		cosmology.setCosmology('WMAP9')
+		cosmology.setCosmology('WMAP9', {'persistence': ''})
 		
 		M = 4E14
 		c = 5.7
@@ -329,7 +329,7 @@ class TCInner(test_colossus.ColosssusTestCase):
 class TCOuter(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
-		cosmology.setCosmology('WMAP9')
+		cosmology.setCosmology('WMAP9', {'persistence': ''})
 
 		z = 0.2
 		M = 4E12
@@ -350,8 +350,8 @@ class TCOuter(test_colossus.ColosssusTestCase):
 		
 		r = 980.2
 
-		correct_rho = [432.67954041340778, 1.422398517682e+03, 337.46916847447704]
-		correct_der = [-0.87875850766375896, -1.879945213371e+00, -0.9389736340514605]
+		correct_rho = [4.326743100631e+02, 1.422357724157e+03, 3.374673592803e+02]
+		correct_der = [-8.787573448793e-01, -1.879908075296e+00, -9.389703075811e-01]
 
 		for i in range(len(self.p)):
 			
@@ -368,7 +368,7 @@ class TCOuter(test_colossus.ColosssusTestCase):
 class TCFitting(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
-		cosmology.setCosmology('WMAP9')
+		cosmology.setCosmology('WMAP9', {'persistence': ''})
 		M = 1E12
 		c = 6.0
 		mdef = 'vir'
@@ -404,7 +404,7 @@ class TCFitting(test_colossus.ColosssusTestCase):
 class TCNFW(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
-		cosmology.setCosmology('WMAP9')
+		cosmology.setCosmology('WMAP9', {'persistence': ''})
 				
 	def test_pdf(self):
 		
@@ -435,7 +435,7 @@ class TCNFW(test_colossus.ColosssusTestCase):
 class TCDK14(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
-		cosmology.setCosmology('planck15')
+		cosmology.setCosmology('planck15', {'persistence': ''})
 		self.M = 1E14
 		self.c = 7.0
 		self.z = 1.0

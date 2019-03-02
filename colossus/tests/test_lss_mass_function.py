@@ -20,7 +20,7 @@ from colossus.lss import peaks
 class TCMassFunction(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
-		cosmology.setCosmology('planck15')
+		cosmology.setCosmology('planck15', {'persistence': ''})
 		pass
 		
 	def test_hmfInput(self):
@@ -31,7 +31,7 @@ class TCMassFunction(test_colossus.ColosssusTestCase):
 		delta_c = peaks.collapseOverdensity()
 		sigma = delta_c / nu
 		
-		correct = 4.431994181910e-01
+		correct = 4.431977473927e-01
 		
 		mf = mass_function.massFunction(M, z, q_in = 'M', mdef = 'fof', model = 'press74')
 		self.assertAlmostEqual(mf, correct, msg = 'Quantity M.')			
@@ -47,15 +47,15 @@ class TCMassFunction(test_colossus.ColosssusTestCase):
 		M = 1E13
 		z = 0.2
 		
-		correct = 4.496414343625e-01
+		correct = 4.496396025508e-01
 		mf = mass_function.massFunction(M, z, q_in = 'M', mdef = 'fof', model = 'press74', q_out = 'f')
 		self.assertAlmostEqual(mf, correct, msg = 'Quantity f.')			
 
-		correct = 6.780705345630e-04
+		correct = 6.780453997694e-04
 		mf = mass_function.massFunction(M, z, q_in = 'M', mdef = 'fof', model = 'press74', q_out = 'dndlnM')
 		self.assertAlmostEqual(mf, correct, msg = 'Quantity dndlnM.')			
 
-		correct = 7.910751930078e-02
+		correct = 7.910742947003e-02
 		mf = mass_function.massFunction(M, z, q_in = 'M', mdef = 'fof', model = 'press74', q_out = 'M2dndM')
 		self.assertAlmostEqual(mf, correct, msg = 'Quantity M2dndM.')			
 				
@@ -68,27 +68,27 @@ class TCMassFunction(test_colossus.ColosssusTestCase):
 				continue
 			
 			if k == 'press74':
-				correct = [2.236848309312e-01, 1.791604300031e-02]
+				correct = [2.236854253750e-01, 1.791450365948e-02]
 			elif k == 'sheth99':
-				correct = [2.037025979090e-01, 3.217299134400e-02]
+				correct = [2.037029058919e-01, 3.217106126232e-02]
 			elif k == 'jenkins01':
-				correct = [6.026570865773e-02, 3.438245438370e-02]
+				correct = [6.026667291380e-02, 3.438018384696e-02]
 			elif k == 'reed03':
-				correct = [2.037025979090e-01, 2.875270538256e-02]
+				correct = [2.037029058919e-01, 2.875081667688e-02]
 			elif k == 'warren06':
-				correct = [2.176072717238e-01, 3.380303422386e-02]
+				correct = [2.176074174337e-01, 3.380079804646e-02]
 			elif k == 'reed07':
-				correct = [1.912790683881e-01, 3.723943155151e-02]
+				correct = [1.912793816150e-01, 3.723712580773e-02]
 			elif k == 'crocce10':
-				correct = [2.196768758003e-01, 4.195009468463e-02]
+				correct = [2.196770391218e-01, 4.194766615518e-02]
 			elif k == 'bhattacharya11':
-				correct = [2.241129561811e-01, 4.065577992624e-02]
+				correct = [2.241131373076e-01, 4.065332158031e-02]
 			elif k == 'courtin11':
-				correct = [1.519178456652e-01, 4.489022975923e-02]
+				correct = [1.519182109604e-01, 4.488768972968e-02]
 			elif k == 'angulo12':
-				correct = [2.283410678096e-01, 3.769899907588e-02]
+				correct = [2.283411904950e-01, 3.769659265894e-02]
 			elif k == 'watson13':
-				correct = [2.847701359546e-01, 3.803906522670e-02]
+				correct = [2.847701564867e-01, 3.803667902439e-02]
 			else:
 				msg = 'Unknown model, %s.' % k
 				raise Exception(msg)
@@ -108,13 +108,13 @@ class TCMassFunction(test_colossus.ColosssusTestCase):
 				continue
 			
 			if k == 'tinker08':
-				correct = [2.510110624301e-01, 4.611808159773e-05]
+				correct = [2.510113220688e-01, 4.610872463607e-05]
 			elif k == 'watson13':
-				correct = [1.621415008597e-01, 4.427873341813e-05]
+				correct = [1.621416397547e-01, 4.426907168247e-05]
 			elif k == 'bocquet16':
-				correct = [2.836178412101e-01, 3.832756307994e-05]
+				correct = [2.836178696344e-01, 3.831952877856e-05]
 			elif k == 'despali16':
-				correct = [2.566878298120e-01, 6.642693089794e-05]
+				correct = [2.566882204044e-01, 6.641439189756e-05]
 			else:
 				msg = 'Unknown model, %s.' % k
 				raise Exception(msg)
@@ -134,13 +134,13 @@ class TCMassFunction(test_colossus.ColosssusTestCase):
 				continue
 			
 			if k == 'tinker08':
-				correct = [2.509254068511e-01, 4.540789859771e-05]
+				correct = [2.509256654054e-01, 4.539867288497e-05]
 			elif k == 'watson13':
-				correct = [1.613528810685e-01, 4.366870740478e-05]
+				correct = [1.613530192304e-01, 4.365917063394e-05]
 			elif k == 'despali16':
-				correct = [2.566102311495e-01, 6.539189884732e-05]
+				correct = [2.566106202740e-01, 6.537953819021e-05]
 			elif k == 'comparat17':
-				correct = [2.449553401913e-01, 2.342956829892e-05]
+				correct = [2.449556775109e-01, 2.342447382920e-05]
 			else:
 				msg = 'Unknown model, %s.' % k
 				raise Exception(msg)

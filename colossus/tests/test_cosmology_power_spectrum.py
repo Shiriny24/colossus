@@ -25,7 +25,7 @@ TEST_K = np.array([1.2E-3, 1.1E3])
 class TCTransferFunction(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
-		cosmology.setCosmology('planck15')
+		cosmology.setCosmology('planck15', {'persistence': ''})
 		pass
 	
 	def test_transferFunctionEisenstein98(self):

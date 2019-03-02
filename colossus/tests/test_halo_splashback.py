@@ -19,7 +19,7 @@ from colossus.halo import splashback
 class TCSplashbackModel(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
-		cosmology.setCosmology('planck15')
+		cosmology.setCosmology('planck15', {'persistence': ''})
 		pass
 
 	def test_modelGamma(self):
@@ -66,7 +66,7 @@ class TCSplashbackModel(test_colossus.ColosssusTestCase):
 class TCSplashbackRadius(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
-		cosmology.setCosmology('planck15')
+		cosmology.setCosmology('planck15', {'persistence': ''})
 	
 	def test_rspR200m(self):
 		R = np.array([900.0, 1100.0])
@@ -74,7 +74,7 @@ class TCSplashbackRadius(test_colossus.ColosssusTestCase):
 		mdef = '200m'
 		Rsp, Msp, mask = splashback.splashbackRadius(z, mdef, R = R, model = 'more15')
 		correct_rsp = [1.072344532566e+03, 1.270993853254e+03]
-		correct_msp = [7.894813512008e+13, 1.414946580407e+14]
+		correct_msp = [7.894529830841e+13, 1.414895737699e+14]
 		for i in range(len(R)):
 			self.assertEqual(mask[i], True)
 			self.assertAlmostEqual(Rsp[i], correct_rsp[i])
@@ -87,7 +87,7 @@ class TCSplashbackRadius(test_colossus.ColosssusTestCase):
 		Rsp, Msp, mask = splashback.splashbackRadius(z, mdef, R = R, 
 									model = 'more15', c_model = 'diemer15')
 		correct_rsp = [1.238620949024e+03, 1.464941206737e+03]
-		correct_msp = [1.294177315832e+14, 2.322203118359e+14]
+		correct_msp = [1.294130812678e+14, 2.322119675566e+14]
 		for i in range(len(R)):
 			self.assertEqual(mask[i], True)
 			self.assertAlmostEqual(Rsp[i], correct_rsp[i])

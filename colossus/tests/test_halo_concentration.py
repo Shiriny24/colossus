@@ -26,7 +26,7 @@ class TCConcentration(test_colossus.ColosssusTestCase):
 
 	def test_model_returns(self):
 
-		cosmology.setCosmology('bolshoi')
+		cosmology.setCosmology('bolshoi', {'persistence': ''})
 		M_one = 1E12
 		M_one_array = np.array([1E12])
 		M_many = np.array([1E10, 1E12, 1E15])
@@ -68,7 +68,7 @@ class TCConcentration(test_colossus.ColosssusTestCase):
 	###############################################################################################
 
 	def test_model_values(self):
-		cosmology.setCosmology('bolshoi')
+		cosmology.setCosmology('bolshoi', {'persistence': ''})
 		M = 1E12
 		z = 0.5
 		mdef = '257m'
@@ -78,31 +78,31 @@ class TCConcentration(test_colossus.ColosssusTestCase):
 			c = concentration.concentration(M, mdef, z = z, model = k, range_return = False, 
 										range_warning = False)
 			if k == 'bullock01':
-				self.assertAlmostEqual(c, 6.835409057048e+00, msg = msg)
+				self.assertAlmostEqual(c, 6.835385932202e+00, msg = msg)
 			elif k == 'duffy08':
 				self.assertAlmostEqual(c, 5.844133619011e+00, msg = msg)
 			elif k == 'klypin11':
 				self.assertAlmostEqual(c, 9.328978854869e+00, msg = msg)
 			elif k == 'prada12':
-				self.assertAlmostEqual(c, 7.553695166528e+00, msg = msg)
+				self.assertAlmostEqual(c, 7.553675753116e+00, msg = msg)
 			elif k == 'bhattacharya13':
-				self.assertAlmostEqual(c, 5.862307012282e+00, msg = msg)
+				self.assertAlmostEqual(c, 5.862296836593e+00, msg = msg)
 			elif k == 'dutton14':
 				self.assertAlmostEqual(c, 7.590718273862e+00, msg = msg)
 			elif k == 'diemer15':
-				self.assertAlmostEqual(c, 6.818418096548e+00, msg = msg)
+				self.assertAlmostEqual(c, 6.818392744601e+00, msg = msg)
 			elif k == 'diemer15_orig':
-				self.assertAlmostEqual(c, 6.650272351897e+00, msg = msg)
+				self.assertAlmostEqual(c, 6.650247771481e+00, msg = msg)
 			elif k == 'klypin16_nu':
-				self.assertAlmostEqual(c, 6.458807208648e+00, msg = msg)
+				self.assertAlmostEqual(c, 6.458787326526e+00, msg = msg)
 			elif k == 'klypin16_m':
 				self.assertAlmostEqual(c, 6.210791674864e+00, msg = msg)
 			elif k == 'ludlow16':
-				self.assertAlmostEqual(c, 7.622996172955e+00, msg = msg)
+				self.assertAlmostEqual(c, 7.622973572184e+00, msg = msg)
 			elif k == 'child18':
-				self.assertAlmostEqual(c, 6.695234425706e+00, msg = msg)
+				self.assertAlmostEqual(c, 6.695209937063e+00, msg = msg)
 			elif k == 'diemer19':
-				self.assertAlmostEqual(c, 6.799716573337e+00, msg = msg)
+				self.assertAlmostEqual(c, 6.799691833677e+00, msg = msg)
 			else:
 				msg = 'Unknown model, %s.' % k
 				raise Exception(msg)
@@ -122,7 +122,7 @@ class TCConcentration(test_colossus.ColosssusTestCase):
 		
 		M = 1E1
 		z = 30.0
-		cosmo = cosmology.setCosmology('bolshoi')
+		cosmo = cosmology.setCosmology('bolshoi', {'persistence': ''})
 		k_R = concentration._diemer15_k_R(M)
 		cosmo.interpolation = True
 		n1 = concentration._diemer15_n(k_R)

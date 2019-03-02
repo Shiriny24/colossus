@@ -10,6 +10,13 @@ Global settings used across Colossus.
 """
 
 ###################################################################################################
+# CODE VERSION
+###################################################################################################
+
+__version__ = '1.2.6'
+"""The colossus code version."""
+
+###################################################################################################
 # PATH TO COLOSSUS FILES
 ###################################################################################################
 
@@ -28,3 +35,8 @@ The parameter can take on any combination of read (``'r'``) and write (``'w'``),
 (read and write, the default), ``'r'`` (read only), ``'w'`` (write only), or ``''`` (no 
 persistence). Note that this parameter is used as a default, but can still be changed for 
 individual Colossus modules or objects, such as cosmology objects."""
+
+PERSISTENCE_OLDEST_VERSION = '1.2.6'
+"""If the colossus version that wrote a persistent quantitity was older than this version, the 
+quantity is re-computed and the old file is removed. The version is increased whenever a numerical
+change affects persistent quantities to ensure that no outdated data is kept."""
