@@ -1,13 +1,11 @@
 from setuptools import setup
 import io
 
-from colossus.utils import settings
-
 with io.open('README.rst', encoding = 'utf-8') as f:
 	long_description = f.read()
 	
 setup(name = 'colossus',
-	version = settings.__version__,
+	version = '1.2.6',
 	description = 'Cosmology, halo, and large-scale structure tools',
 	long_description = long_description,
 	url = 'https://bitbucket.org/bdiemer/colossus',
