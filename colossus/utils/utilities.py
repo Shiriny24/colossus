@@ -31,6 +31,8 @@ import six
 
 ###################################################################################################
 
+__version__ = '1.2.7'
+
 # Store the version so that we do not need to load it from the setup file over and over again.
 global version
 version = None
@@ -202,27 +204,29 @@ def getVersion():
 	
 	if version is None:
 
-		# Get path and strip /colossus from the end
-		path = getCodeDir()[:-9] + '/setup.py'
-		
-		# There must be a __version__ line in the setup.py file
-		f = open(path, 'r')
-		version_str = None
-		i = 0
-		while i < 20:
-			l = f.readline()
-			if l.startswith('__version__'):
-				w = l.split()
-				version_str = w[2]
-				version_str = version_str[1:-1]
-				break
-			i += 1
-		f.close()
-		
-		if version_str is None:
-			raise Exception('Could not find version in setup file.')
-		
-		version = version_str
+# 		# Get path and strip /colossus from the end
+# 		path = getCodeDir()[:-9] + '/setup.py'
+# 		
+# 		# There must be a __version__ line in the setup.py file
+# 		f = open(path, 'r')
+# 		version_str = None
+# 		i = 0
+# 		while i < 20:
+# 			l = f.readline()
+# 			if l.startswith('__version__'):
+# 				w = l.split()
+# 				version_str = w[2]
+# 				version_str = version_str[1:-1]
+# 				break
+# 			i += 1
+# 		f.close()
+# 		
+# 		if version_str is None:
+# 			raise Exception('Could not find version in setup file.')
+# 		
+# 		version = version_str
+
+		version = __version__
 			
 	return version
 	
