@@ -32,6 +32,7 @@ Contents
     installation
     versions
     tutorials
+    faq
     modules
     utils
     global
