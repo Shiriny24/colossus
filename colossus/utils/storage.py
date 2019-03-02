@@ -238,7 +238,7 @@ class StorageUser():
 							warnings.warn('Could not delete outdated persistence file %s. Please delete manually.' \
 										% (filename_pickle))
 						self.storage_pers = {}
-						self.storage_pers['colossus_version'] = settings.__version__
+						self.storage_pers['colossus_version'] = utilities.getVersion()
 					
 				except Exception:
 					warnings.warn('Encountered file error while reading cache file. This usually \
@@ -249,7 +249,7 @@ class StorageUser():
 						pass
 			
 			else:
-				self.storage_pers['colossus_version'] = settings.__version__
+				self.storage_pers['colossus_version'] = utilities.getVersion()
 		
 		return
 	
