@@ -93,7 +93,6 @@ import pickle
 import warnings
 import numpy as np
 import scipy.interpolate
-from packaging import version as version_tools
 
 from colossus import settings
 from colossus.utils import utilities
@@ -231,7 +230,7 @@ class StorageUser():
 					input_file.close()
 					
 					# If the file version is below the allowed version limit, throw away this file.
-					if version_tools.parse(persistence_version) < version_tools.parse(settings.PERSISTENCE_OLDEST_VERSION):
+					if utilities.versionIsOlder(settings.PERSISTENCE_OLDEST_VERSION, persistence_version):
 						try:
 							os.remove(filename_pickle)
 							print('Deleted outdated persistence file, no further action needed.')

@@ -42,6 +42,73 @@ def printLine():
 
 ###################################################################################################
 
+def parseVersionString(version_str):
+	"""
+	Parse a version string into numbers.
+	
+	There are more official functions to parse version numbers that use regular expressions and 
+	can handle more formats according to PEP 440. Since Colossus versions are always composed of 
+	three numbers and no letters, we implement a comparison manually to avoid needing to include 
+	non-standard libraries.
+
+	Parameters
+	---------------------------
+	version_str: str
+		The version string to be converted.
+	
+	Returns
+	-------
+	nums: array_like
+		A list of the three version numbers.
+	"""
+	
+	w = version_str.split('.')
+	if len(w) != 3:
+		raise Exception('Version string invalid (%s), expected three numbers separated by dots.' \
+					% version_str)
+
+	nums = []
+	for i in range(3):
+		try:
+			n = int(w[i])
+		except Exception:
+			raise Exception('Could not parse version element %s, expected a number.' % w[i])
+		nums.append(n)
+		
+	return nums
+
+###################################################################################################
+
+def versionIsOlder(v1, v2):
+	"""
+	Compare two version strings.
+
+	Parameters
+	---------------------------
+	v1: str
+		A version string.
+	v2: str
+		A second version string.
+	
+	Returns
+	-------
+	is_older: bool
+		``True`` if v2 is older than v1, ``False`` otherwise.
+	"""
+
+	n1 = parseVersionString(v1)
+	n2 = parseVersionString(v2)
+
+	is_older = False
+	for i in range(3):
+		if n2[i] < n1[i]:
+			is_older = True
+			break
+	
+	return is_older
+
+###################################################################################################
+
 def getHomeDir():
 	""" 
 	Finds the home directory on this system.

@@ -24,6 +24,8 @@ suites = []
 
 # Utils
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_utils.TCGen))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_utils.TCVersions))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_utils.TCConstants))
 
 # Cosmology
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCComp))
