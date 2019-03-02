@@ -19,7 +19,7 @@ from colossus.halo import splashback
 class TCSplashbackModel(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
-		cosmology.setCosmology('planck15')
+		cosmology.setCosmology('planck15', {'persistence': ''})
 		pass
 
 	def test_modelGamma(self):
@@ -66,7 +66,7 @@ class TCSplashbackModel(test_colossus.ColosssusTestCase):
 class TCSplashbackRadius(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
-		cosmology.setCosmology('planck15')
+		cosmology.setCosmology('planck15', {'persistence': ''})
 	
 	def test_rspR200m(self):
 		R = np.array([900.0, 1100.0])

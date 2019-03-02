@@ -94,6 +94,9 @@ import warnings
 import numpy as np
 import scipy.interpolate
 
+from packaging import version as version_tools
+#import pkg_resources  # part of setuptools
+
 from colossus import settings
 from colossus.utils import utilities
 
@@ -221,7 +224,24 @@ class StorageUser():
 				try:
 					input_file = open(filename_pickle, "rb")
 					self.storage_pers = pickle.load(input_file)
+					
+					# Check if a version was stored with this file. If not, assume it is old.
+					if 'colossus_version' in self.storage_pers:
+						persistence_version = self.storage_pers['colossus_version']
+					else:
+						persistence_version = '1.0.0'
 					input_file.close()
+					
+					# If the file version is below the allowed version limit, throw away this file.
+					if version_tools.parse(persistence_version) < version_tools.parse(settings.PERSISTENCE_OLDEST_VERSION):
+						warnings.warn('Found outdated persistence file, deleting it and replacing it with current version.')
+						try:
+							os.remove(filename_pickle)
+						except Exception:
+							pass
+						self.storage_pers = {}
+						self.storage_pers['colossus_version'] = settings.__version__
+					
 				except Exception:
 					warnings.warn('Encountered file error while reading cache file. This usually \
 						happens when switching between python 2 and 3. Deleting cache file.')
@@ -229,6 +249,9 @@ class StorageUser():
 						os.remove(filename_pickle)
 					except Exception:
 						pass
+			
+			else:
+				self.storage_pers['colossus_version'] = settings.__version__
 		
 		return
 	

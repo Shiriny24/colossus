@@ -22,7 +22,7 @@ from colossus.halo import profile_outer
 class TCMassSO(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
-		cosmology.setCosmology('planck15')
+		cosmology.setCosmology('planck15', {'persistence': ''})
 		pass
 
 	def test_parseMassDefinition(self):
@@ -87,7 +87,7 @@ class TCMassSO(test_colossus.ColosssusTestCase):
 class TCMassDefs(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
-		cosmology.setCosmology('planck15')
+		cosmology.setCosmology('planck15', {'persistence': ''})
 	
 	def test_pseudoEvolve(self):
 		z1 = 0.68
@@ -140,7 +140,7 @@ class TCMassDefs(test_colossus.ColosssusTestCase):
 class TCMassAdv(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
-		cosmology.setCosmology('planck15')
+		cosmology.setCosmology('planck15', {'persistence': ''})
 		pass
 
 	def test_changeMassDefinitionCModel(self):

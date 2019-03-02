@@ -19,7 +19,7 @@ from colossus.lss import bias
 class TCBias(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
-		cosmology.setCosmology('planck15')
+		cosmology.setCosmology('planck15', {'persistence': ''})
 		pass
 	
 	def test_haloBiasFromNu(self):

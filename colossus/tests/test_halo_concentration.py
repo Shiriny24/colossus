@@ -26,7 +26,7 @@ class TCConcentration(test_colossus.ColosssusTestCase):
 
 	def test_model_returns(self):
 
-		cosmology.setCosmology('bolshoi')
+		cosmology.setCosmology('bolshoi', {'persistence': ''})
 		M_one = 1E12
 		M_one_array = np.array([1E12])
 		M_many = np.array([1E10, 1E12, 1E15])
@@ -68,7 +68,7 @@ class TCConcentration(test_colossus.ColosssusTestCase):
 	###############################################################################################
 
 	def test_model_values(self):
-		cosmology.setCosmology('bolshoi')
+		cosmology.setCosmology('bolshoi', {'persistence': ''})
 		M = 1E12
 		z = 0.5
 		mdef = '257m'
@@ -122,7 +122,7 @@ class TCConcentration(test_colossus.ColosssusTestCase):
 		
 		M = 1E1
 		z = 30.0
-		cosmo = cosmology.setCosmology('bolshoi')
+		cosmo = cosmology.setCosmology('bolshoi', {'persistence': ''})
 		k_R = concentration._diemer15_k_R(M)
 		cosmo.interpolation = True
 		n1 = concentration._diemer15_n(k_R)
