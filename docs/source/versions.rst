@@ -10,6 +10,7 @@ version 1.1.0.
 * Removed reference to packaging package by adding manual version comparison function.
 * Added unit tests for versioning and storage.
 * Added unit tests for derived constants.
+* Added a new :doc:`faq` page to the documentation.
 
 .. rubric:: Version 1.2.6
 
