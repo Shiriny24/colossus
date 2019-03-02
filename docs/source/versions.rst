@@ -7,6 +7,17 @@ version 1.1.0.
 
 .. rubric:: Version 1.2.6
 
+* Fixed small discrepancy in the unit system. The gravitational constant was adjusted by a factor
+  of 4E-5, leading to the same discrepancy in the critical density of the universe. Thanks to an
+  anonymous user for pointing out this bug.
+
+  .. note::
+    This change affects numerous outputs from Colossus, but only by factors of around 4E-5 (and
+    much less in most cases).
+
+* Added a system to automatically delete outdated storage files. If files older than a certain
+  version are found, a warning is displayed, the file is deleted, and the computations will be
+  done from scratch.
 * Fixed bug in the Bocquet et al. 2016 mass function for the M200c and M500c mass definitions
   (thanks to Michelle Ntampaka for catching this!).
 

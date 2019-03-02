@@ -59,18 +59,16 @@ MSUN = 1.98892E33
 G = 4.3018751517E-6
 """The gravitational constant G in :math:`{\\rm kpc} \ {\\rm km}^2 / M_{\odot} / s^2`. This 
 constant is computed from the cgs version but given with more significant digits to preserve
-consistency with the Mpc and Msun units."""
+consistency with the :math:`{\\rm Mpc}` and :math:`M_{\odot}` units."""
 
 ###################################################################################################
 # ASTRONOMY CONSTANTS
 ###################################################################################################
 
-RHO_CRIT_0_KPC3 = 2.774848e+02
-#RHO_CRIT_0_KPC3 = 2.7747482925E2
+RHO_CRIT_0_KPC3 = 2.7747482925E2
 """The critical density of the universe at z = 0 in units of :math:`M_{\odot} h^2 / {\\rm kpc}^3`."""
 
-RHO_CRIT_0_MPC3 = 2.774848e+11
-#RHO_CRIT_0_MPC3 = 2.7747482925E11
+RHO_CRIT_0_MPC3 = 2.7747482925E11
 """The critical density of the universe at z = 0 in units of :math:`M_{\odot} h^2 / {\\rm Mpc}^3`."""
 
 DELTA_COLLAPSE = 1.68647

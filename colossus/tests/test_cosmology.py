@@ -137,26 +137,26 @@ class TCComp(CosmologyTestCase):
 	###############################################################################################
 
 	def test_rho_c(self):
-		correct = [277.48480000000001, 1212.3721900475718, 798918.78044411447]
+		correct = [2.774748292500e+02, 1.212328626364e+03, 7.988900732161e+05]
 		self._testRedshiftArray(self.cosmo.rho_c, correct)
 	
 	def test_rho_m(self):
-		correct = [85.715054719999998, 1019.9405094378844, 793807.12176191993]
+		correct = [8.571197475533e+01, 1.019903860325e+03, 7.937785982091e+05]
 		self._testRedshiftArray(self.cosmo.rho_m, correct)
 	
 	def test_rho_de(self):
-		self.assertAlmostEqual(self.cosmo.rho_de(0.0), 191.7444476198966)
+		self.assertAlmostEqual(self.cosmo.rho_de(0.0), 1.917375577436e+02)
 	
 	def test_rho_gamma(self):
-		correct = [0.014953378241588128, 0.40622155544932192, 2908.1479538023009]
+		correct = [1.495284092785e-02, 4.062069588531e-01, 2.908043456489e+03]
 		self._testRedshiftArray(self.cosmo.rho_gamma, correct)
 	
 	def test_rho_nu(self):
-		correct = [0.010344281861837975, 0.28101143434165871, 2011.766280772111]
+		correct = [1.034391016491e-02, 2.810013368705e-01, 2.011693992781e+03]
 		self._testRedshiftArray(self.cosmo.rho_nu, correct)
 	
 	def test_rho_r(self):
-		correct = [0.025297660103426101, 0.68723298979098058, 4919.9142345744112]
+		correct = [2.529675109275e-02, 6.872082957237e-01, 4.919737449270e+03]
 		self._testRedshiftArray(self.cosmo.rho_r, correct)
 	
 	def test_Om(self):
