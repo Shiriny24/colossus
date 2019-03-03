@@ -5,7 +5,7 @@ What's new?
 See below for a listing of the most important code and interface changes in Colossus, starting with
 version 1.1.0.
 
-.. rubric:: Version 1.2.7
+.. rubric:: Version 1.2.8
 
 * Removed reference to packaging package by adding manual version comparison function.
 * Added unit tests for versioning and storage.

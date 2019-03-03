@@ -8,6 +8,7 @@
 import unittest
 import numpy as np
 
+from colossus import version
 from colossus.tests import test_colossus
 from colossus.utils import storage
 from colossus.utils import utilities
@@ -32,7 +33,7 @@ class TCVersions(test_colossus.ColosssusTestCase):
 		self.assertEqual(utilities.versionIsOlder('1.0.0', '1.0.1') , False)
 		
 	def test_get_version(self):
-		v = utilities.getVersion()
+		v = version.__version__
 		is_older = utilities.versionIsOlder('1.0.0', v)
 		self.assertEqual(is_older, False)
 

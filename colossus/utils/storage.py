@@ -94,6 +94,7 @@ import warnings
 import numpy as np
 import scipy.interpolate
 
+from colossus import version
 from colossus import settings
 from colossus.utils import utilities
 
@@ -238,7 +239,7 @@ class StorageUser():
 							warnings.warn('Could not delete outdated persistence file %s. Please delete manually.' \
 										% (filename_pickle))
 						self.storage_pers = {}
-						self.storage_pers['colossus_version'] = utilities.getVersion()
+						self.storage_pers['colossus_version'] = version.__version__
 					
 				except Exception:
 					warnings.warn('Encountered file error while reading cache file. This usually \
@@ -249,7 +250,7 @@ class StorageUser():
 						pass
 			
 			else:
-				self.storage_pers['colossus_version'] = utilities.getVersion()
+				self.storage_pers['colossus_version'] = version.__version__
 		
 		return
 	
