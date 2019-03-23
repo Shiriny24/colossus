@@ -1051,18 +1051,38 @@ class Cosmology(object):
 
 	def comovingDistance(self, z_min = 0.0, z_max = 0.0, transverse = True):
 		"""
-		The comoving distance between redshift :math:`z_{\\rm min}` and :math:`z_{\\rm max}`.
+		The transverse or line-of-sight comoving distance.
+		
+		This function returns the comoving distance between two points. Depending on the chosen 
+		geometry, the output can have two different meanings. If ``transverse = False``, the 
+		line-of-sight distance is returned,
+		
+		.. math::
+			d_{\\rm com,los}(z) = \\frac{c}{H_0} \\int_{0}^{z} \\frac{1}{E(z)} .
+		
+		However, if ``transverse = False``, the function returns the comoving distance between two
+		points separated by an angle of one radian at ``z_max`` (if ``z_min`` is zero). This 
+		quantity depends on the spatial curvature of the universe,
+		
+		.. math::
+			d_{\\rm com,trans}(z) =  \\left\\{
+			\\begin{array}{ll}
+			      \\frac{c/H_0}{\\sqrt{\\Omega_{\\rm k,0}}} \\sinh \\left(\\frac{\\sqrt{\\Omega_{\\rm k,0}}}{c/H_0} d_{\\rm com,los} \\right) & \\forall \\, \\Omega_{\\rm k,0} > 0 \\\\
+			      d_{\\rm com,los} & \\forall \\, \\Omega_{\\rm k,0} = 0 \\\\
+			      \\frac{c/H_0}{\\sqrt{-\\Omega_{\\rm k,0}}} \\sin \\left(\\frac{\\sqrt{-\\Omega_{\\rm k,0}}}{c/H_0} d_{\\rm com,los} \\right) & \\forall \\, \\Omega_{\\rm k,0} < 0 \\\\
+			\\end{array} 
+			\\right.		
+		
+		In Colossus, this distance is referred to as the "transverse comoving distance"
+		(e.g., Hogg 1999), but a number of other terms are used in the literature, e.g., 
+		"comoving angular diameter distance" (Dodelson 2003), "comoving coordinate distance"
+		(Mo et al. 2010),or "angular size distance" (Peebles 1993). The latter is not to be 
+		confused with the angular diameter distance.
 		
 		Either ``z_min`` or ``z_max`` can be a numpy array; in those cases, the same ``z_min`` / 
 		``z_max`` is applied to all values of the other. If both are numpy arrays, they need to 
 		have the same dimensions, and the comoving distance returned corresponds to a series of 
 		different ``z_min`` and ``z_max`` values. 
-		
-		The transverse parameter determines whether the line-of-sight or transverse comoving
-		distance is returned. For flat cosmologies, the two are the same, but for cosmologies with
-		curvature, the geometry of the spacetime influences the transverse comoving distance. The
-		transverse distance is the default because that distance forms the basis for the luminosity
-		and angular diameter distances.
 
 		This function does not use interpolation (unlike the other distance functions) because it
 		accepts both ``z_min`` and ``z_max`` parameters which would necessitate a 2D interpolation. 

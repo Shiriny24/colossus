@@ -5,7 +5,7 @@ What's new?
 See below for a listing of the most important code and interface changes in Colossus, starting with
 version 1.1.0.
 
-.. rubric:: Version 1.2.8
+.. rubric:: Version 1.2.9
 
 * Removed reference to packaging package by adding manual version comparison function.
 * Added unit tests for versioning and storage.
@@ -15,8 +15,8 @@ version 1.1.0.
 .. rubric:: Version 1.2.6
 
 * Fixed small discrepancy in the unit system. The gravitational constant was adjusted by a factor
-  of 4E-5, leading to the same discrepancy in the critical density of the universe. Thanks to an
-  anonymous user for pointing out this bug.
+  of 4E-5, leading to the same discrepancy in the critical density of the universe. Thanks to Tom
+  McClintock for pointing out this bug!
 
   .. note::
     This change affects numerous outputs from Colossus, but only by factors of around 4E-5 (and

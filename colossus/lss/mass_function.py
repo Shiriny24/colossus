@@ -34,7 +34,7 @@ Here, :math:`\\rho_0` is the matter density at :math:`z = 0` and :math:`\\sigma`
 on the lagrangian size scale of the halo mass in question (see 
 :func:`~cosmology.cosmology.Cosmology.sigma`). The function can also return the mass function 
 in other units, namely as the number density per logarithmic interval in mass, :math:`dn/d\\ln(M)` 
-(units of :math:`({\\rm Mpc}/h)^{-3}`, indicated by ``q_out = dndlnM``) and as 
+(units of comoving :math:`({\\rm Mpc}/h)^{-3}`, indicated by ``q_out = dndlnM``) and as 
 :math:`M^2 / \\rho_0 dn/dM` (dimensionless, indicated by ``q_out = M2dndM``). These conversions 
 can separately be performed separately using the :func:`convertMassFunction` function. Please see 
 the :doc:`tutorials` for more extensive code examples.
