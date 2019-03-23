@@ -1073,10 +1073,10 @@ class Cosmology(object):
 			\\end{array} 
 			\\right.		
 		
-		In Colossus, this distance is referred to as the “transverse comoving distance” 
+		In Colossus, this distance is referred to as the "transverse comoving distance"
 		(e.g., Hogg 1999), but a number of other terms are used in the literature, e.g., 
-		“comoving angular diameter distance” (Dodelson 2003), “comoving coordinate distance” 
-		(Mo et al. 2010),or “angular size distance” (Peebles 1993). The latter is not to be 
+		"comoving angular diameter distance" (Dodelson 2003), "comoving coordinate distance"
+		(Mo et al. 2010),or "angular size distance" (Peebles 1993). The latter is not to be 
 		confused with the angular diameter distance.
 		
 		Either ``z_min`` or ``z_max`` can be a numpy array; in those cases, the same ``z_min`` / 
