@@ -38,6 +38,9 @@ RYDBERG = 13.605693009
 # ASTRONOMY UNIT CONVERSIONS
 ###################################################################################################
 
+AU = 1.495978707E13
+"""Astronomical unit (au) in centimeters."""
+
 PC  = 3.08568025E18
 """A parsec in centimeters."""
 
