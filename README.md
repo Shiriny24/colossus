@@ -46,6 +46,7 @@ Contributors:  Matt Becker, Andrey Kravtsov, Steven Murray
 License:       MIT. Copyright (c) 2014-2019
 
 If you use Colossus for a publication, please cite the code paper 
-([Diemer 2017](https://arxiv.org/abs/1712.04512)). Many Colossus routines implement the 
-results of other papers. If you use such routines, please take care to cite the relevant 
-papers as well (they will be mentioned in the function and/or module documentation).
+([Diemer 2018](https://ui.adsabs.harvard.edu/abs/2018ApJS..239...35D/abstract)). 
+Many Colossus routines implement the results of other papers. If you use such routines, please 
+take care to cite the relevant papers as well (they will be mentioned in the function and/or 
+module documentation).
