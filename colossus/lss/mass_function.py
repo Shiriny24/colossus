@@ -811,7 +811,12 @@ def modelWatson13(sigma, z, mdef):
 	function as given in Equation 12, the redshift-evolving fit to the AHF mass function given in 
 	Equations 14-16, as well as the dependence on mass definition given in Equations 17-19. At 
 	z = 0 and z > 6 the authors suggest slightly different sets of parameters for the SO mass
-	function which are used at those redshifts.
+	function which are used at those redshifts. Please note that the different parameterizations do
+	not agree, as in, the redshift-dependent formula at z ~ 0 does not match the z = 0 expression. 
+	To get the redshift-dependent version at z = 0, simply use a very small redshift.
+	
+	Note that there is a typo in the paper text, where the values of :math:`\\alpha` and 
+	:math:`\\beta` are switched. The correct values are in Table 2.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
