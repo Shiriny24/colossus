@@ -864,6 +864,10 @@ class Cosmology(object):
 	
 	def _zFunction(self, table_name, func, z, inverse = False, future = True, derivative = 0):
 
+		# Check for empty arrays; this case can lead to annoying crashes if not treated.
+		if utilities.isArray(z) and len(z) == 0:
+			return np.array([])
+
 		if self.interpolation:
 			
 			# Get interpolator. If it does not exist, create it.
