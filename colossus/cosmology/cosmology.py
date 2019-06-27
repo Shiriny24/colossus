@@ -466,12 +466,12 @@ class Cosmology(object):
 			# rho_gamma   = 4 sigma_SB / c * T_CMB^4 [erg/cm^3]
 			#             = 4 sigma_SB / c^3 * T_CMB^4 [g/cm^3]
 			#
-			# where sigmaSB = 5.670373E-5 erg/cm^2/s/K^4. Then,
-			#
+			# where sigmaSB = 5.670367E-5 erg/cm^2/s/K^4. Then,
+			#                 
 			# Omega_gamma = rho_gamma / (Msun/g) * (kpc/cm)^3 / h^2 / constants.RHO_CRIT_0_KPC3
 			#
 			# Most of these steps can be summarized in one constant.
-			self.Ogamma0 = 4.48131796342E-07 * self.Tcmb0**4 / self.h2
+			self.Ogamma0 =  4.4814665013636476E-07 * self.Tcmb0**4 / self.h2
 			
 			# The energy density in neutrinos is 7/8 (4/11)^(4/3) times the energy density in 
 			# photons, per effective neutrino species.

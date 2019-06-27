@@ -15,6 +15,7 @@ Global defaults used across Colossus.
 
 COSMOLOGY_TCMB0 = 2.7255
 """The default CMB temperature in Kelvin."""
+
 COSMOLOGY_NEFF = 3.046
 """The default number of effective neutrino species."""
 
@@ -33,6 +34,7 @@ HALO_MASS_FUNCTION_MODEL = 'watson13'
 
 HALO_CONCENTRATION_MODEL = 'diemer19'
 """The default concentration model."""
+
 HALO_CONCENTRATION_STATISTIC = 'median'
 """The default statistic used (``mean`` or ``median``). This only applies to those models that 
 distinguish between mean and median statistics."""
@@ -44,9 +46,11 @@ of the :doc:`halo_profile_nfw` makes this computation efficient."""
 
 HALO_SPLASHBACK_MODEL = 'diemer17'
 """The default model for the splashback radius."""
+
 HALO_SPLASHBACK_STATISTIC = 'median'
 """The default statistic used (``mean`` or ``median``). This only applies to splashback models 
 that distinguish between mean and median statistics."""
+
 HALO_SPLASHBACK_RSPDEF = 'mean'
 """The default definition of Rsp used. This only applies to splashback models that distinguish 
 between different definitions."""
@@ -72,12 +76,16 @@ DELTAC_ARGS = {}
 
 HALO_PROFILE_ENCLOSED_MASS_ACCURACY = 1E-6
 """Integration accuracy for enclosed mass."""
+
 HALO_PROFILE_SURFACE_DENSITY_ACCURACY = 1E-4
 """Integration accuracy for surface density."""
+
 HALO_PROFILE_SURFACE_DENSITY_MAX_R_INTERPOLATE = 1E8
 """Radius to which the surface density is integrated when interpolating the density."""
+
 HALO_PROFILE_SURFACE_DENSITY_MAX_R_INTEGRATE = 1E20
 """Radius to which the surface density is integrated when evaluating the density exactly."""
+
 HALO_PROFILE_DELTA_SIGMA_MIN_R_INTERPOLATE = 1E-6
 """Radius from which the surface density is averaged to compute DeltaSigma."""
 
@@ -89,13 +97,17 @@ HALO_PRPFOLE_DK14_SELECTED_BY = 'M'
 """The constructor of the :doc:`halo_profile_dk14` sets the profile parameters to either 
 predict the mean profile of halos selected by their mass (``M``) or mass accretion rate and 
 mass (``Gamma``)."""
+
 HALO_PROFILE_DK14_PL_NORM = 1.0
 """The default normalization of the power-law outer profile for the DK14 profile."""
+
 HALO_PROFILE_DK14_PL_SLOPE = 1.5
 """The default slope of the power-law outer profile for the DK14 profile."""
+
 HALO_PROFILE_DK14_ACC_WARN = 0.01
 """If the desired halo mass cannot be matched with a DK14 profile to better than this accuracy,
 a warning is displayed."""
+
 HALO_PROFILE_DK14_ACC_ERR = 0.05
 """If the desired halo mass cannot be matched with a DK14 profile to better than this accuracy,
 an exception is raised."""
@@ -116,12 +128,16 @@ power-law term will not contribute at all."""
 
 MCMC_N_WALKERS = 100
 """The number of chains (called walkers) run in parallel."""
+
 MCMC_INITIAL_STEP = 0.1
 """A guess at the initial step taken by the walkers."""
+
 MCMC_CONVERGENCE_STEP = 100
 """Test the convergence of the MCMC chains every n steps."""
+
 MCMC_CONVERGED_GR = 0.01
 """Take the chains to have converged when the Gelman-Rubin statistic is smaller than this number
 in all parameters."""
+
 MCMC_OUTPUT_EVERY_N = 100
 """Output the current state of the chain every n steps."""
