@@ -67,9 +67,9 @@ class TCComp(CosmologyTestCase):
 			self.assertAlmostEqual(self.cosmo.Neff, c_dict['Neff'])
 		else:
 			self.assertAlmostEqual(self.cosmo.Neff, defaults.COSMOLOGY_NEFF)
-		self.assertAlmostEqual(self.cosmo.Ogamma0, 5.388899947524e-05)
-		self.assertAlmostEqual(self.cosmo.Onu0, 3.727873332823e-05)
-		self.assertAlmostEqual(self.cosmo.Or0, 9.116773280347645e-05)
+		self.assertAlmostEqual(self.cosmo.Ogamma0, 5.389078568217e-05)
+		self.assertAlmostEqual(self.cosmo.Onu0, 3.727996897061e-05)
+		self.assertAlmostEqual(self.cosmo.Or0, 9.117075465278e-05)
 	
 	def test_initNoRel(self):
 		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 
@@ -90,11 +90,11 @@ class TCComp(CosmologyTestCase):
 	###############################################################################################
 	
 	def test_Ez(self):
-		correct = [1.0, 2.090250729474342, 53.657658359973375]
+		correct = [1.0, 2.090250748388e+00, 5.365766383626e+01]
 		self._testRedshiftArray(self.cosmo.Ez, correct)
 		
 	def test_Hz(self):
-		correct = [67.74, 141.5935844145919, 3634.7697773045961]
+		correct = [67.74, 1.415935856958e+02, 3.634770148268e+03]
 		self._testRedshiftArray(self.cosmo.Hz, correct)
 
 	###############################################################################################
@@ -102,27 +102,27 @@ class TCComp(CosmologyTestCase):
 	###############################################################################################
 
 	def test_hubbleTime(self):
-		correct = [14.434808845686167, 6.9057786427928889, 0.26901674964731592]
+		correct = [1.443479672834e+01, 6.905772783226e+00, 2.690164963645e-01]
 		self._testRedshiftArray(self.cosmo.hubbleTime, correct)
 	
 	def test_lookbackTime(self):
-		correct = [0.0, 8.9280198746525148, 13.619006640208726]
+		correct = [0.0, 8.928012349881e+00, 1.361899507180e+01]
 		self._testRedshiftArray(self.cosmo.lookbackTime, correct)
 
 	def test_age(self):
-		correct = [13.797415621282903, 4.8693957466303877, 0.17840898107417968]
+		correct = [1.379740385589e+01, 4.869391506008e+00, 1.784087840836e-01]
 		self._testRedshiftArray(self.cosmo.age, correct)
 	
 	def test_comovingDistance(self):
-		correct = [0.0, 2740.5127865862187, 7432.2116524758285]
+		correct = [0.0, 2.740512775683e+03, 7.432211484621e+03]
 		self.assertAlmostEqualArray(self.cosmo.comovingDistance(z_max = TEST_Z), correct)		
 
 	def test_luminosityDistance(self):
-		correct = [0.0, 6256.5906917763368, 156076.44470199241]
+		correct = [0.0, 6.256590666884e+03, 1.560764411770e+05]
 		self._testRedshiftArray(self.cosmo.luminosityDistance, correct)
 
 	def test_angularDiameterDistance(self):
-		correct = [0.0, 1200.399818916434, 353.91484059408708]
+		correct = [0.0, 1.200399814141e+03, 3.539148326010e+02]
 		self._testRedshiftArray(self.cosmo.angularDiameterDistance, correct)
 
 	def test_distanceModulus(self):
@@ -137,38 +137,38 @@ class TCComp(CosmologyTestCase):
 	###############################################################################################
 
 	def test_rho_c(self):
-		correct = [2.774748292500e+02, 1.212328626364e+03, 7.988900732161e+05]
+		correct = [2.775366272457e+02, 1.212598652905e+03, 7.990681616685e+05]
 		self._testRedshiftArray(self.cosmo.rho_c, correct)
 	
 	def test_rho_m(self):
-		correct = [8.571197475533e+01, 1.019903860325e+03, 7.937785982091e+05]
+		correct = [8.573106415620e+01, 1.020131008908e+03, 7.939553851506e+05]
 		self._testRedshiftArray(self.cosmo.rho_m, correct)
 	
 	def test_rho_de(self):
-		self.assertAlmostEqual(self.cosmo.rho_de(0.0), 1.917375577436e+02)
+		self.assertAlmostEqual(self.cosmo.rho_de(0.0), 1.917802598658e+02)
 	
 	def test_rho_gamma(self):
-		correct = [1.495284092785e-02, 4.062069588531e-01, 2.908043456489e+03]
+		correct = [1.495666689785e-02, 4.063108946635e-01, 2.908787534961e+03]
 		self._testRedshiftArray(self.cosmo.rho_gamma, correct)
 	
 	def test_rho_nu(self):
-		correct = [1.034391016491e-02, 2.810013368705e-01, 2.011693992781e+03]
+		correct = [1.034655685193e-02, 2.810732364307e-01, 2.012208723120e+03]
 		self._testRedshiftArray(self.cosmo.rho_nu, correct)
 	
 	def test_rho_r(self):
-		correct = [2.529675109275e-02, 6.872082957237e-01, 4.919737449270e+03]
+		correct = [2.530322374978e-02, 6.873841310942e-01, 4.920996258081e+03]
 		self._testRedshiftArray(self.cosmo.rho_r, correct)
 	
 	def test_Om(self):
-		correct = [0.3089, 0.84127672822803978, 0.99360177929557136]
+		correct = [0.3089, 8.412767130033e-01, 9.936015764822e-01]
 		self._testRedshiftArray(self.cosmo.Om, correct)
 	
 	def test_Ob(self):
-		correct = [4.860000000000e-02, 1.323601456519e-01, 1.563258221876e-01]
+		correct = [4.860000000000e-02, 1.323601432566e-01, 1.563257902785e-01]
 		self._testRedshiftArray(self.cosmo.Ob, correct)
 	
 	def test_Ode(self):
-		correct = [0.69100883226719656, 0.15815642192549204, 0.00024000493205743255]
+		correct = [6.910088292453e-01, 1.581564183717e-01, 2.400048820182e-04]
 		self._testRedshiftArray(self.cosmo.Ode, correct)
 	
 	def test_Ok(self):
@@ -176,15 +176,15 @@ class TCComp(CosmologyTestCase):
 		self._testRedshiftArray(self.cosmo.Ok, correct)
 	
 	def test_Ogamma(self):
-		correct = [5.3888999475243789e-05, 0.00033506340609263101, 0.003640104632645733]
+		correct = [5.389078568217e-05, 3.350745060537e-04, 3.640224544658e-03]
 		self._testRedshiftArray(self.cosmo.Ogamma, correct)
 	
 	def test_Onu(self):
-		correct = [3.7278733328232663e-05, 0.0002317864403757333, 0.0025181111397253441]
+		correct = [3.727996897061e-05, 2.317941189835e-04, 2.518194091125e-03]
 		self._testRedshiftArray(self.cosmo.Onu, correct)
 	
 	def test_Or(self):
-		correct = [9.1167732803476445e-05, 0.00056684984646836417, 0.0061582157723710767]
+		correct = [9.117075465278e-05, 5.668686250372e-04, 6.158418635783e-03]
 		self._testRedshiftArray(self.cosmo.Or, correct)
 
 	###############################################################################################
@@ -192,7 +192,7 @@ class TCComp(CosmologyTestCase):
 	###############################################################################################
 
 	def test_growthFactor(self):
-		correct = [1.0, 0.54093225419799251, 0.060968602011373191]
+		correct = [1.0, 0.54093225419799251, 6.096861032873e-02]
 		self._testRedshiftArray(self.cosmo.growthFactor, correct)
 
 	def test_matterPowerSpectrum(self):
@@ -207,13 +207,13 @@ class TCComp(CosmologyTestCase):
 	def test_sigma(self):
 		correct = [1.207145625229e+01, 2.119444226232e+00, 1.280494909616e-03]
 		self._testRZArray(self.cosmo.sigma, 0.0, correct)
-		correct = [2.401626205727e+00, 4.216651818070e-01, 2.547555213689e-04]
+		correct = [2.401626210899e+00, 4.216651827150e-01, 2.547555219174e-04]
 		self._testRZArray(self.cosmo.sigma, TEST_Z2, correct)
 
 	def test_correlationFunction(self):
 		correct = [1.426307983614e+02, 3.998936475381e+00, -2.794675621480e-07]
 		self._testRZArray(self.cosmo.correlationFunction, 0.0, correct)
-		correct = [5.645531190089e+00, 1.582836305925e-01, -1.106172619694e-08]
+		correct = [5.645531214403e+00, 1.582836312741e-01, -1.106172624458e-08]
 		self._testRZArray(self.cosmo.correlationFunction, TEST_Z2, correct)
 
 ###################################################################################################
@@ -235,19 +235,19 @@ class TCInterp(CosmologyTestCase):
 		self.assertAlmostEqual(self.cosmo.sigma(12.5, 0.0), 5.892448500561e-01)
 
 	def test_ZDerivative(self):
-		correct = [-1.443561688659e+01, -3.025536156424e+00, -1.281102065439e-02]
-		self.assertAlmostEqualArray(self.cosmo.age(TEST_Z, derivative = 1), correct)		
+		correct = [-1.443560476858e+01, -3.025533589239e+00, -1.281100859272e-02]
+		self.assertAlmostEqualArray(self.cosmo.age(TEST_Z, derivative = 1), correct)
 
 	def test_ZDerivative2(self):
-		correct = [2.112577677848e+01, 2.994339523099e+00, 1.532142754901e-03]
-		self.assertAlmostEqualArray(self.cosmo.age(TEST_Z, derivative = 2), correct)		
+		correct = [2.112575913079e+01, 2.994337001869e+00, 1.532141374826e-03]
+		self.assertAlmostEqualArray(self.cosmo.age(TEST_Z, derivative = 2), correct)
 
 	def test_ZInverse(self):
-		correct = [6.738530459850e-03, 2.981581730191e+01]
-		self.assertAlmostEqualArray(self.cosmo.age(TEST_AGE, inverse = True), correct)		
+		correct = [6.737712833304e-03, 2.981579253668e+01]
+		self.assertAlmostEqualArray(self.cosmo.age(TEST_AGE, inverse = True), correct)
 
 	def test_ZInverseDerivative(self):
-		correct = [-6.998050778719e-02, -2.036515876830e+02]
+		correct = [-6.998048234536e-02, -2.036513944918e+02]
 		self.assertAlmostEqualArray(self.cosmo.age(TEST_AGE, inverse = True, derivative = 1), correct)		
 
 ###################################################################################################
@@ -265,14 +265,14 @@ class TCNotFlat1(CosmologyTestCase):
 		self.cosmo = cosmology.getCurrent()
 
 	def test_nonFlat(self):
-		self.assertAlmostEqual(self.cosmo.Ok0, 0.02991462406767552)
-		self.assertAlmostEqual(self.cosmo.Ok(4.5), 0.019417039615692584)
+		self.assertAlmostEqual(self.cosmo.Ok0, 2.991462123780e-02)
+		self.assertAlmostEqual(self.cosmo.Ok(4.5), 1.941703673565e-02)
 
 	def test_distanceNonFlat(self):
-		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 1.0, transverse = True), 2.340299035494e+03)
-		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 10.0, transverse = True), 6.959070874045e+03)
-		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 1.0, transverse = False), 2.333246162862e+03)
-		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 10.0, transverse = False), 6.784500417672e+03)
+		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 1.0, transverse = True), 2.340299029513e+03)
+		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 10.0, transverse = True), 6.959070744985e+03)
+		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 1.0, transverse = False), 2.333246157596e+03)
+		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 10.0, transverse = False), 6.784500313347e+03)
 
 ###################################################################################################
 # TEST CASE 4: NON-FLAT COSMOLOGY WITH NEGATIVE CURVATURE
@@ -289,14 +289,14 @@ class TCNotFlat2(CosmologyTestCase):
 		self.cosmo = cosmology.getCurrent()
 
 	def test_nonFlat(self):
-		self.assertAlmostEqual(self.cosmo.Ok0, -7.008537593232e-02)
-		self.assertAlmostEqual(self.cosmo.Ok(4.5), -4.853747713897e-02)
+		self.assertAlmostEqual(self.cosmo.Ok0, -7.008537876220e-02)
+		self.assertAlmostEqual(self.cosmo.Ok(4.5), -4.853747631639e-02)
 
 	def test_distanceNonFlat(self):
-		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 1.0, transverse = True), 2.391423796721e+03)
-		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 10.0, transverse = True), 6.597189702919e+03)
-		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 1.0, transverse = False), 2.409565059911e+03)
-		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 10.0, transverse = False), 7.042437425006e+03)
+		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 1.0, transverse = True), 2.391423790129e+03)
+		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 10.0, transverse = True), 6.597189591596e+03)
+		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 1.0, transverse = False), 2.409565053915e+03)
+		self.assertAlmostEqual(self.cosmo.comovingDistance(0.0, 10.0, transverse = False), 7.042437309730e+03)
 
 ###################################################################################################
 # TEST CASE 5: VARYING DARK ENERGY EQUATION OF STATE 1
@@ -314,7 +314,7 @@ class TCDarkEnergy1(CosmologyTestCase):
 
 	def test_Ez(self):
 		self.assertAlmostEqual(self.cosmo.wz(0.5), -6.333333333333e-01)
-		self.assertAlmostEqual(self.cosmo.Ez(1.2), 2.143355324420e+00)
+		self.assertAlmostEqual(self.cosmo.Ez(1.2), 2.143355338332e+00)
 
 ###################################################################################################
 # TEST CASE 6: VARYING DARK ENERGY EQUATION OF STATE 2
@@ -332,7 +332,7 @@ class TCDarkEnergy2(CosmologyTestCase):
 
 	def test_Ez(self):
 		self.assertAlmostEqual(self.cosmo.wz(0.5), -0.7)
-		self.assertAlmostEqual(self.cosmo.Ez(1.2), 2.088306361926e+00)
+		self.assertAlmostEqual(self.cosmo.Ez(1.2), 2.088306376421e+00)
 
 ###################################################################################################
 # TEST CASE 7: VARYING DARK ENERGY EQUATION OF STATE 2
@@ -355,7 +355,7 @@ class TCDarkEnergy3(CosmologyTestCase):
 
 	def test_Ez(self):
 		self.assertAlmostEqual(self.cosmo.wz(0.5), -6.333333333333e-01)
-		self.assertAlmostEqual(self.cosmo.Ez(1.2), 2.143355324420e+00)
+		self.assertAlmostEqual(self.cosmo.Ez(1.2), 2.143355338332e+00)
 
 ###################################################################################################
 # TEST CASE 8: GROWTH FACTOR IN w0CDM
