@@ -5,6 +5,20 @@ What's new?
 See below for a listing of the most important code and interface changes in Colossus, starting with
 version 1.1.0.
 
+.. rubric:: Version 1.2.10
+
+The changes in this version were largely inspired by a detailed comparison with the 
+`Core Cosmology Library <https://github.com/LSSTDESC/CCL>`_ (CCL) by the LSST-DESC. 
+
+* Physical and astronomical constants were updated to IAU 2015 / PDG 2018 standard, including
+  the definition of parsec/kpc/Mpc and the solar mass. Those changes translate into changes in 
+  the gravitational constant in astronomical units and the critical density of the universe, which
+  in turn are used in numerous functions.
+
+  .. note::
+    This change affects most outputs from Colossus, but only by factors up to 1E-4 or less. All
+    stored pickles will automatically be recomputed following this change.
+  
 .. rubric:: Version 1.2.9
 
 * Removed reference to packaging package by adding manual version comparison function.
