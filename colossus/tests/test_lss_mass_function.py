@@ -76,19 +76,19 @@ class TCMassFunction(test_colossus.ColosssusTestCase):
 			elif k == 'reed03':
 				correct = [2.037009972300e-01, 2.876252283306e-02]
 			elif k == 'warren06':
-				correct = [2.176074174337e-01, 3.380079804646e-02]
+				correct = [2.176065144322e-01, 3.381465783767e-02]
 			elif k == 'reed07':
-				correct = [1.912793816150e-01, 3.723712580773e-02]
+				correct = [1.912774404547e-01, 3.725141648998e-02]
 			elif k == 'crocce10':
-				correct = [2.196770391218e-01, 4.194766615518e-02]
+				correct = [2.196760269744e-01, 4.196271782970e-02]
 			elif k == 'bhattacharya11':
-				correct = [2.241131373076e-01, 4.065332158031e-02]
+				correct = [2.241120148148e-01, 4.066855813171e-02]
 			elif k == 'courtin11':
-				correct = [1.519182109604e-01, 4.488768972968e-02]
+				correct = [1.519159471219e-01, 4.490343243803e-02]
 			elif k == 'angulo12':
-				correct = [2.283411904950e-01, 3.769659265894e-02]
+				correct = [2.283404301823e-01, 3.771150749193e-02]
 			elif k == 'watson13':
-				correct = [2.847701564867e-01, 3.803667902439e-02]
+				correct = [2.847700292451e-01, 3.805146849248e-02]
 			else:
 				msg = 'Unknown model, %s.' % k
 				raise Exception(msg)
