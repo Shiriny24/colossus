@@ -21,12 +21,13 @@ be passed as the ``model`` parameter to the :func:`transferFunction` function:
 .. table::
 	:widths: auto
 
-	================== ============================================================================ ======================================
-	ID                 Reference                                                                    Comment
-	================== ============================================================================ ======================================
-	eisenstein98       `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_  A semi-analytical fitting function
-	eisenstein98_zb    `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_  The zero-baryon version, i.e., no BAO
-	================== ============================================================================ ======================================
+	================== ==================================================================================== ======================================
+	ID                 Reference                                                                            Comment
+	================== ==================================================================================== ======================================
+	sugiyama95         `Sugiyama 1995 <https://ui.adsabs.harvard.edu/abs/1995ApJS..100..281S/abstract>`_    A semi-analytical fitting function
+	eisenstein98       `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_          A semi-analytical fitting function
+	eisenstein98_zb    `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_          The zero-baryon version, i.e., no BAO
+	================== ==================================================================================== ======================================
 
 ---------------------------------------------------------------------------------------------------
 Module contents
@@ -36,6 +37,7 @@ Module contents
 	PowerSpectrumModel
 	models
 	transferFunction
+	modelSugiyama95
 	modelEisenstein98
 	modelEisenstein98ZeroBaryon
 	
@@ -50,6 +52,7 @@ import numpy as np
 from collections import OrderedDict
 
 from colossus import defaults
+from colossus.utils import utilities
 
 ###################################################################################################
 
@@ -73,6 +76,7 @@ Dictionary containing a list of models.
 An ordered dictionary containing one :class:`PowerSpectrumModel` entry for each model.
 """
 
+models['sugiyama95'] = PowerSpectrumModel()
 models['eisenstein98'] = PowerSpectrumModel()
 models['eisenstein98_zb'] = PowerSpectrumModel()
 
@@ -112,7 +116,9 @@ def transferFunction(k, h, Om0, Ob0, Tcmb0, model = defaults.POWER_SPECTRUM_MODE
 		The transfer function; has the same dimensions as ``k``.
 	"""
 	
-	if model == 'eisenstein98':
+	if model == 'sugiyama95':
+		T = modelSugiyama95(k, h, Om0, Ob0, Tcmb0)
+	elif model == 'eisenstein98':
 		T = modelEisenstein98(k, h, Om0, Ob0, Tcmb0)
 	elif model == 'eisenstein98_zb':
 		T = modelEisenstein98ZeroBaryon(k, h, Om0, Ob0, Tcmb0)
@@ -120,6 +126,54 @@ def transferFunction(k, h, Om0, Ob0, Tcmb0, model = defaults.POWER_SPECTRUM_MODE
 		raise Exception('Unknown model, %s.' % model)
 	
 	return T
+
+###################################################################################################
+
+def modelSugiyama95(k, h, Om0, Ob0, Tcmb0):
+	"""
+	The transfer function according to Sugiyama 1995.
+	
+	This function computes the 
+	`Sugiyama 1995 <https://ui.adsabs.harvard.edu/abs/1995ApJS..100..281S/abstract>`_ 
+	approximation to the transfer function at a scale k, which is based on the 
+	`Bardeen et al. 1986 <https://ui.adsabs.harvard.edu/abs/1986ApJ...304...15B/abstract>`_
+	formulation. Note that this approximation is not as accurate as the ``eisenstein98`` model,
+	with deviations of about 10-20% in the power spectrum, variance, and correlation function.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	k: array_like
+		The wavenumber k (in comoving h/Mpc); can be a number or a numpy array.
+	h: float
+		The Hubble constant in units of 100 km/s/Mpc.
+	Om0: float
+		:math:`\Omega_{\\rm m}`, the matter density in units of the critical density at z = 0.
+	Ob0: float
+		:math:`\Omega_{\\rm b}`, the baryon density in units of the critical density at z = 0.
+	Tcmb0: float
+		The temperature of the CMB at z = 0 in Kelvin.
+
+	Returns
+	-----------------------------------------------------------------------------------------------
+	Tk: array_like
+		The transfer function; has the same dimensions as ``k``.
+	"""
+
+	k, is_array = utilities.getArray(k)
+	
+	# The input is k/h rather than k, so one h cancels out
+	q = (Tcmb0 / 2.7)**2 * k / (Om0 * h * np.exp(-Ob0 * (1.0 + np.sqrt(2 * h) / Om0)))
+	
+	Tk = np.log(1.0 + 2.34 * q) / (2.34 * q) \
+		* (1.0 + 3.89 * q + (16.1 * q)**2 + (5.46 * q)**3 + (6.71 * q)**4)**-0.25
+
+	# Numerically, very small values of q lead to issues with T become zero rather than one.
+	Tk[q < 1E-9] = 1.0
+
+	if not is_array:
+		Tk = Tk[0]
+	
+	return Tk
 
 ###################################################################################################
 
@@ -151,12 +205,12 @@ def modelEisenstein98(k, h, Om0, Ob0, Tcmb0):
 		The temperature of the CMB at z = 0 in Kelvin.
 
 	Returns
-	-------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------
 	Tk: array_like
 		The transfer function; has the same dimensions as ``k``.
 
 	See also
-	-------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------
 	modelEisenstein98ZeroBaryon: The zero-baryon transfer function according to Eisenstein & Hu 1998.
 	"""
 
@@ -269,7 +323,7 @@ def modelEisenstein98ZeroBaryon(k, h, Om0, Ob0, Tcmb0):
 	correlation function (see the Colossus code paper for details).
 
 	Parameters
-	-------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------
 	k: array_like
 		The wavenumber k (in comoving h/Mpc); can be a number or a numpy array.
 	h: float
@@ -282,12 +336,12 @@ def modelEisenstein98ZeroBaryon(k, h, Om0, Ob0, Tcmb0):
 		The temperature of the CMB at z = 0 in Kelvin.
 
 	Returns
-	-------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------
 	Tk: array_like
 		The transfer function; has the same dimensions as ``k``.
 
 	See also
-	-------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------
 	modelEisenstein98: The transfer function according to Eisenstein & Hu 1998.
 	"""
 	

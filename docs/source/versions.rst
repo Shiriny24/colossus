@@ -18,7 +18,9 @@ The changes in this version were largely inspired by a detailed comparison with 
   .. note::
     This change affects most outputs from Colossus, but only by factors up to 1E-4 or less. All
     stored pickles will automatically be recomputed following this change.
-  
+
+* Added the ``sugiyama95`` transfer function model.
+
 .. rubric:: Version 1.2.9
 
 * Removed reference to packaging package by adding manual version comparison function.

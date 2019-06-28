@@ -1874,7 +1874,8 @@ class Cosmology(object):
 			table = self.storageUser.getStoredObject(table_name, path = path)
 			
 			if table is None:
-				msg = "Could not load data table, %s." % (table_name)
+				msg = "Could not load data table, %s. Please check that the power spectrum model name is valid." \
+					% (table_name)
 				raise Exception(msg)
 			k_min = 10**table[0][0]
 			if np.min(k) < k_min:
@@ -1940,7 +1941,6 @@ class Cosmology(object):
 		# If we could not find the interpolator, the underlying data table probably has not been
 		# created yet.
 		if interpolator is None:
-
 			# We are dealing with a non-user supplied power spectrum, meaning we can decide the
 			# k array for the table.
 			if path is None:
@@ -1963,8 +1963,12 @@ class Cosmology(object):
 						data_k[k_computed:k_computed + self.k_Pk_Nbins[i]] = \
 							10**np.arange(log_min, log_max, bin_width)
 					k_computed += self.k_Pk_Nbins[i]
-				data_Pk = self._matterPowerSpectrumExact(data_k, model = model, ignore_norm = False)
 				
+				# If the Pk data is not > 0, this leads to serious crashes
+				data_Pk = self._matterPowerSpectrumExact(data_k, model = model, ignore_norm = False)
+				if (np.min(data_Pk) <= 0.0):
+					raise Exception('Got zero or negative data in power spectrum from model %s, cannot compute log.' % model)
+
 				table_ = np.array([np.log10(data_k), np.log10(data_Pk)])
 				self.storageUser.storeObject(table_name, table_)
 				if self.print_info:
