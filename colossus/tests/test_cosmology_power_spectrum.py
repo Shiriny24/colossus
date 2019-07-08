@@ -31,17 +31,19 @@ class TCTransferFunction(test_colossus.ColosssusTestCase):
 	def test_transferFunctionEisenstein98(self):
 		models = power_spectrum.models
 		cosmo = cosmology.getCurrent()
-		for k in models.keys():
-			msg = 'Failure in model = %s' % (k)
-			if k == 'eisenstein98':
+		for m in models.keys():
+			msg = 'Failure in model = %s' % (m)
+			if m == 'sugiyama95':
+				correct = [9.811438043156e-01, 1.349997806341e-08]
+			elif m == 'eisenstein98':
 				correct = [9.892256929454e-01, 1.490479340442e-08]
-			elif k == 'eisenstein98_zb':
+			elif m == 'eisenstein98_zb':
 				correct = [9.890484789741e-01, 1.471045424612e-08]
 			else:
-				msg = 'Unknown model, %s.' % k
+				msg = 'Unknown model, %s.' % m
 				raise Exception(msg)
 			T = power_spectrum.transferFunction(TEST_K, cosmo.h, cosmo.Om0, cosmo.Ob0, cosmo.Tcmb0, 
-										model = k)
+										model = m)
 			self.assertAlmostEqualArray(T, correct, msg = msg)
 
 ###################################################################################################
