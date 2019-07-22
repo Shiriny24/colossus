@@ -85,6 +85,32 @@ class TCComp(CosmologyTestCase):
 		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 
 															'persistence': ''})
 
+	def test_changing(self):
+		cosmo1 = cosmology.setCosmology('planck15', {'interpolation': False, 
+												'persistence': '', 'print_warnings': False})
+		cosmo2 = cosmology.setCosmology('planck18', {'interpolation': False, 
+												'persistence': ''})
+		c_dict = cosmology.cosmologies['planck18']
+		cosmo1.flat = c_dict['flat']
+		cosmo1.H0 = c_dict['H0']
+		cosmo1.Om0 = c_dict['Om0']
+		cosmo1.Ob0 = c_dict['Ob0']
+		cosmo1.sigma8 = c_dict['sigma8']
+		cosmo1.ns = c_dict['ns']
+		
+		cosmo1.checkForChangedCosmology()
+
+		self.assertAlmostEqual(cosmo1.h, cosmo2.h)
+		self.assertAlmostEqual(cosmo1.h2, cosmo2.h2)
+		self.assertAlmostEqual(cosmo1.Omh2, cosmo2.Omh2)
+		self.assertAlmostEqual(cosmo1.Ombh2, cosmo2.Ombh2)
+		self.assertAlmostEqual(cosmo1.Ogamma0, cosmo2.Ogamma0)
+		self.assertAlmostEqual(cosmo1.Onu0, cosmo2.Onu0)
+		self.assertAlmostEqual(cosmo1.Or0, cosmo2.Or0)
+		self.assertAlmostEqual(cosmo1.a_eq, cosmo2.a_eq)
+		self.assertAlmostEqual(cosmo1.Ode0, cosmo2.Ode0)
+		self.assertAlmostEqual(cosmo1.Ok0, cosmo2.Ok0)
+	
 	###############################################################################################
 	# Basic cosmology calculations
 	###############################################################################################

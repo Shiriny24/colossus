@@ -84,6 +84,12 @@ flatness) and that no outdated cached quantities are used::
 	cosmo = cosmology.setCosmology('WMAP9')
 	cosmo.Om0 = 0.31
 	cosmo.checkForChangedCosmology()
+	
+Only user-defined cosmological parameters, that is, parameters that can be passed to the constructor
+of the cosmology object, can be changed in this way. Changing other internal variables of the class
+can have unintended consequences! If derived parameters (such as Ok0 or Onu0) are changed, those
+changes will simply be overwritten when 
+:func:`~cosmology.cosmology.Cosmology.checkForChangedCosmology` is called.
 
 ***************************************************************************************************
 Summary of getter and setter functions
@@ -453,42 +459,8 @@ class Cosmology(object):
 		self.power_law = power_law
 		self.power_law_n = power_law_n
 
-		# Compute some derived cosmological variables
-		self.h = H0 / 100.0
-		self.h2 = self.h**2
-		self.Omh2 = self.Om0 * self.h2
-		self.Ombh2 = self.Ob0 * self.h2
-		
-		if self.relspecies:
-			# To convert the CMB temperature into a fractional energy density, we follow these
-			# steps:
-			# 
-			# rho_gamma   = 4 sigma_SB / c * T_CMB^4 [erg/cm^3]
-			#             = 4 sigma_SB / c^3 * T_CMB^4 [g/cm^3]
-			#
-			# where sigmaSB = 5.670367E-5 erg/cm^2/s/K^4. Then,
-			#                 
-			# Omega_gamma = rho_gamma / (Msun/g) * (kpc/cm)^3 / h^2 / constants.RHO_CRIT_0_KPC3
-			#
-			# Most of these steps can be summarized in one constant.
-			self.Ogamma0 =  4.4814665013636476E-07 * self.Tcmb0**4 / self.h2
-			
-			# The energy density in neutrinos is 7/8 (4/11)^(4/3) times the energy density in 
-			# photons, per effective neutrino species.
-			self.Onu0 = 0.22710731766 * self.Neff * self.Ogamma0
-			
-			# The density of relativistic species is the sum of the photon and neutrino densities.
-			self.Or0 = self.Ogamma0 + self.Onu0
-			
-			# For convenience, compute the epoch of matter-radiation equality
-			self.a_eq = self.Or0 / self.Om0
-		else:
-			self.Ogamma0 = 0.0
-			self.Onu0 = 0.0
-			self.Or0 = 0.0
-
-		# Make sure flatness is obeyed
-		self._ensureConsistency()
+		# Compute derived cosmological parameters
+		self._deriveParameters()
 		
 		# Flag for interpolation tables, printing etc
 		self.interpolation = interpolation
@@ -497,7 +469,7 @@ class Cosmology(object):
 		
 		# Create a storage object
 		self.storageUser = storage.StorageUser('cosmology', persistence, self.getName, 
-									self._getHashableString, self._ensureConsistency)
+									self._getHashableString, self._deriveParameters)
 				
 		# Lookup table for functions of z. This table runs from the future (a = 200.0) to 
 		# a = 0.005. Due to some interpolation errors at the extrema of the range, the table 
@@ -609,7 +581,7 @@ class Cosmology(object):
 		if self.storageUser.checkForChangedHash():
 			if self.print_warnings:
 				print("Cosmology: Detected change in cosmological parameters.")
-			self._ensureConsistency()
+			self._deriveParameters()
 			self.storageUser.resetStorage()
 			
 		return
@@ -618,10 +590,43 @@ class Cosmology(object):
 	# Utilities for internal use
 	###############################################################################################
 	
-	# Depending on whether the cosmology is flat or not, Ode0 and Ok0 take on certain values.
+	def _deriveParameters(self):
 
-	def _ensureConsistency(self):
+		# Compute some derived cosmological variables
+		self.h = self.H0 / 100.0
+		self.h2 = self.h**2
+		self.Omh2 = self.Om0 * self.h2
+		self.Ombh2 = self.Ob0 * self.h2
 		
+		if self.relspecies:
+			# To convert the CMB temperature into a fractional energy density, we follow these
+			# steps:
+			# 
+			# rho_gamma   = 4 sigma_SB / c * T_CMB^4 [erg/cm^3]
+			#             = 4 sigma_SB / c^3 * T_CMB^4 [g/cm^3]
+			#
+			# where sigmaSB = 5.670367E-5 erg/cm^2/s/K^4. Then,
+			#                 
+			# Omega_gamma = rho_gamma / (Msun/g) * (kpc/cm)^3 / h^2 / constants.RHO_CRIT_0_KPC3
+			#
+			# Most of these steps can be summarized in one constant.
+			self.Ogamma0 =  4.4814665013636476E-07 * self.Tcmb0**4 / self.h2
+			
+			# The energy density in neutrinos is 7/8 (4/11)^(4/3) times the energy density in 
+			# photons, per effective neutrino species.
+			self.Onu0 = 0.22710731766 * self.Neff * self.Ogamma0
+			
+			# The density of relativistic species is the sum of the photon and neutrino densities.
+			self.Or0 = self.Ogamma0 + self.Onu0
+			
+			# For convenience, compute the epoch of matter-radiation equality
+			self.a_eq = self.Or0 / self.Om0
+		else:
+			self.Ogamma0 = 0.0
+			self.Onu0 = 0.0
+			self.Or0 = 0.0
+		
+		# Depending on whether the cosmology is flat or not, Ode0 and Ok0 take on certain values.
 		if self.flat:
 			self.Ode0 = 1.0 - self.Om0 - self.Or0
 			self.Ok0 = 0.0

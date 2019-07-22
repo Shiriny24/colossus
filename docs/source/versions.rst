@@ -20,6 +20,9 @@ The changes in this version were largely inspired by a detailed comparison with 
     stored pickles will automatically be recomputed following this change.
 
 * Added the ``sugiyama95`` transfer function model.
+* When manually changing cosmology, all derived parameters are now automatically updated. 
+  Previously, changes to T_CMB0 and Neff did not have any effect. Thanks to Sebastian Bocquet for
+  pointing out this issue!
 
 .. rubric:: Version 1.2.9
 
