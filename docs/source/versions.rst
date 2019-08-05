@@ -23,6 +23,10 @@ The changes in this version were largely inspired by a detailed comparison with 
 * When manually changing cosmology, all derived parameters are now automatically updated. 
   Previously, changes to T_CMB0 and Neff did not have any effect. Thanks to Sebastian Bocquet for
   pointing out this issue!
+* The :doc:`lss_mass_function` module now correctly passes additional arguments to the power
+  spectrum, variance, and collapse overdensity functions. This only makes a difference to the
+  results if the user passes additional parameters such as a tabulated power spectrum. Thanks to
+  Wojciech Hellwing for finding this bug!
 
 .. rubric:: Version 1.2.9
 

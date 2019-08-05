@@ -139,18 +139,33 @@ class HaloMassFunctionModel():
 	def __init__(self):
 		
 		self.func = None
+		
 		self.z_dependence = False
 		"""
 		Indicates whether :math:`f(\\sigma)` depends on redshift in this model.
 		"""
+		
+		self.ps_dependence = False
+		"""
+		Indicates whether :math:`f(\\sigma)` depends directly on the power spectrum.
+		"""
+		
+		self.sigma_dependence = False
+		"""
+		Indicates whether :math:`f(\\sigma)` depends directly on :math:`\\sigma(M)` beyond the
+		input :math:`\\sigma`.
+		"""
+		
 		self.deltac_dependence = False
 		"""
-		Indicates whether :math:`f(\\sigma)` depends on the collapse overdensity.
+		Indicates whether :math:`f(\\sigma)` depends directly on the collapse overdensity.
 		"""
+	
 		self.mdef_dependence = False
 		"""
 		Indicates whether :math:`f(\\sigma)` depends on the mass definition (for SO models).
 		"""
+		
 		self.mdefs = []
 		"""
 		A list of mass definitions for which this model is valid. See :doc:`halo_mass` for details.
@@ -187,6 +202,8 @@ models['warren06'].mdefs = ['fof']
 
 models['reed07'] = HaloMassFunctionModel()
 models['reed07'].mdefs = ['fof']
+models['reed07'].ps_dependence = True
+models['reed07'].sigma_dependence = True
 models['reed07'].deltac_dependence = True
 
 models['tinker08'] = HaloMassFunctionModel()
@@ -216,6 +233,9 @@ models['watson13'].mdef_dependence = True
 models['bocquet16'] = HaloMassFunctionModel()
 models['bocquet16'].mdefs = ['200m', '200c', '500c']
 models['bocquet16'].z_dependence = True
+models['bocquet16'].ps_dependence = True
+models['bocquet16'].sigma_dependence = True
+models['bocquet16'].deltac_dependence = True
 models['bocquet16'].mdef_dependence = True
 
 models['despali16'] = HaloMassFunctionModel()
@@ -292,7 +312,7 @@ def massFunction(x, z, q_in = 'M', q_out = 'f', mdef = 'fof',
 	if q_in == 'M':
 		M = x
 		R = peaks.lagrangianR(x)
-		sigma = cosmo.sigma(R, z, **sigma_args)
+		sigma = cosmo.sigma(R, z, ps_args = ps_args, **sigma_args)
 	elif q_in == 'sigma':
 		sigma = x
 	elif q_in == 'nu':
@@ -307,10 +327,15 @@ def massFunction(x, z, q_in = 'M', q_out = 'f', mdef = 'fof',
 
 	model_props = models[model]
 	args = (sigma,)
-	if model_props.z_dependence or model_props.deltac_dependence:
+	if model_props.z_dependence or model_props.ps_dependence \
+		or model_props.sigma_dependence or model_props.deltac_dependence:
 		args += (z,)
 	if model_props.mdef_dependence:
 		args += (mdef,)
+	if model_props.ps_dependence:
+		args += (ps_args,)
+	if model_props.sigma_dependence:
+		args += (sigma_args,)
 	if model_props.deltac_dependence:
 		args += (deltac_args,)
 
@@ -326,7 +351,7 @@ def massFunction(x, z, q_in = 'M', q_out = 'f', mdef = 'fof',
 		if M is None:
 			R = cosmo.sigma(sigma, inverse = True, ps_args = ps_args, **sigma_args)
 			M = peaks.lagrangianM(R)
-		mfunc = convertMassFunction(f, M, z, 'f', q_out)
+		mfunc = convertMassFunction(f, M, z, 'f', q_out, ps_args = ps_args, sigma_args = sigma_args)
 
 	return mfunc
 
@@ -559,7 +584,8 @@ def modelWarren06(sigma):
 
 ###################################################################################################
 
-def modelReed07(sigma, z, deltac_args = {'corrections': True}, exact_n = True):
+def modelReed07(sigma, z, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARGS,
+			deltac_args = {'corrections': True}, exact_n = True):
 	"""
 	The mass function model of Reed et al 2007.
 	
@@ -574,6 +600,12 @@ def modelReed07(sigma, z, deltac_args = {'corrections': True}, exact_n = True):
 		Variance; can be a number or a numpy array.
 	z: float
 		Redshift
+	ps_args: dict
+		Arguments passed to the :func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum` 
+		function.
+	sigma_args: dict
+		Extra arguments to be passed to the :func:`~cosmology.cosmology.Cosmology.sigma` function 
+		when mass is converted to a variance.
 	deltac_args: dict
 		Arguments passed to the :func:`~lss.peaks.collapseOverdensity` function.
 	exact_n: bool
@@ -589,8 +621,8 @@ def modelReed07(sigma, z, deltac_args = {'corrections': True}, exact_n = True):
 
 	if exact_n:
 		cosmo = cosmology.getCurrent()
-		R = cosmo.sigma(sigma, z, inverse = True)
-		d_ln_sigma_d_ln_R = cosmo.sigma(R, z, derivative = True)
+		R = cosmo.sigma(sigma, z, inverse = True, ps_args = ps_args, **sigma_args)
+		d_ln_sigma_d_ln_R = cosmo.sigma(R, z, derivative = True, ps_args = ps_args, **sigma_args)
 		n_eff = -2.0 * d_ln_sigma_d_ln_R - 3.0
 	else:
 		mz = 0.55 - 0.32 * (1.0 - (1.0 / (1.0 + z)))**5
@@ -875,7 +907,8 @@ def modelWatson13(sigma, z, mdef):
 
 ###################################################################################################
 
-def modelBocquet16(sigma, z, mdef, hydro = True):
+def modelBocquet16(sigma, z, mdef, ps_args = defaults.PS_ARGS, sigma_args = defaults.SIGMA_ARGS,
+			deltac_args = {'corrections': True}, hydro = True):
 	"""
 	The mass function model of Bocquet et al 2016.
 	
@@ -885,6 +918,9 @@ def modelBocquet16(sigma, z, mdef, hydro = True):
 	mass functions rely on a conversion that depends explicitly on redshift, cosmology, and 
 	halo mass (rather than peak height).
 	
+	Due to this conversion to halo mass, the model does implicitly depend on the power spectrum, 
+	variance etc parameters beyond the value of sigma.
+	
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	sigma: array_like
@@ -893,6 +929,14 @@ def modelBocquet16(sigma, z, mdef, hydro = True):
 		Redshift
 	mdef: str
 		The mass definition to which ``sigma`` corresponds. See :doc:`halo_mass` for details.
+	ps_args: dict
+		Arguments passed to the :func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum` 
+		function.
+	sigma_args: dict
+		Extra arguments to be passed to the :func:`~cosmology.cosmology.Cosmology.sigma` function 
+		when mass is converted to a variance.
+	deltac_args: dict
+		Arguments passed to the :func:`~lss.peaks.collapseOverdensity` function.
 	hydro: bool
 		If True, return the model for hydro simulations, otherwise DM-only.
 		
@@ -973,9 +1017,10 @@ def modelBocquet16(sigma, z, mdef, hydro = True):
 	if mdef in ['200c', '500c']:
 		cosmo = cosmology.getCurrent()
 		Omega_m = cosmo.Om(z)
-		delta_c = peaks.collapseOverdensity()
+		delta_c = peaks.collapseOverdensity(z = z, **deltac_args)
 		nu = delta_c / sigma
-		MDelta = peaks.massFromPeakHeight(nu, z)
+		MDelta = peaks.massFromPeakHeight(nu, z, ps_args = ps_args, sigma_args = sigma_args, 
+										deltac_args = deltac_args)
 		ln_MDelta_Msun = np.log(MDelta / cosmo.h)
 		
 	if mdef == '200c':
