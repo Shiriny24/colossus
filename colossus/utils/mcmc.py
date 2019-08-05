@@ -171,7 +171,7 @@ def runChain(L_func, walkers, args = (),
 		Once the GR indicator is lower than this number in all parameters, the chain is ended.
 	verbose: bool
 		If ``False``, this function outputs no information.
-	output_every_n: bool
+	output_every_n: int
 		Output information about the progress of the chain every n steps. This parameter only has
 		an effect if ``verbose == True``.
 		
@@ -306,7 +306,7 @@ def runChain(L_func, walkers, args = (),
 			mutx[i].append(np.sum(x[:, :, i]) / (nwalkers))
 		
 		# Compute Gelman-Rubin indicator for all parameters
-		if nchain % convergence_step == 0 and nchain >= nwalkers / 2 and nchain > 1:
+		if (nchain % convergence_step == 0) and (nchain >= nwalkers / 2) and (nchain > 1):
 			
 			# Calculate Gelman & Rubin convergence indicator
 			mwc = mw / (nchain - 1.0)
@@ -329,7 +329,7 @@ def runChain(L_func, walkers, args = (),
 					/ nwalkers - (nchain - 1.0) / (nchain * nwalkers)
 				Rval[i].append(Rgr[i] - 1.0)
 			
-			if verbose and nchain % output_every_n == 0:
+			if verbose and (nchain % output_every_n == 0):
 				msg = 'Step %6d, autocorr. time %5.1f, GR = [' % (nchain, np.max(tacorx))
 				for i in range(len(Rgr)):
 					msg += ' %6.3f' % Rgr[i]
@@ -338,7 +338,10 @@ def runChain(L_func, walkers, args = (),
 			
 			if np.max(np.abs(Rgr - 1.0)) < converged_GR:
 				converged = True
-
+				
+		elif verbose and (nchain % output_every_n == 0):
+			print('Step %6d' % (nchain))
+			
 	# Chop of burn-in period, and thin samples on auto-correlation time following Sokal's (1996) 
 	# recommendations
 	nthin = int(tacorx)

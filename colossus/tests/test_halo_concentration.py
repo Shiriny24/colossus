@@ -78,31 +78,31 @@ class TCConcentration(test_colossus.ColosssusTestCase):
 			c = concentration.concentration(M, mdef, z = z, model = k, range_return = False, 
 										range_warning = False)
 			if k == 'bullock01':
-				self.assertAlmostEqual(c, 6.835385932202e+00, msg = msg)
+				self.assertAlmostEqual(c, 6.835529245640e+00, msg = msg)
 			elif k == 'duffy08':
 				self.assertAlmostEqual(c, 5.844133619011e+00, msg = msg)
 			elif k == 'klypin11':
 				self.assertAlmostEqual(c, 9.328978854869e+00, msg = msg)
 			elif k == 'prada12':
-				self.assertAlmostEqual(c, 7.553675753116e+00, msg = msg)
+				self.assertAlmostEqual(c, 7.553796065867e+00, msg = msg)
 			elif k == 'bhattacharya13':
-				self.assertAlmostEqual(c, 5.862296836593e+00, msg = msg)
+				self.assertAlmostEqual(c, 5.862359898743e+00, msg = msg)
 			elif k == 'dutton14':
 				self.assertAlmostEqual(c, 7.590718273862e+00, msg = msg)
 			elif k == 'diemer15':
-				self.assertAlmostEqual(c, 6.818392744601e+00, msg = msg)
+				self.assertAlmostEqual(c, 6.818549860585e+00, msg = msg)
 			elif k == 'diemer15_orig':
-				self.assertAlmostEqual(c, 6.650247771481e+00, msg = msg)
+				self.assertAlmostEqual(c, 6.650400105982e+00, msg = msg)
 			elif k == 'klypin16_nu':
-				self.assertAlmostEqual(c, 6.458787326526e+00, msg = msg)
+				self.assertAlmostEqual(c, 6.458910543577e+00, msg = msg)
 			elif k == 'klypin16_m':
 				self.assertAlmostEqual(c, 6.210791674864e+00, msg = msg)
 			elif k == 'ludlow16':
-				self.assertAlmostEqual(c, 7.622973572184e+00, msg = msg)
+				self.assertAlmostEqual(c, 7.623113634479e+00, msg = msg)
 			elif k == 'child18':
-				self.assertAlmostEqual(c, 6.695209937063e+00, msg = msg)
+				self.assertAlmostEqual(c, 6.695361703210e+00, msg = msg)
 			elif k == 'diemer19':
-				self.assertAlmostEqual(c, 6.799691833677e+00, msg = msg)
+				self.assertAlmostEqual(c, 6.799845154993e+00, msg = msg)
 			else:
 				msg = 'Unknown model, %s.' % k
 				raise Exception(msg)

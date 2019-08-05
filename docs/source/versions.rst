@@ -5,6 +5,29 @@ What's new?
 See below for a listing of the most important code and interface changes in Colossus, starting with
 version 1.1.0.
 
+.. rubric:: Version 1.2.10
+
+The changes in this version were largely inspired by a detailed comparison with the 
+`Core Cosmology Library <https://github.com/LSSTDESC/CCL>`_ (CCL) by the LSST-DESC. 
+
+* Physical and astronomical constants were updated to IAU 2015 / PDG 2018 standard, including
+  the definition of parsec/kpc/Mpc and the solar mass. Those changes translate into changes in 
+  the gravitational constant in astronomical units and the critical density of the universe, which
+  in turn are used in numerous functions.
+
+  .. note::
+    This change affects most outputs from Colossus, but only by factors up to 1E-4 or less. All
+    stored pickles will automatically be recomputed following this change.
+
+* Added the ``sugiyama95`` transfer function model.
+* When manually changing cosmology, all derived parameters are now automatically updated. 
+  Previously, changes to T_CMB0 and Neff did not have any effect. Thanks to Sebastian Bocquet for
+  pointing out this issue!
+* The :doc:`lss_mass_function` module now correctly passes additional arguments to the power
+  spectrum, variance, and collapse overdensity functions. This only makes a difference to the
+  results if the user passes additional parameters such as a tabulated power spectrum. Thanks to
+  Wojciech Hellwing for finding this bug!
+
 .. rubric:: Version 1.2.9
 
 * Removed reference to packaging package by adding manual version comparison function.
