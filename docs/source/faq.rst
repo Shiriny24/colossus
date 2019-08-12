@@ -57,3 +57,21 @@ respective module documentations).
 
 Finally, the accuracy of many functions is tested and stated explicitly in the 
 `code paper <https://ui.adsabs.harvard.edu/abs/2018ApJS..239...35D/abstract>`_.
+
+.. rubric:: Using a tabulated power spectrum causes weird errors
+
+When using a tabulated power spectrum, you may get errors such as::
+
+    ValueError: x must be strictly increasing
+    
+These errors occur when colossus tries to set up an interpolation table where the x-dimension is
+not monotonic. For example, if a tabulated power spectrum cuts out at some wavenumber, the variance
+will approach a constant which can throw the interpolator. In such cases, one can change the extent
+of the cosmological interpolation tables, for example::
+
+    R_min_sigma = 1E-3
+    
+means that Colossus will not try to interpolate sigma at smaller radii, which it normally would. 
+When changing the interpolation tables in this way, make sure to delete old persistence files.
+Such manipulations require some knowledge of the internal workings of Colossus. Feel free
+to contact the developer.
