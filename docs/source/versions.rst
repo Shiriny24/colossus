@@ -5,6 +5,11 @@ What's new?
 See below for a listing of the most important code and interface changes in Colossus, starting with
 version 1.1.0.
 
+.. rubric:: Version 1.2.11
+
+Fixes a bug in the :doc:`lss_mass_function` module, where redshift was not correctly passed to 
+the sigma function.
+
 .. rubric:: Version 1.2.10
 
 The changes in this version were largely inspired by a detailed comparison with the 

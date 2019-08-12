@@ -349,7 +349,7 @@ def massFunction(x, z, q_in = 'M', q_out = 'f', mdef = 'fof',
 		mfunc = f
 	else:
 		if M is None:
-			R = cosmo.sigma(sigma, inverse = True, ps_args = ps_args, **sigma_args)
+			R = cosmo.sigma(sigma, z, inverse = True, ps_args = ps_args, **sigma_args)
 			M = peaks.lagrangianM(R)
 		mfunc = convertMassFunction(f, M, z, 'f', q_out, ps_args = ps_args, sigma_args = sigma_args)
 
