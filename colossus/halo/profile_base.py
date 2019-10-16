@@ -237,8 +237,12 @@ class HaloDensityProfile():
 			Density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`; has the same dimensions 
 			as ``r``.
 		"""
+		
+		rho = self.densityInner(r)
+		if self.N_outer > 0:
+			rho += self.densityOuter(r)
 
-		return self.densityInner(r) + self.densityOuter(r)
+		return rho
 
 	###############################################################################################
 
@@ -313,8 +317,12 @@ class HaloDensityProfile():
 			The linear derivative in physical :math:`M_{\odot} h / {\\rm kpc}^2`; has the same 
 			dimensions as ``r``.
 		"""
+
+		drho_dr = self.densityDerivativeLinInner(r)
+		if self.N_outer > 0:
+			drho_dr += self.densityDerivativeLinOuter(r)
 		
-		return self.densityDerivativeLinInner(r) + self.densityDerivativeLinOuter(r)
+		return drho_dr
 
 	###############################################################################################
 
@@ -448,6 +456,7 @@ class HaloDensityProfile():
 		derivative: array_like
 			The dimensionless logarithmic derivative; has the same dimensions as ``r``.
 		"""		
+		
 		drho_dr = self.densityDerivativeLinOuter(r)
 		rho = self.density(r)
 		der = drho_dr * r / rho
@@ -465,7 +474,7 @@ class HaloDensityProfile():
 
 		r_use, is_array = utilities.getArray(r)
 		M = 0.0 * r_use
-		for i in range(len(r_use)):	
+		for i in range(len(r_use)):
 			M[i], _ = scipy.integrate.quad(integrand, self.rmin, r_use[i], epsrel = accuracy)
 		if not is_array:
 			M = M[0]
@@ -534,9 +543,14 @@ class HaloDensityProfile():
 		M: array_like
 			The mass enclosed within radius ``r``, in :math:`M_{\odot}/h`; has the same dimensions 
 			as ``r``.
-		"""		
+		"""
+		
+		if self.N_outer > 0:
+			M = self._enclosedMass(r, accuracy, self.densityOuter)
+		else:
+			M = np.zeros_like(r)
 
-		return self._enclosedMass(r, accuracy, self.densityOuter)
+		return M
 	
 	###############################################################################################
 
