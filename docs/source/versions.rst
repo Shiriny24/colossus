@@ -5,6 +5,13 @@ What's new?
 See below for a listing of the most important code and interface changes in Colossus, starting with
 version 1.1.0.
 
+.. rubric:: Version 1.2.12
+
+Fixes:
+
+* Improved error checking in :doc:`halo_profile_spline`. 
+* Fixed bug when trying to compute outer profile for objects that have no outer profile.
+
 .. rubric:: Version 1.2.11
 
 Fixes a bug in the :doc:`lss_mass_function` module, where redshift was not correctly passed to 
