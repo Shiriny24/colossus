@@ -181,6 +181,10 @@ We can implement more exotic models by supplying an arbitrary function::
 	params['wz_function'] = wz_func
 	cosmo = cosmology.setCosmology('planck_wz', params)
 
+Please note that the redshift range into the future is reduced from :math:`z = -0.995` 
+(:math:`a = 200`) to :math:`z = 0.9` (:math:`a = 10`) for the ``w0wa`` and ``user`` dark energy 
+models to avoid numerical issues.
+
 ---------------------------------------------------------------------------------------------------
 Power spectrum models
 ---------------------------------------------------------------------------------------------------
@@ -474,8 +478,17 @@ class Cosmology(object):
 		# Lookup table for functions of z. This table runs from the future (a = 200.0) to 
 		# a = 0.005. Due to some interpolation errors at the extrema of the range, the table 
 		# runs to slightly lower and higher z than the interpolation is allowed for.
-		self.z_min = -0.995
-		self.z_min_compute = -0.998
+		# 
+		# If the dark energy model is w0-wa or user-defined, we assume somewhat more 
+		# conservative limits. In the w0-wa model, sufficiently large values of wa can
+		# otherwise lead to a crash because np.exp() overflows. A similar situation could easily
+		# occur for user-defined models. 
+		if de_model in ['lambda', 'w0']:
+			self.z_min = -0.995
+			self.z_min_compute = -0.998
+		else:
+			self.z_min = -0.9
+			self.z_min_compute = -0.96
 		self.z_max = 200.01
 		self.z_max_compute = 500.0
 		self.z_Nbins = 50
@@ -1711,8 +1724,17 @@ class Cosmology(object):
 			# The stringent accuracy limit is necessary, there are noticeable errors in the solution 
 			# for lower atol. The solution should always converge to D ~ a at very low a.
 			dic = scipy.integrate.solve_ivp(derivatives_G, (a_min, a_max), [1.0, 0.0], 
-										t_eval = a_eval, atol = 1E-6, rtol = 1E-6)
+										t_eval = a_eval, atol = 1E-6, rtol = 1E-6, vectorized = True)
 			G = dic['y'][0, :]
+			
+			# Before we multiply G with a to get D, we need to check that the solve_ivp function 
+			# did not crash. Unfortunately, if an overflow occurs, the function simply does not 
+			# return the corresponding values.
+			if (dic['status'] != 0) or (G.shape[0] != a_eval.shape[0]):
+				if self.interpolation:
+					raise Exception('The calculation of the growth factor failed for at least one redshift. Please reduce the redshift range of the interpolation table (typically z_min/z_min_compute).')
+				else:
+					raise Exception('The calculation of the growth factor failed for at least one redshift.')
 			D = G * a_eval
 			
 			# Revert array to original order
