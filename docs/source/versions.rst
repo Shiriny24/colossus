@@ -5,6 +5,18 @@ What's new?
 See below for a listing of the most important code and interface changes in Colossus, starting with
 version 1.1.0.
 
+.. rubric:: Version 1.2.12
+
+This version contains some minor bug fixes, namely:
+
+* Improved error checking in :doc:`halo_profile_spline`. 
+* Fixed bug when trying to compute outer profile for objects that have no outer profile.
+* Some calculations relating to dark energy, including the growth factor, can fail at far-future
+  times when the w0-wa dark energy model is active. This happens because dark energy grows
+  exponentially, leading to some very large values. Now, the default redshift range is reduced from
+  a=200 to a=10 for w0wa and user-defined cosmologies. Thank to Antonio Villareal for pointing out
+  this bug!
+
 .. rubric:: Version 1.2.11
 
 Fixes a bug in the :doc:`lss_mass_function` module, where redshift was not correctly passed to 

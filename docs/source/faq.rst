@@ -75,3 +75,20 @@ means that Colossus will not try to interpolate sigma at smaller radii, which it
 When changing the interpolation tables in this way, make sure to delete old persistence files.
 Such manipulations require some knowledge of the internal workings of Colossus. Feel free
 to contact the developer.
+
+.. rubric:: I am using non-LCDM cosmologies and get weird errors
+
+When using ``de_model = 'w0wa'`` or ``de_model = 'user'``, the calculation of the growth factor
+can fail due to overflow errors. These are typically caused because the dark energy component
+grows exponentially in the future. For this reason, the default redshift range of all interpolation
+tables is reduced in these cases. If such errors still occur, you can set ``interpolation = False``, 
+but that reduces the functionality of the cosmology module somewhat. Instead, you can reduce the 
+redshift range of the interpolation table, for example::
+
+    cosmo = cosmology.setCosmology('myCosmo', params)
+    cosmo.z_min = -0.1
+    cosmo.z_min_compute = -0.2
+    
+Note that changes in the interpolation tables will cause untested changes in the behavior of the
+interpolation.
+    

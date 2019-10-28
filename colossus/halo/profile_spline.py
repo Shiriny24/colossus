@@ -76,6 +76,10 @@ class SplineProfile(profile_base.HaloDensityProfile):
 	M: array_like
 		Enclosed mass within radii r in :math:`M_{\odot} / h`. Does not have to be passed
 		as long as ``rho`` is passed.
+	spline_order: int
+		The order of the spline used. By default, a cubic spline (order 3) is used, but such 
+		splines can lead to ringing, especially if there are oscillating elements in the input
+		mass or density array. In such cases, it can be helpful to set ``spline_order = 1``.
 
 	Warnings
 	-----------------------------------------------------------------------------------------------
@@ -87,7 +91,7 @@ class SplineProfile(profile_base.HaloDensityProfile):
 	# CONSTRUCTOR
 	###############################################################################################
 	
-	def __init__(self, r, rho = None, M = None):
+	def __init__(self, r, rho = None, M = None, spline_order = 3):
 		
 		self.par_names = []
 		self.opt_names = []
@@ -105,32 +109,54 @@ class SplineProfile(profile_base.HaloDensityProfile):
 		
 		self.rho_spline = None
 		self.M_spline = None
+		if np.any(r <= 0.0):
+			raise Exception('Radius may not contain negative or zero elements.')
 		logr = np.log(r)
 		
 		if M is not None:
+			if np.any(np.isnan(M)):
+				raise Exception('Mass array may not contain nan elements.')
+			if np.any(M < 0.0):
+				raise Exception('Mass array may not contain negative elements.')
+			if np.any(np.diff(M) <= 0.0):
+				raise Exception('Mass array must be strictly increasing.')
+			if np.any(M < 1E-20):
+				print('Warning: mass array passed to spline profile contains very small or zero numbers.')
+				M[M < 1E-20] = 1E-20
 			logM = np.log(M)
-			self.M_spline = scipy.interpolate.InterpolatedUnivariateSpline(logr, logM)
+			self.M_spline = scipy.interpolate.InterpolatedUnivariateSpline(logr, logM, k = spline_order)
 
 		if rho is not None:
+			if np.any(np.isnan(rho)):
+				raise Exception('Density array may not contain nan elements.')
+			if np.any(rho < 0.0):
+				raise Exception('Density may not contain negative elements.')
+			if np.any(rho < 1E-20):
+				print('Warning: density array passed to spline profile contains very small or zero numbers.')
+				rho[rho < 1E-20] = 1E-20
 			logrho = np.log(rho)
-			self.rho_spline = scipy.interpolate.InterpolatedUnivariateSpline(logr, logrho)
+			self.rho_spline = scipy.interpolate.InterpolatedUnivariateSpline(logr, logrho, k = spline_order)
 
 		# Construct M(r) from density. For some reason, the spline integrator fails on the 
 		# innermost bin, and the quad integrator fails on the outermost bin. 
 		if self.M_spline is None:
 			integrand = 4.0 * np.pi * r**2 * rho
-			integrand_spline = scipy.interpolate.InterpolatedUnivariateSpline(r, integrand)
+			integrand_spline = scipy.interpolate.InterpolatedUnivariateSpline(r, integrand, k = spline_order)
 			logM = 0.0 * r
 			for i in range(len(logM) - 1):
 				logM[i], _ = scipy.integrate.quad(integrand_spline, 0.0, r[i])
 			logM[-1] = integrand_spline.integral(0.0, r[-1])
 			logM = np.log(logM)
-			self.M_spline = scipy.interpolate.InterpolatedUnivariateSpline(logr, logM)
+			self.M_spline = scipy.interpolate.InterpolatedUnivariateSpline(logr, logM, k = spline_order)
 
 		if self.rho_spline is None:
 			deriv = self.M_spline(np.log(r), nu = 1) * M / r
+			if np.any(deriv <= 0.0):
+				raise Exception('Derivative of mass array contains zero or negative elements.')
 			logrho = np.log(deriv / 4.0 / np.pi / r**2)
-			self.rho_spline = scipy.interpolate.InterpolatedUnivariateSpline(logr, logrho)
+			if np.any(np.isnan(logrho)):
+				raise Exception('Found nan in density array.')
+			self.rho_spline = scipy.interpolate.InterpolatedUnivariateSpline(logr, logrho, k = spline_order)
 
 		return
 
