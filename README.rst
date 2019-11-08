@@ -18,7 +18,7 @@ You might need to prefix this command with ``sudo``. Alternatively, you can clon
 
 .. code:: shell
 
-    hg clone https://bitbucket.org/bdiemer/colossus
+   git clone git@bitbucket.org:bdiemer/colossus.git
 
 After installing colossus, you should run its unit test suite to ensure that the code works as expected. In python, execute:
 
@@ -46,7 +46,7 @@ If any errors occur, please send the output to the author.
 License & Citing
 ----------------
 
-Author:        Benedikt Diemer (benedikt.diemer@cfa.harvard.edu)
+Author:        Benedikt Diemer (diemer@umd.edu)
 
 Contributors:  Matt Becker, Andrey Kravtsov, Steven Murray
 

@@ -38,33 +38,24 @@ pip command. For more information, please see the
 .. rubric:: Repository installation
 
 If you want to edit the code, you might prefer to clone the public BitBucket repository 
-https://bitbucket.org/bdiemer/colossus by executing
+https://bitbucket.org/bdiemer/colossus/src/master/ by executing
 
 .. code:: shell
 
-   hg clone https://bitbucket.org/bdiemer/colossus
-
-For this method, you will need the version control system Mercurial (hg), which you can download 
-`here <http://mercurial.selenic.com/>`_. You can update the code by pulling changes from the 
-repository,
-
-.. code:: shell
-
-   hg pull
-   hg up
+   git clone git@bitbucket.org:bdiemer/colossus.git
 
 You will also need to manually include Colossus in your ``$PYTHONPATH`` variable, for example 
 by adding this command to your shell's initialization script (e.g., ``bashrc``):
 
 .. code:: shell
    
-   export PYTHONPATH=$PYTHONPATH:/Users/me/code/colossus
+   export PYTHONPATH=$PYTHONPATH:/users/me/code/colossus
 
 where the path is, of course, replaced with the location of Colossus on your system. 
 
 If, for some reason, you wish to avoid using mercurial or pip, you can install Colossus manually 
-by downloading the current repository contents as a 
-`zip file <https://bitbucket.org/bdiemer/colossus/downloads/>`_. The disadvantage of this method 
+by downloading the current repository contents from the
+`repository site <https://bitbucket.org/bdiemer/colossus/src/master/>`_. The disadvantage of this method 
 is that it makes updating the code relatively cumbersome.
 
 .. rubric:: Running unit tests

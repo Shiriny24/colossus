@@ -106,7 +106,7 @@ nitpicky = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 
-html_theme_path = ['../../../_Environment/SphinxThemes']
+html_theme_path = ['../../../_environment/sphinx_themes']
 
 #html_theme = 'classic'
 #html_theme = 'sphinxdoc'

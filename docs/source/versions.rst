@@ -5,6 +5,18 @@ What's new?
 See below for a listing of the most important code and interface changes in Colossus, starting with
 version 1.1.0.
 
+.. rubric:: Version 1.2.13
+
+Colossus has migrated from mercurial (hg) to git, and this version simply updates the documentation
+and readme files. The reason for this migration is that BitBucket is retiring its mercurial support
+in 2020, but this decision is just a symptom of a broader trend.
+
+Some may wonder why the code has not been migrated to GitHub instead of BitBucket, now that the
+repository system does not matter any more. The answer is that GitHub does not support the current
+development model, namely a private fork of the public repository. Moreover, previous issues and
+commit details cannot be transferred to GitHub and would be lost. Thus, Colossus is now a git
+repository, but is still hosted on BitBucket.
+
 .. rubric:: Version 1.2.12
 
 This version contains some minor bug fixes, namely:
