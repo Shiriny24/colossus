@@ -5,6 +5,14 @@ What's new?
 See below for a listing of the most important code and interface changes in Colossus, starting with
 version 1.1.0.
 
+.. rubric:: Version 1.2.14
+
+Changes in this version include:
+
+* The user can now pass power spectrum arguments to the Diemer & Joyce 2019 concentration model,
+  for example, in order to use a non-standard power spectrum.
+* The code returns more informative error messages when tabulated power spectra are used.
+
 .. rubric:: Version 1.2.13
 
 Colossus has migrated from mercurial (hg) to git, and this version simply updates the documentation

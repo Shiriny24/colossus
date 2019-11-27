@@ -1968,13 +1968,12 @@ class Cosmology(object):
 		# If we could not find the interpolator, the underlying data table probably has not been
 		# created yet.
 		if interpolator is None:
-			# We are dealing with a non-user supplied power spectrum, meaning we can decide the
-			# k array for the table.
 			if path is None:
 				
+				# We are dealing with a non-user supplied power spectrum, meaning we can decide the
+				# k array for the table.
 				if self.print_info:
 					print("Cosmology.matterPowerSpectrum: Computing lookup table.")				
-				
 				data_k = np.zeros((np.sum(self.k_Pk_Nbins) + 1), np.float)
 				n_regions = len(self.k_Pk_Nbins)
 				k_computed = 0
@@ -2007,6 +2006,15 @@ class Cosmology(object):
 				# to the correct sigma8 which happens in the exact Pk function.
 				table_name = self._matterPowerSpectrumName(model)
 				table = self.storageUser.getStoredObject(table_name, path = path)
+				
+				# If the stored object function returns None, that can be because persistence is 
+				# turned off altogether, in which case we should return an informative error
+				# message.
+				if table is None:
+					if not self.storageUser.persistence_read:
+						raise Exception('Please set persistence to read in order to load a power spectrum from a file.')
+					else:
+						raise Exception('Could not load power spectrum table from path "%s".' % (path))
 				table_k = 10**table[0]
 				table_P = self._matterPowerSpectrumExact(table_k, model = model, path = path,
 														ignore_norm = False)
@@ -2042,6 +2050,9 @@ class Cosmology(object):
 		and :math:`\log_{10}(P)` where k and P(k) are in the same units as in this function. This
 		table is interpolated with a third-order spline. Note that the tabulated spectrum is 
 		normalized to the value if :math:`\sigma_8` set in the cosmology.
+		
+		Also note that if a power spectrum is to be read from a file, the ``persistence`` 
+		parameter must allow for reading (though not necessarily writing) of files.
 
 		Warnings
 		-------------------------------------------------------------------------------------------
@@ -2299,6 +2310,8 @@ class Cosmology(object):
 
 	def _sigmaInterpolator(self, j, filt, inverse, ps_args):
 		
+		if not 'model' in ps_args:
+			raise Exception('The ps_args dictionary must contain the model keyword, even if the power spectrum is loaded from file.')
 		table_name = 'sigma%d_%s_%s_%s' % (j, self.name, ps_args['model'], filt)
 		interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, 
 													inverse = inverse)
@@ -2588,8 +2601,7 @@ class Cosmology(object):
 		derivative: bool
 			If ``derivative == True``, the linear derivative :math:`d \\xi / d R` is returned.
 		ps_args: dict
-			Arguments passed to the :func:`matterPowerSpectrum` 
-			function.
+			Arguments passed to the :func:`matterPowerSpectrum` function.
 
 		Returns
 		-------------------------------------------------------------------------------------------

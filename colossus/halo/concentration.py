@@ -1271,7 +1271,7 @@ def _diemer19_alpha_eff(z):
 
 ###################################################################################################
 
-def modelDiemer19(M200c, z, statistic = 'median'):
+def modelDiemer19(M200c, z, statistic = 'median', ps_args = defaults.PS_ARGS):
 	"""
 	The model of Diemer & Joyce 2019.
 	
@@ -1293,6 +1293,9 @@ def modelDiemer19(M200c, z, statistic = 'median'):
 		Redshift
 	statistic: str
 		Can be ``mean`` or ``median``.
+	ps_args: dict
+		Arguments passed to the :func:`matterPowerSpectrum` function, and functions that depend on
+		it such as the power spectrum slope.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -1410,8 +1413,8 @@ def modelDiemer19(M200c, z, statistic = 'median'):
 		raise Exception('Statistic %s not implmented in diemer19 model.' % statistic)
 
 	# Compute peak height, n_eff, and alpha_eff
-	nu = peaks.peakHeight(M200c, z)
-	n_eff = peaks.powerSpectrumSlope(nu, z, slope_type = 'sigma', scale = kappa)
+	nu = peaks.peakHeight(M200c, z, ps_args = ps_args)
+	n_eff = peaks.powerSpectrumSlope(nu, z, slope_type = 'sigma', scale = kappa, ps_args = ps_args)
 	alpha_eff = _diemer19_alpha_eff(z)
 
 	is_array = utilities.isArray(nu)
