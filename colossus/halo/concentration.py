@@ -1317,7 +1317,7 @@ def modelDiemer19(M200c, z, statistic = 'median', ps_args = defaults.PS_ARGS):
 		n = np.linspace(-4.0, 0.0, n_n)
 		c = np.linspace(-1.0, 3.0, n_c)
 		
-		# The left hand side of the equation in DJ18
+		# The left hand side of the equation in DJ19
 		lin_c = 10**c
 		lhs = np.log10(lin_c[:, None] / profile_nfw.NFWProfile.mu(lin_c[:, None])**((5.0 + n) / 6.0))
 		
@@ -1433,7 +1433,7 @@ def modelDiemer19(M200c, z, statistic = 'median', ps_args = defaults.PS_ARGS):
 	# Get interpolation table
 	interp_Gc, interp_Gmin, interp_Gmax = getGcTable()
 	
-	# Mask out values of rhs for which do not exist. The interpolator will still work because it
+	# Mask out values of rhs for which do G not exist. The interpolator will still work because it
 	# is based on a full grid of G values, but we mask out the invalid array elements.
 	mask = (rhs >= interp_Gmin(n_eff)) & (rhs <= interp_Gmax(n_eff))
 	c200c = 10**interp_Gc(rhs, n_eff, grid = False) * C_alpha
