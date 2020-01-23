@@ -1,11 +1,22 @@
-===========
-What's new?
-===========
+===============
+Version history
+===============
 
 See below for a listing of the most important code and interface changes in Colossus, starting with
-version 1.1.0.
+version 1.1.0. You can download older versions from the 
+`PyPi History <https://pypi.org/project/colossus/#history>`_ for Colossus.
 
-.. rubric:: Version 1.2.13
+.. rubric:: Version 1.2.14 (released 01/23/2020)
+
+Changes in this version include:
+
+* The user can now pass power spectrum arguments to the Diemer & Joyce 2019 concentration model,
+  for example, in order to use a non-standard power spectrum.
+* The code returns more informative error messages when tabulated power spectra are used.
+* The normalization of the power spectrum for self-similar (power-law) cosmologies has been fixed
+  for both the tophat and Gaussian filters (thanks to Michael Joyce for finding this bug!).
+
+.. rubric:: Version 1.2.13 (released 11/08/2019)
 
 Colossus has migrated from mercurial (hg) to git, and this version simply updates the documentation
 and readme files. The reason for this migration is that BitBucket is retiring its mercurial support
@@ -17,7 +28,7 @@ development model, namely a private fork of the public repository. Moreover, pre
 commit details cannot be transferred to GitHub and would be lost. Thus, Colossus is now a git
 repository, but is still hosted on BitBucket.
 
-.. rubric:: Version 1.2.12
+.. rubric:: Version 1.2.12 (released 10/28/2019)
 
 This version contains some minor bug fixes, namely:
 
@@ -29,12 +40,12 @@ This version contains some minor bug fixes, namely:
   a=200 to a=10 for w0wa and user-defined cosmologies. Thank to Antonio Villareal for pointing out
   this bug!
 
-.. rubric:: Version 1.2.11
+.. rubric:: Version 1.2.11 (released 08/12/2019)
 
 Fixes a bug in the :doc:`lss_mass_function` module, where redshift was not correctly passed to 
 the sigma function.
 
-.. rubric:: Version 1.2.10
+.. rubric:: Version 1.2.10 (released 08/05/2019)
 
 The changes in this version were largely inspired by a detailed comparison with the 
 `Core Cosmology Library <https://github.com/LSSTDESC/CCL>`_ (CCL) by the LSST-DESC. 
@@ -57,14 +68,14 @@ The changes in this version were largely inspired by a detailed comparison with 
   results if the user passes additional parameters such as a tabulated power spectrum. Thanks to
   Wojciech Hellwing for finding this bug!
 
-.. rubric:: Version 1.2.9
+.. rubric:: Version 1.2.9 (released 03/23/2019)
 
 * Removed reference to packaging package by adding manual version comparison function.
 * Added unit tests for versioning and storage.
 * Added unit tests for derived constants.
 * Added a new :doc:`faq` page to the documentation.
 
-.. rubric:: Version 1.2.6
+.. rubric:: Version 1.2.6 (released 03/01/2019)
 
 * Fixed small discrepancy in the unit system. The gravitational constant was adjusted by a factor
   of 4E-5, leading to the same discrepancy in the critical density of the universe. Thanks to Tom
@@ -80,7 +91,7 @@ The changes in this version were largely inspired by a detailed comparison with 
 * Fixed bug in the Bocquet et al. 2016 mass function for the M200c and M500c mass definitions
   (thanks to Michelle Ntampaka for catching this!).
 
-.. rubric:: Version 1.2.5
+.. rubric:: Version 1.2.5 (released 01/30/2019)
 
 * Renamed the ``diemer18`` concentration model to ``diemer19`` to match the publication date. 
 * Changed the default concentration model from ``diemer15_orig`` to ``diemer19``. 
@@ -96,7 +107,7 @@ The changes in this version were largely inspired by a detailed comparison with 
 * Added the bias models of Bhattacharya et al 2011 and Comparat et al 2017 to the :doc:`lss_bias`
   module. Thanks to Johan Comparat for the suggestion!
 
-.. rubric:: Version 1.2.4
+.. rubric:: Version 1.2.4 (released 10/29/2018)
 
 This version corresponds to the published version of the code paper.
 
@@ -117,9 +128,6 @@ This version corresponds to the published version of the code paper.
 * Many small fixes to the documentation, thanks to Jerry Maggioncalda for his careful proofreading!
 * Activated continuous integration (i.e., automatically running the unit test suite after every
   commit). Thanks to Joseph Kuruvilla for setting that up!
-
-.. rubric:: Version 1.2.3
-
 * The `Diemer & Joyce 2018 <https://ui.adsabs.harvard.edu/?#abs/2018arXiv180907326D>`_
   concentration model is presented in its published form. The routine was
   sped up through a pre-computed, stored interpolation table.
@@ -130,7 +138,7 @@ This version corresponds to the published version of the code paper.
   interface has two fewer parameters. 
 * The cosmology of the Multidark-Planck simulations was added.
 
-.. rubric:: Version 1.2.2
+.. rubric:: Version 1.2.2 (released 07/31/2018)
 
 This version fixes several bugs and adds new features. Changes in the cosmology module include:
 
@@ -177,7 +185,7 @@ Other changes:
   `MCMC tutorial <_static/tutorial_utils_mcmc.html>`_.
 * Numerous small improvements were made in the documentation. 
 
-.. rubric:: Version 1.2.1
+.. rubric:: Version 1.2.1 (released 12/13/2017)
 
 Version 1.2.1 is the version that coincided with the first publication of the code paper on
 arXiv.org. The following major changes were made:
@@ -189,7 +197,7 @@ arXiv.org. The following major changes were made:
   and ``q_out`` to conform with the rest of the code. A number of other small inconsistencies in
   splashback radius interface were fixed.
 
-.. rubric:: Version 1.1.0
+.. rubric:: Version 1.1.0 (released 11/27/2017)
 
 Version 1.1.0 presents a major change to the Colossus interface, documentation, and tutorial system.
 The most important changes are that

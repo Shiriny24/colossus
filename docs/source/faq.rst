@@ -92,3 +92,10 @@ redshift range of the interpolation table, for example::
 Note that changes in the interpolation tables will cause untested changes in the behavior of the
 interpolation.
     
+.. rubric:: Can I reset all previously stored cosmological data?
+
+Yes! Just go to the cache directory::
+
+    ~/.colossus/cache/cosmology/
+
+and delete all files. The next time you create a cosmology, a new file will be stored there.

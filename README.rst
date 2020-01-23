@@ -48,9 +48,9 @@ License & Citing
 
 Author:        Benedikt Diemer (diemer@umd.edu)
 
-Contributors:  Matt Becker, Andrey Kravtsov, Steven Murray
+Contributors:  Matt Becker, Michael Joyce, Andrey Kravtsov, Steven Murray
 
-License:       MIT. Copyright (c) 2014-2019
+License:       MIT. Copyright (c) 2014-2020
 
 If you use Colossus for a publication, please cite the code paper 
 (`Diemer 2018 <https://ui.adsabs.harvard.edu/abs/2018ApJS..239...35D/abstract>`_). Many 

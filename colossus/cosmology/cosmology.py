@@ -716,12 +716,12 @@ class Cosmology(object):
 		"""
 		
 		zp1 = (1.0 + z)
-		sum = self.Om0 * zp1**3 + self.Ode0 * self._rho_de_z(z)
+		t = self.Om0 * zp1**3 + self.Ode0 * self._rho_de_z(z)
 		if not self.flat:
-			sum += self.Ok0 * zp1**2
+			t += self.Ok0 * zp1**2
 		if self.relspecies:
-			sum += self.Or0 * zp1**4
-		E = np.sqrt(sum)
+			t += self.Or0 * zp1**4
+		E = np.sqrt(t)
 		
 		return E
 
@@ -1676,12 +1676,12 @@ class Cosmology(object):
 		
 		def Ez_D(z):
 			ai = (1.0 + z)
-			sum = self.Om0 * ai**3 + self.Ode0 * self._rho_de_z(z)
+			t = self.Om0 * ai**3 + self.Ode0 * self._rho_de_z(z)
 			if self.relspecies:
-				sum += self.Or0
+				t += self.Or0
 			if not self.flat:
-				sum += self.Ok0 * ai**2
-			E = np.sqrt(sum)
+				t += self.Ok0 * ai**2
+			E = np.sqrt(t)
 			return E
 
 		# -----------------------------------------------------------------------------------------
@@ -1887,7 +1887,7 @@ class Cosmology(object):
 
 		if self.power_law:
 			
-			model = 'powerlaw'
+			model = 'powerlaw_%.6f' % (self.power_law_n)
 			Pk = k**self.power_law_n
 		
 		elif model in power_spectrum.models:
@@ -1930,6 +1930,7 @@ class Cosmology(object):
 											exact_ps = True, ignore_norm = True)
 				norm = (self.sigma8 / sigma_8Mpc)**2
 				self.storageUser.storeObject(norm_name, norm, persistent = False)
+			
 			Pk *= norm
 
 		return Pk
@@ -1968,13 +1969,12 @@ class Cosmology(object):
 		# If we could not find the interpolator, the underlying data table probably has not been
 		# created yet.
 		if interpolator is None:
-			# We are dealing with a non-user supplied power spectrum, meaning we can decide the
-			# k array for the table.
 			if path is None:
 				
+				# We are dealing with a non-user supplied power spectrum, meaning we can decide the
+				# k array for the table.
 				if self.print_info:
 					print("Cosmology.matterPowerSpectrum: Computing lookup table.")				
-				
 				data_k = np.zeros((np.sum(self.k_Pk_Nbins) + 1), np.float)
 				n_regions = len(self.k_Pk_Nbins)
 				k_computed = 0
@@ -2007,6 +2007,15 @@ class Cosmology(object):
 				# to the correct sigma8 which happens in the exact Pk function.
 				table_name = self._matterPowerSpectrumName(model)
 				table = self.storageUser.getStoredObject(table_name, path = path)
+				
+				# If the stored object function returns None, that can be because persistence is 
+				# turned off altogether, in which case we should return an informative error
+				# message.
+				if table is None:
+					if not self.storageUser.persistence_read:
+						raise Exception('Please set persistence to read in order to load a power spectrum from a file.')
+					else:
+						raise Exception('Could not load power spectrum table from path "%s".' % (path))
 				table_k = 10**table[0]
 				table_P = self._matterPowerSpectrumExact(table_k, model = model, path = path,
 														ignore_norm = False)
@@ -2042,6 +2051,9 @@ class Cosmology(object):
 		and :math:`\log_{10}(P)` where k and P(k) are in the same units as in this function. This
 		table is interpolated with a third-order spline. Note that the tabulated spectrum is 
 		normalized to the value if :math:`\sigma_8` set in the cosmology.
+		
+		Also note that if a power spectrum is to be read from a file, the ``persistence`` 
+		parameter must allow for reading (though not necessarily writing) of files.
 
 		Warnings
 		-------------------------------------------------------------------------------------------
@@ -2189,6 +2201,7 @@ class Cosmology(object):
 				ps_args = defaults.PS_ARGS):
 
 		# -----------------------------------------------------------------------------------------
+		
 		def logIntegrand(lnk, ps_interpolator):
 			
 			k = np.exp(lnk)
@@ -2209,20 +2222,64 @@ class Cosmology(object):
 			return ret
 
 		# -----------------------------------------------------------------------------------------
+
+		# The variance of a top-hat filter for a power-law spectrum is analytically evaluated, but 
+		# we have to be careful with the n = -2 case.
 		
+		def sigma2_power_law_tophat(n, R):
+			
+			ret = 9.0 * R**(-n - 3.0) * 2**(-n - 1.0) / (np.pi**2 * (n - 3.0))
+			if (abs(n + 2.0) < 1E-3):
+				ret *= -(1.0 + n) * np.pi / (2.0 * scipy.special.gamma(2.0 - n) * np.cos(np.pi * n * 0.5))
+			else:
+				ret *= np.sin(n * np.pi * 0.5) * scipy.special.gamma(n + 2.0) / ((n - 1.0) * n)
+		
+			return ret
+
+		# -----------------------------------------------------------------------------------------
+
+		def sigma2_power_law_gaussian(n, R):
+
+			return R**(-n - 3.0) * scipy.special.gamma((n + 3.0) * 0.5) / (4.0 * np.pi**2)
+
+		# -----------------------------------------------------------------------------------------
+
 		if filt == 'tophat' and j > 0:
 			raise Exception('Higher-order moments of sigma are not well-defined for tophat filter. Choose filter "gaussian" instead.')
 	
 		# For power-law cosmologies, we can evaluate sigma analytically. The exact expression 
 		# has a dependence on n that in turn depends on the filter used, but the dependence 
-		# on radius is simple and independent of the filter. Thus, we use sigma8 to normalize
-		# sigma directly. 
-		if self.power_law:
+		# on radius is simple and independent of the filter. 
+		#
+		# Thus, if we are not ignoring the norm and using the top-hat filter, we use sigma8 to 
+		# normalize sigma directly. For the tophat filter, this just means folding in the 
+		# dependence on R. For the Gaussian, we need to calculate the relative normalization to the 
+		# tophat. Alternatively, we could also go via the power spectrum normalization and 
+		# numerically compute the Gaussian, but that would be very slow.
+		#
+		# If we are ignoring the norm, we simply return the mathematical expressions for the 
+		# tophat or gaussian filters. Note that these assume a power spectrum of P=k^n, meaning
+		# they must be consistent with the power spectrum function. Furthermore, the units of R
+		# and k must be consistent to work without additional factors.
+	
+		if self.power_law and filt in ['tophat', 'gaussian'] and True:
 			
 			n = self.power_law_n + 2 * j
 			if n <= -3.0:
 				raise Exception('n + 2j must be > -3 for the variance to converge in a power-law cosmology.')
-			sigma2 = R**(-3 - n) / (8.0**(-3 - n) / self.sigma8**2)
+
+			if ignore_norm:
+				if filt == 'tophat':
+					sigma2 = sigma2_power_law_tophat(n, R)
+				elif filt == 'gaussian':
+					sigma2 = sigma2_power_law_gaussian(n, R)
+				else:
+					raise Exception('Unknown filter, %s.' % (filt))
+			else:
+				sigma2 = (R / 8.0)**(-3 - n) * self.sigma8**2
+				if filt == 'gaussian':
+					sigma2 = sigma2 * sigma2_power_law_gaussian(n, R) / sigma2_power_law_tophat(n, R)
+
 			sigma = np.sqrt(sigma2)
 			
 		else:
@@ -2299,6 +2356,8 @@ class Cosmology(object):
 
 	def _sigmaInterpolator(self, j, filt, inverse, ps_args):
 		
+		if not 'model' in ps_args:
+			raise Exception('The ps_args dictionary must contain the model keyword, even if the power spectrum is loaded from file.')
 		table_name = 'sigma%d_%s_%s_%s' % (j, self.name, ps_args['model'], filt)
 		interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, 
 													inverse = inverse)
@@ -2588,8 +2647,7 @@ class Cosmology(object):
 		derivative: bool
 			If ``derivative == True``, the linear derivative :math:`d \\xi / d R` is returned.
 		ps_args: dict
-			Arguments passed to the :func:`matterPowerSpectrum` 
-			function.
+			Arguments passed to the :func:`matterPowerSpectrum` function.
 
 		Returns
 		-------------------------------------------------------------------------------------------

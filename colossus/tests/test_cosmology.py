@@ -407,6 +407,33 @@ class TCDarkEnergyGrowthFactor(CosmologyTestCase):
 			self.assertAlmostEqualArray(D1, D2, places = 4)
 
 ###################################################################################################
+# TEST CASE 9: SELF-SIMILAR COSMOLOGIES
+###################################################################################################
+
+class TCSelfSimilar(CosmologyTestCase):
+
+	def setUp(self):
+		self.cosmo_name = 'powerlaw_-2.23'
+		self.cosmo = cosmology.setCosmology(self.cosmo_name, {'interpolation': False, 
+															'persistence': ''})
+	
+	def test_sigma_tophat(self):
+		sigma_nn = self.cosmo._sigmaExact(8.0, 0.0, filt = 'tophat', ignore_norm = True)
+		self.assertAlmostEqual(sigma_nn, 0.1452984341044695)
+		sigma = self.cosmo._sigmaExact(8.0, 0.0, filt = 'tophat', ignore_norm = False)
+		self.assertAlmostEqual(sigma, self.cosmo.sigma8, places = 5)
+
+		# The normalization of the power spectrum at k=1 must be derived from sigma8 and the 
+		# variance of the PS
+		Pk = self.cosmo.matterPowerSpectrum(1.0, 0.0)
+		self.assertAlmostEqual(Pk, (self.cosmo.sigma8 / sigma_nn)**2, places = 5)
+		
+	def test_sigma_gaussian(self):
+		# Test Gaussian filter; the result should not be the same as for tophat.
+		sigma_g = self.cosmo._sigmaExact(8.0, 0.0, filt = 'gaussian', ignore_norm = False)
+		self.assertAlmostEqual(sigma_g, 6.126388566928e-01, places = 5)
+
+###################################################################################################
 # TRIGGER
 ###################################################################################################
 

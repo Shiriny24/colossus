@@ -1271,7 +1271,7 @@ def _diemer19_alpha_eff(z):
 
 ###################################################################################################
 
-def modelDiemer19(M200c, z, statistic = 'median'):
+def modelDiemer19(M200c, z, statistic = 'median', ps_args = defaults.PS_ARGS):
 	"""
 	The model of Diemer & Joyce 2019.
 	
@@ -1293,6 +1293,9 @@ def modelDiemer19(M200c, z, statistic = 'median'):
 		Redshift
 	statistic: str
 		Can be ``mean`` or ``median``.
+	ps_args: dict
+		Arguments passed to the :func:`matterPowerSpectrum` function, and functions that depend on
+		it such as the power spectrum slope.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -1301,11 +1304,31 @@ def modelDiemer19(M200c, z, statistic = 'median'):
 	"""
 
 	# ---------------------------------------------------------------------------------------------
+
+	# Currently, only NFW predictions are implemented. In principle, the model can predict 
+	# c based on other mass profiles, but the parameters would need to be re-tuned.
+	
+	profile = 'nfw'
+
+	# ---------------------------------------------------------------------------------------------
+
+	def getTableName(profile):
+
+		if profile == 'nfw':
+			table_name = 'diemer19_'
+		elif profile == 'einasto':
+			table_name = 'diemer19_einasto_'
+		else:
+			raise Exception('Unknown profile type, %s. Valid are "nfw" or "einasto".' % (profile))
+		
+		return table_name
+	
+	# ---------------------------------------------------------------------------------------------
 	# The G(c) inverse function that needs to be mumerically inverted is tabulated, the table 
 	# inverted to give c(G, n). This is a little tricky because G(c) has a minimum that depends on
 	# n.
 	
-	def computeGcTable():
+	def computeGcTable(profile):
 	
 		n_G = 80
 		n_n = 40
@@ -1314,9 +1337,19 @@ def modelDiemer19(M200c, z, statistic = 'median'):
 		n = np.linspace(-4.0, 0.0, n_n)
 		c = np.linspace(-1.0, 3.0, n_c)
 		
-		# The left hand side of the equation in DJ18
+		# The left hand side of the equation in DJ19
 		lin_c = 10**c
-		lhs = np.log10(lin_c[:, None] / profile_nfw.NFWProfile.mu(lin_c[:, None])**((5.0 + n) / 6.0))
+		
+		if profile == 'nfw':
+			mu = profile_nfw.NFWProfile.mu(lin_c)
+		elif profile == 'einasto':
+			p_ein = profile_einasto.EinastoProfile(M = 1E12, c = 5.0, z = 0.0, mdef = '200c', alpha = 0.18)
+			rs_ein = p_ein.par['rs']
+			mu = p_ein.enclosedMassInner(rs_ein * lin_c) / p_ein.enclosedMassInner(rs_ein)
+		else:
+			raise Exception('Unknown profile type, %s. Valid are "nfw" or "einasto".' % (profile))
+
+		lhs = np.log10(lin_c[:, None] / mu[:, None]**((5.0 + n) / 6.0))
 		
 		# At very low concentration and shallow slopes, the LHS begins to rise again. This will cause
 		# issues with the inversion. We set those parts of the curve to the minimum concentration of 
@@ -1355,32 +1388,35 @@ def modelDiemer19(M200c, z, statistic = 'median'):
 		# Store the objects using the storage module. An interpolator will automatically be 
 		# created.
 		storageUser = _getStorageUser()
+		table_name = getTableName(profile)
+		
 		object_data = (G, n, gc_table)
-		storageUser.storeObject('diemer19_Gc', object_data = object_data, persistent = True)
+		storageUser.storeObject('%sGc' % table_name, object_data = object_data, persistent = True)
 		object_data = np.array([n, mins])
-		storageUser.storeObject('diemer19_Gmin', object_data = object_data, persistent = True)
+		storageUser.storeObject('%sGmin' % table_name, object_data = object_data, persistent = True)
 		object_data = np.array([n, maxs])
-		storageUser.storeObject('diemer19_Gmax', object_data = object_data, persistent = True)
+		storageUser.storeObject('%sGmax' % table_name, object_data = object_data, persistent = True)
 
 		return
 
 	# ---------------------------------------------------------------------------------------------
 	# Try to load the interpolators from storage. If they do not exist, create them.
 	
-	def getGcTable():
+	def getGcTable(profile):
 		
 		storageUser = _getStorageUser()
+		table_name = getTableName(profile)
 		
-		interp_Gc = storageUser.getStoredObject('diemer19_Gc', interpolator = True, 
+		interp_Gc = storageUser.getStoredObject('%sGc' % table_name, interpolator = True, 
 											store_interpolator = True)
 		if interp_Gc is None:
-			computeGcTable()
-			interp_Gc = storageUser.getStoredObject('diemer19_Gc', interpolator = True, 
+			computeGcTable(profile)
+			interp_Gc = storageUser.getStoredObject('%sGc' % table_name, interpolator = True, 
 											store_interpolator = True)
 		
-		interp_Gmin = storageUser.getStoredObject('diemer19_Gmin', interpolator = True, 
+		interp_Gmin = storageUser.getStoredObject('%sGmin' % table_name, interpolator = True, 
 											store_interpolator = True)
-		interp_Gmax = storageUser.getStoredObject('diemer19_Gmax', interpolator = True, 
+		interp_Gmax = storageUser.getStoredObject('%sGmax' % table_name, interpolator = True, 
 											store_interpolator = True)
 
 		# These interpolators are created at the same time as the Gc interpolator. If they do not
@@ -1410,8 +1446,8 @@ def modelDiemer19(M200c, z, statistic = 'median'):
 		raise Exception('Statistic %s not implmented in diemer19 model.' % statistic)
 
 	# Compute peak height, n_eff, and alpha_eff
-	nu = peaks.peakHeight(M200c, z)
-	n_eff = peaks.powerSpectrumSlope(nu, z, slope_type = 'sigma', scale = kappa)
+	nu = peaks.peakHeight(M200c, z, ps_args = ps_args)
+	n_eff = peaks.powerSpectrumSlope(nu, z, slope_type = 'sigma', scale = kappa, ps_args = ps_args)
 	alpha_eff = _diemer19_alpha_eff(z)
 
 	is_array = utilities.isArray(nu)
@@ -1428,9 +1464,9 @@ def modelDiemer19(M200c, z, statistic = 'median'):
 	rhs = np.log10(A_n / nu * (1.0 + nu**2 / B_n))
 	
 	# Get interpolation table
-	interp_Gc, interp_Gmin, interp_Gmax = getGcTable()
+	interp_Gc, interp_Gmin, interp_Gmax = getGcTable(profile)
 	
-	# Mask out values of rhs for which do not exist. The interpolator will still work because it
+	# Mask out values of rhs for which do G not exist. The interpolator will still work because it
 	# is based on a full grid of G values, but we mask out the invalid array elements.
 	mask = (rhs >= interp_Gmin(n_eff)) & (rhs <= interp_Gmax(n_eff))
 	c200c = 10**interp_Gc(rhs, n_eff, grid = False) * C_alpha
