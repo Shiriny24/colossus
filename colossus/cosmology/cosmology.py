@@ -716,12 +716,12 @@ class Cosmology(object):
 		"""
 		
 		zp1 = (1.0 + z)
-		sum = self.Om0 * zp1**3 + self.Ode0 * self._rho_de_z(z)
+		t = self.Om0 * zp1**3 + self.Ode0 * self._rho_de_z(z)
 		if not self.flat:
-			sum += self.Ok0 * zp1**2
+			t += self.Ok0 * zp1**2
 		if self.relspecies:
-			sum += self.Or0 * zp1**4
-		E = np.sqrt(sum)
+			t += self.Or0 * zp1**4
+		E = np.sqrt(t)
 		
 		return E
 
@@ -1676,12 +1676,12 @@ class Cosmology(object):
 		
 		def Ez_D(z):
 			ai = (1.0 + z)
-			sum = self.Om0 * ai**3 + self.Ode0 * self._rho_de_z(z)
+			t = self.Om0 * ai**3 + self.Ode0 * self._rho_de_z(z)
 			if self.relspecies:
-				sum += self.Or0
+				t += self.Or0
 			if not self.flat:
-				sum += self.Ok0 * ai**2
-			E = np.sqrt(sum)
+				t += self.Ok0 * ai**2
+			E = np.sqrt(t)
 			return E
 
 		# -----------------------------------------------------------------------------------------
@@ -1887,7 +1887,7 @@ class Cosmology(object):
 
 		if self.power_law:
 			
-			model = 'powerlaw'
+			model = 'powerlaw_%.6f' % (self.power_law_n)
 			Pk = k**self.power_law_n
 		
 		elif model in power_spectrum.models:
@@ -1930,6 +1930,7 @@ class Cosmology(object):
 											exact_ps = True, ignore_norm = True)
 				norm = (self.sigma8 / sigma_8Mpc)**2
 				self.storageUser.storeObject(norm_name, norm, persistent = False)
+			
 			Pk *= norm
 
 		return Pk
@@ -2200,6 +2201,7 @@ class Cosmology(object):
 				ps_args = defaults.PS_ARGS):
 
 		# -----------------------------------------------------------------------------------------
+		
 		def logIntegrand(lnk, ps_interpolator):
 			
 			k = np.exp(lnk)
@@ -2220,20 +2222,64 @@ class Cosmology(object):
 			return ret
 
 		# -----------------------------------------------------------------------------------------
+
+		# The variance of a top-hat filter for a power-law spectrum is analytically evaluated, but 
+		# we have to be careful with the n = -2 case.
 		
+		def sigma2_power_law_tophat(n, R):
+			
+			ret = 9.0 * R**(-n - 3.0) * 2**(-n - 1.0) / (np.pi**2 * (n - 3.0))
+			if (abs(n + 2.0) < 1E-3):
+				ret *= -(1.0 + n) * np.pi / (2.0 * scipy.special.gamma(2.0 - n) * np.cos(np.pi * n * 0.5))
+			else:
+				ret *= np.sin(n * np.pi * 0.5) * scipy.special.gamma(n + 2.0) / ((n - 1.0) * n)
+		
+			return ret
+
+		# -----------------------------------------------------------------------------------------
+
+		def sigma2_power_law_gaussian(n, R):
+
+			return R**(-n - 3.0) * scipy.special.gamma((n + 3.0) * 0.5) / (4.0 * np.pi**2)
+
+		# -----------------------------------------------------------------------------------------
+
 		if filt == 'tophat' and j > 0:
 			raise Exception('Higher-order moments of sigma are not well-defined for tophat filter. Choose filter "gaussian" instead.')
 	
 		# For power-law cosmologies, we can evaluate sigma analytically. The exact expression 
 		# has a dependence on n that in turn depends on the filter used, but the dependence 
-		# on radius is simple and independent of the filter. Thus, we use sigma8 to normalize
-		# sigma directly. 
-		if self.power_law:
+		# on radius is simple and independent of the filter. 
+		#
+		# Thus, if we are not ignoring the norm and using the top-hat filter, we use sigma8 to 
+		# normalize sigma directly. For the tophat filter, this just means folding in the 
+		# dependence on R. For the Gaussian, we need to calculate the relative normalization to the 
+		# tophat. Alternatively, we could also go via the power spectrum normalization and 
+		# numerically compute the Gaussian, but that would be very slow.
+		#
+		# If we are ignoring the norm, we simply return the mathematical expressions for the 
+		# tophat or gaussian filters. Note that these assume a power spectrum of P=k^n, meaning
+		# they must be consistent with the power spectrum function. Furthermore, the units of R
+		# and k must be consistent to work without additional factors.
+	
+		if self.power_law and filt in ['tophat', 'gaussian'] and True:
 			
 			n = self.power_law_n + 2 * j
 			if n <= -3.0:
 				raise Exception('n + 2j must be > -3 for the variance to converge in a power-law cosmology.')
-			sigma2 = R**(-3 - n) / (8.0**(-3 - n) / self.sigma8**2)
+
+			if ignore_norm:
+				if filt == 'tophat':
+					sigma2 = sigma2_power_law_tophat(n, R)
+				elif filt == 'gaussian':
+					sigma2 = sigma2_power_law_gaussian(n, R)
+				else:
+					raise Exception('Unknown filter, %s.' % (filt))
+			else:
+				sigma2 = (R / 8.0)**(-3 - n) * self.sigma8**2
+				if filt == 'gaussian':
+					sigma2 = sigma2 * sigma2_power_law_gaussian(n, R) / sigma2_power_law_tophat(n, R)
+
 			sigma = np.sqrt(sigma2)
 			
 		else:

@@ -6,13 +6,15 @@ See below for a listing of the most important code and interface changes in Colo
 version 1.1.0. You can download older versions from the 
 `PyPi History <https://pypi.org/project/colossus/#history>`_ for Colossus.
 
-.. rubric:: Version 1.2.14 (released XXXXXX)
+.. rubric:: Version 1.2.14 (released 01/23/2020)
 
 Changes in this version include:
 
 * The user can now pass power spectrum arguments to the Diemer & Joyce 2019 concentration model,
   for example, in order to use a non-standard power spectrum.
 * The code returns more informative error messages when tabulated power spectra are used.
+* The normalization of the power spectrum for self-similar (power-law) cosmologies has been fixed
+  for both the tophat and Gaussian filters (thanks to Michael Joyce for finding this bug!).
 
 .. rubric:: Version 1.2.13 (released 11/08/2019)
 

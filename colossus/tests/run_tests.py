@@ -37,6 +37,7 @@ suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCDarkE
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCDarkEnergy2))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCDarkEnergy3))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCDarkEnergyGrowthFactor))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology.TCSelfSimilar))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_cosmology_power_spectrum.TCTransferFunction))
 
 # Large-scale structure
