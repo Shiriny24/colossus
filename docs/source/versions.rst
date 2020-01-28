@@ -6,6 +6,13 @@ See below for a listing of the most important code and interface changes in Colo
 version 1.1.0. You can download older versions from the 
 `PyPi History <https://pypi.org/project/colossus/#history>`_ for Colossus.
 
+.. rubric:: Version 1.2.14 (released ?)
+
+Changes in this version include:
+
+* In self-similar cosmologies, the correlation function is now computed from analytical expressions
+  rather than numerical integration (thanks to Michael Joyce for the analytical formulae).
+
 .. rubric:: Version 1.2.14 (released 01/23/2020)
 
 Changes in this version include:
@@ -14,7 +21,9 @@ Changes in this version include:
   for example, in order to use a non-standard power spectrum.
 * The code returns more informative error messages when tabulated power spectra are used.
 * The normalization of the power spectrum for self-similar (power-law) cosmologies has been fixed
-  for both the tophat and Gaussian filters (thanks to Michael Joyce for finding this bug!).
+  for both the tophat and Gaussian filters, and the variance is now computed from the analytical
+  expression rather than numerical integration (thanks to Michael Joyce for finding this bug and
+  providing the analytical formulae!).
 
 .. rubric:: Version 1.2.13 (released 11/08/2019)
 
