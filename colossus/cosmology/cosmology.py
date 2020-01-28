@@ -431,6 +431,8 @@ class Cosmology(object):
 			raise Exception('Parameter Neff must be set.')
 		if power_law and power_law_n is None:
 			raise Exception('For a power-law cosmology, power_law_n must be set.')
+		if power_law and power_law_n >= 0.0:
+			raise Exception('For a power-law cosmology, power_law_n must be less than 0.')
 		
 		if not flat and Ode0 is None:
 			raise Exception('Ode0 must be set for non-flat cosmologies.')
@@ -1862,6 +1864,21 @@ class Cosmology(object):
 	
 	###############################################################################################
 
+	def _matterPowerSpectrumNorm(self, model, path = None):
+
+		norm_name = self._matterPowerSpectrumNormName(model)
+		norm = self.storageUser.getStoredObject(norm_name)
+		if norm is None:
+			ps_args = {'model': model, 'path': path}
+			sigma_8Mpc = self._sigmaExact(8.0, filt = 'tophat', ps_args = ps_args, exact_ps = True, 
+										ignore_norm = True)
+			norm = (self.sigma8 / sigma_8Mpc)**2
+			self.storageUser.storeObject(norm_name, norm, persistent = False)	
+			
+		return norm
+	
+	###############################################################################################
+
 	# Utility to get the min and max k for which a power spectrum is valid. Only for internal use.
 
 	def _matterPowerSpectrumLimits(self, model = defaults.POWER_SPECTRUM_MODEL, path = None):
@@ -1922,15 +1939,7 @@ class Cosmology(object):
 		# interpolation = False; otherwise, we get into an infinite loop of computing sigma8, P(k), 
 		# sigma8 etc.
 		if not ignore_norm:
-			norm_name = self._matterPowerSpectrumNormName(model)
-			norm = self.storageUser.getStoredObject(norm_name)
-			if norm is None:
-				ps_args = {'model': model, 'path': path}
-				sigma_8Mpc = self._sigmaExact(8.0, filt = 'tophat', ps_args = ps_args, 
-											exact_ps = True, ignore_norm = True)
-				norm = (self.sigma8 / sigma_8Mpc)**2
-				self.storageUser.storeObject(norm_name, norm, persistent = False)
-			
+			norm = self._matterPowerSpectrumNorm(model, path = path)
 			Pk *= norm
 
 		return Pk
@@ -2265,8 +2274,8 @@ class Cosmology(object):
 		if self.power_law and filt in ['tophat', 'gaussian'] and True:
 			
 			n = self.power_law_n + 2 * j
-			if n <= -3.0:
-				raise Exception('n + 2j must be > -3 for the variance to converge in a power-law cosmology.')
+			if n <= -3.0 or n >= 0.0:
+				raise Exception('n + 2j must be between -3 and 0 to calculate sigma in a power-law cosmology.')
 
 			if ignore_norm:
 				if filt == 'tophat':
@@ -2535,6 +2544,7 @@ class Cosmology(object):
 
 		# -----------------------------------------------------------------------------------------
 		# The integrand is exponentially cut off at a scale 1000 * R.
+		
 		def integrand(k, R, ps_args, ps_interpolator):
 			
 			if self.interpolation:
@@ -2547,32 +2557,54 @@ class Cosmology(object):
 			return ret
 
 		# -----------------------------------------------------------------------------------------
-		# If we are getting P(k) from a look-up table, it is a little more efficient to 
-		# get the interpolator object and use it directly, rather than using the P(k) function.
-		ps_interpolator = None
-		if self.interpolation:
-			ps_interpolator = self._matterPowerSpectrumInterpolator(**ps_args)
+		
+		def cf_power_law(n, R):
 
-		# Determine the integration limits. The limits chosen here correspond to the cut-off scale
-		# introduced in the integrator.
-		k_min = 1E-6 / R
-		k_max = 10.0 / f_cut / R
+			ret = -R**(-3.0 - n) * (0.5 / np.pi**2)
+			if (abs(n + 2.0) < 1E-3):
+				ret *= (np.pi / (2.0 * np.cos(np.pi * n * 0.5) * scipy.special.gamma(-n - 1.0)))
+			else:
+				ret *= np.sin(np.pi * n * 0.5) * scipy.special.gamma(n + 2.0)
+		
+			return ret
 
-		# If we are using a tabulated power spectrum, we just use the limits of that table IF they 
-		# are more stringent than those already determined.
-		k_min_model, k_max_model = self._matterPowerSpectrumLimits(**ps_args)
-		k_min = max(k_min, k_min_model * 1.0001)
-		k_max = min(k_max, k_max_model * 0.9999)
+		# -----------------------------------------------------------------------------------------
 
-		# Use a Clenshaw-Curtis integration, i.e. an integral weighted by sin(kR). 
-		args = R, ps_args, ps_interpolator
-		xi, _ = scipy.integrate.quad(integrand, k_min, k_max, args = args, epsabs = 0.0,
-					epsrel = self.accuracy_xi, limit = 100, weight = 'sin', wvar = R)
-		xi /= 2.0 * np.pi**2
-
-		if np.isnan(xi):
-			msg = 'Result is nan (cosmology %s, R %.2e).' % (self.name, R)
-			raise Exception(msg)
+		# For power-law cosmologies, we can compute the correlation function directly. However, we
+		# do need to respect the PS normalization, otherwise the result will not be compatible with
+		# the other PS-related functions.
+		if self.power_law:
+			xi = cf_power_law(self.power_law_n, R)
+			norm = self._matterPowerSpectrumNorm(**ps_args)
+			xi *= norm
+			
+		else:
+			# If we are getting P(k) from a look-up table, it is a little more efficient to 
+			# get the interpolator object and use it directly, rather than using the P(k) function.
+			ps_interpolator = None
+			if self.interpolation:
+				ps_interpolator = self._matterPowerSpectrumInterpolator(**ps_args)
+	
+			# Determine the integration limits. The limits chosen here correspond to the cut-off scale
+			# introduced in the integrator.
+			k_min = 1E-6 / R
+			k_max = 10.0 / f_cut / R
+	
+			# If we are using a tabulated power spectrum, we just use the limits of that table IF they 
+			# are more stringent than those already determined.
+			k_min_model, k_max_model = self._matterPowerSpectrumLimits(**ps_args)
+			k_min = max(k_min, k_min_model * 1.0001)
+			k_max = min(k_max, k_max_model * 0.9999)
+	
+			# Use a Clenshaw-Curtis integration, i.e. an integral weighted by sin(kR). 
+			args = R, ps_args, ps_interpolator
+			xi, _ = scipy.integrate.quad(integrand, k_min, k_max, args = args, epsabs = 0.0,
+						epsrel = self.accuracy_xi, limit = 100, weight = 'sin', wvar = R)
+			xi /= 2.0 * np.pi**2
+	
+			if np.isnan(xi):
+				msg = 'Result is nan (cosmology %s, R %.2e).' % (self.name, R)
+				raise Exception(msg)
 
 		return xi
 	
