@@ -510,9 +510,18 @@ class Cosmology(object):
 		self.R_Nbins_sigma = 18.0
 		self.accuracy_sigma = 3E-3
 	
-		# Lookup table for correlation function xi
-		self.R_xi = [1E-3, 5E1, 5E2]
-		self.R_xi_Nbins = [30, 40]
+		# Lookup table for correlation function xi. Power-law cosmologies are a special case: here,
+		# the correlation function is a power law, but we still want to maintain the ability to 
+		# interpolate. However, the non-uniform binning scheme used for LCDM cosmologies causes
+		# catastrophic numerical errors when the power spectrum slope gets shallow. Thus, we 
+		# enforce a uniform binning scheme for power-law cosmologies. Note that the number of bins
+		# still needs to be about 70 for sub-percent errors.
+		if self.power_law:
+			self.R_xi = [1E-3, 5E2]
+			self.R_xi_Nbins = [70]
+		else:
+			self.R_xi = [1E-3, 5E1, 5E2]
+			self.R_xi_Nbins = [30, 40]
 		self.accuracy_xi = 1E-5
 
 		return
@@ -2626,18 +2635,24 @@ class Cosmology(object):
 			data_R = np.zeros((np.sum(self.R_xi_Nbins) + 1), np.float)
 			n_regions = len(self.R_xi_Nbins)
 			k_computed = 0
-			for i in range(n_regions):
-				log_min = np.log10(self.R_xi[i])
-				log_max = np.log10(self.R_xi[i + 1])
-				log_range = log_max - log_min
-				bin_width = log_range / self.R_xi_Nbins[i]
-				if i == n_regions - 1:
-					data_R[k_computed:k_computed + self.R_xi_Nbins[i] + 1] = \
-						10**np.arange(log_min, log_max + bin_width, bin_width)
-				else:
-					data_R[k_computed:k_computed + self.R_xi_Nbins[i]] = \
-						10**np.arange(log_min, log_max, bin_width)
-				k_computed += self.R_xi_Nbins[i]
+
+			if n_regions == 1:
+				log_min = np.log10(self.R_xi[0])
+				log_max = np.log10(self.R_xi[1])
+				data_R = 10**np.linspace(log_min, log_max, self.R_xi_Nbins[0])
+			else:
+				for i in range(n_regions):
+					log_min = np.log10(self.R_xi[i])
+					log_max = np.log10(self.R_xi[i + 1])
+					log_range = log_max - log_min
+					bin_width = log_range / self.R_xi_Nbins[i]
+					if i == n_regions - 1:
+						data_R[k_computed:k_computed + self.R_xi_Nbins[i] + 1] = \
+							10**np.arange(log_min, log_max + bin_width, bin_width)
+					else:
+						data_R[k_computed:k_computed + self.R_xi_Nbins[i]] = \
+							10**np.arange(log_min, log_max, bin_width)
+					k_computed += self.R_xi_Nbins[i]
 			
 			data_xi = data_R * 0.0
 			for i in range(len(data_R)):
