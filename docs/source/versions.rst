@@ -6,12 +6,14 @@ See below for a listing of the most important code and interface changes in Colo
 version 1.1.0. You can download older versions from the 
 `PyPi History <https://pypi.org/project/colossus/#history>`_ for Colossus.
 
-.. rubric:: Version 1.2.14 (released ?)
+.. rubric:: Version 1.2.15 (released ?)
 
 Changes in this version include:
 
 * In self-similar cosmologies, the correlation function is now computed from analytical expressions
   rather than numerical integration (thanks to Michael Joyce for the analytical formulae).
+* The variance sigma can be computed between user-defined lower and/or upper limits in k-space.
+  This is useful when calculating the variance in a box of limited size, for example.
 
 .. rubric:: Version 1.2.14 (released 01/23/2020)
 
