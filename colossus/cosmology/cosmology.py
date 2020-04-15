@@ -431,6 +431,8 @@ class Cosmology(object):
 			raise Exception('Parameter Neff must be set.')
 		if power_law and power_law_n is None:
 			raise Exception('For a power-law cosmology, power_law_n must be set.')
+		if power_law and power_law_n >= 0.0:
+			raise Exception('For a power-law cosmology, power_law_n must be less than 0.')
 		
 		if not flat and Ode0 is None:
 			raise Exception('Ode0 must be set for non-flat cosmologies.')
@@ -508,9 +510,18 @@ class Cosmology(object):
 		self.R_Nbins_sigma = 18.0
 		self.accuracy_sigma = 3E-3
 	
-		# Lookup table for correlation function xi
-		self.R_xi = [1E-3, 5E1, 5E2]
-		self.R_xi_Nbins = [30, 40]
+		# Lookup table for correlation function xi. Power-law cosmologies are a special case: here,
+		# the correlation function is a power law, but we still want to maintain the ability to 
+		# interpolate. However, the non-uniform binning scheme used for LCDM cosmologies causes
+		# catastrophic numerical errors when the power spectrum slope gets shallow. Thus, we 
+		# enforce a uniform binning scheme for power-law cosmologies. Note that the number of bins
+		# still needs to be about 70 for sub-percent errors.
+		if self.power_law:
+			self.R_xi = [1E-3, 5E2]
+			self.R_xi_Nbins = [70]
+		else:
+			self.R_xi = [1E-3, 5E1, 5E2]
+			self.R_xi_Nbins = [30, 40]
 		self.accuracy_xi = 1E-5
 
 		return
@@ -1862,6 +1873,21 @@ class Cosmology(object):
 	
 	###############################################################################################
 
+	def _matterPowerSpectrumNorm(self, model, path = None):
+
+		norm_name = self._matterPowerSpectrumNormName(model)
+		norm = self.storageUser.getStoredObject(norm_name)
+		if norm is None:
+			ps_args = {'model': model, 'path': path}
+			sigma_8Mpc = self._sigmaExact(8.0, filt = 'tophat', ps_args = ps_args, exact_ps = True, 
+										ignore_norm = True)
+			norm = (self.sigma8 / sigma_8Mpc)**2
+			self.storageUser.storeObject(norm_name, norm, persistent = False)	
+			
+		return norm
+	
+	###############################################################################################
+
 	# Utility to get the min and max k for which a power spectrum is valid. Only for internal use.
 
 	def _matterPowerSpectrumLimits(self, model = defaults.POWER_SPECTRUM_MODEL, path = None):
@@ -1922,15 +1948,7 @@ class Cosmology(object):
 		# interpolation = False; otherwise, we get into an infinite loop of computing sigma8, P(k), 
 		# sigma8 etc.
 		if not ignore_norm:
-			norm_name = self._matterPowerSpectrumNormName(model)
-			norm = self.storageUser.getStoredObject(norm_name)
-			if norm is None:
-				ps_args = {'model': model, 'path': path}
-				sigma_8Mpc = self._sigmaExact(8.0, filt = 'tophat', ps_args = ps_args, 
-											exact_ps = True, ignore_norm = True)
-				norm = (self.sigma8 / sigma_8Mpc)**2
-				self.storageUser.storeObject(norm_name, norm, persistent = False)
-			
+			norm = self._matterPowerSpectrumNorm(model, path = path)
 			Pk *= norm
 
 		return Pk
@@ -2198,7 +2216,7 @@ class Cosmology(object):
 	###############################################################################################
 
 	def _sigmaExact(self, R, j = 0, filt = 'tophat', exact_ps = False, ignore_norm = False, 
-				ps_args = defaults.PS_ARGS):
+				kmin = None, kmax = None, ps_args = defaults.PS_ARGS):
 
 		# -----------------------------------------------------------------------------------------
 		
@@ -2261,12 +2279,15 @@ class Cosmology(object):
 		# tophat or gaussian filters. Note that these assume a power spectrum of P=k^n, meaning
 		# they must be consistent with the power spectrum function. Furthermore, the units of R
 		# and k must be consistent to work without additional factors.
+		#
+		# Note that there are no simple expressions if we are not integrating from zero and to 
+		# infinity, so we fall back to the numerical solution if the user has chosen other limits.
 	
-		if self.power_law and filt in ['tophat', 'gaussian'] and True:
+		if self.power_law and (filt in ['tophat', 'gaussian']) and (kmin is None) and (kmax is None):
 			
 			n = self.power_law_n + 2 * j
-			if n <= -3.0:
-				raise Exception('n + 2j must be > -3 for the variance to converge in a power-law cosmology.')
+			if n <= -3.0 or n >= 0.0:
+				raise Exception('n + 2j must be between -3 and 0 to calculate sigma in a power-law cosmology.')
 
 			if ignore_norm:
 				if filt == 'tophat':
@@ -2289,22 +2310,41 @@ class Cosmology(object):
 			ps_interpolator = None
 			if (not exact_ps) and self.interpolation:
 				ps_interpolator = self._matterPowerSpectrumInterpolator(**ps_args)
-			
+
 			# The infinite integral over k often causes trouble when the tophat filter is used. Thus,
 			# we determine sensible limits and integrate over a finite k-volume. The limits are
 			# determined by demanding that the integrand is some factor, 1E-6, smaller than at its
-			# maximum. For tabulated power spectra, we need to be careful not to exceed their 
-			# limits, even if the integrand has not reached the desired low value. Thus, we simply
-			# use the limits of the table.
+			# maximum. 
 			test_k_min, test_k_max = self._matterPowerSpectrumLimits(**ps_args)
 
+			#For tabulated power spectra, we need to be careful not to exceed their 
+			# limits, even if the integrand has not reached the desired low value. Thus, we simply
+			# use the limits of the table.
+			#
+			# If the user has decided both kmin and kmax, there is no need to find them numerically.
 			if ('path' in ps_args) and (ps_args['path'] is not None):
 
-				min_k_use = np.log(test_k_min * 1.0001)
-				max_k_use = np.log(test_k_max * 0.9999)
+				if kmin is not None:
+					if kmin < test_k_min:
+						raise Exception('Found user kmin %.2e but lower limit of tabulated spectrum is %.2e.' % (kmin, test_k_min))
+					min_k_use = np.log(kmin)
+				else:
+					min_k_use = np.log(test_k_min * 1.0001)
 
+				if kmax is not None:
+					if kmax > test_k_max:
+						raise Exception('Found user kmax %.2e but upper limit of tabulated spectrum is %.2e.' % (kmax, test_k_max))
+					max_k_use = np.log(kmax)
+				else:
+					max_k_use = np.log(test_k_max * 0.9999)
+					
+			elif kmin is not None and kmax is not None:
+				
+				min_k_use = np.log(kmin)
+				max_k_use = np.log(kmax)
+				
 			else:
-
+				
 				test_integrand_min = 1E-6
 
 				test_k_min = max(test_k_min * 1.0001, 1E-7)
@@ -2315,7 +2355,7 @@ class Cosmology(object):
 				for i in range(n_test):
 					test_k_integrand[i] = logIntegrand(test_k[i], ps_interpolator)
 				integrand_max = np.max(test_k_integrand)
-			
+				
 				min_index = 0
 				while test_k_integrand[min_index] < integrand_max * test_integrand_min:
 					min_index += 1
@@ -2323,7 +2363,7 @@ class Cosmology(object):
 						msg = "Could not find lower integration limit."
 						raise Exception(msg)
 				min_k_use = test_k[min_index]
-				
+			
 				min_index -= 1
 				max_index = min_index + 1
 				while test_k_integrand[max_index] > integrand_max * test_integrand_min:
@@ -2333,6 +2373,13 @@ class Cosmology(object):
 						raise Exception(msg)
 				max_k_use = test_k[max_index]
 						
+				# Check if the user has set a lower or upper limit. In either case, we will
+				# need one of the limits worked out above, so we still compute them.
+				if kmin is not None:
+					min_k_use = np.log(kmin)
+				if kmax is not None:
+					max_k_use = np.log(kmax)
+					
 			args = ps_interpolator
 			sigma2, _ = scipy.integrate.quad(logIntegrand, min_k_use, max_k_use,
 						args = args, epsabs = 0.0, epsrel = self.accuracy_sigma, limit = 100)
@@ -2354,13 +2401,18 @@ class Cosmology(object):
 	# between few points. Around the BAO scale, we need a higher resolution. Thus, the bins are 
 	# assigned in reverse log(log) space.
 
-	def _sigmaInterpolator(self, j, filt, inverse, ps_args):
+	def _sigmaInterpolator(self, j, filt, inverse, kmin, kmax, ps_args):
 		
 		if not 'model' in ps_args:
 			raise Exception('The ps_args dictionary must contain the model keyword, even if the power spectrum is loaded from file.')
+		
 		table_name = 'sigma%d_%s_%s_%s' % (j, self.name, ps_args['model'], filt)
-		interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, 
-													inverse = inverse)
+		if kmin is not None:
+			table_name += '_kmin%.4e' % (kmin)
+		if kmax is not None:
+			table_name += '_kmax%.4e' % (kmax)
+		
+		interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, inverse = inverse)
 		
 		if interpolator is None:
 			if self.print_info:
@@ -2375,7 +2427,7 @@ class Cosmology(object):
 			data_sigma = data_R * 0.0
 			for i in range(len(data_R)):
 				data_sigma[i] = self._sigmaExact(data_R[i], j = j, filt = filt, 
-												ps_args = ps_args)
+									kmin = kmin, kmax = kmax, ps_args = ps_args)
 			table_ = np.array([np.log10(data_R), np.log10(data_sigma)])
 			self.storageUser.storeObject(table_name, table_)
 			if self.print_info:
@@ -2388,7 +2440,7 @@ class Cosmology(object):
 	###############################################################################################
 	
 	def sigma(self, R, z, j = 0, filt = 'tophat', inverse = False, derivative = False, 
-							ps_args = defaults.PS_ARGS):
+							kmin = None, kmax = None, ps_args = defaults.PS_ARGS):
 		"""
 		The rms variance of the linear density field on a scale R, :math:`\\sigma(R)`.
 		
@@ -2434,6 +2486,17 @@ class Cosmology(object):
 		derivative: bool
 			If True, return the logarithmic derivative, :math:`d \log(\sigma) / d \log(R)`, or its
 			inverse, :math:`d \log(R) / d \log(\sigma)` if ``inverse == True``.
+		kmin: float
+			The lower limit of the variance integral in k-space. If ``None``, the limit is 
+			determined automatically (it should be zero in principle, but will be set to a very 
+			small number depending on the type of power spectrum). Setting ``kmin`` can be useful 
+			when considering finite simulation volumes where the largest scales (smallest  k-modes)
+			are not taken into account.
+		kmax: float 
+			The upper limit of the variance integral in k-space. If ``None``, the limit is 
+			determined automatically (it should be infinity in principle, but will be set to a 
+			large number where the power spectrum has fallen off sufficiently that the integral is
+			converged).
 		ps_args: dict
 			Arguments passed to the :func:`matterPowerSpectrum` function.
 		
@@ -2450,7 +2513,7 @@ class Cosmology(object):
 		"""
 
 		if self.interpolation:
-			interpolator = self._sigmaInterpolator(j, filt, inverse, ps_args)
+			interpolator = self._sigmaInterpolator(j, filt, inverse, kmin, kmax, ps_args)
 			
 			if not inverse:
 	
@@ -2482,15 +2545,25 @@ class Cosmology(object):
 
 				# Get the limits in sigma from storage, or compute and store them. Using the 
 				# storage mechanism seems like overkill, but these numbers should be erased if 
-				# the cosmology changes and sigma is re-computed.
-				sigma_min = self.storageUser.getStoredObject('sigma_min')
-				sigma_max = self.storageUser.getStoredObject('sigma_max')
+				# the cosmology changes and sigma is re-computed. Note that the limits change
+				# slightly if the user has imposed k-limits.
+				sigma_min_name = 'sigma_min'
+				sigma_max_name = 'sigma_max'
+				if kmin is not None:
+					sigma_min_name += '_kmin%.4e' % (kmin)
+					sigma_max_name += '_kmin%.4e' % (kmin)
+				if kmax is not None:
+					sigma_min_name += '_kmax%.4e' % (kmax)
+					sigma_max_name += '_kmax%.4e' % (kmax)
+					
+				sigma_min = self.storageUser.getStoredObject(sigma_min_name)
+				sigma_max = self.storageUser.getStoredObject(sigma_max_name)
 				if sigma_min is None or sigma_min is None:
 					knots = interpolator.get_knots()
 					sigma_min = 10**np.min(knots)
 					sigma_max = 10**np.max(knots)
-					self.storageUser.storeObject('sigma_min', sigma_min, persistent = False)
-					self.storageUser.storeObject('sigma_max', sigma_max, persistent = False)
+					self.storageUser.storeObject(sigma_min_name, sigma_min, persistent = False)
+					self.storageUser.storeObject(sigma_max_name, sigma_max, persistent = False)
 				
 				# If the requested sigma is outside the range, give a detailed error message.
 				sigma_req = np.max(sigma_)
@@ -2505,7 +2578,7 @@ class Cosmology(object):
 				
 				# Interpolate to get R(sigma)
 				if derivative: 
-					ret = interpolator(np.log10(sigma_), nu = 1)					
+					ret = interpolator(np.log10(sigma_), nu = 1)
 				else:
 					ret = interpolator(np.log10(sigma_))
 					ret = 10**ret
@@ -2513,16 +2586,16 @@ class Cosmology(object):
 		else:
 			
 			if inverse:
-				raise Exception('R(sigma)  cannot be evaluated with interpolation == False.')
+				raise Exception('R(sigma) cannot be evaluated with interpolation == False.')
 			if derivative:
 				raise Exception('Derivative of sigma cannot be evaluated if interpolation == False.')
 
 			if utilities.isArray(R):
 				ret = R * 0.0
 				for i in range(len(R)):
-					ret[i] = self._sigmaExact(R[i], j = j, filt = filt, ps_args = ps_args)
+					ret[i] = self._sigmaExact(R[i], j = j, filt = filt, kmin = kmin, kmax = kmax, ps_args = ps_args)
 			else:
-				ret = self._sigmaExact(R, j = j, filt = filt, ps_args = ps_args)
+				ret = self._sigmaExact(R, j = j, filt = filt, kmin = kmin, kmax = kmax, ps_args = ps_args)
 			ret *= self.growthFactor(z)
 		
 		return ret
@@ -2535,6 +2608,7 @@ class Cosmology(object):
 
 		# -----------------------------------------------------------------------------------------
 		# The integrand is exponentially cut off at a scale 1000 * R.
+		
 		def integrand(k, R, ps_args, ps_interpolator):
 			
 			if self.interpolation:
@@ -2547,32 +2621,54 @@ class Cosmology(object):
 			return ret
 
 		# -----------------------------------------------------------------------------------------
-		# If we are getting P(k) from a look-up table, it is a little more efficient to 
-		# get the interpolator object and use it directly, rather than using the P(k) function.
-		ps_interpolator = None
-		if self.interpolation:
-			ps_interpolator = self._matterPowerSpectrumInterpolator(**ps_args)
+		
+		def cf_power_law(n, R):
 
-		# Determine the integration limits. The limits chosen here correspond to the cut-off scale
-		# introduced in the integrator.
-		k_min = 1E-6 / R
-		k_max = 10.0 / f_cut / R
+			ret = -R**(-3.0 - n) * (0.5 / np.pi**2)
+			if (abs(n + 2.0) < 1E-3):
+				ret *= (np.pi / (2.0 * np.cos(np.pi * n * 0.5) * scipy.special.gamma(-n - 1.0)))
+			else:
+				ret *= np.sin(np.pi * n * 0.5) * scipy.special.gamma(n + 2.0)
+		
+			return ret
 
-		# If we are using a tabulated power spectrum, we just use the limits of that table IF they 
-		# are more stringent than those already determined.
-		k_min_model, k_max_model = self._matterPowerSpectrumLimits(**ps_args)
-		k_min = max(k_min, k_min_model * 1.0001)
-		k_max = min(k_max, k_max_model * 0.9999)
+		# -----------------------------------------------------------------------------------------
 
-		# Use a Clenshaw-Curtis integration, i.e. an integral weighted by sin(kR). 
-		args = R, ps_args, ps_interpolator
-		xi, _ = scipy.integrate.quad(integrand, k_min, k_max, args = args, epsabs = 0.0,
-					epsrel = self.accuracy_xi, limit = 100, weight = 'sin', wvar = R)
-		xi /= 2.0 * np.pi**2
-
-		if np.isnan(xi):
-			msg = 'Result is nan (cosmology %s, R %.2e).' % (self.name, R)
-			raise Exception(msg)
+		# For power-law cosmologies, we can compute the correlation function directly. However, we
+		# do need to respect the PS normalization, otherwise the result will not be compatible with
+		# the other PS-related functions.
+		if self.power_law:
+			xi = cf_power_law(self.power_law_n, R)
+			norm = self._matterPowerSpectrumNorm(**ps_args)
+			xi *= norm
+			
+		else:
+			# If we are getting P(k) from a look-up table, it is a little more efficient to 
+			# get the interpolator object and use it directly, rather than using the P(k) function.
+			ps_interpolator = None
+			if self.interpolation:
+				ps_interpolator = self._matterPowerSpectrumInterpolator(**ps_args)
+	
+			# Determine the integration limits. The limits chosen here correspond to the cut-off scale
+			# introduced in the integrator.
+			k_min = 1E-6 / R
+			k_max = 10.0 / f_cut / R
+	
+			# If we are using a tabulated power spectrum, we just use the limits of that table IF they 
+			# are more stringent than those already determined.
+			k_min_model, k_max_model = self._matterPowerSpectrumLimits(**ps_args)
+			k_min = max(k_min, k_min_model * 1.0001)
+			k_max = min(k_max, k_max_model * 0.9999)
+	
+			# Use a Clenshaw-Curtis integration, i.e. an integral weighted by sin(kR). 
+			args = R, ps_args, ps_interpolator
+			xi, _ = scipy.integrate.quad(integrand, k_min, k_max, args = args, epsabs = 0.0,
+						epsrel = self.accuracy_xi, limit = 100, weight = 'sin', wvar = R)
+			xi /= 2.0 * np.pi**2
+	
+			if np.isnan(xi):
+				msg = 'Result is nan (cosmology %s, R %.2e).' % (self.name, R)
+				raise Exception(msg)
 
 		return xi
 	
@@ -2594,18 +2690,24 @@ class Cosmology(object):
 			data_R = np.zeros((np.sum(self.R_xi_Nbins) + 1), np.float)
 			n_regions = len(self.R_xi_Nbins)
 			k_computed = 0
-			for i in range(n_regions):
-				log_min = np.log10(self.R_xi[i])
-				log_max = np.log10(self.R_xi[i + 1])
-				log_range = log_max - log_min
-				bin_width = log_range / self.R_xi_Nbins[i]
-				if i == n_regions - 1:
-					data_R[k_computed:k_computed + self.R_xi_Nbins[i] + 1] = \
-						10**np.arange(log_min, log_max + bin_width, bin_width)
-				else:
-					data_R[k_computed:k_computed + self.R_xi_Nbins[i]] = \
-						10**np.arange(log_min, log_max, bin_width)
-				k_computed += self.R_xi_Nbins[i]
+
+			if n_regions == 1:
+				log_min = np.log10(self.R_xi[0])
+				log_max = np.log10(self.R_xi[1])
+				data_R = 10**np.linspace(log_min, log_max, self.R_xi_Nbins[0])
+			else:
+				for i in range(n_regions):
+					log_min = np.log10(self.R_xi[i])
+					log_max = np.log10(self.R_xi[i + 1])
+					log_range = log_max - log_min
+					bin_width = log_range / self.R_xi_Nbins[i]
+					if i == n_regions - 1:
+						data_R[k_computed:k_computed + self.R_xi_Nbins[i] + 1] = \
+							10**np.arange(log_min, log_max + bin_width, bin_width)
+					else:
+						data_R[k_computed:k_computed + self.R_xi_Nbins[i]] = \
+							10**np.arange(log_min, log_max, bin_width)
+					k_computed += self.R_xi_Nbins[i]
 			
 			data_xi = data_R * 0.0
 			for i in range(len(data_R)):

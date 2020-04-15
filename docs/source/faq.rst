@@ -4,7 +4,7 @@ FAQ and troubleshooting
 
 Below are some commonly asked questions and explanations.
 
-.. rubric:: I cannot import colossus.
+.. rubric:: I cannot import Colossus.
 
 If commands such as ``from colossus.tests import run_tests`` fail, your installation probably did 
 not succeed in the first place. If you have cloned the repository directly, make sure Colossus is
@@ -20,6 +20,15 @@ If you get an error like this while running the unit tests::
     
 then you almost certainly need to update your scipy distribution (and probably numpy, while you're
 at it).
+
+.. rubric:: How can I tell what version of Colossus I have?
+
+Just execute this code::
+
+    from colossus import version
+    print(version.__version__)
+
+If this function fails, you are using a very old version and an update would probably be in order!   
 
 .. rubric:: I am getting errors because the cosmology is not set
 

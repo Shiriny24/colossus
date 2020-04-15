@@ -432,7 +432,15 @@ class TCSelfSimilar(CosmologyTestCase):
 		# Test Gaussian filter; the result should not be the same as for tophat.
 		sigma_g = self.cosmo._sigmaExact(8.0, 0.0, filt = 'gaussian', ignore_norm = False)
 		self.assertAlmostEqual(sigma_g, 6.126388566928e-01, places = 5)
-
+		
+	def test_cf(self):
+		# Here, we test to high accuracy to make sure the function uses the analytical expressions
+		# for the PL CF.
+		cf = self.cosmo._correlationFunctionExact(0.1)
+		self.assertAlmostEqual(cf, 1.751768324780e+01, places = 10)
+		cf = self.cosmo._correlationFunctionExact(100.0)
+		self.assertAlmostEqual(cf, 8.579790219177e-02, places = 10)
+		
 ###################################################################################################
 # TRIGGER
 ###################################################################################################
