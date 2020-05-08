@@ -44,7 +44,7 @@ HALO_MASS_CONVERSION_PROFILE = 'nfw'
 are converted into one another, we have to assume a form of the density profile. The simplicity
 of the :doc:`halo_profile_nfw` makes this computation efficient."""
 
-HALO_SPLASHBACK_MODEL = 'diemer17'
+HALO_SPLASHBACK_MODEL = 'diemer20'
 """The default model for the splashback radius."""
 
 HALO_SPLASHBACK_STATISTIC = 'median'
