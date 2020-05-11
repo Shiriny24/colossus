@@ -2345,12 +2345,19 @@ class Cosmology(object):
 				
 			else:
 				
+				# Check the integrand across a range of k scales, and measure its maximum. Then
+				# compare its value at small and large k to that maximum. Once it has reached a
+				# small fraction, we can safely set those k scales as integration limits. The 
+				# upper limit of 1E25 may seem extreme, but in cosmologies with a shallow power
+				# spectrum (e.g., power-law n = -1 cosmology), there can be lots of power at high
+				# k, making the integral slow to converge.
 				test_integrand_min = 1E-6
 
 				test_k_min = max(test_k_min * 1.0001, 1E-7)
-				test_k_max = min(test_k_max * 0.9999, 1E15)
+				test_k_max = min(test_k_max * 0.9999, 1E25)
 				test_k = np.arange(np.log(test_k_min), np.log(test_k_max), 2.0)
 				n_test = len(test_k)
+				
 				test_k_integrand = test_k * 0.0
 				for i in range(n_test):
 					test_k_integrand[i] = logIntegrand(test_k[i], ps_interpolator)
