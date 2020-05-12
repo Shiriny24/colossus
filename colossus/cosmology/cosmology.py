@@ -2386,10 +2386,19 @@ class Cosmology(object):
 					min_k_use = np.log(kmin)
 				if kmax is not None:
 					max_k_use = np.log(kmax)
-					
+
+			# Normally, 100 subdivisions should be enough for the sigma integral to achieve the
+			# desired precision. However, when there is a kmin or kmax cutoff in the integral,
+			# wiggles from the tophat filter can lead to oscillatory behavior. In such cases,
+			# we allow for more subdivisions (which will lead to a more accurate evaluation and
+			# no warning messages, but also longer run time).		
+			if (kmin is not None) or (kmax is not None) or (j > 0):
+				n_subdiv_limit = 1000
+			else:
+				n_subdiv_limit = 100
 			args = ps_interpolator
 			sigma2, _ = scipy.integrate.quad(logIntegrand, min_k_use, max_k_use,
-						args = args, epsabs = 0.0, epsrel = self.accuracy_sigma, limit = 100)
+						args = args, epsabs = 0.0, epsrel = self.accuracy_sigma, limit = n_subdiv_limit)
 			sigma = np.sqrt(sigma2 / 2.0 / np.pi**2)
 		
 		if np.isnan(sigma):
