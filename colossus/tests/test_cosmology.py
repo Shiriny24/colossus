@@ -35,7 +35,7 @@ class CosmologyTestCase(test_colossus.ColosssusTestCase):
 		self.assertAlmostEqualArray(f(TEST_K), correct)
 
 	def _testRZArray(self, f, z, correct):
-		self.assertAlmostEqualArray(f(TEST_RR, z), correct)		
+		self.assertAlmostEqualArray(f(TEST_RR, z), correct)
 
 ###################################################################################################
 # TEST CASE 1: COMPUTATIONS WITHOUT INTERPOLATION
@@ -235,6 +235,22 @@ class TCComp(CosmologyTestCase):
 		self._testRZArray(self.cosmo.sigma, 0.0, correct)
 		correct = [2.401626210899e+00, 4.216651827150e-01, 2.547555219174e-04]
 		self._testRZArray(self.cosmo.sigma, TEST_Z2, correct)
+
+	def test_sigma_klimits(self):
+		correct = 1.899383616640e-02
+		self.assertAlmostEqual(self.cosmo.sigma(1.4, 0.0, kmin = 1E1), correct)
+		correct = 2.119368316269e+00
+		self.assertAlmostEqual(self.cosmo.sigma(1.4, 0.0, kmin = 1E-2), correct)
+		correct = 2.739297090091e-04
+		self.assertAlmostEqual(self.cosmo.sigma(1.4, 0.0, kmin = 1E2), correct)
+		correct = 2.119360774906e+00
+		self.assertAlmostEqual(self.cosmo.sigma(1.4, 0.0, kmax = 1E1), correct)
+		correct = 1.770073547288e-02
+		self.assertAlmostEqual(self.cosmo.sigma(1.4, 0.0, kmax = 1E-2), correct)
+		correct = 2.119425938893e+00
+		self.assertAlmostEqual(self.cosmo.sigma(1.4, 0.0, kmax = 1E2), correct)
+		correct = 2.082159038457e+00
+		self.assertAlmostEqual(self.cosmo.sigma(1.4, 0.0, kmin = 1E-1, kmax = 1E1), correct)
 
 	def test_correlationFunction(self):
 		correct = [1.426307983614e+02, 3.998936475381e+00, -2.794675621480e-07]

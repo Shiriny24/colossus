@@ -14,6 +14,10 @@ Changes in this version include:
   is a recalibration of the ``diemer17`` model, with percent-level changes.
 * The implementation of these splashback models has changed, with some interface changes to the 
   convenience functions (but none to the main splashback model function).
+* The integration in :func:`~cosmology.cosmology.Cosmology.sigma` was made more robust in the case
+  where the user has specified a lower or upper limit to the integration. In particular, the 
+  calculation of the tree integration limit was improved and the code now automatically increases
+  the number of bins in the intepolation table because the solution oscillates near the cutoff.
 
 .. rubric:: Version 1.2.15 (released 04/15/2020)
 

@@ -504,10 +504,13 @@ class Cosmology(object):
 		
 		# Lookup table for sigma. Note that the nominal accuracy to which the integral is 
 		# evaluated should match with the accuracy of the interpolation which is set by Nbins.
-		# Here, they are matched to be accurate to better than ~3E-3.
+		# Here, they are matched to be accurate to better than ~3E-3. If the user imposes lower
+		# and/or upper limits on k, the top-hat filter leads to oscillations that make the 
+		# solution much harder to interpolate. In that case, we raise the number of bins.
 		self.R_min_sigma = 1E-12
 		self.R_max_sigma = 1E3
 		self.R_Nbins_sigma = 18.0
+		self.R_Nbins_sigma_klimits = 60.0
 		self.accuracy_sigma = 3E-3
 	
 		# Lookup table for correlation function xi. Power-law cosmologies are a special case: here,
@@ -2338,8 +2341,10 @@ class Cosmology(object):
 				else:
 					max_k_use = np.log(test_k_max * 0.9999)
 					
-			elif kmin is not None and kmax is not None:
+			elif (kmin is not None) and (kmax is not None):
 				
+				# If the user has imposed both limits, we trust that they are the correct ones
+				# and perform no search for good limits.
 				min_k_use = np.log(kmin)
 				max_k_use = np.log(kmax)
 				
@@ -2347,45 +2352,66 @@ class Cosmology(object):
 				
 				# Check the integrand across a range of k scales, and measure its maximum. Then
 				# compare its value at small and large k to that maximum. Once it has reached a
-				# small fraction, we can safely set those k scales as integration limits. The 
-				# upper limit of 1E25 may seem extreme, but in cosmologies with a shallow power
-				# spectrum (e.g., power-law n = -1 cosmology), there can be lots of power at high
-				# k, making the integral slow to converge.
+				# small fraction, we can safely set those k scales as integration limits.
 				test_integrand_min = 1E-6
 
-				test_k_min = max(test_k_min * 1.0001, 1E-7)
-				test_k_max = min(test_k_max * 0.9999, 1E25)
+				# First, we design a set of test k. We want to test the integral between the limits
+				# of the power spectrum set above, some reasonable cutoffs, and possibly limits set
+				# by the user (otherwise we can derive a max that is smaller than the min). Note 
+				# that the case where both limits are set by the user is covered above.
+				#
+				# The default upper limit of 1E25 may seem extreme, but in cosmologies with a 
+				# shallow power spectrum (e.g., power-law n = -1 cosmology), there can be lots of 
+				# power at high k, making the integral slow to converge.
+				if kmin is not None:
+					test_k_min = kmin
+				else:
+					test_k_min = max(test_k_min * 1.0001, 1E-7)
+				if kmax is not None:
+					test_k_max = kmax
+				else:
+					test_k_max = min(test_k_max * 0.9999, 1E25)
+				if test_k_max <= test_k_min:
+					raise Exception('Perliminary maximum limit of sigma integration (%.4e) is smaller than minimum (%.4e).' \
+							% (test_k_max, test_k_min))
 				test_k = np.arange(np.log(test_k_min), np.log(test_k_max), 2.0)
 				n_test = len(test_k)
 				
+				# Evaluate integral at all test points and compute max
 				test_k_integrand = test_k * 0.0
 				for i in range(n_test):
 					test_k_integrand[i] = logIntegrand(test_k[i], ps_interpolator)
 				integrand_max = np.max(test_k_integrand)
 				
+				# Check if the user has set a lower or upper limit. Otherwise, go down in test 
+				# table until the integrand is sufficiently small compared to maximum.
 				min_index = 0
-				while test_k_integrand[min_index] < integrand_max * test_integrand_min:
-					min_index += 1
-					if min_index > n_test - 2:
-						msg = "Could not find lower integration limit."
-						raise Exception(msg)
-				min_k_use = test_k[min_index]
-			
-				min_index -= 1
-				max_index = min_index + 1
-				while test_k_integrand[max_index] > integrand_max * test_integrand_min:
-					max_index += 1	
-					if max_index == n_test:
-						msg = "Could not find upper integration limit."
-						raise Exception(msg)
-				max_k_use = test_k[max_index]
-						
-				# Check if the user has set a lower or upper limit. In either case, we will
-				# need one of the limits worked out above, so we still compute them.
-				if kmin is not None:
+				if kmin is None:
+					while test_k_integrand[min_index] < integrand_max * test_integrand_min:
+						min_index += 1
+						if min_index > n_test - 2:
+							raise Exception("Could not find lower integration limit for sigma. Value of integrand at limit (%.2e) is %.2e of max, too high." \
+								% (test_k_integrand[min_index - 1], test_k_integrand[min_index - 1] / integrand_max))
+					min_k_use = test_k[min_index]
+				else:
 					min_k_use = np.log(kmin)
-				if kmax is not None:
+					
+				if kmax is None:
+					min_index -= 1
+					max_index = min_index + 1
+					while test_k_integrand[max_index] > integrand_max * test_integrand_min:
+						max_index += 1	
+						if max_index == n_test:
+							raise Exception("Could not find upper integration limit for sigma. Value of integrand at limit (%.2e) is %.2e of max, too high." \
+								% (test_k_integrand[max_index - 1], test_k_integrand[max_index - 1] / integrand_max))
+					max_k_use = test_k[max_index]
+				else:
 					max_k_use = np.log(kmax)
+
+			# Check that the integration limits make sense
+			if (max_k_use <= min_k_use):
+				raise Exception('Maximum limit of sigma integration (%.4e) is smaller than minimum (%.4e).' \
+							% (np.exp(max_k_use), np.exp(min_k_use)))
 
 			# Normally, 100 subdivisions should be enough for the sigma integral to achieve the
 			# desired precision. However, when there is a kmin or kmax cutoff in the integral,
@@ -2411,7 +2437,7 @@ class Cosmology(object):
 
 	# Return a spline interpolator for sigma(R) or R(sigma) if inverse == True. Generally, sigma(R) 
 	# should be evaluated using the sigma() function below, but for some performance-critical 
-	# operations it is faster to obtain the interpolator directly from this function.If the lookup-
+	# operations it is faster to obtain the interpolator directly from this function. If the lookup
 	# table does not exist yet, create it. For sigma, we use a very particular binning scheme. At 
 	# low R, sigma is a very smooth function, and very wellapproximated by a spline interpolation 
 	# between few points. Around the BAO scale, we need a higher resolution. Thus, the bins are 
@@ -2436,7 +2462,11 @@ class Cosmology(object):
 			max_log = np.log10(self.R_max_sigma)
 			log_range = max_log - np.log10(self.R_min_sigma)
 			max_loglog = np.log10(log_range + 1.0)
-			loglog_width = max_loglog / self.R_Nbins_sigma
+			if (kmin is not None) or (kmax is not None):
+				n_bins = self.R_Nbins_sigma_klimits
+			else:
+				n_bins = self.R_Nbins_sigma
+			loglog_width = max_loglog / n_bins
 			R_loglog = np.arange(0.0, max_loglog + loglog_width, loglog_width)
 			log_R = max_log - 10**R_loglog[::-1] + 1.0
 			data_R = 10**log_R
@@ -2507,12 +2537,18 @@ class Cosmology(object):
 			determined automatically (it should be zero in principle, but will be set to a very 
 			small number depending on the type of power spectrum). Setting ``kmin`` can be useful 
 			when considering finite simulation volumes where the largest scales (smallest  k-modes)
-			are not taken into account.
+			are not taken into account. If ``kmin`` is not ``None`` and a top-hat filter is used, 
+			the variance will oscillate at certain radii. Thus, the number of points in the
+			interpolation table is automatically increased, but the solution is nevertheless 
+			unreliable close to the cutoff scale.
 		kmax: float 
 			The upper limit of the variance integral in k-space. If ``None``, the limit is 
 			determined automatically (it should be infinity in principle, but will be set to a 
 			large number where the power spectrum has fallen off sufficiently that the integral is
-			converged).
+			converged). If ``kmax`` is not ``None`` and a top-hat filter is used, the variance 
+			will oscillate at certain radii. Thus, the number of points in the interpolation table 
+			is automatically increased, but the solution is nevertheless unreliable close to the 
+			cutoff scale.
 		ps_args: dict
 			Arguments passed to the :func:`matterPowerSpectrum` function.
 		
