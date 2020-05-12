@@ -2562,7 +2562,7 @@ class Cosmology(object):
 				# Get the limits in sigma from storage, or compute and store them. Using the 
 				# storage mechanism seems like overkill, but these numbers should be erased if 
 				# the cosmology changes and sigma is re-computed. Note that the limits change
-				# slightly if the user has imposed k-limits.
+				# if the user has imposed k-limits.
 				sigma_min_name = 'sigma_min'
 				sigma_max_name = 'sigma_max'
 				if kmin is not None:
@@ -2584,12 +2584,12 @@ class Cosmology(object):
 				# If the requested sigma is outside the range, give a detailed error message.
 				sigma_req = np.max(sigma_)
 				if sigma_req > sigma_max:
-					msg = "sigma = %.2e is too large (max. sigma = %.2e)" % (sigma_req, sigma_max)
+					msg = "Variance sigma = %.2e is too large to invert to radius (max. sigma = %.2e)." % (sigma_req, sigma_max)
 					raise Exception(msg)
 					
 				sigma_req = np.min(sigma_)
 				if sigma_req < sigma_min:
-					msg = "sigma = %.2e is too small (min. sigma = %.2e)" % (sigma_req, sigma_min)
+					msg = "Variance sigma = %.2e is too small to invert to radius (min. sigma = %.2e)." % (sigma_req, sigma_min)
 					raise Exception(msg)
 				
 				# Interpolate to get R(sigma)
