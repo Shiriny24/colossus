@@ -2564,6 +2564,10 @@ class Cosmology(object):
 		matterPowerSpectrum: The matter power spectrum at a scale k.
 		"""
 
+		is_array = utilities.isArray(R)
+		if is_array and len(R) == 0:
+			raise Exception('Sigma function received R array with zero entries.')
+
 		if self.interpolation:
 			interpolator = self._sigmaInterpolator(j, filt, inverse, kmin, kmax, ps_args)
 			
@@ -2642,7 +2646,7 @@ class Cosmology(object):
 			if derivative:
 				raise Exception('Derivative of sigma cannot be evaluated if interpolation == False.')
 
-			if utilities.isArray(R):
+			if is_array:
 				ret = R * 0.0
 				for i in range(len(R)):
 					ret[i] = self._sigmaExact(R[i], j = j, filt = filt, kmin = kmin, kmax = kmax, ps_args = ps_args)
