@@ -18,6 +18,9 @@ Changes in this version include:
   where the user has specified a lower or upper limit to the integration. In particular, the 
   calculation of the tree integration limit was improved and the code now automatically increases
   the number of bins in the intepolation table because the solution oscillates near the cutoff.
+* A number of functions in the cosmology and halo modules are now safe to input of integers instead
+  of float. For example, the growthFactorUnnormalized function returned wrong values when "1" was
+  given instead of "1.0" or "1.". Thanks to Yucheng Zhang for pointing this out!
 
 .. rubric:: Version 1.2.15 (released 04/15/2020)
 
