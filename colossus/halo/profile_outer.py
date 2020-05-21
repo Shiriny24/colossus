@@ -176,6 +176,7 @@ class OuterTerm():
 		"""
 
 		r_array, is_array = utilities.getArray(r)
+		r_array = r_array.astype(np.float)
 		rho = self._density(r_array)
 		if not is_array:
 			rho = rho[0]
@@ -204,7 +205,8 @@ class OuterTerm():
 		"""
 		
 		r_use, is_array = utilities.getArray(r)
-		density_der = 0.0 * r_use
+		r_use = r_use.astype(np.float)
+		density_der = np.zeros_like(r_use)
 		for i in range(len(r_use)):	
 			density_der[i] = scipy.misc.derivative(self.density, r_use[i], dx = 0.001, n = 1, order = 3)
 		if not is_array:

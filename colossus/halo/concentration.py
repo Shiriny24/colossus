@@ -369,6 +369,7 @@ def concentration(M, mdef, z,
 		
 		# Convert to array
 		M_array, is_array = utilities.getArray(M)
+		M_array = M_array.astype(np.float)
 		N = len(M_array)
 		mask = np.ones((N), dtype = bool)
 
@@ -1133,6 +1134,7 @@ def modelLudlow16(M200c, z):
 
 	# Make sure we are dealing with an array
 	M200c, is_array = utilities.getArray(M200c)
+	M200c = M200c.astype(np.float)
 
 	# We solve this model by computing Equations 6 and 7 in Ludlow+16 for a large range of
 	# concentrations. 

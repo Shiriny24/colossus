@@ -55,7 +55,7 @@ class TCSplashbackModel(test_colossus.ColosssusTestCase):
 			elif k == 'diemer17':
 				correct_rsp = [1.232502327747e+00, 7.998382581962e-01]
 			elif k == 'diemer20':
-				correct_rsp = [1.207214556607e+00, 7.946495219314e-01]
+				correct_rsp = [1.214166576317e+00, 7.980307021577e-01]
 			else:
 				raise Exception('No test case defined for model %s.' % k)
 			

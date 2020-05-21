@@ -709,11 +709,14 @@ def radiusFromPdf(M, c, z, mdef, cumulativePdf,
 		return x
 	
 	M_array, is_array = utilities.getArray(M)
+	M_array = M_array.astype(np.float)
 	R = mass_so.M_to_R(M, z, mdef)
 	N = len(M_array)
-	x = 0.0 * M_array
+	x = np.zeros_like(M_array)
 	c_array, _ = utilities.getArray(c)
+	c_array = c_array.astype(np.float)
 	p_array, _ = utilities.getArray(cumulativePdf)
+	p_array = p_array.astype(np.float)
 	
 	if interpolate:
 

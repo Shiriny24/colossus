@@ -696,6 +696,7 @@ class Cosmology(object):
 		elif self.de_model == 'user':
 			
 			z_array, is_array = utilities.getArray(z)
+			z_array = z_array.astype(np.float)
 			de_z = np.zeros_like(z_array)
 			for i in range(len(z_array)):
 				integral, _ = scipy.integrate.quad(_de_integrand, 0, np.log(1.0 + z_array[i]))
@@ -1761,6 +1762,7 @@ class Cosmology(object):
 		# -----------------------------------------------------------------------------------------
 
 		z_arr, is_array = utilities.getArray(z)
+		z_arr = z_arr.astype(np.float)
 		D = np.zeros_like(z_arr)
 		
 		# Create a transition regime centered around z = 10 in log space, but only if relativistic

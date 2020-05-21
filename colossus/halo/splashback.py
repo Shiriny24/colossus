@@ -381,6 +381,7 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 	elif q_in == 'nu200m':
 		x = nu200m
 	x, is_array = utilities.getArray(x)
+	x = x.astype(np.float)
 	mask, _ = utilities.getArray(mask)
 	x = x[mask]
 	if np.count_nonzero(mask) == 0:
@@ -593,8 +594,10 @@ def splashbackRadius(z, mdef, R = None, M = None, c = None, Gamma = None,
 	
 	if R is not None:
 		R, is_array = utilities.getArray(R)
+		R = R.astype(np.float)
 	else:
 		M, is_array = utilities.getArray(M)
+		M = M.astype(np.float)
 	
 	if mdef == '200m':
 		if R is None:
