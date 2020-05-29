@@ -2028,6 +2028,8 @@ class Cosmology(object):
 				
 				# If the interpolator has not been created yet, we need to normalize the table
 				# to the correct sigma8 which happens in the exact Pk function.
+				if self.print_info:
+					print("Cosmology.matterPowerSpectrum: Loading power spectrum from file %s." % (path))				
 				table_name = self._matterPowerSpectrumName(model)
 				table = self.storageUser.getStoredObject(table_name, path = path)
 				
@@ -2039,6 +2041,7 @@ class Cosmology(object):
 						raise Exception('Please set persistence to read in order to load a power spectrum from a file.')
 					else:
 						raise Exception('Could not load power spectrum table from path "%s".' % (path))
+					
 				table_k = 10**table[0]
 				table_P = self._matterPowerSpectrumExact(table_k, model = model, path = path,
 														ignore_norm = False)
@@ -2374,7 +2377,7 @@ class Cosmology(object):
 				else:
 					test_k_max = min(test_k_max * 0.9999, 1E25)
 				if test_k_max <= test_k_min:
-					raise Exception('Perliminary maximum limit of sigma integration (%.4e) is smaller than minimum (%.4e).' \
+					raise Exception('Preliminary maximum limit of sigma integration (%.4e) is smaller than minimum (%.4e).' \
 							% (test_k_max, test_k_min))
 				test_k = np.arange(np.log(test_k_min), np.log(test_k_max), 2.0)
 				n_test = len(test_k)
@@ -2383,27 +2386,31 @@ class Cosmology(object):
 				test_k_integrand = test_k * 0.0
 				for i in range(n_test):
 					test_k_integrand[i] = logIntegrand(test_k[i], ps_interpolator)
-				integrand_max = np.max(test_k_integrand)
-				
+				integrand_max_idx = np.argmax(test_k_integrand)
+				integrand_max = test_k_integrand[integrand_max_idx]
+
 				# Check if the user has set a lower or upper limit. Otherwise, go down in test 
-				# table until the integrand is sufficiently small compared to maximum.
-				min_index = 0
+				# table until the integrand is sufficiently small compared to maximum. We start at
+				# the bottom end instead of the maximum because we want to be conservative: the 
+				# integrand could dip below the threshold but grow again at lower k.
 				if kmin is None:
-					while test_k_integrand[min_index] < integrand_max * test_integrand_min:
+					min_index = 0
+					while test_k_integrand[min_index + 1] < integrand_max * test_integrand_min:
 						min_index += 1
-						if min_index > n_test - 2:
+						if min_index == n_test - 2:
 							raise Exception("Could not find lower integration limit for sigma. Value of integrand at limit (%.2e) is %.2e of max, too high." \
-								% (test_k_integrand[min_index - 1], test_k_integrand[min_index - 1] / integrand_max))
+								% (test_k_integrand[min_index + 1], test_k_integrand[min_index + 1] / integrand_max))
 					min_k_use = test_k[min_index]
 				else:
 					min_k_use = np.log(kmin)
-					
+				
+				# Now do the same for the maximum. Here, we start at the high end of the test
+				# table and decrease the max index.
 				if kmax is None:
-					min_index -= 1
-					max_index = min_index + 1
-					while test_k_integrand[max_index] > integrand_max * test_integrand_min:
-						max_index += 1	
-						if max_index == n_test:
+					max_index = n_test - 1
+					while test_k_integrand[max_index - 1] < integrand_max * test_integrand_min:
+						max_index -= 1	
+						if max_index == 1:
 							raise Exception("Could not find upper integration limit for sigma. Value of integrand at limit (%.2e) is %.2e of max, too high." \
 								% (test_k_integrand[max_index - 1], test_k_integrand[max_index - 1] / integrand_max))
 					max_k_use = test_k[max_index]
@@ -2448,7 +2455,8 @@ class Cosmology(object):
 	def _sigmaInterpolator(self, j, filt, inverse, kmin, kmax, ps_args):
 		
 		if not 'model' in ps_args:
-			raise Exception('The ps_args dictionary must contain the model keyword, even if the power spectrum is loaded from file.')
+			raise Exception('The ps_args dictionary must contain the model keyword, even if the power spectrum is loaded from file. Found %s.' \
+						% (str(ps_args)))
 		
 		table_name = 'sigma%d_%s_%s_%s' % (j, self.name, ps_args['model'], filt)
 		if kmin is not None:
