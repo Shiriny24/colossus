@@ -2398,6 +2398,9 @@ class Cosmology(object):
 					while test_k_integrand[min_index + 1] < integrand_max * test_integrand_min:
 						min_index += 1
 						if min_index == n_test - 2:
+							print('Test k (in h/Mpc) and sigma-integrand:')
+							print(np.exp(test_k))
+							print(test_k_integrand)
 							raise Exception("Could not find lower integration limit for sigma. Value of integrand at limit (%.2e) is %.2e of max, too high." \
 								% (test_k_integrand[min_index + 1], test_k_integrand[min_index + 1] / integrand_max))
 					min_k_use = test_k[min_index]
@@ -2411,6 +2414,9 @@ class Cosmology(object):
 					while test_k_integrand[max_index - 1] < integrand_max * test_integrand_min:
 						max_index -= 1	
 						if max_index == 1:
+							print('Test k (in h/Mpc) and sigma-integrand:')
+							print(np.exp(test_k))
+							print(test_k_integrand)
 							raise Exception("Could not find upper integration limit for sigma. Value of integrand at limit (%.2e) is %.2e of max, too high." \
 								% (test_k_integrand[max_index - 1], test_k_integrand[max_index - 1] / integrand_max))
 					max_k_use = test_k[max_index]
