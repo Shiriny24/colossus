@@ -281,7 +281,7 @@ models['diemer20'].max_z = 8.0
 def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 				model = defaults.HALO_SPLASHBACK_MODEL,
 				statistic = defaults.HALO_SPLASHBACK_STATISTIC,
-				rspdef = defaults.HALO_SPLASHBACK_RSPDEF):
+				rspdef = None):
 	"""
 	The splashback radius, mass, and scatter.
 	
@@ -314,13 +314,14 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 	statistic: str
 		Can be ``mean`` or ``median``, determining whether the function returns the best fit to the 
 		mean or median profile of a halo sample. This parameter is ignored by most models. Not
-		to be mixed up with the definition ``rspdef`` used in the ``diemer17`` model.
+		to be mixed up with the definition ``rspdef`` used in the ``diemer20`` model.
 	rspdef: str
 		The definition of the splashback radius. This parameter is ignored by most models, but 
-		used by the ``diemer17`` model to distinguish the ``mean`` of the apocenter distribution
+		used by the ``diemer20`` model to distinguish the ``mean`` of the apocenter distribution
 		or higher percentiles (e.g. ``percentile75``). The function also accepts the newer notation
 		used in the SPARTA code, namely ``sp-apr-mn`` for the mean and ``sp-apr-p75`` and so on
-		for percentiles.
+		for percentiles. For models that use this parameter (``diemer17`` and ``diemer20``), it 
+		must be given, otherwise the function throws an error.
 	
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -459,6 +460,10 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 			ret = np.ones((len(x)), np.float) * 0.054
 	
 	elif model in ['diemer17', 'diemer20']:
+
+		# Check that a definition was given.
+		if rspdef is None:
+			raise Exception('Need Rsp/Msp definition such as sp-apr-mn or sp-apr-p75, none given.')
 		
 		# The model is only valid between the 50th and 90th percentile
 		p = _modelDiemerPercentileValue(rspdef)
@@ -470,7 +475,7 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 		# If only nu200m is given, we compute Gamma from nu and z.
 		if q_in == 'nu200m':
 			pars = _modelDiemerGetPars(model, 'Gamma', None)
-			Gamma = modelDiemer17Gamma(nu200m, z, pars)
+			Gamma = modelDiemerGamma(nu200m, z, pars)
 		
 		if q_out in ['RspR200m', 'MspM200m']:
 			pars = _modelDiemerGetPars(model, q_out, rspdef)
@@ -526,7 +531,7 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 def splashbackRadius(z, mdef, R = None, M = None, c = None, Gamma = None,
 		model = defaults.HALO_SPLASHBACK_MODEL, 
 		statistic = defaults.HALO_SPLASHBACK_STATISTIC,
-		rspdef = defaults.HALO_SPLASHBACK_RSPDEF,
+		rspdef = None,
 		c_model = defaults.HALO_CONCENTRATION_MODEL,
 		profile = defaults.HALO_MASS_CONVERSION_PROFILE):
 	"""
@@ -556,7 +561,8 @@ def splashbackRadius(z, mdef, R = None, M = None, c = None, Gamma = None,
 	Gamma: array_like
 		The mass accretion rate that can be optionally passed to the splashback model. If this 
 		field is set, the splashback model is evaluated with Gamma as the primary input, otherwise
-		peak height is the primary input.
+		peak height is the primary input. If ``Gamma`` is an array, it must have the same 
+		dimensions as the input ``R`` or ``M``.
 	model: str
 		The splashback model to use for the prediction (see table above).
 	statistic: str
@@ -615,23 +621,44 @@ def splashbackRadius(z, mdef, R = None, M = None, c = None, Gamma = None,
 		else:
 			M200m, R200m, _ = mass_defs.changeMassDefinition(M, c, z, mdef, '200m', 
 										profile = profile)
-			
+	
+	# Final parameter check: if Gamma is given, it must have the same dimensions as R/M.
+	if Gamma is not None:
+		gamma_is_array = utilities.isArray(Gamma)
+		if gamma_is_array:
+			if not is_array:
+				raise Exception('Gamma is an array, but the given R/M is not. They must agree in dimensions.')
+			if len(Gamma) != len(M200m):
+				raise Exception('The Gamma array has length %d, the R/M array %d; they must agree in dimensions.' \
+							% (len(Gamma), len(M200m)))
+
+	# Perform the actual computations. We first convert mass to peak height and then evaluate the
+	# splashback model.			
 	nu200m = peaks.peakHeight(M200m, z)
 	
 	RspR200m, mask1 = splashbackModel('RspR200m', Gamma = Gamma, nu200m = nu200m, z = z, model = model,
 				statistic = statistic, rspdef = rspdef)
 	MspM200m, mask2 = splashbackModel('MspM200m', Gamma = Gamma, nu200m = nu200m, z = z, model = model,
 				statistic = statistic, rspdef = rspdef)
+	
+	# The masks should be the same but we require both to be true to be safe.
 	mask = mask1 & mask2
 	
-	Rsp = R200m[mask] * RspR200m
-	Msp = M200m[mask] * MspM200m
-	
-	if not is_array:
-		Rsp = Rsp[0]
-		Msp = Msp[0]
-		mask = mask[0]
-	
+	# Special case: if there is only one element and its mask is False, we need to return some
+	# value for R and M.
+	if (np.count_nonzero(mask) == 0) and (not is_array):
+		Rsp = None
+		Msp = None
+		mask = False
+		
+	else:
+		Rsp = R200m[mask] * RspR200m
+		Msp = M200m[mask] * MspM200m
+		if not is_array:
+			Rsp = Rsp[0]
+			Msp = Msp[0]
+			mask = mask[0]
+		
 	return Rsp, Msp, mask
 
 ###################################################################################################
@@ -1206,7 +1233,10 @@ mdp['diemer20']['Gamma']['b3'] = 0.004207
 ###################################################################################################
 
 def _modelDiemerPercentileValue(rspdef):
-	
+
+	if rspdef is None:
+		raise Exception('Need Rsp/Msp definition such as sp-apr-mn or sp-apr-p75, none given.')
+
 	if rspdef == 'sp-apr-mn' or rspdef == 'mean':
 		p = -1.0
 	else:
@@ -1273,6 +1303,9 @@ def modelDiemerRspMsp(Gamma, nu200m, z, rspdef, pars):
 		given parameters; has the same dimensions as ``Gamma``.
 	"""
 
+	if rspdef is None:
+		raise Exception('Need Rsp/Msp definition such as sp-apr-mn or sp-apr-p75, none given.')
+
 	cosmo = cosmology.getCurrent()
 	Om = cosmo.Om(z)
 	p = _modelDiemerPercentileValue(rspdef)
@@ -1333,6 +1366,9 @@ def modelDiemerScatter(Gamma, nu200m, rspdef, pars):
 		:math:`M_{\\rm sp}/M_{\\rm 200m}`, depending on the parameters; has the same dimensions as 
 		``Gamma``.
 	"""
+
+	if rspdef is None:
+		raise Exception('Need Rsp/Msp definition such as sp-apr-mn or sp-apr-p75, none given.')
 
 	p = _modelDiemerPercentileValue(rspdef)	
 	ret = pars['sigma_0'] + pars['sigma_Gamma'] * Gamma + pars['sigma_nu'] * nu200m + pars['sigma_p'] * p
@@ -1402,7 +1438,7 @@ def modelDiemer17RspR200m(Gamma, nu200m, z, rspdef):
 		:math:`R_{\\rm sp}/R_{\\rm 200m}`, has the same dimensions as ``Gamma``.
 	"""
 
-	return modelDiemer17RspR200m(Gamma, nu200m, z, rspdef, _modelDiemerGetPars('diemer17', 'RspR200m', rspdef))
+	return modelDiemerRspMsp(Gamma, nu200m, z, rspdef, _modelDiemerGetPars('diemer17', 'RspR200m', rspdef))
 
 ###################################################################################################
 
@@ -1432,7 +1468,7 @@ def modelDiemer17MspM200m(Gamma, nu200m, z, rspdef):
 		:math:`M_{\\rm sp}/M_{\\rm 200m}`, has the same dimensions as ``Gamma``.
 	"""
 		
-	return modelDiemer17RspR200m(Gamma, nu200m, z, rspdef, _modelDiemerGetPars('diemer17', 'MspM200m', rspdef))
+	return modelDiemerRspMsp(Gamma, nu200m, z, rspdef, _modelDiemerGetPars('diemer17', 'MspM200m', rspdef))
 
 ###################################################################################################
 
@@ -1547,7 +1583,7 @@ def modelDiemer20RspR200m(Gamma, nu200m, z, rspdef):
 		:math:`R_{\\rm sp}/R_{\\rm 200m}`, has the same dimensions as ``Gamma``.
 	"""
 		
-	return modelDiemer17RspR200m(Gamma, nu200m, z, rspdef, _modelDiemerGetPars('diemer20', 'RspR200m', rspdef))
+	return modelDiemerRspMsp(Gamma, nu200m, z, rspdef, _modelDiemerGetPars('diemer20', 'RspR200m', rspdef))
 
 ###################################################################################################
 
@@ -1577,7 +1613,7 @@ def modelDiemer20MspM200m(Gamma, nu200m, z, rspdef):
 		:math:`M_{\\rm sp}/M_{\\rm 200m}`, has the same dimensions as ``Gamma``.
 	"""
 		
-	return modelDiemer17RspR200m(Gamma, nu200m, z, rspdef, _modelDiemerGetPars('diemer20', 'MspM200m', rspdef))
+	return modelDiemerRspMsp(Gamma, nu200m, z, rspdef, _modelDiemerGetPars('diemer20', 'MspM200m', rspdef))
 
 ###################################################################################################
 

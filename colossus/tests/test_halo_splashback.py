@@ -41,7 +41,8 @@ class TCSplashbackModel(test_colossus.ColosssusTestCase):
 		models = splashback.models
 		for k in models.keys():
 			msg = 'Failure in model = %s' % (k)
-			Rsp, _, mask = splashback.splashbackRadius(z, mdef, Gamma = Gamma, R = R200m, model = k)
+			Rsp, _, mask = splashback.splashbackRadius(z, mdef, Gamma = Gamma, R = R200m, 
+													model = k, rspdef = 'sp-apr-mn')
 			RspR200m = Rsp / R200m_test
 			
 			if k == 'adhikari14':

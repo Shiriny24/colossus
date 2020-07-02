@@ -51,10 +51,6 @@ HALO_SPLASHBACK_STATISTIC = 'median'
 """The default statistic used (``mean`` or ``median``). This only applies to splashback models 
 that distinguish between mean and median statistics."""
 
-HALO_SPLASHBACK_RSPDEF = 'mean'
-"""The default definition of Rsp used. This only applies to splashback models that distinguish 
-between different definitions."""
-
 ###################################################################################################
 # ARGUMENT LISTS
 ###################################################################################################

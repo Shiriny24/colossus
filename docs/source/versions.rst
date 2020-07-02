@@ -13,7 +13,12 @@ Changes in this version include:
 * A new splashback model, ``diemer20``, was added and made the default splashback model. This model
   is a recalibration of the ``diemer17`` model, with percent-level changes.
 * The implementation of these splashback models has changed, with some interface changes to the 
-  convenience functions (but none to the main splashback model function).
+  convenience functions.
+* The main :func:`~halo.splashback.splashbackModel` function does not provide a default definition
+  for the ``diemer17`` and ``diemer20`` models any longer (such as the mean or higher percentiles
+  of the particle splashback distribution). The definition matters quite a bit and should be 
+  provided by the user to avoid confusion. The function now throws an error if no definition
+  is passed.
 * The integration in :func:`~cosmology.cosmology.Cosmology.sigma` was made more robust in the case
   where the user has specified a lower or upper limit to the integration. In particular, the 
   calculation of the tree integration limit was improved and the code now automatically increases
