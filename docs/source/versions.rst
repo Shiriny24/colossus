@@ -10,6 +10,9 @@ version 1.1.0. You can download older versions from the
 
 Changes in this version include:
 
+* The cosmology module now supports conversions to and from Astropy, including a number of dark 
+  energy models. See the :func:`~cosmology.cosmology.Cosmology.toAstropy` and 
+  :func:`~cosmology.cosmology.fromAstropy` functions.
 * A new splashback model, ``diemer20``, was added and made the default splashback model. This model
   is a recalibration of the ``diemer17`` model, with percent-level changes.
 * The implementation of these splashback models has changed, with some interface changes to the 
