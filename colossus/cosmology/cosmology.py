@@ -92,6 +92,35 @@ changes will simply be overwritten when
 :func:`~cosmology.cosmology.Cosmology.checkForChangedCosmology` is called.
 
 ***************************************************************************************************
+Converting to and from Astropy cosmologies
+***************************************************************************************************
+
+Colossus can easily interface with the cosmology module of the popular 
+`Astropy <https://www.astropy.org/>`_ code. Astropy cosmology objects can be converted to Colossus 
+cosmologies with the :func:`fromAstropy` function::
+
+	import astropy.cosmology
+
+	params = dict(H0 = 70, Om0 = 0.27, Ob0 = 0.0457, Tcmb0 = 2.7255, Neff = 3.046)
+	sigma8 = 0.82
+	ns = 0.96
+	
+	astropy_cosmo = astropy.cosmology.FlatLambdaCDM(**params)
+	colossus_cosmo = cosmology.fromAstropy(astropy_cosmo, sigma8, ns, name = 'my_cosmo')
+
+The ``name`` parameter is not necessary if a name is set in the Astropy cosmology. The ``sigma8``
+and ``ns`` parameters must be set by the user because the Astropy cosmology does not contain them
+(because it does not compute power spectrum-related quantities). The conversion supports the 
+``LambdaCDM``, ``FlatLambdaCDM``, ``wCDM``, ``FlatwCDM``, ``w0waCDM``, and ``Flatw0waCDM`` 
+Astropy cosmology classes. Conversely, to convert a Colossus cosmology to Astropy, we simply use 
+the :func:`~cosmology.cosmology.Cosmology.toAstropy` function::
+
+	colossus_cosmo = cosmology.setCosmology('WMAP9')
+	astropy_cosmo = colossus_cosmo.toAstropy()
+
+Naturally, both conversion functions will fail if astropy.cosmology cannot be imported.
+
+***************************************************************************************************
 Summary of getter and setter functions
 ***************************************************************************************************
 
@@ -100,6 +129,7 @@ Summary of getter and setter functions
 	addCosmology
 	setCurrent
 	getCurrent
+	fromAstropy
 
 ---------------------------------------------------------------------------------------------------
 Standard cosmologies
@@ -612,6 +642,66 @@ class Cosmology(object):
 			self.storageUser.resetStorage()
 			
 		return
+
+	###############################################################################################
+	# Conversions to other modules
+	###############################################################################################
+	
+	def toAstropy(self):
+		"""
+		Create an equivalent Astropy cosmology object.
+		
+		This function throws an error if Astropy cannot be imported. Most standard Colossus
+		cosmologies can be converted, exceptions are self-similar cosmologies with power-law
+		spectra and user-defined dark energy equations of state.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		cosmo_astropy: FLRW
+			An astropy.cosmology.FLRW class object.
+		"""
+		
+		import astropy.cosmology
+		
+		if self.power_law:
+			raise Exception('Cannot convert power-law cosmology to astropy.')
+		
+		if not self.relspecies:
+			print('WARNING: Cannot convert setting to ignore relativistic species to Astropy.')
+
+		params = {'name': self.name, 'H0': self.H0, 'Om0': self.Om0, 'Ob0': self.Ob0, 
+				'Tcmb0': self.Tcmb0, 'Neff': self.Neff}
+		
+		if not self.flat:
+			params.update({'Ode0': self.Ode0})
+		
+		if self.de_model == 'lambda':
+			if self.flat:
+				c_apy = astropy.cosmology.FlatLambdaCDM(**params)
+			else:
+				c_apy = astropy.cosmology.LambdaCDM(**params)
+				
+		elif self.de_model == 'w0':
+			params.update({'w0': self.w0})
+			if self.flat:
+				c_apy = astropy.cosmology.FlatwCDM(**params)
+			else:
+				c_apy = astropy.cosmology.wCDM(**params)
+			
+		elif self.de_model == 'w0wa':
+			params.update({'w0': self.w0, 'wa': self.wa})
+			if self.flat:
+				c_apy = astropy.cosmology.Flatw0waCDM(**params)
+			else:
+				c_apy = astropy.cosmology.w0waCDM(**params)
+			
+		elif self.de_model == 'user':
+			raise Exception('Cannot convert to Astropy cosmology because de_model = user.')
+			
+		else:
+			raise Exception('Unknown de_model, %s.' % (self.de_model))
+		
+		return c_apy
 	
 	###############################################################################################
 	# Utilities for internal use
@@ -2993,5 +3083,86 @@ def getCurrent():
 		raise Exception('Cosmology is not set.')
 
 	return current_cosmo
+
+###################################################################################################
+
+def fromAstropy(astropy_cosmo, sigma8, ns, cosmo_name = None, **kwargs):
+	"""
+	Convert an Astropy cosmology object to Colossus and set it as current cosmology.
+
+	This function throws an error if Astropy cannot be imported. The user needs to supply sigma8
+	and ns because Astropy does not include power spectrum calculations in its cosmology module.
+	There are a few dark energy model implemented in Astropy that are not implemented in Colossus,
+	namely "wpwaCDM" and "w0wzCDM". The corresponding classes cannot be converted with this 
+	function.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	astropy_cosmo: FLRW
+		Astropy cosmology object of type FLRW or its derivative classes.
+	sigma8: float
+		The normalization of the power spectrum, i.e. the variance when the field is filtered with a 
+		top hat filter of radius 8 Mpc/h. This parameter is not part of an Astropy cosmology but 
+		must be set in Colossus.
+	ns: float
+		The tilt of the primordial power spectrum. This parameter is not part of an Astropy cosmology 
+		but must be set in Colossus.
+	cosmo_name: str
+		The name of the cosmology. Can be ``None`` if a name is supplied in the Astropy cosmology,
+		which is optional in Astropy.
+	kwargs: dictionary
+		Additional parameters that are passed to the Colossus cosmology.
+
+	Returns
+	-----------------------------------------------------------------------------------------------
+	cosmo: Cosmology
+		The cosmology object derived from Astropy, which is also set globally. 
+	"""
+
+	import astropy.cosmology
+
+	if isinstance(astropy_cosmo, astropy.cosmology.LambdaCDM):
+		pass
+	
+	elif isinstance(astropy_cosmo, astropy.cosmology.wCDM):
+		kwargs.update(de_model = 'w0')
+		kwargs.update(w0 = astropy_cosmo.w0)
+	
+	elif isinstance(astropy_cosmo, astropy.cosmology.w0waCDM):
+		kwargs.update(de_model = 'w0wa')
+		kwargs.update(w0 = astropy_cosmo.w0)
+		kwargs.update(wa = astropy_cosmo.wa)
+
+	elif isinstance(astropy_cosmo, astropy.cosmology.wpwaCDM):
+		raise Exception('Cannot convert wpwaCDM cosmology to Colossus.')
+	
+	elif isinstance(astropy_cosmo, astropy.cosmology.w0wzCDM):
+		raise Exception('Cannot convert w0wzCDM cosmology to Colossus.')
+	
+	else:
+		raise Exception('Unknown astropy cosmology class, %s.' % (astropy_cosmo.__class__.__name__))
+
+	if astropy_cosmo.name is None:
+		if cosmo_name is None:
+			raise Exception('Name is None in Astropy cosmology, must be supplied by the user.')
+	else:
+		cosmo_name = astropy_cosmo.name
+	
+	if astropy_cosmo.has_massive_nu:
+		print('WARNING: Astropy cosmology class contains massive neutrinos, which are not taken into account in Colossus.')
+
+	params = dict(
+	        flat = (astropy_cosmo.Ok0 == 0.0),
+	        H0 = astropy_cosmo.H0.value,
+	        Om0 = astropy_cosmo.Om0,
+	        Ode0 = astropy_cosmo.Ode0,
+	        Ob0 = astropy_cosmo.Ob0,
+	        Tcmb0 = astropy_cosmo.Tcmb0.value,
+	        Neff = astropy_cosmo.Neff,
+	        sigma8 = sigma8,
+	        ns = ns,
+	        **kwargs)
+	
+	return setCosmology(cosmo_name, params = params)
 
 ###################################################################################################
