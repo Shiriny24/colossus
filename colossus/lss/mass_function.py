@@ -64,6 +64,7 @@ watson13       fof, any SO      Yes (SO)    `Watson et al. 2013 <http://adsabs.h
 bocquet16      200m,200c,500c   Yes         `Bocquet et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.456.2361B>`_
 despali16      Any SO           Yes         `Despali et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.456.2486D>`_
 comparat17     vir              No          `Comparat et al. 2017 <https://ui.adsabs.harvard.edu//#abs/2017MNRAS.469.4157C/abstract>`_
+diemer20       sp-apr-*         No          Diemer 2020
 ============== ================ =========== ======================================
 
 Note that the mass definition (set to ``fof`` by default) needs to match one of the allowed mass 
@@ -246,6 +247,12 @@ models['despali16'].mdef_dependence = True
 models['comparat17'] = HaloMassFunctionModel()
 models['comparat17'].mdefs = ['vir']
 
+models['diemer20'] = HaloMassFunctionModel()
+models['diemer20'].mdefs = ['sp-apr-mn', 'sp-apr-p*']
+models['diemer20'].z_dependence = True
+models['diemer20'].deltac_dependence = True
+models['diemer20'].mdef_dependence = True
+
 ###################################################################################################
 
 def massFunction(x, z, q_in = 'M', q_out = 'f', mdef = 'fof', 
@@ -305,9 +312,9 @@ def massFunction(x, z, q_in = 'M', q_out = 'f', mdef = 'fof',
 		The halo mass function in the desired units.
 	"""
 
-	# Compute sigma
 	cosmo = cosmology.getCurrent()
 	
+	# Compute sigma
 	M = None
 	if q_in == 'M':
 		M = x
@@ -321,11 +328,26 @@ def massFunction(x, z, q_in = 'M', q_out = 'f', mdef = 'fof',
 	else:
 		raise Exception('Unknown input quantity, %s.' % (q_in))
 
+	# Check that the model exists
 	if not model in models.keys():
 		msg = 'Unknown model, %s.' % (model)
 		raise Exception(msg)
-
 	model_props = models[model]
+	
+	# Check that the mass definition and model are compatible.
+	found = False
+	if '*' in model_props.mdefs:
+		found = True
+	if mdef in model_props.mdefs:
+		found = True
+	if mdef.startswith('sp-apr-p') and ('sp-apr-p*' in model_props.mdefs):
+		found = True
+		
+	if not found:
+		raise Exception('The mass definition %s is not allowed for model %s. Allowed are: %s.' % \
+					(mdef, model, str(model_props.mdefs)))
+	
+	# Create the argument list depending on the model and evaluate it.
 	args = (sigma,)
 	if model_props.z_dependence or model_props.ps_dependence \
 		or model_props.sigma_dependence or model_props.deltac_dependence:
@@ -338,10 +360,6 @@ def massFunction(x, z, q_in = 'M', q_out = 'f', mdef = 'fof',
 		args += (sigma_args,)
 	if model_props.deltac_dependence:
 		args += (deltac_args,)
-
-	if not '*' in model_props.mdefs and not mdef in model_props.mdefs:
-		raise Exception('The mass definition %s is not allowed for model %s. Allowed are: %s.' % \
-					(mdef, model, str(model_props.mdefs)))
 
 	f = model_props.func(*args, **kwargs)
 
@@ -1134,6 +1152,72 @@ def modelComparat17(sigma):
 	return f
 
 ###################################################################################################
+
+def modelDiemer20(sigma, z, mdef, deltac_args = {'corrections': True}):
+	"""
+	The splashback mass function model of Diemer 2020.
+	
+	This model represents a universal fitting function for splashback masses measured dynamically,
+	that is, as the mean or percentiles of the particle apocenter distribution. The model is 
+	nominally valid for any redshift or cosmology, see the corresponding paper for details on its
+	accuracy.
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	sigma: array_like
+		Variance; can be a number or a numpy array.
+	z: float
+		Redshift
+	mdef: str
+		The splashback mass definition to which ``sigma`` corresponds. This function predicts the 
+		mass function for dynamically measured splashback masses, namely the mean (``sp-apr-mn``)
+		or higher percentiles (``sp-apr-p75`` etc) of the splashback distribution. Any percentile
+		between 50 and 90 is allowed. See :doc:`halo_mass` for details.
+	deltac_args: dict
+		Arguments passed to the :func:`~lss.peaks.collapseOverdensity` function.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	f: array_like
+		The halo mass function :math:`f(\\sigma)`, has the same dimensions as ``sigma``.
+	"""
+	
+	delta_c = peaks.collapseOverdensity(z = z, **deltac_args)
+	nu = delta_c / sigma
+	
+	if mdef == 'sp-apr-mn':
+		A = 0.124399
+		a = 1.191457
+		b = 0.337871
+		c = 0.431710
+		
+	elif mdef.startswith('sp-apr-p'):
+		A = 0.091878
+		a0 = 1.088267
+		b = 0.242074
+		c0 = 0.445337
+		ap = 0.167465
+		cp = -0.068969
+		alpha = 1.756618
+	
+		p_int = int(mdef[-2:])
+		p = float(p_int) / 100.0
+		
+		if (p < 0.5) or (p > 0.9):
+			raise Exception('Cannot evaluate percentile %d, the allowed range is [50..90].' % p_int)
+		
+		pprime = p**alpha
+		a = a0 + ap * pprime
+		c = c0 + cp * pprime
+
+	else:
+		raise Exception('Mass definition %s cannot be evaluated with diemer20 model.' % (mdef))
+
+	f = A * ((nu / b)**a + 1.0) * np.exp(-c * nu**2)
+
+	return f
+
+###################################################################################################
 # Pointers to model functions
 ###################################################################################################
 
@@ -1152,5 +1236,6 @@ models['watson13'].func = modelWatson13
 models['bocquet16'].func = modelBocquet16
 models['despali16'].func = modelDespali16
 models['comparat17'].func = modelComparat17
+models['diemer20'].func = modelDiemer20
 
 ###################################################################################################

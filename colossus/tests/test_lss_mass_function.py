@@ -148,6 +148,46 @@ class TCMassFunction(test_colossus.ColosssusTestCase):
 			self.assertAlmostEqualArray(mass_function.massFunction(np.array([1E8, 1E15]), z, 
 								q_in = 'M', mdef = mdef, model = k), correct, msg = msg)
 
+	def test_hmfModelsSplashbackMean(self):
+		models = mass_function.models
+		for k in models.keys():
+			msg = 'Failure in model = %s.' % (k)
+			
+			mdef = 'sp-apr-mn'
+			z = 1.0
+			
+			if (not 'sp-apr-mn' in models[k].mdefs):
+				continue
+			
+			if k == 'diemer20':
+				correct = [2.839481935931e-01, 3.342581497124e-05]
+			else:
+				msg = 'Unknown model, %s.' % k
+				raise Exception(msg)
+			
+			self.assertAlmostEqualArray(mass_function.massFunction(np.array([1E8, 1E15]), z, 
+								q_in = 'M', mdef = mdef, model = k), correct, msg = msg)
+
+	def test_hmfModelsSplashbackPercentiles(self):
+		models = mass_function.models
+		for k in models.keys():
+			msg = 'Failure in model = %s.' % (k)
+			
+			mdef = 'sp-apr-p75'
+			z = 1.0
+			
+			if (not 'sp-apr-p*' in models[k].mdefs):
+				continue
+			
+			if k == 'diemer20':
+				correct = [2.729257516844e-01, 7.599996379257e-05]
+			else:
+				msg = 'Unknown model, %s.' % k
+				raise Exception(msg)
+			
+			self.assertAlmostEqualArray(mass_function.massFunction(np.array([1E8, 1E15]), z, 
+								q_in = 'M', mdef = mdef, model = k), correct, msg = msg)
+
 ###################################################################################################
 # TRIGGER
 ###################################################################################################

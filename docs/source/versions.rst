@@ -22,6 +22,9 @@ Changes in this version include:
   of the particle splashback distribution). The definition matters quite a bit and should be 
   provided by the user to avoid confusion. The function now throws an error if no definition
   is passed.
+* A new mass function model, ``diemer20`` has been added (not to be mistaken for the splashback
+  radius and mass model of the same name). This model is the first to predict splashback mass
+  functions.
 * The integration in :func:`~cosmology.cosmology.Cosmology.sigma` was made more robust in the case
   where the user has specified a lower or upper limit to the integration. In particular, the 
   calculation of the tree integration limit was improved and the code now automatically increases
