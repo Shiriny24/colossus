@@ -1296,8 +1296,8 @@ def modelDiemer19(M200c, z, statistic = 'median', ps_args = defaults.PS_ARGS):
 	statistic: str
 		Can be ``mean`` or ``median``.
 	ps_args: dict
-		Arguments passed to the :func:`matterPowerSpectrum` function, and functions that depend on
-		it such as the power spectrum slope.
+		Arguments passed to the :func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum` 
+		function, and functions that depend on it such as the power spectrum slope.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------

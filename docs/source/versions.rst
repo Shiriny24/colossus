@@ -6,13 +6,14 @@ See below for a listing of the most important code and interface changes in Colo
 version 1.1.0. You can download older versions from the 
 `PyPi History <https://pypi.org/project/colossus/#history>`_ for Colossus.
 
-.. rubric:: Version 1.2.16 (released ???)
+.. rubric:: Version 1.2.16 (released 07/15/2020)
 
 Changes in this version include:
 
 * The cosmology module now supports conversions to and from Astropy, including a number of dark 
   energy models. See the :func:`~cosmology.cosmology.Cosmology.toAstropy` and 
-  :func:`~cosmology.cosmology.fromAstropy` functions.
+  :func:`~cosmology.cosmology.fromAstropy` functions. Thanks to Steven Murray for the idea and 
+  code!
 * A new splashback model, ``diemer20``, was added and made the default splashback model. This model
   is a recalibration of the ``diemer17`` model, with percent-level changes.
 * The implementation of these splashback models has changed, with some interface changes to the 
