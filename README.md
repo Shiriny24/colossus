@@ -39,7 +39,7 @@ If any errors occur, please send the output to the author.
 License & Citing
 ----------------
 
-Author:        Benedikt Diemer (diemer@umd.edu)
+Main Devloper: Benedikt Diemer (diemer@umd.edu)
 
 Contributors:  Matt Becker, Michael Joyce, Andrey Kravtsov, Steven Murray
 

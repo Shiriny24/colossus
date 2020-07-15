@@ -289,9 +289,10 @@ class HaloDensityProfile():
 		"""		
 				
 		r_array, is_array = utilities.getArray(r)
-		rho_outer = np.zeros((len(r_array)), np.float)
+		r_array = r_array.astype(np.float)
+		rho_outer = np.zeros_like(r_array)
 		for i in range(self.N_outer):
-			rho_outer += self._outer_terms[i].density(r)
+			rho_outer += self._outer_terms[i].density(r_array)
 		if not is_array:
 			rho_outer = rho_outer[0]
 		
@@ -346,7 +347,8 @@ class HaloDensityProfile():
 		"""
 		
 		r_use, is_array = utilities.getArray(r)
-		rho_der = 0.0 * r_use
+		r_use = r_use.astype(np.float)
+		rho_der = np.zeros_like(r_use)
 		for i in range(len(r_use)):	
 			rho_der[i] = scipy.misc.derivative(self.densityInner, r_use[i], dx = 0.001, n = 1, order = 3)
 		if not is_array:
@@ -473,7 +475,8 @@ class HaloDensityProfile():
 			return density_function(r) * 4.0 * np.pi * r**2
 
 		r_use, is_array = utilities.getArray(r)
-		M = 0.0 * r_use
+		r_use = r_use.astype(np.float)
+		M = np.zeros_like(r_use)
 		for i in range(len(r_use)):
 			M[i], _ = scipy.integrate.quad(integrand, self.rmin, r_use[i], epsrel = accuracy)
 		if not is_array:
@@ -656,7 +659,8 @@ class HaloDensityProfile():
 			integrand = integrand_exact
 			
 		r_use, is_array = utilities.getArray(r)
-		surfaceDensity =np.zeros_like(r_use)
+		r_use = r_use.astype(np.float)
+		surfaceDensity = np.zeros_like(r_use)
 		log_r_use = np.log(r_use)
 		for i in range(len(r_use)):
 			surfaceDensity[i], _ = scipy.integrate.quad(integrand, log_r_use[i], log_max_r, 
@@ -849,7 +853,8 @@ class HaloDensityProfile():
 			integrand = integrand_exact
 
 		r_use, is_array = utilities.getArray(r)
-		deltaSigma = 0.0 * r_use
+		r_use = r_use.astype(np.float)
+		deltaSigma = np.zeros_like(r_use)
 		for i in range(len(r_use)):
 			deltaSigma[i], _ = scipy.integrate.quad(integrand, log_min_r, np.log(r_use[i]), 
 										args = (interp), epsrel = accuracy, limit = 1000)

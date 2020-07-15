@@ -424,10 +424,27 @@ class StorageUser():
 						
 						# There is a subtlety: the spline interpolator can't deal with decreasing 
 						# x-values, so if the y-values are decreasing, we reverse their order.
+						# If they are still not monotonically ascending after switching the order,
+						# the interpolator will fail. In the case where the values are flat, we
+						# use a bit of a hack and remove the flat values; this is OK but the user
+						# should check the actual limits of the interpolator before using it.
 						if object_raw[1][-1] < object_raw[1][0]:
 							object_raw = object_raw[:, ::-1]
 						
-						object_data = scipy.interpolate.InterpolatedUnivariateSpline(object_raw[1],
+						if (np.min(np.diff(object_raw[1])) < 0.0):
+							raise Exception('While inverting interpolator %s, found not monotonically increasing values.' \
+										% (object_name))
+						elif (np.min(np.diff(object_raw[1])) == 0.0):
+							mask = np.ones(len(object_raw[1]), np.bool)
+							mask[1:] = (np.diff(object_raw[1]) > 0.0)
+							n_removed = len(mask) - np.count_nonzero(mask)
+							warnings.warn('While inverting interpolator %s, removed %d flat values from the data.' \
+										% (object_name, n_removed))
+							object_data = scipy.interpolate.InterpolatedUnivariateSpline(object_raw[1][mask],
+																					object_raw[0][mask])
+							
+						else:
+							object_data = scipy.interpolate.InterpolatedUnivariateSpline(object_raw[1],
 																					object_raw[0])
 					else:
 						object_data = scipy.interpolate.InterpolatedUnivariateSpline(object_raw[0],

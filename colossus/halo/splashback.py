@@ -97,11 +97,12 @@ parameter to the :func:`splashbackModel` and :func:`splashbackRadius` functions:
 	shi16          Rsp/Msp              (Gamma, z)                  `Shi 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.459.3711S>`_
 	mansfield17    Rsp/Msp, Scatter     (Gamma, z, M)               `Mansfield et al. 2017 <http://adsabs.harvard.edu/abs/2017ApJ...841...34M>`_
 	diemer17       Rsp/Msp, Scatter     (Gamma, z, M) or (z, M)     `Diemer et al. 2017 <http://adsabs.harvard.edu/abs/2017ApJ...843..140D>`_
+	diemer20       Rsp/Msp, Scatter     (Gamma, z, M) or (z, M)     Diemer 2020
 	============== ==================== =========================== =========================================
 
 The individual functions for these models are documented towards the bottom of this page. Note that
-the ``diemer17`` model includes a fitting function for the mass accretion rate as a function of 
-peak height and redshift, :func:`modelDiemer17Gamma`.
+the ``diemer20`` model includes a fitting function for the mass accretion rate as a function of 
+peak height and redshift.
 
 Note that, in principle, the user can overwrite the model properties and limitations stored in 
 the :data:`models` dictionary, for example to evaluate a model outside of the range of parameters
@@ -124,9 +125,19 @@ Module contents
 	modelShi16RspR200m
 	modelMansfield17RspR200m
 	modelMansfield17MspM200m
-	modelDiemer17Gamma
+	modelDiemerRspMsp
+	modelDiemerScatter
+	modelDiemerGamma
 	modelDiemer17RspR200m
-	modelDiemer17Scatter
+	modelDiemer17MspM200m
+	modelDiemer17RspR200mScatter
+	modelDiemer17MspM200mScatter
+	modelDiemer17Gamma
+	modelDiemer20RspR200m
+	modelDiemer20MspM200m
+	modelDiemer20RspR200mScatter
+	modelDiemer20MspM200mScatter
+	modelDiemer20Gamma
 	
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -256,12 +267,21 @@ models['diemer17'].max_nu200m = 5.0
 models['diemer17'].min_z = 0.0
 models['diemer17'].max_z = 8.0
 
+models['diemer20'] = SplashbackModel()
+models['diemer20'].q_in = ['Gamma', 'nu200m']
+models['diemer20'].q_out = ['RspR200m', 'MspM200m', 'Deltasp', 'RspR200m-1s', 'MspM200m-1s', 'Deltasp-1s']
+models['diemer20'].depends_on = ['Gamma', 'z', 'nu', 'rspdef']
+models['diemer20'].min_nu200m = 0.0
+models['diemer20'].max_nu200m = 5.0
+models['diemer20'].min_z = 0.0
+models['diemer20'].max_z = 8.0
+
 ###################################################################################################
 
 def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 				model = defaults.HALO_SPLASHBACK_MODEL,
 				statistic = defaults.HALO_SPLASHBACK_STATISTIC,
-				rspdef = defaults.HALO_SPLASHBACK_RSPDEF):
+				rspdef = None):
 	"""
 	The splashback radius, mass, and scatter.
 	
@@ -294,11 +314,14 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 	statistic: str
 		Can be ``mean`` or ``median``, determining whether the function returns the best fit to the 
 		mean or median profile of a halo sample. This parameter is ignored by most models. Not
-		to be mixed up with the definition ``rspdef`` used in the ``diemer17`` model.
+		to be mixed up with the definition ``rspdef`` used in the ``diemer20`` model.
 	rspdef: str
 		The definition of the splashback radius. This parameter is ignored by most models, but 
-		used by the ``diemer17`` model to distinguish the ``mean`` of the apocenter distribution
-		or higher percentiles (e.g. ``percentile75``). 
+		used by the ``diemer20`` model to distinguish the ``mean`` of the apocenter distribution
+		or higher percentiles (e.g. ``percentile75``). The function also accepts the newer notation
+		used in the SPARTA code, namely ``sp-apr-mn`` for the mean and ``sp-apr-p75`` and so on
+		for percentiles. For models that use this parameter (``diemer17`` and ``diemer20``), it 
+		must be given, otherwise the function throws an error.
 	
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -359,6 +382,7 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 	elif q_in == 'nu200m':
 		x = nu200m
 	x, is_array = utilities.getArray(x)
+	x = x.astype(np.float)
 	mask, _ = utilities.getArray(mask)
 	x = x[mask]
 	if np.count_nonzero(mask) == 0:
@@ -392,12 +416,12 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 	elif model == 'more15':
 
 		if q_out == 'RspR200m':
-			ret = modelMore15RspR200m(z = z, Gamma = Gamma, nu200m = nu200m)
+			ret = modelMore15RspR200m(z = z, Gamma = Gamma, nu200m = nu200m, statistic = statistic)
 		elif q_out == 'MspM200m':
-			ret = modelMore15MspM200m(z = z, Gamma = Gamma, nu200m = nu200m)
+			ret = modelMore15MspM200m(z = z, Gamma = Gamma, nu200m = nu200m, statistic = statistic)
 		elif q_out == 'Deltasp':
-			msp200m = modelMore15MspM200m(z = z, Gamma = Gamma, nu200m = nu200m)
-			rsp200m = modelMore15RspR200m(z = z, Gamma = Gamma, nu200m = nu200m)
+			msp200m = modelMore15MspM200m(z = z, Gamma = Gamma, nu200m = nu200m, statistic = statistic)
+			rsp200m = modelMore15RspR200m(z = z, Gamma = Gamma, nu200m = nu200m, statistic = statistic)
 			ret = 200.0 * msp200m / rsp200m**3
 
 	elif model == 'shi16':
@@ -434,28 +458,36 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 			ret = np.ones((len(x)), np.float) * 0.046
 		elif q_out == 'MspM200m-1s':
 			ret = np.ones((len(x)), np.float) * 0.054
-			
-	if model == 'diemer17':
+	
+	elif model in ['diemer17', 'diemer20']:
+
+		# Check that a definition was given.
+		if rspdef is None:
+			raise Exception('Need Rsp/Msp definition such as sp-apr-mn or sp-apr-p75, none given.')
 		
-		# The model is only valid between the 50th and 87th percentile
-		p = _modelDiemer17PercentileValue(rspdef)
-		if (p > 0.0 and p < 0.5) or p > 0.87:
+		# The model is only valid between the 50th and 90th percentile
+		p = _modelDiemerPercentileValue(rspdef)
+		if (p > 0.0 and p < 0.5) or p > 0.901:
 			mask[:] = False
 			ret = np.array([])
 			return ret, mask
 		
 		# If only nu200m is given, we compute Gamma from nu and z.
 		if q_in == 'nu200m':
-			Gamma = modelDiemer17Gamma(nu200m, z)
+			pars = _modelDiemerGetPars(model, 'Gamma', None)
+			Gamma = modelDiemerGamma(nu200m, z, pars)
 		
-		if q_out == 'RspR200m':
-			ret = modelDiemer17RspR200m('RspR200m', Gamma, nu200m, z, rspdef)
-		elif q_out == 'MspM200m':
-			ret = modelDiemer17RspR200m('MspM200m', Gamma, nu200m, z, rspdef)
+		if q_out in ['RspR200m', 'MspM200m']:
+			pars = _modelDiemerGetPars(model, q_out, rspdef)
+			ret = modelDiemerRspMsp(Gamma, nu200m, z, rspdef, pars)
+		
 		elif q_out == 'Deltasp':
-			rsp200m = modelDiemer17RspR200m('RspR200m', Gamma, nu200m, z, rspdef)
-			msp200m = modelDiemer17RspR200m('MspM200m', Gamma, nu200m, z, rspdef)
+			pars = _modelDiemerGetPars(model, 'RspR200m', rspdef)
+			rsp200m = modelDiemerRspMsp(Gamma, nu200m, z, rspdef, pars)
+			pars = _modelDiemerGetPars(model, 'MspM200m', rspdef)
+			msp200m = modelDiemerRspMsp(Gamma, nu200m, z, rspdef, pars)
 			ret = 200.0 * msp200m / rsp200m**3
+		
 		else:
 			if q_in == 'nu200m':
 				if q_out == 'RspR200m-1s':
@@ -464,20 +496,29 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 					ret = np.ones((len(mask)), np.float) * 0.07
 				elif q_out == 'Deltasp-1s':
 					ret = np.ones((len(mask)), np.float) * 0.15
+				else:
+					raise Exception('Unknown quantity, %s.' % (q_out))
 			else:
-				if q_out == 'RspR200m-1s':
-					ret = modelDiemer17Scatter('RspR200m-1s', Gamma, nu200m, z, rspdef)
-				elif q_out == 'MspM200m-1s':
-					ret = modelDiemer17Scatter('MspM200m-1s', Gamma, nu200m, z, rspdef)
+				if q_out in ['RspR200m-1s', 'MspM200m-1s']:
+					pars = _modelDiemerGetPars(model, q_out, rspdef)
+					ret = modelDiemerScatter(Gamma, nu200m, rspdef, pars)
 				elif q_out == 'Deltasp-1s':
-					rsp_1s = modelDiemer17Scatter('RspR200m-1s', Gamma, nu200m, z, rspdef)
-					msp_1s = modelDiemer17Scatter('MspM200m-1s', Gamma, nu200m, z, rspdef)
+					pars = _modelDiemerGetPars(model, 'RspR200m-1s', rspdef)
+					rsp_1s = modelDiemerScatter(Gamma, nu200m, rspdef, pars)
+					pars = _modelDiemerGetPars(model, 'MspM200m-1s', rspdef)
+					msp_1s = modelDiemerScatter(Gamma, nu200m, rspdef, pars)
 					ret = np.sqrt(msp_1s**2 + 3.0 * rsp_1s**2)
+				else:
+					raise Exception('Unknown quantity, %s.' % (q_out))
+
 				min_scatter = 0.02
 				if utilities.isArray(ret):
 					ret[ret < min_scatter] = min_scatter
 				else:
 					ret = max(ret, min_scatter)
+	
+	else:
+		raise Exception('Unknown model, %s.' % model)
 
 	if not is_array:
 		ret = ret[0]
@@ -490,7 +531,7 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 def splashbackRadius(z, mdef, R = None, M = None, c = None, Gamma = None,
 		model = defaults.HALO_SPLASHBACK_MODEL, 
 		statistic = defaults.HALO_SPLASHBACK_STATISTIC,
-		rspdef = defaults.HALO_SPLASHBACK_RSPDEF,
+		rspdef = None,
 		c_model = defaults.HALO_CONCENTRATION_MODEL,
 		profile = defaults.HALO_MASS_CONVERSION_PROFILE):
 	"""
@@ -520,7 +561,8 @@ def splashbackRadius(z, mdef, R = None, M = None, c = None, Gamma = None,
 	Gamma: array_like
 		The mass accretion rate that can be optionally passed to the splashback model. If this 
 		field is set, the splashback model is evaluated with Gamma as the primary input, otherwise
-		peak height is the primary input.
+		peak height is the primary input. If ``Gamma`` is an array, it must have the same 
+		dimensions as the input ``R`` or ``M``.
 	model: str
 		The splashback model to use for the prediction (see table above).
 	statistic: str
@@ -529,7 +571,9 @@ def splashbackRadius(z, mdef, R = None, M = None, c = None, Gamma = None,
 	rspdef: str
 		The definition of the splashback radius. This parameter is ignored by most models, but 
 		used by the ``diemer17`` model to distinguish the ``mean`` of the apocenter distribution
-		or higher percentiles (e.g. ``percentile75``). 
+		or higher percentiles (e.g. ``percentile75``). The function also accepts the newer notation
+		used in the SPARTA code, namely ``sp-apr-mn`` for the mean and ``sp-apr-p75`` and so on
+		for percentiles.
 	c_model: str
 		The concentration model used to compute c if it is not passed by the user. See the
 		:doc:`halo_concentration` module for details.
@@ -556,8 +600,10 @@ def splashbackRadius(z, mdef, R = None, M = None, c = None, Gamma = None,
 	
 	if R is not None:
 		R, is_array = utilities.getArray(R)
+		R = R.astype(np.float)
 	else:
 		M, is_array = utilities.getArray(M)
+		M = M.astype(np.float)
 	
 	if mdef == '200m':
 		if R is None:
@@ -575,23 +621,44 @@ def splashbackRadius(z, mdef, R = None, M = None, c = None, Gamma = None,
 		else:
 			M200m, R200m, _ = mass_defs.changeMassDefinition(M, c, z, mdef, '200m', 
 										profile = profile)
-			
+	
+	# Final parameter check: if Gamma is given, it must have the same dimensions as R/M.
+	if Gamma is not None:
+		gamma_is_array = utilities.isArray(Gamma)
+		if gamma_is_array:
+			if not is_array:
+				raise Exception('Gamma is an array, but the given R/M is not. They must agree in dimensions.')
+			if len(Gamma) != len(M200m):
+				raise Exception('The Gamma array has length %d, the R/M array %d; they must agree in dimensions.' \
+							% (len(Gamma), len(M200m)))
+
+	# Perform the actual computations. We first convert mass to peak height and then evaluate the
+	# splashback model.			
 	nu200m = peaks.peakHeight(M200m, z)
 	
 	RspR200m, mask1 = splashbackModel('RspR200m', Gamma = Gamma, nu200m = nu200m, z = z, model = model,
 				statistic = statistic, rspdef = rspdef)
 	MspM200m, mask2 = splashbackModel('MspM200m', Gamma = Gamma, nu200m = nu200m, z = z, model = model,
 				statistic = statistic, rspdef = rspdef)
+	
+	# The masks should be the same but we require both to be true to be safe.
 	mask = mask1 & mask2
 	
-	Rsp = R200m[mask] * RspR200m
-	Msp = M200m[mask] * MspM200m
-	
-	if not is_array:
-		Rsp = Rsp[0]
-		Msp = Msp[0]
-		mask = mask[0]
-	
+	# Special case: if there is only one element and its mask is False, we need to return some
+	# value for R and M.
+	if (np.count_nonzero(mask) == 0) and (not is_array):
+		Rsp = None
+		Msp = None
+		mask = False
+		
+	else:
+		Rsp = R200m[mask] * RspR200m
+		Msp = M200m[mask] * MspM200m
+		if not is_array:
+			Rsp = Rsp[0]
+			Msp = Msp[0]
+			mask = mask[0]
+		
 	return Rsp, Msp, mask
 
 ###################################################################################################
@@ -925,9 +992,252 @@ def modelMansfield17MspM200m(Gamma, Om):
 
 ###################################################################################################
 
-def _modelDiemer17PercentileValue(rspdef):
-	
-	if rspdef == 'mean':
+# Create a generalized structure for the parameters of the diemer17 and diemer20 models.
+mdp = {}
+
+mdp['diemer17'] = {}
+mdp['diemer20'] = {}
+
+for k in mdp.keys():
+	mdp[k]['RspR200m'] = {}
+	mdp[k]['MspM200m'] = {}
+	mdp[k]['RspR200m-1s'] = {}
+	mdp[k]['MspM200m-1s'] = {}
+	for j in mdp[k].keys():
+		mdp[k][j]['mean'] = {}
+		mdp[k][j]['perc'] = {}
+	mdp[k]['Gamma'] = {}
+
+mdp['diemer17']['RspR200m']['mean']['a0'] = 0.649783
+mdp['diemer17']['RspR200m']['mean']['b0'] = 0.600362
+mdp['diemer17']['RspR200m']['mean']['b_om'] = 0.091996
+mdp['diemer17']['RspR200m']['mean']['b_nu'] = 0.061557
+mdp['diemer17']['RspR200m']['mean']['c0'] = -0.806288
+mdp['diemer17']['RspR200m']['mean']['c_om'] = 17.520522
+mdp['diemer17']['RspR200m']['mean']['c_nu'] = -0.293465
+mdp['diemer17']['RspR200m']['mean']['c_om2'] = -9.624342
+mdp['diemer17']['RspR200m']['mean']['c_nu2'] = 0.039196
+mdp['diemer17']['RspR200m']['mean']['a0_p'] = 0.000000
+mdp['diemer17']['RspR200m']['mean']['b0_p'] = 0.000000
+mdp['diemer17']['RspR200m']['mean']['b_om_p'] = 0.000000
+mdp['diemer17']['RspR200m']['mean']['b_om_p2'] = 0.000000
+mdp['diemer17']['RspR200m']['mean']['b_nu_p'] = 0.000000
+mdp['diemer17']['RspR200m']['mean']['c_om_p'] = 0.000000
+mdp['diemer17']['RspR200m']['mean']['c_om_p2'] = 0.000000
+mdp['diemer17']['RspR200m']['mean']['c_om2_p'] = 0.000000
+mdp['diemer17']['RspR200m']['mean']['c_om2_p2'] = 0.000000
+mdp['diemer17']['RspR200m']['mean']['c_nu_p'] = 0.000000
+mdp['diemer17']['RspR200m']['mean']['c_nu2_p'] = 0.000000
+
+mdp['diemer17']['MspM200m']['mean']['a0'] = 0.679244
+mdp['diemer17']['MspM200m']['mean']['b0'] = 0.405083
+mdp['diemer17']['MspM200m']['mean']['b_om'] = 0.291925
+mdp['diemer17']['MspM200m']['mean']['b_nu'] = 0.000000
+mdp['diemer17']['MspM200m']['mean']['c0'] = 3.365943
+mdp['diemer17']['MspM200m']['mean']['c_om'] = 1.469818
+mdp['diemer17']['MspM200m']['mean']['c_nu'] = -0.075635
+mdp['diemer17']['MspM200m']['mean']['c_om2'] = 0.000000
+mdp['diemer17']['MspM200m']['mean']['c_nu2'] = 0.000000
+mdp['diemer17']['MspM200m']['mean']['a0_p'] = 0.000000
+mdp['diemer17']['MspM200m']['mean']['b0_p'] = 0.000000
+mdp['diemer17']['MspM200m']['mean']['b_om_p'] = 0.000000
+mdp['diemer17']['MspM200m']['mean']['b_om_p2'] = 0.000000
+mdp['diemer17']['MspM200m']['mean']['b_nu_p'] = 0.000000
+mdp['diemer17']['MspM200m']['mean']['c_om_p'] = 0.000000
+mdp['diemer17']['MspM200m']['mean']['c_om_p2'] = 0.000000
+mdp['diemer17']['MspM200m']['mean']['c_om2_p'] = 0.000000
+mdp['diemer17']['MspM200m']['mean']['c_om2_p2'] = 0.000000
+mdp['diemer17']['MspM200m']['mean']['c_nu_p'] = 0.000000
+mdp['diemer17']['MspM200m']['mean']['c_nu2_p'] = 0.000000
+		
+mdp['diemer17']['RspR200m-1s']['mean']['sigma_0'] = 0.052645
+mdp['diemer17']['RspR200m-1s']['mean']['sigma_Gamma'] = 0.003846
+mdp['diemer17']['RspR200m-1s']['mean']['sigma_nu'] = -0.012054
+mdp['diemer17']['RspR200m-1s']['mean']['sigma_p'] = 0.000000
+
+mdp['diemer17']['MspM200m-1s']['mean']['sigma_0'] = 0.052815
+mdp['diemer17']['MspM200m-1s']['mean']['sigma_Gamma'] = 0.002456
+mdp['diemer17']['MspM200m-1s']['mean']['sigma_nu'] = -0.011182
+mdp['diemer17']['MspM200m-1s']['mean']['sigma_p'] = 0.000000
+
+mdp['diemer17']['RspR200m']['perc']['a0'] = 0.320332
+mdp['diemer17']['RspR200m']['perc']['b0'] = 0.267433
+mdp['diemer17']['RspR200m']['perc']['b_om'] = 0.113389
+mdp['diemer17']['RspR200m']['perc']['b_nu'] = 0.207989
+mdp['diemer17']['RspR200m']['perc']['c0'] = -0.959629
+mdp['diemer17']['RspR200m']['perc']['c_om'] = 16.245894
+mdp['diemer17']['RspR200m']['perc']['c_nu'] = 0.000000
+mdp['diemer17']['RspR200m']['perc']['c_om2'] = -9.497861
+mdp['diemer17']['RspR200m']['perc']['c_nu2'] = -0.018484
+mdp['diemer17']['RspR200m']['perc']['a0_p'] = 0.614807
+mdp['diemer17']['RspR200m']['perc']['b0_p'] = 0.545238
+mdp['diemer17']['RspR200m']['perc']['b_om_p'] = 0.000000
+mdp['diemer17']['RspR200m']['perc']['b_om_p2'] = 0.000000
+mdp['diemer17']['RspR200m']['perc']['b_nu_p'] = -0.223282
+mdp['diemer17']['RspR200m']['perc']['c_om_p'] = 0.003941
+mdp['diemer17']['RspR200m']['perc']['c_om_p2'] = 8.969094
+mdp['diemer17']['RspR200m']['perc']['c_om2_p'] = -0.000485
+mdp['diemer17']['RspR200m']['perc']['c_om2_p2'] = 10.613168
+mdp['diemer17']['RspR200m']['perc']['c_nu_p'] = -0.451066
+mdp['diemer17']['RspR200m']['perc']['c_nu2_p'] = 0.088029
+			
+mdp['diemer17']['MspM200m']['perc']['a0'] = 0.264765
+mdp['diemer17']['MspM200m']['perc']['b0'] = 0.666040
+mdp['diemer17']['MspM200m']['perc']['b_om'] = 0.168814
+mdp['diemer17']['MspM200m']['perc']['b_nu'] = 0.000000
+mdp['diemer17']['MspM200m']['perc']['c0'] = 4.728709
+mdp['diemer17']['MspM200m']['perc']['c_om'] = 2.388866
+mdp['diemer17']['MspM200m']['perc']['c_nu'] = -0.084108
+mdp['diemer17']['MspM200m']['perc']['c_om2'] = 0.000000
+mdp['diemer17']['MspM200m']['perc']['c_nu2'] = 0.000000
+mdp['diemer17']['MspM200m']['perc']['a0_p'] = 0.843509
+mdp['diemer17']['MspM200m']['perc']['b0_p'] = -0.639169
+mdp['diemer17']['MspM200m']['perc']['b_om_p'] = 0.003195
+mdp['diemer17']['MspM200m']['perc']['b_om_p2'] = 4.939266
+mdp['diemer17']['MspM200m']['perc']['b_nu_p'] = 0.225399
+mdp['diemer17']['MspM200m']['perc']['c_om_p'] = -0.705712
+mdp['diemer17']['MspM200m']['perc']['c_om_p2'] = -1.241920
+mdp['diemer17']['MspM200m']['perc']['c_om2_p'] = 0.000000
+mdp['diemer17']['MspM200m']['perc']['c_om2_p2'] = 0.000000
+mdp['diemer17']['MspM200m']['perc']['c_nu_p'] = -0.391103
+mdp['diemer17']['MspM200m']['perc']['c_nu2_p'] = 0.074216
+
+mdp['diemer17']['RspR200m-1s']['perc']['sigma_0'] = 0.044548
+mdp['diemer17']['RspR200m-1s']['perc']['sigma_Gamma'] = 0.004404
+mdp['diemer17']['RspR200m-1s']['perc']['sigma_nu'] = -0.014636
+mdp['diemer17']['RspR200m-1s']['perc']['sigma_p'] = 0.022637
+
+mdp['diemer17']['MspM200m-1s']['perc']['sigma_0'] = 0.027594
+mdp['diemer17']['MspM200m-1s']['perc']['sigma_Gamma'] = 0.002330
+mdp['diemer17']['MspM200m-1s']['perc']['sigma_nu'] = -0.012491
+mdp['diemer17']['MspM200m-1s']['perc']['sigma_p'] = 0.047344
+
+mdp['diemer17']['Gamma']['a0'] = 1.222190
+mdp['diemer17']['Gamma']['a1'] = 0.351460
+mdp['diemer17']['Gamma']['b0'] = -0.286441
+mdp['diemer17']['Gamma']['b1'] = 0.077767
+mdp['diemer17']['Gamma']['b2'] = -0.056228
+mdp['diemer17']['Gamma']['b3'] = 0.004100
+
+mdp['diemer20']['RspR200m']['mean']['a0'] = 0.659745
+mdp['diemer20']['RspR200m']['mean']['b0'] = 0.556171
+mdp['diemer20']['RspR200m']['mean']['b_om'] = 0.114053
+mdp['diemer20']['RspR200m']['mean']['b_nu'] = 0.069775
+mdp['diemer20']['RspR200m']['mean']['c0'] = -0.850819
+mdp['diemer20']['RspR200m']['mean']['c_om'] = 18.446356
+mdp['diemer20']['RspR200m']['mean']['c_nu'] = -0.333245
+mdp['diemer20']['RspR200m']['mean']['c_om2'] = -10.059591
+mdp['diemer20']['RspR200m']['mean']['c_nu2'] = 0.047432
+mdp['diemer20']['RspR200m']['mean']['a0_p'] = 0.000000
+mdp['diemer20']['RspR200m']['mean']['b0_p'] = 0.000000
+mdp['diemer20']['RspR200m']['mean']['b_om_p'] = 0.000000
+mdp['diemer20']['RspR200m']['mean']['b_om_p2'] = 0.000000
+mdp['diemer20']['RspR200m']['mean']['b_nu_p'] = 0.000000
+mdp['diemer20']['RspR200m']['mean']['c_om_p'] = 0.000000
+mdp['diemer20']['RspR200m']['mean']['c_om_p2'] = 0.000000
+mdp['diemer20']['RspR200m']['mean']['c_om2_p'] = 0.000000
+mdp['diemer20']['RspR200m']['mean']['c_om2_p2'] = 0.000000
+mdp['diemer20']['RspR200m']['mean']['c_nu_p'] = 0.000000
+mdp['diemer20']['RspR200m']['mean']['c_nu2_p'] = 0.000000
+
+mdp['diemer20']['MspM200m']['mean']['a0'] = 0.696229
+mdp['diemer20']['MspM200m']['mean']['b0'] = 0.373627
+mdp['diemer20']['MspM200m']['mean']['b_om'] = 0.300490
+mdp['diemer20']['MspM200m']['mean']['b_nu'] = 0.000000
+mdp['diemer20']['MspM200m']['mean']['c0'] = 3.344518
+mdp['diemer20']['MspM200m']['mean']['c_om'] = 1.371785
+mdp['diemer20']['MspM200m']['mean']['c_nu'] = -0.082529
+mdp['diemer20']['MspM200m']['mean']['c_om2'] = 0.000000
+mdp['diemer20']['MspM200m']['mean']['c_nu2'] = 0.000000
+mdp['diemer20']['MspM200m']['mean']['a0_p'] = 0.000000
+mdp['diemer20']['MspM200m']['mean']['b0_p'] = 0.000000
+mdp['diemer20']['MspM200m']['mean']['b_om_p'] = 0.000000
+mdp['diemer20']['MspM200m']['mean']['b_om_p2'] = 0.000000
+mdp['diemer20']['MspM200m']['mean']['b_nu_p'] = 0.000000
+mdp['diemer20']['MspM200m']['mean']['c_om_p'] = 0.000000
+mdp['diemer20']['MspM200m']['mean']['c_om_p2'] = 0.000000
+mdp['diemer20']['MspM200m']['mean']['c_om2_p'] = 0.000000
+mdp['diemer20']['MspM200m']['mean']['c_om2_p2'] = 0.000000
+mdp['diemer20']['MspM200m']['mean']['c_nu_p'] = 0.000000
+mdp['diemer20']['MspM200m']['mean']['c_nu2_p'] = 0.000000
+
+mdp['diemer20']['RspR200m-1s']['mean']['sigma_0'] = 0.050135
+mdp['diemer20']['RspR200m-1s']['mean']['sigma_Gamma'] = 0.003548
+mdp['diemer20']['RspR200m-1s']['mean']['sigma_nu'] = -0.010766
+mdp['diemer20']['RspR200m-1s']['mean']['sigma_p'] = 0.000000
+
+mdp['diemer20']['MspM200m-1s']['mean']['sigma_0'] = 0.045588
+mdp['diemer20']['MspM200m-1s']['mean']['sigma_Gamma'] = 0.001679
+mdp['diemer20']['MspM200m-1s']['mean']['sigma_nu'] = -0.007945
+mdp['diemer20']['MspM200m-1s']['mean']['sigma_p'] = 0.000000
+
+mdp['diemer20']['RspR200m']['perc']['a0'] = 0.307107
+mdp['diemer20']['RspR200m']['perc']['b0'] = 0.250844
+mdp['diemer20']['RspR200m']['perc']['b_om'] = 0.152731
+mdp['diemer20']['RspR200m']['perc']['b_nu'] = 0.195627
+mdp['diemer20']['RspR200m']['perc']['c0'] = -1.221448
+mdp['diemer20']['RspR200m']['perc']['c_om'] = 17.537448
+mdp['diemer20']['RspR200m']['perc']['c_nu'] = 0.000000
+mdp['diemer20']['RspR200m']['perc']['c_om2'] = -10.315817
+mdp['diemer20']['RspR200m']['perc']['c_nu2'] = -0.018938
+mdp['diemer20']['RspR200m']['perc']['a0_p'] = 0.642779
+mdp['diemer20']['RspR200m']['perc']['b0_p'] = 0.507395
+mdp['diemer20']['RspR200m']['perc']['b_om_p'] = 0.000000
+mdp['diemer20']['RspR200m']['perc']['b_om_p2'] = 0.000000
+mdp['diemer20']['RspR200m']['perc']['b_nu_p'] = -0.212788
+mdp['diemer20']['RspR200m']['perc']['c_om_p'] = 0.002358
+mdp['diemer20']['RspR200m']['perc']['c_om_p2'] = 9.711469
+mdp['diemer20']['RspR200m']['perc']['c_om2_p'] = -0.000550
+mdp['diemer20']['RspR200m']['perc']['c_om2_p2'] = 10.762591
+mdp['diemer20']['RspR200m']['perc']['c_nu_p'] = -0.473487
+mdp['diemer20']['RspR200m']['perc']['c_nu2_p'] = 0.094019
+
+mdp['diemer20']['MspM200m']['perc']['a0'] = 0.287428
+mdp['diemer20']['MspM200m']['perc']['b0'] = 0.661551
+mdp['diemer20']['MspM200m']['perc']['b_om'] = 0.132142
+mdp['diemer20']['MspM200m']['perc']['b_nu'] = 0.000000
+mdp['diemer20']['MspM200m']['perc']['c0'] = 4.591265
+mdp['diemer20']['MspM200m']['perc']['c_om'] = 3.092819
+mdp['diemer20']['MspM200m']['perc']['c_nu'] = -0.115458
+mdp['diemer20']['MspM200m']['perc']['c_om2'] = 0.000000
+mdp['diemer20']['MspM200m']['perc']['c_nu2'] = 0.000000
+mdp['diemer20']['MspM200m']['perc']['a0_p'] = 0.822820
+mdp['diemer20']['MspM200m']['perc']['b0_p'] = -0.656698
+mdp['diemer20']['MspM200m']['perc']['b_om_p'] = 0.003182
+mdp['diemer20']['MspM200m']['perc']['b_om_p2'] = 4.953590
+mdp['diemer20']['MspM200m']['perc']['b_nu_p'] = 0.288168
+mdp['diemer20']['MspM200m']['perc']['c_om_p'] = -0.660871
+mdp['diemer20']['MspM200m']['perc']['c_om_p2'] = -1.105000
+mdp['diemer20']['MspM200m']['perc']['c_om2_p'] = 0.000000
+mdp['diemer20']['MspM200m']['perc']['c_om2_p2'] = 0.000000
+mdp['diemer20']['MspM200m']['perc']['c_nu_p'] = -0.376065
+mdp['diemer20']['MspM200m']['perc']['c_nu2_p'] = 0.078376
+
+mdp['diemer20']['RspR200m-1s']['perc']['sigma_0'] = 0.041872
+mdp['diemer20']['RspR200m-1s']['perc']['sigma_Gamma'] = 0.004279
+mdp['diemer20']['RspR200m-1s']['perc']['sigma_nu'] = -0.014068
+mdp['diemer20']['RspR200m-1s']['perc']['sigma_p'] = 0.023470
+
+mdp['diemer20']['MspM200m-1s']['perc']['sigma_0'] = 0.022368
+mdp['diemer20']['MspM200m-1s']['perc']['sigma_Gamma'] = 0.000916
+mdp['diemer20']['MspM200m-1s']['perc']['sigma_nu'] = -0.009101
+mdp['diemer20']['MspM200m-1s']['perc']['sigma_p'] = 0.045386
+
+mdp['diemer20']['Gamma']['a0'] = 1.172092
+mdp['diemer20']['Gamma']['a1'] = 0.325463
+mdp['diemer20']['Gamma']['b0'] = -0.256528
+mdp['diemer20']['Gamma']['b1'] = 0.093206
+mdp['diemer20']['Gamma']['b2'] = -0.057122
+mdp['diemer20']['Gamma']['b3'] = 0.004207
+
+###################################################################################################
+
+def _modelDiemerPercentileValue(rspdef):
+
+	if rspdef is None:
+		raise Exception('Need Rsp/Msp definition such as sp-apr-mn or sp-apr-p75, none given.')
+
+	if rspdef == 'sp-apr-mn' or rspdef == 'mean':
 		p = -1.0
 	else:
 		p = float(rspdef[-2:]) / 100.0
@@ -936,9 +1246,295 @@ def _modelDiemer17PercentileValue(rspdef):
 
 ###################################################################################################
 
+def _modelDiemerGetPars(model, q, rspdef):
+	
+	if q == 'Gamma':
+		pars = mdp[model][q]
+	
+	else:
+		if not q in mdp[model].keys():
+			raise Exception('Unknown output quantity, %s.' % (q))
+		
+		if rspdef in ['mean', 'sp-apr-mn']:
+			def_str = 'mean'
+		elif rspdef.startswith('percentile') or rspdef.startswith('sp-apr-p'):
+			def_str = 'perc'
+		else:
+			raise Exception('Unknown splashback definition, %s.' % (rspdef))
+			
+		pars = mdp[model][q][def_str]
+		
+	return pars
+
+###################################################################################################
+
+def modelDiemerRspMsp(Gamma, nu200m, z, rspdef, pars):
+	"""
+	:math:`R_{\\rm sp}/R_{\\rm 200m}` and :math:`M_{\\rm sp}/M_{\\rm 200m}` for the Diemer 2017/2020 models.
+
+	This is a general function that takes a set of parameters for the general function. Thus, the
+	user can either use the parameters given in the model defaults or a different set of 
+	parameters. See convenience functions below, though the :func:`splashbackModel` function is
+	the preferred way to evaluate the model. To evaluate the overdensity, use the 
+	:func:`splashbackModel` function.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	Gamma: array_like
+		Mass accretion rate; can be a number or a numpy array. This model was calibrated using 
+		:math:`\Gamma_{\\rm dyn}`.
+	nu200m: array_like
+		The peak height as computed from :math:`M_{\\rm 200m}`; can be a number or a numpy array
+		with the same dimensions as ``Gamma``.
+	z: float
+		Redshift	
+	rspdef: str
+		The definition of the splashback radius. This parameter distinguishes the ``mean`` of 
+		the apocenter distribution or higher percentiles (e.g. ``percentile75``). The function 
+		also accepts the newer notation used in the SPARTA code, namely ``sp-apr-mn`` for the mean 
+		and ``sp-apr-p75`` and so on for percentiles, which is preferred.
+	pars: dict
+		A dictionary of parameters; see ``mdp`` dictionary for the necessary contents.
+	
+	Returns
+	-----------------------------------------------------------------------------------------------
+	q: array_like
+		:math:`R_{\\rm sp}/R_{\\rm 200m}` or :math:`M_{\\rm sp}/M_{\\rm 200m}` depending on the 
+		given parameters; has the same dimensions as ``Gamma``.
+	"""
+
+	if rspdef is None:
+		raise Exception('Need Rsp/Msp definition such as sp-apr-mn or sp-apr-p75, none given.')
+
+	cosmo = cosmology.getCurrent()
+	Om = cosmo.Om(z)
+	p = _modelDiemerPercentileValue(rspdef)
+		
+	A0 = pars['a0'] + p * pars['a0_p']
+	B0 = pars['b0'] + p * pars['b0_p']
+	B_om = pars['b_om'] + pars['b_om_p'] * np.exp(p * pars['b_om_p2'])
+	B_nu = pars['b_nu'] + p * pars['b_nu_p']
+	C0 = pars['c0']
+	C_om = pars['c_om'] + pars['c_om_p'] * np.exp(p * pars['c_om_p2'])
+	C_om2 = pars['c_om2'] + pars['c_om2_p'] * np.exp(p * pars['c_om2_p2'])
+	C_nu = pars['c_nu'] + p * pars['c_nu_p']
+	C_nu2 = pars['c_nu2'] + p * pars['c_nu2_p']
+	
+	A = A0
+	B = (B0 + B_om * Om) * (1.0 + B_nu * nu200m)
+	C = (C0 + C_om * Om + C_om2 * Om**2) * (1.0 + C_nu * nu200m + C_nu2 * nu200m**2)
+	
+	if utilities.isArray(C):
+		C[C < 1E-4] = 1E-4
+	
+	ret = A + B * np.exp(-Gamma / C)
+	
+	return ret
+
+###################################################################################################
+
+def modelDiemerScatter(Gamma, nu200m, rspdef, pars):
+	"""
+	The 68% scatter for the Diemer 2017/2020 models.
+
+	This is a general function that takes a set of parameters for the general function. Thus, the
+	user can either use the parameters given in the model defaults or a different set of 
+	parameters. See convenience functions below, though the :func:`splashbackModel` function is
+	the preferred way to evaluate the model. To evaluate the scatter in the overdensity, use the 
+	:func:`splashbackModel` function.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	Gamma: array_like
+		Mass accretion rate; can be a number or a numpy array. This model was calibrated using 
+		:math:`\Gamma_{\\rm dyn}`.
+	nu200m: array_like
+		The peak height as computed from :math:`M_{\\rm 200m}`; can be a number or a numpy array
+		with the same dimensions as ``Gamma``.
+	rspdef: str
+		The definition of the splashback radius. This parameter distinguishes the ``mean`` of 
+		the apocenter distribution or higher percentiles (e.g. ``percentile75``). The function 
+		also accepts the newer notation used in the SPARTA code, namely ``sp-apr-mn`` for the mean 
+		and ``sp-apr-p75`` and so on for percentiles, which is preferred.
+	pars: dict
+		A dictionary of parameters; see ``mdp`` dictionary for the necessary contents.
+
+	Returns
+	-----------------------------------------------------------------------------------------------
+	scatter: array_like
+		The scatter in either :math:`R_{\\rm sp}/R_{\\rm 200m}` or 
+		:math:`M_{\\rm sp}/M_{\\rm 200m}`, depending on the parameters; has the same dimensions as 
+		``Gamma``.
+	"""
+
+	if rspdef is None:
+		raise Exception('Need Rsp/Msp definition such as sp-apr-mn or sp-apr-p75, none given.')
+
+	p = _modelDiemerPercentileValue(rspdef)	
+	ret = pars['sigma_0'] + pars['sigma_Gamma'] * Gamma + pars['sigma_nu'] * nu200m + pars['sigma_p'] * p
+
+	return ret
+
+###################################################################################################
+
+def modelDiemerGamma(nu200m, z, pars):
+	"""
+	:math:`\\Gamma_{\\rm dyn}` as a function of peak height for the Diemer 2017/2020 models.
+	
+	A fit to the median accretion rate of halos as a function of peak height and redshift. This 
+	accretion rate can be used as a guess when the real accretion rate of halos is not known.
+
+	This is a general function that takes a set of parameters for the general function. Thus, the
+	user can either use the parameters given in the model defaults or a different set of 
+	parameters. See convenience functions below.
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	nu200m: array_like
+		The peak height as computed from :math:`M_{\\rm 200m}`; can be a number or a numpy array.
+	z: array_like
+		Redshift	
+	pars: dict
+		A dictionary of parameters; see ``mdp`` dictionary for the necessary contents.
+
+	Returns
+	-----------------------------------------------------------------------------------------------
+	Gamma: array_like
+		The accretion rate measured over one dynamical time; has the same dimensions as ``nu200m`` 
+		and/or ``z``.
+	"""
+	
+	A = pars['a0'] + pars['a1'] * z
+	B = pars['b0'] + pars['b1'] * z + pars['b2'] * z**2 + pars['b3'] * z**3
+	Gamma = A * nu200m + B * nu200m**1.5
+	
+	return Gamma
+
+###################################################################################################
+
+def modelDiemer17RspR200m(Gamma, nu200m, z, rspdef):
+	"""
+	:math:`R_{\\rm sp}/R_{\\rm 200m}` for the Diemer+2017 model.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	Gamma: array_like
+		Mass accretion rate; can be a number or a numpy array. This model was calibrated using 
+		:math:`\Gamma_{\\rm dyn}`.
+	nu200m: array_like
+		The peak height as computed from :math:`M_{\\rm 200m}`; can be a number or a numpy array
+		with the same dimensions as ``Gamma``.
+	z: float
+		Redshift	
+	rspdef: str
+		The definition of the splashback radius. This parameter distinguishes the ``mean`` of 
+		the apocenter distribution or higher percentiles (e.g. ``percentile75``). The function 
+		also accepts the newer notation used in the SPARTA code, namely ``sp-apr-mn`` for the mean 
+		and ``sp-apr-p75`` and so on for percentiles, which is preferred.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	q: array_like
+		:math:`R_{\\rm sp}/R_{\\rm 200m}`, has the same dimensions as ``Gamma``.
+	"""
+
+	return modelDiemerRspMsp(Gamma, nu200m, z, rspdef, _modelDiemerGetPars('diemer17', 'RspR200m', rspdef))
+
+###################################################################################################
+
+def modelDiemer17MspM200m(Gamma, nu200m, z, rspdef):
+	"""
+	:math:`M_{\\rm sp}/M_{\\rm 200m}` for the Diemer+2017 model.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	Gamma: array_like
+		Mass accretion rate; can be a number or a numpy array. This model was calibrated using 
+		:math:`\Gamma_{\\rm dyn}`.
+	nu200m: array_like
+		The peak height as computed from :math:`M_{\\rm 200m}`; can be a number or a numpy array
+		with the same dimensions as ``Gamma``.
+	z: float
+		Redshift	
+	rspdef: str
+		The definition of the splashback radius. This parameter distinguishes the ``mean`` of 
+		the apocenter distribution or higher percentiles (e.g. ``percentile75``). The function 
+		also accepts the newer notation used in the SPARTA code, namely ``sp-apr-mn`` for the mean 
+		and ``sp-apr-p75`` and so on for percentiles, which is preferred.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	q: array_like
+		:math:`M_{\\rm sp}/M_{\\rm 200m}`, has the same dimensions as ``Gamma``.
+	"""
+		
+	return modelDiemerRspMsp(Gamma, nu200m, z, rspdef, _modelDiemerGetPars('diemer17', 'MspM200m', rspdef))
+
+###################################################################################################
+
+def modelDiemer17RspR200mScatter(Gamma, nu200m, z, rspdef):
+	"""
+	The 68% scatter in :math:`R_{\\rm sp}/R_{\\rm 200m}` for the Diemer+2017 model.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	Gamma: array_like
+		Mass accretion rate; can be a number or a numpy array. This model was calibrated using 
+		:math:`\Gamma_{\\rm dyn}`.
+	nu200m: array_like
+		The peak height as computed from :math:`M_{\\rm 200m}`; can be a number or a numpy array
+		with the same dimensions as ``Gamma``.
+	z: float
+		Redshift	
+	rspdef: str
+		The definition of the splashback radius. This parameter distinguishes the ``mean`` of 
+		the apocenter distribution or higher percentiles (e.g. ``percentile75``). The function 
+		also accepts the newer notation used in the SPARTA code, namely ``sp-apr-mn`` for the mean 
+		and ``sp-apr-p75`` and so on for percentiles, which is preferred.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	scatter: array_like
+		Scatter in :math:`R_{\\rm sp}/R_{\\rm 200m}`, has the same dimensions as ``Gamma``.
+	"""
+		
+	return modelDiemerScatter(Gamma, nu200m, z, rspdef, _modelDiemerGetPars('diemer17', 'RspR200m-1s', rspdef))
+
+###################################################################################################
+
+def modelDiemer17MspM200mScatter(Gamma, nu200m, z, rspdef):
+	"""
+	The 68% scatter in :math:`M_{\\rm sp}/M_{\\rm 200m}` for the Diemer+2017 model.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	Gamma: array_like
+		Mass accretion rate; can be a number or a numpy array. This model was calibrated using 
+		:math:`\Gamma_{\\rm dyn}`.
+	nu200m: array_like
+		The peak height as computed from :math:`M_{\\rm 200m}`; can be a number or a numpy array
+		with the same dimensions as ``Gamma``.
+	z: float
+		Redshift	
+	rspdef: str
+		The definition of the splashback radius. This parameter distinguishes the ``mean`` of 
+		the apocenter distribution or higher percentiles (e.g. ``percentile75``). The function 
+		also accepts the newer notation used in the SPARTA code, namely ``sp-apr-mn`` for the mean 
+		and ``sp-apr-p75`` and so on for percentiles, which is preferred.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	scatter: array_like
+		Scatter in :math:`M_{\\rm sp}/M_{\\rm 200m}`, has the same dimensions as ``Gamma``.
+	"""
+		
+	return modelDiemerScatter(Gamma, nu200m, z, rspdef, _modelDiemerGetPars('diemer17', 'MspM200m-1s', rspdef))
+
+###################################################################################################
+
 def modelDiemer17Gamma(nu200m, z):
 	"""
-	:math:`\\Gamma_{\\rm dyn}` as a function of peak height.
+	:math:`\\Gamma_{\\rm dyn}` as a function of peak height for the Diemer+2017 model.
 	
 	A fit to the median accretion rate of halos as a function of peak height and redshift. This 
 	accretion rate can be used as a guess when the real accretion rate of halos is not known.
@@ -956,32 +1552,17 @@ def modelDiemer17Gamma(nu200m, z):
 		The accretion rate measured over one dynamical time; has the same dimensions as ``nu200m`` 
 		and/or ``z``.
 	"""
-	
-	a0 = 1.222190
-	a1 = 0.351460
-	b0 = -0.286441
-	b1 = 0.077767
-	b2 = -0.056228
-	b3 = 0.004100
 
-	A = a0 + a1 * z
-	B = b0 + b1 * z + b2 * z**2 + b3 * z**3
-	Gamma = A * nu200m + B * nu200m**1.5
-	
-	return Gamma
+	return modelDiemerGamma(nu200m, z, _modelDiemerGetPars('diemer17', 'Gamma', None))
 
 ###################################################################################################
 
-def modelDiemer17RspR200m(q_out, Gamma, nu200m, z, rspdef):
+def modelDiemer20RspR200m(Gamma, nu200m, z, rspdef):
 	"""
-	:math:`R_{\\rm sp}/R_{\\rm 200m}` and :math:`M_{\\rm sp}/M_{\\rm 200m}` for the Diemer et al 2017 model.
-
-	To evaluate the overdensity, use the :func:`splashbackModel` function.
+	:math:`R_{\\rm sp}/R_{\\rm 200m}` for the Diemer 2020 model.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
-	q_out: str
-		Identifier of the output quantity, can be ``RspR200m`` or ``MspM200m``. 
 	Gamma: array_like
 		Mass accretion rate; can be a number or a numpy array. This model was calibrated using 
 		:math:`\Gamma_{\\rm dyn}`.
@@ -991,144 +1572,27 @@ def modelDiemer17RspR200m(q_out, Gamma, nu200m, z, rspdef):
 	z: float
 		Redshift	
 	rspdef: str
-		The definition of the splashback radius, for example the ``mean`` of the apocenter 
-		distribution or higher percentiles (e.g. ``percentile75``). 
-
+		The definition of the splashback radius. This parameter distinguishes the ``mean`` of 
+		the apocenter distribution or higher percentiles (e.g. ``percentile75``). The function 
+		also accepts the newer notation used in the SPARTA code, namely ``sp-apr-mn`` for the mean 
+		and ``sp-apr-p75`` and so on for percentiles, which is preferred.
+		
 	Returns
 	-----------------------------------------------------------------------------------------------
 	q: array_like
-		:math:`R_{\\rm sp}/R_{\\rm 200m}` or :math:`M_{\\rm sp}/M_{\\rm 200m}` depending on the 
-		``q_out`` parameter; has the same dimensions as ``Gamma``.
+		:math:`R_{\\rm sp}/R_{\\rm 200m}`, has the same dimensions as ``Gamma``.
 	"""
-
-	if rspdef == 'mean':
 		
-		if q_out == 'RspR200m':
-			a0 = 0.649783
-			b0 = 0.600362
-			b_om = 0.091996
-			b_nu = 0.061557
-			c0 = -0.806288
-			c_om = 17.520522
-			c_nu = -0.293465
-			c_om2 = -9.624342
-			c_nu2 = 0.039196
-			a0_p = 0.000000
-			b0_p = 0.000000
-			b_om_p = 0.000000
-			b_om_p2 = 0.000000
-			b_nu_p = 0.000000
-			c_om_p = 0.000000
-			c_om_p2 = 0.000000
-			c_om2_p = 0.000000
-			c_om2_p2 = 0.000000
-			c_nu_p = 0.000000
-			c_nu2_p = 0.000000
-			
-		elif q_out == 'MspM200m':
-			a0 = 0.679244
-			b0 = 0.405083
-			b_om = 0.291925
-			b_nu = 0.000000
-			c0 = 3.365943
-			c_om = 1.469818
-			c_nu = -0.075635
-			c_om2 = 0.000000
-			c_nu2 = 0.000000
-			a0_p = 0.000000
-			b0_p = 0.000000
-			b_om_p = 0.000000
-			b_om_p2 = 0.000000
-			b_nu_p = 0.000000
-			c_om_p = 0.000000
-			c_om_p2 = 0.000000
-			c_om2_p = 0.000000
-			c_om2_p2 = 0.000000
-			c_nu_p = 0.000000
-			c_nu2_p = 0.000000
-	else:
-		
-		if q_out == 'RspR200m':
-			a0 = 0.320332
-			b0 = 0.267433
-			b_om = 0.113389
-			b_nu = 0.207989
-			c0 = -0.959629
-			c_om = 16.245894
-			c_nu = 0.000000
-			c_om2 = -9.497861
-			c_nu2 = -0.018484
-			a0_p = 0.614807
-			b0_p = 0.545238
-			b_om_p = 0.000000
-			b_om_p2 = 0.000000
-			b_nu_p = -0.223282
-			c_om_p = 0.003941
-			c_om_p2 = 8.969094
-			c_om2_p = -0.000485
-			c_om2_p2 = 10.613168
-			c_nu_p = -0.451066
-			c_nu2_p = 0.088029
-			
-		elif q_out == 'MspM200m':
-			a0 = 0.264765
-			b0 = 0.666040
-			b_om = 0.168814
-			b_nu = 0.000000
-			c0 = 4.728709
-			c_om = 2.388866
-			c_nu = -0.084108
-			c_om2 = 0.000000
-			c_nu2 = 0.000000
-			a0_p = 0.843509
-			b0_p = -0.639169
-			b_om_p = 0.003195
-			b_om_p2 = 4.939266
-			b_nu_p = 0.225399
-			c_om_p = -0.705712
-			c_om_p2 = -1.241920
-			c_om2_p = 0.000000
-			c_om2_p2 = 0.000000
-			c_nu_p = -0.391103
-			c_nu2_p = 0.074216
-
-	cosmo = cosmology.getCurrent()
-	Om = cosmo.Om(z)
-	p = _modelDiemer17PercentileValue(rspdef)
-		
-	A0 = a0 + p * a0_p
-	B0 = b0 + p * b0_p
-	B_om = b_om + b_om_p * np.exp(p * b_om_p2)
-	B_nu = b_nu + p * b_nu_p
-	C0 = c0
-	C_om = c_om + c_om_p * np.exp(p * c_om_p2)
-	C_om2 = c_om2 + c_om2_p * np.exp(p * c_om2_p2)
-	C_nu = c_nu + p * c_nu_p
-	C_nu2 = c_nu2 + p * c_nu2_p
-	
-	A = A0
-	B = (B0 + B_om * Om) * (1.0 + B_nu * nu200m)
-	C = (C0 + C_om * Om + C_om2 * Om**2) * (1.0 + C_nu * nu200m + C_nu2 * nu200m**2)
-	
-	if utilities.isArray(C):
-		C[C < 1E-4] = 1E-4
-	
-	ret = A + B * np.exp(-Gamma / C)
-	
-	return ret
+	return modelDiemerRspMsp(Gamma, nu200m, z, rspdef, _modelDiemerGetPars('diemer20', 'RspR200m', rspdef))
 
 ###################################################################################################
 
-def modelDiemer17Scatter(q_out, Gamma, nu200m, z, rspdef):
+def modelDiemer20MspM200m(Gamma, nu200m, z, rspdef):
 	"""
-	The 68% scatter for the Diemer et al 2017 model.
-
-	To evaluate the scatter in the overdensity, use the :func:`splashbackModel` function.
+	:math:`M_{\\rm sp}/M_{\\rm 200m}` for the Diemer 2020 model.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
-	q_out: str
-		Identifier of the output quantity, can be ``RspR200m-1s`` or ``MspM200m-1s``. 
 	Gamma: array_like
 		Mass accretion rate; can be a number or a numpy array. This model was calibrated using 
 		:math:`\Gamma_{\\rm dyn}`.
@@ -1138,43 +1602,102 @@ def modelDiemer17Scatter(q_out, Gamma, nu200m, z, rspdef):
 	z: float
 		Redshift	
 	rspdef: str
-		The definition of the splashback radius, for example the ``mean`` of the apocenter 
-		distribution or higher percentiles (e.g. ``percentile75``). 
+		The definition of the splashback radius. This parameter distinguishes the ``mean`` of 
+		the apocenter distribution or higher percentiles (e.g. ``percentile75``). The function 
+		also accepts the newer notation used in the SPARTA code, namely ``sp-apr-mn`` for the mean 
+		and ``sp-apr-p75`` and so on for percentiles, which is preferred.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	q: array_like
+		:math:`M_{\\rm sp}/M_{\\rm 200m}`, has the same dimensions as ``Gamma``.
+	"""
+		
+	return modelDiemerRspMsp(Gamma, nu200m, z, rspdef, _modelDiemerGetPars('diemer20', 'MspM200m', rspdef))
 
+###################################################################################################
+
+def modelDiemer20RspR200mScatter(Gamma, nu200m, z, rspdef):
+	"""
+	The 68% scatter in :math:`R_{\\rm sp}/R_{\\rm 200m}` for the Diemer 2020 model.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	Gamma: array_like
+		Mass accretion rate; can be a number or a numpy array. This model was calibrated using 
+		:math:`\Gamma_{\\rm dyn}`.
+	nu200m: array_like
+		The peak height as computed from :math:`M_{\\rm 200m}`; can be a number or a numpy array
+		with the same dimensions as ``Gamma``.
+	z: float
+		Redshift	
+	rspdef: str
+		The definition of the splashback radius. This parameter distinguishes the ``mean`` of 
+		the apocenter distribution or higher percentiles (e.g. ``percentile75``). The function 
+		also accepts the newer notation used in the SPARTA code, namely ``sp-apr-mn`` for the mean 
+		and ``sp-apr-p75`` and so on for percentiles, which is preferred.
+		
 	Returns
 	-----------------------------------------------------------------------------------------------
 	scatter: array_like
-		The scatter in either :math:`R_{\\rm sp}/R_{\\rm 200m}` or 
-		:math:`M_{\\rm sp}/M_{\\rm 200m}`, depending on the ``q_out`` parameter; has the same 
-		dimensions as ``Gamma``.
+		Scatter in :math:`R_{\\rm sp}/R_{\\rm 200m}`, has the same dimensions as ``Gamma``.
+	"""
+		
+	return modelDiemerScatter(Gamma, nu200m, z, rspdef, _modelDiemerGetPars('diemer20', 'RspR200m-1s', rspdef))
+
+###################################################################################################
+
+def modelDiemer20MspM200mScatter(Gamma, nu200m, z, rspdef):
+	"""
+	The 68% scatter in :math:`M_{\\rm sp}/M_{\\rm 200m}` for the Diemer 2020 model.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	Gamma: array_like
+		Mass accretion rate; can be a number or a numpy array. This model was calibrated using 
+		:math:`\Gamma_{\\rm dyn}`.
+	nu200m: array_like
+		The peak height as computed from :math:`M_{\\rm 200m}`; can be a number or a numpy array
+		with the same dimensions as ``Gamma``.
+	z: float
+		Redshift	
+	rspdef: str
+		The definition of the splashback radius. This parameter distinguishes the ``mean`` of 
+		the apocenter distribution or higher percentiles (e.g. ``percentile75``). The function 
+		also accepts the newer notation used in the SPARTA code, namely ``sp-apr-mn`` for the mean 
+		and ``sp-apr-p75`` and so on for percentiles, which is preferred.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	scatter: array_like
+		Scatter in :math:`M_{\\rm sp}/M_{\\rm 200m}`, has the same dimensions as ``Gamma``.
+	"""
+		
+	return modelDiemerScatter(Gamma, nu200m, z, rspdef, _modelDiemerGetPars('diemer20', 'MspM200m-1s', rspdef))
+
+###################################################################################################
+
+def modelDiemer20Gamma(nu200m, z):
+	"""
+	:math:`\\Gamma_{\\rm dyn}` as a function of peak height for the Diemer 2020 model.
+	
+	A fit to the median accretion rate of halos as a function of peak height and redshift. This 
+	accretion rate can be used as a guess when the real accretion rate of halos is not known.
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	nu200m: array_like
+		The peak height as computed from :math:`M_{\\rm 200m}`; can be a number or a numpy array.
+	z: array_like
+		Redshift	
+
+	Returns
+	-----------------------------------------------------------------------------------------------
+	Gamma: array_like
+		The accretion rate measured over one dynamical time; has the same dimensions as ``nu200m`` 
+		and/or ``z``.
 	"""
 
-	if rspdef == 'mean':
-		if q_out == 'RspR200m-1s':
-			sigma_0 = 0.052645
-			sigma_Gamma = 0.003846
-			sigma_nu = -0.012054
-			sigma_p = 0.000000
-		elif q_out == 'MspM200m-1s':
-			sigma_0 = 0.052815
-			sigma_Gamma = 0.002456
-			sigma_nu = -0.011182
-			sigma_p = 0.000000
-	else:
-		if q_out == 'RspR200m-1s':
-			sigma_0 = 0.044548
-			sigma_Gamma = 0.004404
-			sigma_nu = -0.014636
-			sigma_p = 0.022637
-		elif q_out == 'MspM200m-1s':
-			sigma_0 = 0.027594
-			sigma_Gamma = 0.002330
-			sigma_nu = -0.012491
-			sigma_p = 0.047344
-
-	p = _modelDiemer17PercentileValue(rspdef)	
-	ret = sigma_0 + sigma_Gamma * Gamma + sigma_nu * nu200m + sigma_p * p
-
-	return ret
+	return modelDiemerGamma(nu200m, z, _modelDiemerGetPars('diemer20', 'Gamma', None))
 
 ###################################################################################################

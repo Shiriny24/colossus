@@ -92,6 +92,35 @@ changes will simply be overwritten when
 :func:`~cosmology.cosmology.Cosmology.checkForChangedCosmology` is called.
 
 ***************************************************************************************************
+Converting to and from Astropy cosmologies
+***************************************************************************************************
+
+Colossus can easily interface with the cosmology module of the popular 
+`Astropy <https://www.astropy.org/>`_ code. Astropy cosmology objects can be converted to Colossus 
+cosmologies with the :func:`fromAstropy` function::
+
+	import astropy.cosmology
+
+	params = dict(H0 = 70, Om0 = 0.27, Ob0 = 0.0457, Tcmb0 = 2.7255, Neff = 3.046)
+	sigma8 = 0.82
+	ns = 0.96
+	
+	astropy_cosmo = astropy.cosmology.FlatLambdaCDM(**params)
+	colossus_cosmo = cosmology.fromAstropy(astropy_cosmo, sigma8, ns, name = 'my_cosmo')
+
+The ``name`` parameter is not necessary if a name is set in the Astropy cosmology. The ``sigma8``
+and ``ns`` parameters must be set by the user because the Astropy cosmology does not contain them
+(because it does not compute power spectrum-related quantities). The conversion supports the 
+``LambdaCDM``, ``FlatLambdaCDM``, ``wCDM``, ``FlatwCDM``, ``w0waCDM``, and ``Flatw0waCDM`` 
+Astropy cosmology classes. Conversely, to convert a Colossus cosmology to Astropy, we simply use 
+the :func:`~cosmology.cosmology.Cosmology.toAstropy` function::
+
+	colossus_cosmo = cosmology.setCosmology('WMAP9')
+	astropy_cosmo = colossus_cosmo.toAstropy()
+
+Naturally, both conversion functions will fail if astropy.cosmology cannot be imported.
+
+***************************************************************************************************
 Summary of getter and setter functions
 ***************************************************************************************************
 
@@ -100,6 +129,7 @@ Summary of getter and setter functions
 	addCosmology
 	setCurrent
 	getCurrent
+	fromAstropy
 
 ---------------------------------------------------------------------------------------------------
 Standard cosmologies
@@ -504,10 +534,13 @@ class Cosmology(object):
 		
 		# Lookup table for sigma. Note that the nominal accuracy to which the integral is 
 		# evaluated should match with the accuracy of the interpolation which is set by Nbins.
-		# Here, they are matched to be accurate to better than ~3E-3.
+		# Here, they are matched to be accurate to better than ~3E-3. If the user imposes lower
+		# and/or upper limits on k, the top-hat filter leads to oscillations that make the 
+		# solution much harder to interpolate. In that case, we raise the number of bins.
 		self.R_min_sigma = 1E-12
 		self.R_max_sigma = 1E3
 		self.R_Nbins_sigma = 18.0
+		self.R_Nbins_sigma_klimits = 60.0
 		self.accuracy_sigma = 3E-3
 	
 		# Lookup table for correlation function xi. Power-law cosmologies are a special case: here,
@@ -609,6 +642,66 @@ class Cosmology(object):
 			self.storageUser.resetStorage()
 			
 		return
+
+	###############################################################################################
+	# Conversions to other modules
+	###############################################################################################
+	
+	def toAstropy(self):
+		"""
+		Create an equivalent Astropy cosmology object.
+		
+		This function throws an error if Astropy cannot be imported. Most standard Colossus
+		cosmologies can be converted, exceptions are self-similar cosmologies with power-law
+		spectra and user-defined dark energy equations of state.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		cosmo_astropy: FLRW
+			An astropy.cosmology.FLRW class object.
+		"""
+		
+		import astropy.cosmology
+		
+		if self.power_law:
+			raise Exception('Cannot convert power-law cosmology to astropy.')
+		
+		if not self.relspecies:
+			print('WARNING: Cannot convert setting to ignore relativistic species to Astropy.')
+
+		params = {'name': self.name, 'H0': self.H0, 'Om0': self.Om0, 'Ob0': self.Ob0, 
+				'Tcmb0': self.Tcmb0, 'Neff': self.Neff}
+		
+		if not self.flat:
+			params.update({'Ode0': self.Ode0})
+		
+		if self.de_model == 'lambda':
+			if self.flat:
+				c_apy = astropy.cosmology.FlatLambdaCDM(**params)
+			else:
+				c_apy = astropy.cosmology.LambdaCDM(**params)
+				
+		elif self.de_model == 'w0':
+			params.update({'w0': self.w0})
+			if self.flat:
+				c_apy = astropy.cosmology.FlatwCDM(**params)
+			else:
+				c_apy = astropy.cosmology.wCDM(**params)
+			
+		elif self.de_model == 'w0wa':
+			params.update({'w0': self.w0, 'wa': self.wa})
+			if self.flat:
+				c_apy = astropy.cosmology.Flatw0waCDM(**params)
+			else:
+				c_apy = astropy.cosmology.w0waCDM(**params)
+			
+		elif self.de_model == 'user':
+			raise Exception('Cannot convert to Astropy cosmology because de_model = user.')
+			
+		else:
+			raise Exception('Unknown de_model, %s.' % (self.de_model))
+		
+		return c_apy
 	
 	###############################################################################################
 	# Utilities for internal use
@@ -693,6 +786,7 @@ class Cosmology(object):
 		elif self.de_model == 'user':
 			
 			z_array, is_array = utilities.getArray(z)
+			z_array = z_array.astype(np.float)
 			de_z = np.zeros_like(z_array)
 			for i in range(len(z_array)):
 				integral, _ = scipy.integrate.quad(_de_integrand, 0, np.log(1.0 + z_array[i]))
@@ -1758,6 +1852,7 @@ class Cosmology(object):
 		# -----------------------------------------------------------------------------------------
 
 		z_arr, is_array = utilities.getArray(z)
+		z_arr = z_arr.astype(np.float)
 		D = np.zeros_like(z_arr)
 		
 		# Create a transition regime centered around z = 10 in log space, but only if relativistic
@@ -2023,6 +2118,8 @@ class Cosmology(object):
 				
 				# If the interpolator has not been created yet, we need to normalize the table
 				# to the correct sigma8 which happens in the exact Pk function.
+				if self.print_info:
+					print("Cosmology.matterPowerSpectrum: Loading power spectrum from file %s." % (path))				
 				table_name = self._matterPowerSpectrumName(model)
 				table = self.storageUser.getStoredObject(table_name, path = path)
 				
@@ -2034,6 +2131,7 @@ class Cosmology(object):
 						raise Exception('Please set persistence to read in order to load a power spectrum from a file.')
 					else:
 						raise Exception('Could not load power spectrum table from path "%s".' % (path))
+					
 				table_k = 10**table[0]
 				table_P = self._matterPowerSpectrumExact(table_k, model = model, path = path,
 														ignore_norm = False)
@@ -2338,51 +2436,100 @@ class Cosmology(object):
 				else:
 					max_k_use = np.log(test_k_max * 0.9999)
 					
-			elif kmin is not None and kmax is not None:
+			elif (kmin is not None) and (kmax is not None):
 				
+				# If the user has imposed both limits, we trust that they are the correct ones
+				# and perform no search for good limits.
 				min_k_use = np.log(kmin)
 				max_k_use = np.log(kmax)
 				
 			else:
 				
+				# Check the integrand across a range of k scales, and measure its maximum. Then
+				# compare its value at small and large k to that maximum. Once it has reached a
+				# small fraction, we can safely set those k scales as integration limits.
 				test_integrand_min = 1E-6
 
-				test_k_min = max(test_k_min * 1.0001, 1E-7)
-				test_k_max = min(test_k_max * 0.9999, 1E15)
+				# First, we design a set of test k. We want to test the integral between the limits
+				# of the power spectrum set above, some reasonable cutoffs, and possibly limits set
+				# by the user (otherwise we can derive a max that is smaller than the min). Note 
+				# that the case where both limits are set by the user is covered above.
+				#
+				# The default upper limit of 1E25 may seem extreme, but in cosmologies with a 
+				# shallow power spectrum (e.g., power-law n = -1 cosmology), there can be lots of 
+				# power at high k, making the integral slow to converge.
+				if kmin is not None:
+					test_k_min = kmin
+				else:
+					test_k_min = max(test_k_min * 1.0001, 1E-7)
+				if kmax is not None:
+					test_k_max = kmax
+				else:
+					test_k_max = min(test_k_max * 0.9999, 1E25)
+				if test_k_max <= test_k_min:
+					raise Exception('Preliminary maximum limit of sigma integration (%.4e) is smaller than minimum (%.4e).' \
+							% (test_k_max, test_k_min))
 				test_k = np.arange(np.log(test_k_min), np.log(test_k_max), 2.0)
 				n_test = len(test_k)
+				
+				# Evaluate integral at all test points and compute max
 				test_k_integrand = test_k * 0.0
 				for i in range(n_test):
 					test_k_integrand[i] = logIntegrand(test_k[i], ps_interpolator)
-				integrand_max = np.max(test_k_integrand)
-				
-				min_index = 0
-				while test_k_integrand[min_index] < integrand_max * test_integrand_min:
-					min_index += 1
-					if min_index > n_test - 2:
-						msg = "Could not find lower integration limit."
-						raise Exception(msg)
-				min_k_use = test_k[min_index]
-			
-				min_index -= 1
-				max_index = min_index + 1
-				while test_k_integrand[max_index] > integrand_max * test_integrand_min:
-					max_index += 1	
-					if max_index == n_test:
-						msg = "Could not find upper integration limit."
-						raise Exception(msg)
-				max_k_use = test_k[max_index]
-						
-				# Check if the user has set a lower or upper limit. In either case, we will
-				# need one of the limits worked out above, so we still compute them.
-				if kmin is not None:
+				integrand_max_idx = np.argmax(test_k_integrand)
+				integrand_max = test_k_integrand[integrand_max_idx]
+
+				# Check if the user has set a lower or upper limit. Otherwise, go down in test 
+				# table until the integrand is sufficiently small compared to maximum. We start at
+				# the bottom end instead of the maximum because we want to be conservative: the 
+				# integrand could dip below the threshold but grow again at lower k.
+				if kmin is None:
+					min_index = 0
+					while test_k_integrand[min_index + 1] < integrand_max * test_integrand_min:
+						min_index += 1
+						if min_index == n_test - 2:
+							print('Test k (in h/Mpc) and sigma-integrand:')
+							print(np.exp(test_k))
+							print(test_k_integrand)
+							raise Exception("Could not find lower integration limit for sigma. Value of integrand at limit (%.2e) is %.2e of max, too high." \
+								% (test_k_integrand[min_index + 1], test_k_integrand[min_index + 1] / integrand_max))
+					min_k_use = test_k[min_index]
+				else:
 					min_k_use = np.log(kmin)
-				if kmax is not None:
+				
+				# Now do the same for the maximum. Here, we start at the high end of the test
+				# table and decrease the max index.
+				if kmax is None:
+					max_index = n_test - 1
+					while test_k_integrand[max_index - 1] < integrand_max * test_integrand_min:
+						max_index -= 1	
+						if max_index == 1:
+							print('Test k (in h/Mpc) and sigma-integrand:')
+							print(np.exp(test_k))
+							print(test_k_integrand)
+							raise Exception("Could not find upper integration limit for sigma. Value of integrand at limit (%.2e) is %.2e of max, too high." \
+								% (test_k_integrand[max_index - 1], test_k_integrand[max_index - 1] / integrand_max))
+					max_k_use = test_k[max_index]
+				else:
 					max_k_use = np.log(kmax)
-					
+
+			# Check that the integration limits make sense
+			if (max_k_use <= min_k_use):
+				raise Exception('Maximum limit of sigma integration (%.4e) is smaller than minimum (%.4e).' \
+							% (np.exp(max_k_use), np.exp(min_k_use)))
+
+			# Normally, 100 subdivisions should be enough for the sigma integral to achieve the
+			# desired precision. However, when there is a kmin or kmax cutoff in the integral,
+			# wiggles from the tophat filter can lead to oscillatory behavior. In such cases,
+			# we allow for more subdivisions (which will lead to a more accurate evaluation and
+			# no warning messages, but also longer run time).		
+			if (kmin is not None) or (kmax is not None) or (j > 0):
+				n_subdiv_limit = 1000
+			else:
+				n_subdiv_limit = 100
 			args = ps_interpolator
 			sigma2, _ = scipy.integrate.quad(logIntegrand, min_k_use, max_k_use,
-						args = args, epsabs = 0.0, epsrel = self.accuracy_sigma, limit = 100)
+						args = args, epsabs = 0.0, epsrel = self.accuracy_sigma, limit = n_subdiv_limit)
 			sigma = np.sqrt(sigma2 / 2.0 / np.pi**2)
 		
 		if np.isnan(sigma):
@@ -2395,7 +2542,7 @@ class Cosmology(object):
 
 	# Return a spline interpolator for sigma(R) or R(sigma) if inverse == True. Generally, sigma(R) 
 	# should be evaluated using the sigma() function below, but for some performance-critical 
-	# operations it is faster to obtain the interpolator directly from this function.If the lookup-
+	# operations it is faster to obtain the interpolator directly from this function. If the lookup
 	# table does not exist yet, create it. For sigma, we use a very particular binning scheme. At 
 	# low R, sigma is a very smooth function, and very wellapproximated by a spline interpolation 
 	# between few points. Around the BAO scale, we need a higher resolution. Thus, the bins are 
@@ -2404,7 +2551,8 @@ class Cosmology(object):
 	def _sigmaInterpolator(self, j, filt, inverse, kmin, kmax, ps_args):
 		
 		if not 'model' in ps_args:
-			raise Exception('The ps_args dictionary must contain the model keyword, even if the power spectrum is loaded from file.')
+			raise Exception('The ps_args dictionary must contain the model keyword, even if the power spectrum is loaded from file. Found %s.' \
+						% (str(ps_args)))
 		
 		table_name = 'sigma%d_%s_%s_%s' % (j, self.name, ps_args['model'], filt)
 		if kmin is not None:
@@ -2420,7 +2568,11 @@ class Cosmology(object):
 			max_log = np.log10(self.R_max_sigma)
 			log_range = max_log - np.log10(self.R_min_sigma)
 			max_loglog = np.log10(log_range + 1.0)
-			loglog_width = max_loglog / self.R_Nbins_sigma
+			if (kmin is not None) or (kmax is not None):
+				n_bins = self.R_Nbins_sigma_klimits
+			else:
+				n_bins = self.R_Nbins_sigma
+			loglog_width = max_loglog / n_bins
 			R_loglog = np.arange(0.0, max_loglog + loglog_width, loglog_width)
 			log_R = max_log - 10**R_loglog[::-1] + 1.0
 			data_R = 10**log_R
@@ -2491,12 +2643,18 @@ class Cosmology(object):
 			determined automatically (it should be zero in principle, but will be set to a very 
 			small number depending on the type of power spectrum). Setting ``kmin`` can be useful 
 			when considering finite simulation volumes where the largest scales (smallest  k-modes)
-			are not taken into account.
+			are not taken into account. If ``kmin`` is not ``None`` and a top-hat filter is used, 
+			the variance will oscillate at certain radii. Thus, the number of points in the
+			interpolation table is automatically increased, but the solution is nevertheless 
+			unreliable close to the cutoff scale.
 		kmax: float 
 			The upper limit of the variance integral in k-space. If ``None``, the limit is 
 			determined automatically (it should be infinity in principle, but will be set to a 
 			large number where the power spectrum has fallen off sufficiently that the integral is
-			converged).
+			converged). If ``kmax`` is not ``None`` and a top-hat filter is used, the variance 
+			will oscillate at certain radii. Thus, the number of points in the interpolation table 
+			is automatically increased, but the solution is nevertheless unreliable close to the 
+			cutoff scale.
 		ps_args: dict
 			Arguments passed to the :func:`matterPowerSpectrum` function.
 		
@@ -2511,6 +2669,10 @@ class Cosmology(object):
 		-------------------------------------------------------------------------------------------
 		matterPowerSpectrum: The matter power spectrum at a scale k.
 		"""
+
+		is_array = utilities.isArray(R)
+		if is_array and len(R) == 0:
+			raise Exception('Sigma function received R array with zero entries.')
 
 		if self.interpolation:
 			interpolator = self._sigmaInterpolator(j, filt, inverse, kmin, kmax, ps_args)
@@ -2546,7 +2708,7 @@ class Cosmology(object):
 				# Get the limits in sigma from storage, or compute and store them. Using the 
 				# storage mechanism seems like overkill, but these numbers should be erased if 
 				# the cosmology changes and sigma is re-computed. Note that the limits change
-				# slightly if the user has imposed k-limits.
+				# if the user has imposed k-limits.
 				sigma_min_name = 'sigma_min'
 				sigma_max_name = 'sigma_max'
 				if kmin is not None:
@@ -2568,12 +2730,12 @@ class Cosmology(object):
 				# If the requested sigma is outside the range, give a detailed error message.
 				sigma_req = np.max(sigma_)
 				if sigma_req > sigma_max:
-					msg = "sigma = %.2e is too large (max. sigma = %.2e)" % (sigma_req, sigma_max)
+					msg = "Variance sigma = %.2e is too large to invert to radius (max. sigma = %.2e)." % (sigma_req, sigma_max)
 					raise Exception(msg)
 					
 				sigma_req = np.min(sigma_)
 				if sigma_req < sigma_min:
-					msg = "sigma = %.2e is too small (min. sigma = %.2e)" % (sigma_req, sigma_min)
+					msg = "Variance sigma = %.2e is too small to invert to radius (min. sigma = %.2e)." % (sigma_req, sigma_min)
 					raise Exception(msg)
 				
 				# Interpolate to get R(sigma)
@@ -2590,7 +2752,7 @@ class Cosmology(object):
 			if derivative:
 				raise Exception('Derivative of sigma cannot be evaluated if interpolation == False.')
 
-			if utilities.isArray(R):
+			if is_array:
 				ret = R * 0.0
 				for i in range(len(R)):
 					ret[i] = self._sigmaExact(R[i], j = j, filt = filt, kmin = kmin, kmax = kmax, ps_args = ps_args)
@@ -2921,5 +3083,86 @@ def getCurrent():
 		raise Exception('Cosmology is not set.')
 
 	return current_cosmo
+
+###################################################################################################
+
+def fromAstropy(astropy_cosmo, sigma8, ns, cosmo_name = None, **kwargs):
+	"""
+	Convert an Astropy cosmology object to Colossus and set it as current cosmology.
+
+	This function throws an error if Astropy cannot be imported. The user needs to supply sigma8
+	and ns because Astropy does not include power spectrum calculations in its cosmology module.
+	There are a few dark energy model implemented in Astropy that are not implemented in Colossus,
+	namely "wpwaCDM" and "w0wzCDM". The corresponding classes cannot be converted with this 
+	function.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	astropy_cosmo: FLRW
+		Astropy cosmology object of type FLRW or its derivative classes.
+	sigma8: float
+		The normalization of the power spectrum, i.e. the variance when the field is filtered with a 
+		top hat filter of radius 8 Mpc/h. This parameter is not part of an Astropy cosmology but 
+		must be set in Colossus.
+	ns: float
+		The tilt of the primordial power spectrum. This parameter is not part of an Astropy cosmology 
+		but must be set in Colossus.
+	cosmo_name: str
+		The name of the cosmology. Can be ``None`` if a name is supplied in the Astropy cosmology,
+		which is optional in Astropy.
+	kwargs: dictionary
+		Additional parameters that are passed to the Colossus cosmology.
+
+	Returns
+	-----------------------------------------------------------------------------------------------
+	cosmo: Cosmology
+		The cosmology object derived from Astropy, which is also set globally. 
+	"""
+
+	import astropy.cosmology
+
+	if isinstance(astropy_cosmo, astropy.cosmology.LambdaCDM):
+		pass
+	
+	elif isinstance(astropy_cosmo, astropy.cosmology.wCDM):
+		kwargs.update(de_model = 'w0')
+		kwargs.update(w0 = astropy_cosmo.w0)
+	
+	elif isinstance(astropy_cosmo, astropy.cosmology.w0waCDM):
+		kwargs.update(de_model = 'w0wa')
+		kwargs.update(w0 = astropy_cosmo.w0)
+		kwargs.update(wa = astropy_cosmo.wa)
+
+	elif isinstance(astropy_cosmo, astropy.cosmology.wpwaCDM):
+		raise Exception('Cannot convert wpwaCDM cosmology to Colossus.')
+	
+	elif isinstance(astropy_cosmo, astropy.cosmology.w0wzCDM):
+		raise Exception('Cannot convert w0wzCDM cosmology to Colossus.')
+	
+	else:
+		raise Exception('Unknown astropy cosmology class, %s.' % (astropy_cosmo.__class__.__name__))
+
+	if astropy_cosmo.name is None:
+		if cosmo_name is None:
+			raise Exception('Name is None in Astropy cosmology, must be supplied by the user.')
+	else:
+		cosmo_name = astropy_cosmo.name
+	
+	if astropy_cosmo.has_massive_nu:
+		print('WARNING: Astropy cosmology class contains massive neutrinos, which are not taken into account in Colossus.')
+
+	params = dict(
+	        flat = (astropy_cosmo.Ok0 == 0.0),
+	        H0 = astropy_cosmo.H0.value,
+	        Om0 = astropy_cosmo.Om0,
+	        Ode0 = astropy_cosmo.Ode0,
+	        Ob0 = astropy_cosmo.Ob0,
+	        Tcmb0 = astropy_cosmo.Tcmb0.value,
+	        Neff = astropy_cosmo.Neff,
+	        sigma8 = sigma8,
+	        ns = ns,
+	        **kwargs)
+	
+	return setCosmology(cosmo_name, params = params)
 
 ###################################################################################################

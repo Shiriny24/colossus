@@ -6,6 +6,34 @@ See below for a listing of the most important code and interface changes in Colo
 version 1.1.0. You can download older versions from the 
 `PyPi History <https://pypi.org/project/colossus/#history>`_ for Colossus.
 
+.. rubric:: Version 1.2.16 (released 07/15/2020)
+
+Changes in this version include:
+
+* The cosmology module now supports conversions to and from Astropy, including a number of dark 
+  energy models. See the :func:`~cosmology.cosmology.Cosmology.toAstropy` and 
+  :func:`~cosmology.cosmology.fromAstropy` functions. Thanks to Steven Murray for the idea and 
+  code!
+* A new splashback model, ``diemer20``, was added and made the default splashback model. This model
+  is a recalibration of the ``diemer17`` model, with percent-level changes.
+* The implementation of these splashback models has changed, with some interface changes to the 
+  convenience functions.
+* The main :func:`~halo.splashback.splashbackModel` function does not provide a default definition
+  for the ``diemer17`` and ``diemer20`` models any longer (such as the mean or higher percentiles
+  of the particle splashback distribution). The definition matters quite a bit and should be 
+  provided by the user to avoid confusion. The function now throws an error if no definition
+  is passed.
+* A new mass function model, ``diemer20`` has been added (not to be mistaken for the splashback
+  radius and mass model of the same name). This model is the first to predict splashback mass
+  functions.
+* The integration in :func:`~cosmology.cosmology.Cosmology.sigma` was made more robust in the case
+  where the user has specified a lower or upper limit to the integration. In particular, the 
+  calculation of the tree integration limit was improved and the code now automatically increases
+  the number of bins in the intepolation table because the solution oscillates near the cutoff.
+* A number of functions in the cosmology and halo modules are now safe to input of integers instead
+  of float. For example, the growthFactorUnnormalized function returned wrong values when "1" was
+  given instead of "1.0" or "1.". Thanks to Yucheng Zhang for pointing this out! 
+
 .. rubric:: Version 1.2.15 (released 04/15/2020)
 
 Changes in this version include:

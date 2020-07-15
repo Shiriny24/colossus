@@ -41,19 +41,24 @@ class TCSplashbackModel(test_colossus.ColosssusTestCase):
 		models = splashback.models
 		for k in models.keys():
 			msg = 'Failure in model = %s' % (k)
-			Rsp, _, mask = splashback.splashbackRadius(z, mdef, Gamma = Gamma, R = R200m, model = k)
+			Rsp, _, mask = splashback.splashbackRadius(z, mdef, Gamma = Gamma, R = R200m, 
+													model = k, rspdef = 'sp-apr-mn')
 			RspR200m = Rsp / R200m_test
 			
 			if k == 'adhikari14':
 				correct_rsp = [1.269417774113e+00, 8.167315805978e-01]
 			elif k == 'more15':
-				correct_rsp = [1.392934317089e+00, 8.750736226357e-01]
+				correct_rsp = [1.392934316796e+00, 8.750736226357e-01]
 			elif k == 'shi16':
 				correct_rsp = [1.334955458442e+00, 6.672045990854e-01]
 			elif k == 'mansfield17':
-				correct_rsp = [1.386075126745e+00, 1.138968512092e+00]
+				correct_rsp = [1.386073423900e+00, 1.138961025552e+00]
 			elif k == 'diemer17':
-				correct_rsp = [1.232502327747e+00, 7.998382581962e-01]
+				correct_rsp = [1.232502896365e+00, 7.998312439193e-01]
+			elif k == 'diemer20':
+				correct_rsp = [1.214166952231e+00, 7.980230003679e-01]
+			else:
+				raise Exception('No test case defined for model %s.' % k)
 			
 			for i in range(len(Gamma)):
 				self.assertEqual(mask[i], True, msg = msg)
@@ -73,8 +78,8 @@ class TCSplashbackRadius(test_colossus.ColosssusTestCase):
 		z = 0.1
 		mdef = '200m'
 		Rsp, Msp, mask = splashback.splashbackRadius(z, mdef, R = R, model = 'more15')
-		correct_rsp = [1.072344532566e+03, 1.270993853254e+03]
-		correct_msp = [7.896288066433e+13, 1.415210857167e+14]
+		correct_rsp = [1.072325264941e+03, 1.270966525596e+03]
+		correct_msp = [7.896203193991e+13, 1.415192318977e+14]
 		for i in range(len(R)):
 			self.assertEqual(mask[i], True)
 			self.assertAlmostEqual(Rsp[i], correct_rsp[i])
@@ -86,8 +91,8 @@ class TCSplashbackRadius(test_colossus.ColosssusTestCase):
 		mdef = 'vir'
 		Rsp, Msp, mask = splashback.splashbackRadius(z, mdef, R = R, 
 									model = 'more15', c_model = 'diemer15')
-		correct_rsp = [1.238620949024e+03, 1.464941206737e+03]
-		correct_msp = [1.294419037027e+14, 2.322636850049e+14]
+		correct_rsp = [1.238595733861e+03, 1.464913446611e+03]
+		correct_msp = [1.294406412531e+14, 2.322614981111e+14]
 		for i in range(len(R)):
 			self.assertEqual(mask[i], True)
 			self.assertAlmostEqual(Rsp[i], correct_rsp[i])

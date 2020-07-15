@@ -44,16 +44,12 @@ HALO_MASS_CONVERSION_PROFILE = 'nfw'
 are converted into one another, we have to assume a form of the density profile. The simplicity
 of the :doc:`halo_profile_nfw` makes this computation efficient."""
 
-HALO_SPLASHBACK_MODEL = 'diemer17'
+HALO_SPLASHBACK_MODEL = 'diemer20'
 """The default model for the splashback radius."""
 
 HALO_SPLASHBACK_STATISTIC = 'median'
 """The default statistic used (``mean`` or ``median``). This only applies to splashback models 
 that distinguish between mean and median statistics."""
-
-HALO_SPLASHBACK_RSPDEF = 'mean'
-"""The default definition of Rsp used. This only applies to splashback models that distinguish 
-between different definitions."""
 
 ###################################################################################################
 # ARGUMENT LISTS

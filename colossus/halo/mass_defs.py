@@ -148,6 +148,8 @@ def evolveSO(M_i, c_i, z_i, mdef_i, z_f, mdef_f,
 	# Both M and c can be numbers or arrays
 	M_i_array, M_is_array = utilities.getArray(M_i)
 	c_i_array, c_is_array = utilities.getArray(c_i)
+	M_i_array = M_i_array.astype(np.float)
+	c_i_array = c_i_array.astype(np.float)
 	if not M_is_array and not c_is_array:
 		M_i = M_i_array
 		c_i = c_i_array
