@@ -64,7 +64,7 @@ watson13       fof, any SO      Yes (SO)    `Watson et al. 2013 <http://adsabs.h
 bocquet16      200m,200c,500c   Yes         `Bocquet et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.456.2361B>`_
 despali16      Any SO           Yes         `Despali et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.456.2486D>`_
 comparat17     vir              No          `Comparat et al. 2017 <https://ui.adsabs.harvard.edu//#abs/2017MNRAS.469.4157C/abstract>`_
-diemer20       sp-apr-*         No          Diemer 2020
+diemer20       sp-apr-*         No          `Diemer 2020b <https://ui.adsabs.harvard.edu/abs/2020arXiv200710346D/abstract>`_
 ============== ================ =========== ======================================
 
 Note that the mass definition (set to ``fof`` by default) needs to match one of the allowed mass 
@@ -1155,7 +1155,7 @@ def modelComparat17(sigma):
 
 def modelDiemer20(sigma, z, mdef, deltac_args = {'corrections': True}):
 	"""
-	The splashback mass function model of Diemer 2020.
+	The splashback mass function model of Diemer 2020b.
 	
 	This model represents a universal fitting function for splashback masses measured dynamically,
 	that is, as the mean or percentiles of the particle apocenter distribution. The model is 
