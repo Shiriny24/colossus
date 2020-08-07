@@ -79,7 +79,8 @@ parameter to the :func:`concentration` function:
 	klypin16_nu    200c, vir        M > 1E10           0 < z < 5   planck13        `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
 	ludlow16       200c             Any                Any         Any             `Ludlow et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2016MNRAS.460.1214L/abstract>`_
 	child18        200c             M > 2.1E11         0 < z < 4   WMAP7           `Child et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2018ApJ...859...55C/abstract>`_
-	diemer19       200c             Any                Any         Any             `Diemer & Joyce 2019 <https://ui.adsabs.harvard.edu//#abs/2018arXiv180907326D/abstract>`_
+	diemer19       200c             Any                Any         Any             `Diemer & Joyce 2019 <https://ui.adsabs.harvard.edu/abs/2019ApJ...871..168D/abstract>`_
+	ishiyama20     200c, vir        Any                Any         Any             `Ishiyama et al. 2020 <https://ui.adsabs.harvard.edu/abs/2020arXiv200714720I/abstract>`_
 	============== ================ ================== =========== =============== ============================================================================
 
 The original version of the ``diemer15`` model suffered from a small numerical error, a corrected
@@ -109,6 +110,7 @@ Module contents
 	modelLudlow16
 	modelChild18
 	modelDiemer19
+	modelIshiyama20
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -219,6 +221,10 @@ models['diemer19'] = ConcentrationModel()
 models['diemer19'].mdefs = ['200c']
 models['diemer19'].universal = False
 models['diemer19'].depends_on_statistic = True
+
+models['ishiyama20'] = ConcentrationModel()
+models['ishiyama20'].mdefs = ['200c', 'vir']
+models['ishiyama20'].universal = False
 
 ###################################################################################################
 
@@ -1273,42 +1279,16 @@ def _diemer19_alpha_eff(z):
 
 ###################################################################################################
 
-def modelDiemer19(M200c, z, statistic = 'median', ps_args = defaults.PS_ARGS):
-	"""
-	The model of Diemer & Joyce 2019.
-	
-	This model improves on the Diemer & Kravtsov 2015 model in a number of ways. First, it is based
-	on a mathematical derivation of the evolution of concentration at the low-mass end. This more
-	physically motivated functional form allows fewer free parameters (six instead of seven). 
-	Second, because of the improved functional form, the model improves the fit, particularly to
-	scale-free cosmologies. Finally, the new model fixed a slight numerical bug in the DK15 model.
-	
-	The first time this model is ever called, it will compute a lookup table (in three dimensions)
-	for c(G, n) where G is the left-hand side of the c-M model equation. This table then serves as
-	a lookup and avoids having to numerically solve the equation.
-	
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	M200c: array_like
-		Halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
-	z: float
-		Redshift
-	statistic: str
-		Can be ``mean`` or ``median``.
-	ps_args: dict
-		Arguments passed to the :func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum` 
-		function, and functions that depend on it such as the power spectrum slope.
-		
-	Returns
-	-----------------------------------------------------------------------------------------------
-	c200c: array_like
-		Halo concentration; has the same dimensions as ``M200c``.
-	"""
+# This function is a generalized version of the Diemer & Joyce 2019 model, where the user can 
+# pass a set of parameters and give mass in any definition.
+
+def _diemer19_general(M, z, params, ps_args = defaults.PS_ARGS):
 
 	# ---------------------------------------------------------------------------------------------
 
 	# Currently, only NFW predictions are implemented. In principle, the model can predict 
-	# c based on other mass profiles, but the parameters would need to be re-tuned.
+	# c based on other mass profiles, but the parameters would need to be re-tuned. The 
+	# implementation of the Einasto profile below is for test purposes only.
 	
 	profile = 'nfw'
 
@@ -1430,26 +1410,9 @@ def modelDiemer19(M200c, z, statistic = 'median', ps_args = defaults.PS_ARGS):
 
 	# ---------------------------------------------------------------------------------------------
 
-	if statistic == 'median':
-		kappa             = 0.41
-		a_0               = 2.45
-		a_1               = 1.82
-		b_0               = 3.20
-		b_1               = 2.30
-		c_alpha           = 0.21
-	elif statistic == 'mean':
-		kappa             = 0.42
-		a_0               = 2.37
-		a_1               = 1.74
-		b_0               = 3.39
-		b_1               = 1.82
-		c_alpha           = 0.20
-	else:
-		raise Exception('Statistic %s not implmented in diemer19 model.' % statistic)
-
 	# Compute peak height, n_eff, and alpha_eff
-	nu = peaks.peakHeight(M200c, z, ps_args = ps_args)
-	n_eff = peaks.powerSpectrumSlope(nu, z, slope_type = 'sigma', scale = kappa, ps_args = ps_args)
+	nu = peaks.peakHeight(M, z, ps_args = ps_args)
+	n_eff = peaks.powerSpectrumSlope(nu, z, slope_type = 'sigma', scale = params['kappa'], ps_args = ps_args)
 	alpha_eff = _diemer19_alpha_eff(z)
 
 	is_array = utilities.isArray(nu)
@@ -1460,9 +1423,9 @@ def modelDiemer19(M200c, z, statistic = 'median', ps_args = defaults.PS_ARGS):
 	
 	# Compute input parameters and the right-hand side of the c-M equation. We use interpolation
 	# tables to find the concentration at which the equation gives that RHS.
-	A_n = a_0 * (1.0 + a_1 * (n_eff + 3.0))
-	B_n = b_0 * (1.0 + b_1 * (n_eff + 3.0))
-	C_alpha = 1.0 - c_alpha * (1.0 - alpha_eff)
+	A_n = params['a_0'] * (1.0 + params['a_1'] * (n_eff + 3.0))
+	B_n = params['b_0'] * (1.0 + params['b_1'] * (n_eff + 3.0))
+	C_alpha = 1.0 - params['c_alpha'] * (1.0 - alpha_eff)
 	rhs = np.log10(A_n / nu * (1.0 + nu**2 / B_n))
 	
 	# Get interpolation table
@@ -1471,14 +1434,151 @@ def modelDiemer19(M200c, z, statistic = 'median', ps_args = defaults.PS_ARGS):
 	# Mask out values of rhs for which do G not exist. The interpolator will still work because it
 	# is based on a full grid of G values, but we mask out the invalid array elements.
 	mask = (rhs >= interp_Gmin(n_eff)) & (rhs <= interp_Gmax(n_eff))
-	c200c = 10**interp_Gc(rhs, n_eff, grid = False) * C_alpha
-	c200c[np.logical_not(mask)] = INVALID_CONCENTRATION
+	c = 10**interp_Gc(rhs, n_eff, grid = False) * C_alpha
+	c[np.logical_not(mask)] = INVALID_CONCENTRATION
 
 	if not is_array:
-		c200c = c200c[0]
+		c = c[0]
 		mask = mask[0]
+		
+	return c, mask
 
-	return c200c, mask
+###################################################################################################
+
+def modelDiemer19(M200c, z, statistic = 'median', ps_args = defaults.PS_ARGS):
+	"""
+	The model of Diemer & Joyce 2019.
+	
+	This model improves on the Diemer & Kravtsov 2015 model in a number of ways. First, it is based
+	on a mathematical derivation of the evolution of concentration at the low-mass end. This more
+	physically motivated functional form allows fewer free parameters (six instead of seven). 
+	Second, because of the improved functional form, the model improves the fit, particularly to
+	scale-free cosmologies. Finally, the new model fixed a slight numerical bug in the DK15 model.
+	
+	The first time this model is ever called, it will compute a lookup table (in three dimensions)
+	for c(G, n) where G is the left-hand side of the c-M model equation. This table then serves as
+	a lookup and avoids having to numerically solve the equation.
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	M200c: array_like
+		Halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
+	z: float
+		Redshift
+	statistic: str
+		Can be ``mean`` or ``median``.
+	ps_args: dict
+		Arguments passed to the :func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum` 
+		function, and functions that depend on it such as the power spectrum slope.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	c200c: array_like
+		Halo concentration; has the same dimensions as ``M200c``.
+	"""
+
+	if statistic == 'median':
+		params = dict( \
+		kappa             = 0.41,
+		a_0               = 2.45,
+		a_1               = 1.82,
+		b_0               = 3.20,
+		b_1               = 2.30,
+		c_alpha           = 0.21)
+	elif statistic == 'mean':
+		params = dict( \
+		kappa             = 0.42,
+		a_0               = 2.37,
+		a_1               = 1.74,
+		b_0               = 3.39,
+		b_1               = 1.82,
+		c_alpha           = 0.20)
+	else:
+		raise Exception('Statistic %s not implemented in diemer19 model.' % statistic)
+		
+	return _diemer19_general(M200c, z, params, ps_args = ps_args)
+
+###################################################################################################
+
+def modelIshiyama20(M, z, mdef, ps_args = defaults.PS_ARGS, c_type = 'fit'):
+	"""
+	The model of Ishiyama et al 2020.
+	
+	This model constitutes a recalibration of the Diemer & Joyce 2019 model based on the Uchuu
+	simulation. The model provides median concentrations only but was calibrated for both the 200c
+	and vir mass definitions and for concentrations derived from an NFW fit and estimated from 
+	Vmax.
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	M: array_like
+		Halo mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
+	z: float
+		Redshift
+	mdef: str
+		The mass definition in which the mass is given, and in which concentration is returned.
+		Can be ``200c`` or ``vir``. See :doc:`halo_mass` for details.
+	ps_args: dict
+		Arguments passed to the :func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum` 
+		function, and functions that depend on it such as the power spectrum slope.
+	c_type: str
+		The type of concentration; can be ``fit`` for concentrations derived from an NFW fit or
+		``vmax`` for concentrations derived from the ratio of Vmax and V200c.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	c: array_like
+		Halo concentration; has the same dimensions as ``M``.
+	"""
+
+	if c_type == 'fit':
+		
+		if mdef == '200c':
+			params = dict( \
+			kappa             = 1.19,
+			a_0               = 2.54,
+			a_1               = 1.33,
+			b_0               = 4.04,
+			b_1               = 1.21,
+			c_alpha           = 0.22)
+		elif mdef == 'vir':
+			params = dict( \
+			kappa             = 1.64,
+			a_0               = 2.67,
+			a_1               = 1.23,
+			b_0               = 3.92,
+			b_1               = 1.30,
+			c_alpha           = -0.19)
+		else:
+			raise Exception('Invalid mdef (%s) for ishiyama20 model, allowed are 200c and vir.' % mdef)
+
+	elif c_type == 'vmax':
+				
+		if mdef == '200c':
+			params = dict( \
+			kappa             = 1.10,
+			a_0               = 2.30,
+			a_1               = 1.64,
+			b_0               = 1.72,
+			b_1               = 3.60,
+			c_alpha           = 0.32)
+
+		elif mdef == 'vir':
+			params = dict( \
+			kappa             = 0.76,
+			a_0               = 2.34,
+			a_1               = 1.82,
+			b_0               = 1.83,
+			b_1               = 3.52,
+			c_alpha           = -0.18)
+			
+		else:
+			raise Exception('Invalid mdef (%s) for ishiyama20 model, allowed are 200c and vir.' % mdef)
+
+	else:
+		raise Exception('Invalid concentration type (%s) for ishiyama20 model, allowed are fit and vmax.' % c_type)
+		
+	return _diemer19_general(M, z, params, ps_args = ps_args)
 
 ###################################################################################################
 # Pointers to model functions
@@ -1497,5 +1597,6 @@ models['klypin16_nu'].func = modelKlypin16fromNu
 models['ludlow16'].func = modelLudlow16
 models['child18'].func = modelChild18
 models['diemer19'].func = modelDiemer19
+models['ishiyama20'].func = modelIshiyama20
 
 ###################################################################################################
