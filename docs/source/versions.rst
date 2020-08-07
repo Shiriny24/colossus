@@ -6,6 +6,11 @@ See below for a listing of the most important code and interface changes in Colo
 version 1.1.0. You can download older versions from the 
 `PyPi History <https://pypi.org/project/colossus/#history>`_ for Colossus.
 
+.. rubric:: Version 1.2.17 (released 08/07/2020)
+
+This version contains the new ``ishiyama20`` concentration model, which is a recalibration of the
+``diemer19`` model based on the Uchuu simulation.
+
 .. rubric:: Version 1.2.16 (released 07/15/2020)
 
 Changes in this version include:
