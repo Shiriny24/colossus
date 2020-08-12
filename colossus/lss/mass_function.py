@@ -65,6 +65,7 @@ bocquet16      200m,200c,500c   Yes         `Bocquet et al. 2016 <http://adsabs.
 despali16      Any SO           Yes         `Despali et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.456.2486D>`_
 comparat17     vir              No          `Comparat et al. 2017 <https://ui.adsabs.harvard.edu//#abs/2017MNRAS.469.4157C/abstract>`_
 diemer20       sp-apr-*         No          `Diemer 2020b <https://ui.adsabs.harvard.edu/abs/2020arXiv200710346D/abstract>`_
+seppi20        vir              Yes         `Seppi et al. 2020 <https://ui.adsabs.harvard.edu/abs/2020arXiv200803179S/abstract>`_
 ============== ================ =========== ======================================
 
 Note that the mass definition (set to ``fof`` by default) needs to match one of the allowed mass 
@@ -108,6 +109,8 @@ Module contents
 	modelBocquet16
 	modelDespali16
 	modelComparat17
+	modelDiemer20
+	modelSeppi20
 	
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -117,6 +120,7 @@ Module reference
 ###################################################################################################
 
 import numpy as np
+import scipy.integrate
 from collections import OrderedDict
 
 from colossus import defaults
@@ -252,6 +256,11 @@ models['diemer20'].mdefs = ['sp-apr-mn', 'sp-apr-p*']
 models['diemer20'].z_dependence = True
 models['diemer20'].deltac_dependence = True
 models['diemer20'].mdef_dependence = True
+
+models['seppi20'] = HaloMassFunctionModel()
+models['seppi20'].mdefs = ['vir']
+models['seppi20'].z_dependence = True
+models['seppi20'].deltac_dependence = True
 
 ###################################################################################################
 
@@ -1218,6 +1227,165 @@ def modelDiemer20(sigma, z, mdef, deltac_args = {'corrections': True}):
 	return f
 
 ###################################################################################################
+
+def modelSeppi20(sigma, z, deltac_args = {'corrections': True},
+				xoff = None, spin = None, int_over_sigma = False, int_over_xoff = True, int_over_spin = True):
+	"""
+	The mass function model of Seppi et al 2020.
+	
+	This model constitutes a 3D distribution of halo abundance over the variance, the spatial 
+	offset between a halo's offset from its center of mass (e.g., the offset of a measured X-ray 
+	peak), and the Peebles spin parameter. Depending on the ``int_over_sigma``, ``int_over_xoff``,
+	and ``int_over_spin`` parameters, this function can return 1D, 2D, or 3D results on a grid 
+	given by ``sigma``, ``xoff``, and ``spin``. If those arrays are not given, a standard set of 
+	bins is used (and integrated over depending on the dimensionality of the desired output).
+	
+	The model was calibrated only for masses above 4*10^13 solar masses and should not be used b
+	below this mass scale. The function is given in Equation 21 of the paper.
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	sigma: array_like
+		Variance; can be a number or a numpy array.
+	xoff: array_like
+		Offset between cluster peak and center of mass; can be a number or a numpy array.
+	spin: array_like
+		Peebles spin parameter; can be a number or a numpy array.
+	int_over_sigma: bool
+		If ``True``, marginalize over the ``sigma`` parameter.
+	int_over_xoff: bool
+		If ``True``, marginalize over the ``xoff`` parameger.
+	int_over_spin: bool
+		If ``True``, marginalize over the ``spin`` parameger.
+	
+	Returns
+	-----------------------------------------------------------------------------------------------
+	h: array_like
+		The 3D halo mass-xoff-spin function :math:`h(\\sigma,xoff,\\lambda)`
+	g_sigma_xoff: array_like
+		The 2D halo mass-xoff function :math:`g(\\sigma,xoff)`, marginalized over spin
+	g_sigma_spin: array_like
+		The 2D halo mass-spin function :math:`g(\\sigma,\\lambda)`, marginalized over xoff
+	g_xoff_spin: array_like
+		The 2D halo xoff-spin function :math:`g(xoff,\\lambda)`, marginalized over mass
+	f_xoff: array_like
+		The halo xoff function :math:`f(xoff)`, marginalized over mass and spin
+	f_spin: array_like
+		The halo spin function :math:`f(\\sigma)`, marginalized over mass and xoff
+	f: array_like
+		The halo mass function :math:`f(\\sigma)`, marginalized over xoff and spin
+	"""
+	
+	zp1 = 1.0 + z
+	
+	A     = -22.004 * (zp1)**-0.0441
+	a     =   0.886 * (zp1)**-0.1611
+	q     =   2.285 * (zp1)**0.0409
+	mu    =  -3.326 * (zp1)**-0.1286
+	alpha =   5.623 * (zp1)**0.1081
+	beta  =  -0.391 * (zp1)**-0.3114
+	gamma =   3.024 * (zp1)**0.0902
+	delta =   1.209 * (zp1)**-0.0768
+	e     =  -1.105 * (zp1)**0.6123
+	
+	if sigma is None:
+		sigma = np.linspace(0.25, 1.2, 50)
+	if xoff is None:
+		xoff = np.logspace(-3.5, -0.3, 50)
+	if spin is None:
+		spin = np.logspace(-3.5, -0.3, 50)
+		
+	n_sigma = len(sigma)
+	n_xoff = len(xoff)
+	n_spin = len(spin)
+
+	# Compute 3D distribution
+	delta_c = peaks.collapseOverdensity(z = 0, **deltac_args)    
+	sigma_, xoff_, spin_ = np.meshgrid(sigma, xoff, spin, indexing = 'ij')
+	
+	nu_ = delta_c / sigma_
+	t1 = xoff_ / 10**(1.83 * mu)
+	ln10 = np.log(10.0)
+	
+	h_log = A + np.log10(np.sqrt(2.0 / np.pi)) + q * np.log10(np.sqrt(a) * nu_) \
+			- a / 2.0 / ln10 * nu_**2 + alpha * np.log10(t1) \
+			- 1.0 / ln10 * t1**(0.05 * alpha) + gamma * np.log10(spin_ / 10**(mu)) \
+			- 1.0 / ln10 * (t1 / sigma_**e)**beta * (spin_ / (10**mu))**delta
+	h = 10**h_log
+	
+	# Compute 2D distributions
+	g_xoff_spin = np.zeros((n_xoff, n_spin))    
+	for i in range(n_xoff):
+		for j in range(n_spin):
+			if n_sigma == 1:
+				g_xoff_spin[i,j] = h[:,i,j]
+			else:    
+				g_xoff_spin[i,j] = scipy.integrate.simps(h[:,i,j], sigma)
+	
+	g_sigma_spin = np.zeros((n_sigma, n_spin))    
+	for i in range(n_sigma):
+		for j in range(n_spin):
+			if n_xoff == 1:
+				g_sigma_spin[i,j] = h[i,:,j]
+			else:    
+				g_sigma_spin[i,j] = scipy.integrate.simps(h[i,:,j], np.log10(xoff))
+	
+	g_sigma_xoff = np.zeros((n_sigma, n_xoff))    
+	for i in range(n_sigma):
+		for j in range(n_xoff):
+			if n_spin == 1:
+				g_sigma_xoff[i,j] = h[i,j,:]
+			else:    
+				g_sigma_xoff[i,j] = scipy.integrate.simps(h[i,j,:], np.log10(spin))
+	
+	# Compute 1D distributions
+	f_xoff = np.zeros(n_xoff)
+	for i in range(n_xoff):
+		if n_sigma == 1:
+			f_xoff[i] = g_sigma_xoff[:,i]
+		else:    
+			f_xoff[i] = scipy.integrate.simps(g_sigma_xoff[:,i], np.log10(1.0 / sigma))
+	
+	f_spin = np.zeros(n_spin)
+	for i in range(n_spin):
+		if n_sigma == 1:
+			f_spin[i] = g_sigma_spin[:,i]
+		else:    
+			f_spin[i] = scipy.integrate.simps(g_sigma_spin[:,i], np.log10(1.0 / sigma))
+	
+	f_sigma = np.zeros(n_sigma)
+	for i in range(n_sigma):
+		if n_xoff == 1:
+			f_sigma[i] = g_sigma_xoff[i,:]
+		else:    
+			f_sigma[i] = scipy.integrate.simps(g_sigma_xoff[i,:], np.log10(xoff))
+	
+	# Return the correct 1D, 2D, or 3D mass function depending on the parameters
+	if (not int_over_sigma) & (not int_over_xoff) & (not int_over_spin):
+		return h
+	
+	elif int_over_sigma & (not int_over_xoff) & (not int_over_spin):
+		return g_xoff_spin
+	
+	elif (not int_over_sigma) & int_over_xoff & (not int_over_spin):
+		return g_sigma_spin
+	
+	elif (not int_over_sigma) & (not int_over_xoff) & int_over_spin:
+		return g_sigma_xoff
+	
+	elif int_over_sigma & int_over_xoff & (not int_over_spin):
+		return f_spin
+	
+	elif int_over_sigma & (not int_over_xoff) & int_over_spin:
+		return f_xoff
+	
+	elif (not int_over_sigma) & int_over_xoff & int_over_spin:
+		return f_sigma 
+
+	else:
+		raise Exception('Invalid combination of int_over_sigma, int_over_xoff, int_over_spin.')
+
+###################################################################################################
 # Pointers to model functions
 ###################################################################################################
 
@@ -1237,5 +1405,6 @@ models['bocquet16'].func = modelBocquet16
 models['despali16'].func = modelDespali16
 models['comparat17'].func = modelComparat17
 models['diemer20'].func = modelDiemer20
+models['seppi20'].func = modelSeppi20
 
 ###################################################################################################
