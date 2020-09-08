@@ -1320,7 +1320,7 @@ def modelSeppi20(sigma, z, deltac_args = {'corrections': True},
 			if n_sigma == 1:
 				g_xoff_spin[i,j] = h[:,i,j]
 			else:    
-				g_xoff_spin[i,j] = scipy.integrate.simps(h[:,i,j], sigma)
+				g_xoff_spin[i,j] = scipy.integrate.simps(h[:,i,j], 1/sigma)
 	
 	g_sigma_spin = np.zeros((n_sigma, n_spin))    
 	for i in range(n_sigma):
@@ -1344,14 +1344,14 @@ def modelSeppi20(sigma, z, deltac_args = {'corrections': True},
 		if n_sigma == 1:
 			f_xoff[i] = g_sigma_xoff[:,i]
 		else:    
-			f_xoff[i] = scipy.integrate.simps(g_sigma_xoff[:,i], np.log10(1.0 / sigma))
+			f_xoff[i] = scipy.integrate.simps(g_sigma_xoff[:,i], 1.0 / sigma)
 	
 	f_spin = np.zeros(n_spin)
 	for i in range(n_spin):
 		if n_sigma == 1:
 			f_spin[i] = g_sigma_spin[:,i]
 		else:    
-			f_spin[i] = scipy.integrate.simps(g_sigma_spin[:,i], np.log10(1.0 / sigma))
+			f_spin[i] = scipy.integrate.simps(g_sigma_spin[:,i], 1.0 / sigma)
 	
 	f_sigma = np.zeros(n_sigma)
 	for i in range(n_sigma):
