@@ -1234,8 +1234,8 @@ def modelSeppi20(sigma, z, deltac_args = {'corrections': True},
 	The mass function model of Seppi et al 2020.
 	
 	This model constitutes a 3D distribution of halo abundance over the variance, the spatial 
-	offset between a halo's offset from its center of mass (e.g., the offset of a measured X-ray 
-	peak), and the Peebles spin parameter. Depending on the ``int_over_sigma``, ``int_over_xoff``,
+	offset between a halo's center of mass and the peak of its mass profile
+	and the Peebles spin parameter. Depending on the ``int_over_sigma``, ``int_over_xoff``,
 	and ``int_over_spin`` parameters, this function can return 1D, 2D, or 3D results on a grid 
 	given by ``sigma``, ``xoff``, and ``spin``. If those arrays are not given, a standard set of 
 	bins is used (and integrated over depending on the dimensionality of the desired output).
