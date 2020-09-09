@@ -375,6 +375,10 @@ def massFunction(x, z, q_in = 'M', q_out = 'f', mdef = 'fof',
 	if q_out == 'f':
 		mfunc = f
 	else:
+		if len(f.shape) > 1:
+			raise Exception('Mass function model returned multi-dimensional output; cannot convert from f to %s.' \
+						% (q_out))
+		
 		if M is None:
 			R = cosmo.sigma(sigma, z, inverse = True, ps_args = ps_args, **sigma_args)
 			M = peaks.lagrangianM(R)
@@ -1234,13 +1238,16 @@ def modelSeppi20(sigma, z, deltac_args = {'corrections': True},
 	The mass function model of Seppi et al 2020.
 	
 	This model constitutes a 3D distribution of halo abundance over the variance, the spatial 
-	offset between a halo's center of mass and the peak of its mass profile
-	and the Peebles spin parameter. Depending on the ``int_over_sigma``, ``int_over_xoff``,
-	and ``int_over_spin`` parameters, this function can return 1D, 2D, or 3D results on a grid 
-	given by ``sigma``, ``xoff``, and ``spin``. If those arrays are not given, a standard set of 
-	bins is used (and integrated over depending on the dimensionality of the desired output).
+	offset between a halo's center of mass and the peak of its mass profile and the Peebles spin 
+	parameter. Depending on the ``int_over_sigma``, ``int_over_xoff``, and ``int_over_spin`` 
+	parameters, this function can return 1D, 2D, or 3D results on a grid given by ``sigma``, 
+	``xoff``, and ``spin``. If those arrays are not given, a standard set of bins is used (and 
+	integrated over depending on the dimensionality of the desired output).
 	
-	The model was calibrated only for masses above 4*10^13 solar masses and should not be used b
+	Note that if 2D or 3D arrays are returned, the output units must be ``f`` when using the 
+	generalized :func:`massFunction` function because the output cannot be converted.
+	
+	The model was calibrated only for masses above 4*10^13 solar masses and should not be used
 	below this mass scale. The function is given in Equation 21 of the paper.
 	
 	Parameters
@@ -1320,7 +1327,7 @@ def modelSeppi20(sigma, z, deltac_args = {'corrections': True},
 			if n_sigma == 1:
 				g_xoff_spin[i,j] = h[:,i,j]
 			else:    
-				g_xoff_spin[i,j] = scipy.integrate.simps(h[:,i,j], 1/sigma)
+				g_xoff_spin[i,j] = scipy.integrate.simps(h[:,i,j], 1.0 / sigma)
 	
 	g_sigma_spin = np.zeros((n_sigma, n_spin))    
 	for i in range(n_sigma):
