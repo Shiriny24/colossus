@@ -6,6 +6,11 @@ See below for a listing of the most important code and interface changes in Colo
 version 1.1.0. You can download older versions from the 
 `PyPi History <https://pypi.org/project/colossus/#history>`_ for Colossus.
 
+.. rubric:: Version 1.2.18 (released XX/XX/2020)
+
+* Added the new ``seppi20`` mass function model. Thanks to Riccardo Seppi for the implementation
+  and tutorial!
+
 .. rubric:: Version 1.2.17 (released 08/07/2020)
 
 This version contains the new ``ishiyama20`` concentration model, which is a recalibration of the
