@@ -141,6 +141,8 @@ class TCMassFunction(test_colossus.ColosssusTestCase):
 				correct = [2.566169917705e-01, 6.560381212926e-05]
 			elif k == 'comparat17':
 				correct = [2.449612008069e-01, 2.351693095425e-05]
+			elif k == 'seppi20':
+				correct = [2.359726326775e-01, 5.108267257217e-05]
 			else:
 				msg = 'Unknown model, %s.' % k
 				raise Exception(msg)

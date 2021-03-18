@@ -20,6 +20,7 @@ TEST_Z = np.array([0.0, 1.283, 20.0])
 TEST_Z2 = 5.4
 TEST_K = np.array([1.2E-3, 1.1E3])
 TEST_RR = np.array([1.2E-3, 1.4, 1.1E3])
+TEST_RR_interp = np.array([1.2E-3, 1.4, 0.9E3])
 TEST_AGE = np.array([13.7, 0.1])
 
 ###################################################################################################
@@ -292,6 +293,20 @@ class TCInterp(CosmologyTestCase):
 		correct = [-6.998048234536e-02, -2.036513944918e+02]
 		self.assertAlmostEqualArray(self.cosmo.age(TEST_AGE, inverse = True, derivative = 1), correct)		
 
+	def test_ps_derivative(self):
+		correct = [9.283892624857e-01, -2.819106688708e+00]
+		ps_der_z0 = self.cosmo.matterPowerSpectrum(TEST_K, 0.0, derivative = True)
+		self.assertAlmostEqualArray(ps_der_z0, correct)
+		ps_der_z2 = self.cosmo.matterPowerSpectrum(TEST_K, 2.0, derivative = True)
+		self.assertAlmostEqualArray(ps_der_z2, correct)
+
+	def test_sigma_derivative(self):
+		correct = [-1.425800765884e-01, -4.392008200148e-01, -1.794761655074e+00]
+		sigma_der_z0 = self.cosmo.sigma(TEST_RR_interp, 0.0, derivative = True)
+		self.assertAlmostEqualArray(sigma_der_z0, correct)
+		sigma_der_z2 = self.cosmo.sigma(TEST_RR_interp, 2.0, derivative = True)
+		self.assertAlmostEqualArray(sigma_der_z2, correct)
+		
 ###################################################################################################
 # TEST CASE 3: NON-FLAT COSMOLOGY WITH POSITIVE CURVATURE
 ###################################################################################################
