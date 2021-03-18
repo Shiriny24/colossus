@@ -2204,8 +2204,9 @@ class Cosmology(object):
 		Returns
 		-------------------------------------------------------------------------------------------
 		Pk: array_like
-			The matter power spectrum (or its logarithmic derivative if ``derivative == True``); has 
-			the same dimensions as k and units of :math:`({\\rm Mpc}/h)^3`.
+			The matter power spectrum; has the same dimensions as k and units of 
+			:math:`({\\rm Mpc}/h)^3`. Alternatively, the dimensionless logarithmic derivative if 
+			``derivative == True``.
 		"""
 
 		if self.interpolation:
@@ -2245,7 +2246,8 @@ class Cosmology(object):
 				Pk = self._matterPowerSpectrumExact(k, model = model, path = path, 
 												ignore_norm = False)
 
-		Pk *= self.growthFactor(z)**2
+		if not derivative:
+			Pk *= self.growthFactor(z)**2
 
 		return Pk
 	
