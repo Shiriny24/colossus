@@ -39,11 +39,11 @@ If any errors occur, please send the output to the author.
 License & Citing
 ----------------
 
-Main Devloper: Benedikt Diemer (diemer@umd.edu)
+Main Developer: Benedikt Diemer (diemer@umd.edu)
 
-Contributors:  Matt Becker, Michael Joyce, Andrey Kravtsov, Steven Murray, Riccardo Seppi
+Contributors:   Matt Becker, Michael Joyce, Andrey Kravtsov, Steven Murray, Riccardo Seppi
 
-License:       MIT. Copyright (c) 2014-2021
+License:        MIT. Copyright (c) 2014-2021
 
 If you use Colossus for a publication, please cite the code paper 
 ([Diemer 2018](https://ui.adsabs.harvard.edu/abs/2018ApJS..239...35D/abstract)). 
