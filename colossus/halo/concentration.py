@@ -80,7 +80,7 @@ parameter to the :func:`concentration` function:
 	ludlow16       200c             Any                Any         Any             `Ludlow et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2016MNRAS.460.1214L/abstract>`_
 	child18        200c             M > 2.1E11         0 < z < 4   WMAP7           `Child et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2018ApJ...859...55C/abstract>`_
 	diemer19       200c             Any                Any         Any             `Diemer & Joyce 2019 <https://ui.adsabs.harvard.edu/abs/2019ApJ...871..168D/abstract>`_
-	ishiyama20     200c, vir        Any                Any         Any             `Ishiyama et al. 2020 <https://ui.adsabs.harvard.edu/abs/2020arXiv200714720I/abstract>`_
+	ishiyama21     500c, 200c, vir  Any                Any         Any             `Ishiyama et al. 2021 <https://ui.adsabs.harvard.edu/abs/2021MNRAS.506.4210I/abstract>`_
 	============== ================ ================== =========== =============== ============================================================================
 
 The original version of the ``diemer15`` model suffered from a small numerical error, a corrected
@@ -110,7 +110,7 @@ Module contents
 	modelLudlow16
 	modelChild18
 	modelDiemer19
-	modelIshiyama20
+	modelIshiyama21
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -222,9 +222,9 @@ models['diemer19'].mdefs = ['200c']
 models['diemer19'].universal = False
 models['diemer19'].depends_on_statistic = True
 
-models['ishiyama20'] = ConcentrationModel()
-models['ishiyama20'].mdefs = ['200c', 'vir']
-models['ishiyama20'].universal = False
+models['ishiyama21'] = ConcentrationModel()
+models['ishiyama21'].mdefs = ['500c', '200c', 'vir']
+models['ishiyama21'].universal = False
 
 ###################################################################################################
 
@@ -1500,14 +1500,14 @@ def modelDiemer19(M200c, z, statistic = 'median', ps_args = defaults.PS_ARGS):
 
 ###################################################################################################
 
-def modelIshiyama20(M, z, mdef, ps_args = defaults.PS_ARGS, c_type = 'fit'):
+def modelIshiyama21(M, z, mdef, ps_args = defaults.PS_ARGS, c_type = 'fit', halo_sample = 'all'):
 	"""
-	The model of Ishiyama et al 2020.
+	The model of Ishiyama et al 2021.
 	
 	This model constitutes a recalibration of the Diemer & Joyce 2019 model based on the Uchuu
-	simulation. The model provides median concentrations only but was calibrated for both the 200c
-	and vir mass definitions and for concentrations derived from an NFW fit and estimated from 
-	Vmax.
+	simulation. The model provides median concentrations only but was calibrated for the 500c, 
+	200c, and vir mass definitions and for concentrations derived from an NFW fit and estimated 
+	from Vmax.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -1523,7 +1523,10 @@ def modelIshiyama20(M, z, mdef, ps_args = defaults.PS_ARGS, c_type = 'fit'):
 		function, and functions that depend on it such as the power spectrum slope.
 	c_type: str
 		The type of concentration; can be ``fit`` for concentrations derived from an NFW fit or
-		``vmax`` for concentrations derived from the ratio of Vmax and V200c.
+		``vmax`` for concentrations derived from the ratio of Vmax and V200c. Note that no fit is
+		provided for ``mdef = 500c`` and ``c_type = vmax``.
+	halo_sample: str
+		The halo sample on which the fit is based; can be ``all`` or ``relaxed``.
 		
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -1531,52 +1534,115 @@ def modelIshiyama20(M, z, mdef, ps_args = defaults.PS_ARGS, c_type = 'fit'):
 		Halo concentration; has the same dimensions as ``M``.
 	"""
 
+	if not halo_sample in ['all', 'relaxed']:
+		raise Exception('Invalid halo sample (%s) for ishiyama21 model, allowed are all and relaxed.' % halo_sample)
+	
+	if not c_type in ['fit', 'vmax']:
+		raise Exception('Invalid concentration type (%s) for ishiyama21 model, allowed are fit and vmax.' % c_type)
+	
+	if not mdef in ['500c', '200c', 'vir']:
+		raise Exception('Invalid mdef (%s) for ishiyama21 model, allowed are 500c, 200c, and vir.' % mdef)
+	
+	if c_type == 'vmax' and mdef == '500c':
+		raise Exception('Invalid parameter combination for ishiyama21 model, mdef cannot be 500c when c_type is vmax.')
+	
 	if c_type == 'fit':
 		
-		if mdef == '200c':
-			params = dict( \
-			kappa             = 1.19,
-			a_0               = 2.54,
-			a_1               = 1.33,
-			b_0               = 4.04,
-			b_1               = 1.21,
-			c_alpha           = 0.22)
+		if mdef == '500c':
+			
+			if halo_sample == 'all':
+				params = dict( \
+				kappa             = 1.83,
+				a_0               = 1.95,
+				a_1               = 1.17,
+				b_0               = 3.57,
+				b_1               = 0.91,
+				c_alpha           = 0.26)
+			elif halo_sample == 'relaxed':
+				params = dict( \
+				kappa             = 0.38,
+				a_0               = 1.44,
+				a_1               = 3.41,
+				b_0               = 2.86,
+				b_1               = 2.99,
+				c_alpha           = 0.42)
+			
+		elif mdef == '200c':
+			
+			if halo_sample == 'all':
+				params = dict( \
+				kappa             = 1.19,
+				a_0               = 2.54,
+				a_1               = 1.33,
+				b_0               = 4.04,
+				b_1               = 1.21,
+				c_alpha           = 0.22)
+			elif halo_sample == 'relaxed':
+				params = dict( \
+				kappa             = 0.60,
+				a_0               = 2.14,
+				a_1               = 2.63,
+				b_0               = 1.69,
+				b_1               = 6.36,
+				c_alpha           = 0.37)
+							
 		elif mdef == 'vir':
-			params = dict( \
-			kappa             = 1.64,
-			a_0               = 2.67,
-			a_1               = 1.23,
-			b_0               = 3.92,
-			b_1               = 1.30,
-			c_alpha           = -0.19)
-		else:
-			raise Exception('Invalid mdef (%s) for ishiyama20 model, allowed are 200c and vir.' % mdef)
+			
+			if halo_sample == 'all':
+				params = dict( \
+				kappa             = 1.64,
+				a_0               = 2.67,
+				a_1               = 1.23,
+				b_0               = 3.92,
+				b_1               = 1.30,
+				c_alpha           = -0.19)
+			elif halo_sample == 'relaxed':
+				params = dict( \
+				kappa             = 1.22,
+				a_0               = 2.52,
+				a_1               = 1.87,
+				b_0               = 2.13,
+				b_1               = 4.19,
+				c_alpha           = -0.017)				
 
 	elif c_type == 'vmax':
 				
 		if mdef == '200c':
-			params = dict( \
-			kappa             = 1.10,
-			a_0               = 2.30,
-			a_1               = 1.64,
-			b_0               = 1.72,
-			b_1               = 3.60,
-			c_alpha           = 0.32)
+			if halo_sample == 'all':
+				params = dict( \
+				kappa             = 1.10,
+				a_0               = 2.30,
+				a_1               = 1.64,
+				b_0               = 1.72,
+				b_1               = 3.60,
+				c_alpha           = 0.32)
+			elif halo_sample == 'relaxed':
+				params = dict( \
+				kappa             = 1.79,
+				a_0               = 2.15,
+				a_1               = 2.06,
+				b_0               = 0.88,
+				b_1               = 9.24,
+				c_alpha           = 0.51)				
 
 		elif mdef == 'vir':
-			params = dict( \
-			kappa             = 0.76,
-			a_0               = 2.34,
-			a_1               = 1.82,
-			b_0               = 1.83,
-			b_1               = 3.52,
-			c_alpha           = -0.18)
 			
-		else:
-			raise Exception('Invalid mdef (%s) for ishiyama20 model, allowed are 200c and vir.' % mdef)
-
-	else:
-		raise Exception('Invalid concentration type (%s) for ishiyama20 model, allowed are fit and vmax.' % c_type)
+			if halo_sample == 'all':
+				params = dict( \
+				kappa             = 0.76,
+				a_0               = 2.34,
+				a_1               = 1.82,
+				b_0               = 1.83,
+				b_1               = 3.52,
+				c_alpha           = -0.18)
+			elif halo_sample == 'relaxed':
+				params = dict( \
+				kappa             = 2.40,
+				a_0               = 2.27,
+				a_1               = 1.80,
+				b_0               = 0.56,
+				b_1               = 13.24,
+				c_alpha           = 0.079)		
 		
 	return _diemer19_general(M, z, params, ps_args = ps_args)
 
@@ -1597,6 +1663,6 @@ models['klypin16_nu'].func = modelKlypin16fromNu
 models['ludlow16'].func = modelLudlow16
 models['child18'].func = modelChild18
 models['diemer19'].func = modelDiemer19
-models['ishiyama20'].func = modelIshiyama20
+models['ishiyama21'].func = modelIshiyama21
 
 ###################################################################################################
