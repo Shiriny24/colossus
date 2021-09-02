@@ -224,8 +224,6 @@ class HaloDensityProfile():
 		"""
 		Density as a function of radius.
 		
-		Abstract function which must be overwritten by child classes.
-		
 		Parameters
 		-------------------------------------------------------------------------------------------
 		r: array_like

@@ -51,7 +51,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Colossus'
-copyright = '2014-2020, Benedikt Diemer'
+copyright = '2014-2021, Benedikt Diemer'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
