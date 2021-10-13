@@ -6,6 +6,11 @@ See below for a listing of the most important code and interface changes in Colo
 version 1.1.0. You can download older versions from the 
 `PyPi History <https://pypi.org/project/colossus/#history>`_ for Colossus.
 
+.. rubric:: Version 1.2.20 (released XX/XX/2021)
+
+* Small bug fix where evaluating the dark energy density for an array of redshifts sometimes
+  returned a number instead of an array.
+
 .. rubric:: Version 1.2.19 (released 09/02/2021)
 
 * Added the final version of the ``ishiyama21`` concentration model, which was renamed from

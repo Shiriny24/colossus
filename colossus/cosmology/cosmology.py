@@ -772,7 +772,10 @@ class Cosmology(object):
 		
 		if self.de_model == 'lambda':
 			
-			de_z = 1.0
+			if utilities.isArray(z):
+				de_z = np.ones_like(z, np.float)
+			else:
+				de_z = 1.0
 		
 		elif self.de_model == 'w0':
 			
