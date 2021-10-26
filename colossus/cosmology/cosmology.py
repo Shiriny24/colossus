@@ -1188,7 +1188,7 @@ class Cosmology(object):
 		line-of-sight distance is returned,
 		
 		.. math::
-			d_{\\rm com,los}(z) = \\frac{c}{H_0} \\int_{0}^{z} \\frac{1}{E(z)} .
+			d_{\\rm com,los}(z) = \\frac{c}{H_0} \\int_{0}^{z} \\frac{1}{E(z)} {\\rm d}z .
 		
 		However, if ``transverse = False``, the function returns the comoving distance between two
 		points separated by an angle of one radian at ``z_max`` (if ``z_min`` is zero). This 
