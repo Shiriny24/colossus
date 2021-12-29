@@ -369,7 +369,7 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 	def _fitParamDeriv_rho(self, r, mask, N_par_fit):
 
 		x = self.getParameterArray()
-		deriv = np.zeros((N_par_fit, len(r)), np.float)
+		deriv = np.zeros((N_par_fit, len(r)), float)
 		rrs = r / x[1]
 		rho_r = self.density(r)
 		

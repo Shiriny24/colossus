@@ -375,7 +375,7 @@ def concentration(M, mdef, z,
 		
 		# Convert to array
 		M_array, is_array = utilities.getArray(M)
-		M_array = M_array.astype(np.float)
+		M_array = M_array.astype(float)
 		N = len(M_array)
 		mask = np.ones((N), dtype = bool)
 
@@ -1140,7 +1140,7 @@ def modelLudlow16(M200c, z):
 
 	# Make sure we are dealing with an array
 	M200c, is_array = utilities.getArray(M200c)
-	M200c = M200c.astype(np.float)
+	M200c = M200c.astype(float)
 
 	# We solve this model by computing Equations 6 and 7 in Ludlow+16 for a large range of
 	# concentrations. 
@@ -1345,7 +1345,7 @@ def _diemer19_general(M, z, params, ps_args = defaults.PS_ARGS):
 		G_max = np.max(lhs)
 		G = np.linspace(G_min, G_max, n_G)
 		
-		gc_table = np.ones((n_G, n_n), np.float) * -10.0
+		gc_table = np.ones((n_G, n_n), float) * -10.0
 		mins = np.zeros_like(n)
 		maxs = np.zeros_like(n)
 		for i in range(n_n):

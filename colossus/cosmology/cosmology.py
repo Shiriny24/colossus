@@ -773,7 +773,7 @@ class Cosmology(object):
 		if self.de_model == 'lambda':
 			
 			if utilities.isArray(z):
-				de_z = np.ones_like(z, np.float)
+				de_z = np.ones_like(z, float)
 			else:
 				de_z = 1.0
 		
@@ -789,7 +789,7 @@ class Cosmology(object):
 		elif self.de_model == 'user':
 			
 			z_array, is_array = utilities.getArray(z)
-			z_array = z_array.astype(np.float)
+			z_array = z_array.astype(float)
 			de_z = np.zeros_like(z_array)
 			for i in range(len(z_array)):
 				integral, _ = scipy.integrate.quad(_de_integrand, 0, np.log(1.0 + z_array[i]))
@@ -1855,7 +1855,7 @@ class Cosmology(object):
 		# -----------------------------------------------------------------------------------------
 
 		z_arr, is_array = utilities.getArray(z)
-		z_arr = z_arr.astype(np.float)
+		z_arr = z_arr.astype(float)
 		D = np.zeros_like(z_arr)
 		
 		# Create a transition regime centered around z = 10 in log space, but only if relativistic
@@ -2091,7 +2091,7 @@ class Cosmology(object):
 				# k array for the table.
 				if self.print_info:
 					print("Cosmology.matterPowerSpectrum: Computing lookup table.")				
-				data_k = np.zeros((np.sum(self.k_Pk_Nbins) + 1), np.float)
+				data_k = np.zeros((np.sum(self.k_Pk_Nbins) + 1), float)
 				n_regions = len(self.k_Pk_Nbins)
 				k_computed = 0
 				for i in range(n_regions):
@@ -2854,7 +2854,7 @@ class Cosmology(object):
 			if self.print_info:
 				print("correlationFunction: Computing lookup table. This may take a few minutes, please do not interrupt.")
 			
-			data_R = np.zeros((np.sum(self.R_xi_Nbins) + 1), np.float)
+			data_R = np.zeros((np.sum(self.R_xi_Nbins) + 1), float)
 			n_regions = len(self.R_xi_Nbins)
 			k_computed = 0
 

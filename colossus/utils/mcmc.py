@@ -407,7 +407,7 @@ def analyzeChain(chain, param_names = None, percentiles = [68.27, 95.45, 99.73],
 	x_stddev = np.std(chain, axis = 0)
 
 	nperc = len(percentiles)
-	x_percentiles = np.zeros((nperc, 2, nparams), np.float)
+	x_percentiles = np.zeros((nperc, 2, nparams), float)
 	for i in range(nperc):
 		half_percentile = (100.0 - percentiles[i]) / 2.0
 		x_percentiles[i, 0, :] = np.percentile(chain, half_percentile, axis = 0)

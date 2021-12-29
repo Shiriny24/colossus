@@ -382,7 +382,7 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 	elif q_in == 'nu200m':
 		x = nu200m
 	x, is_array = utilities.getArray(x)
-	x = x.astype(np.float)
+	x = x.astype(float)
 	mask, _ = utilities.getArray(mask)
 	x = x[mask]
 	if np.count_nonzero(mask) == 0:
@@ -455,9 +455,9 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 			mspm200m = modelMansfield17MspM200m(x, Om)
 			ret = mspm200m * 200.0 / rspr200m**3
 		elif q_out == 'RspR200m-1s':
-			ret = np.ones((len(x)), np.float) * 0.046
+			ret = np.ones((len(x)), float) * 0.046
 		elif q_out == 'MspM200m-1s':
-			ret = np.ones((len(x)), np.float) * 0.054
+			ret = np.ones((len(x)), float) * 0.054
 	
 	elif model in ['diemer17', 'diemer20']:
 
@@ -491,11 +491,11 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 		else:
 			if q_in == 'nu200m':
 				if q_out == 'RspR200m-1s':
-					ret = np.ones((len(mask)), np.float) * 0.07
+					ret = np.ones((len(mask)), float) * 0.07
 				elif q_out == 'MspM200m-1s':
-					ret = np.ones((len(mask)), np.float) * 0.07
+					ret = np.ones((len(mask)), float) * 0.07
 				elif q_out == 'Deltasp-1s':
-					ret = np.ones((len(mask)), np.float) * 0.15
+					ret = np.ones((len(mask)), float) * 0.15
 				else:
 					raise Exception('Unknown quantity, %s.' % (q_out))
 			else:
@@ -600,10 +600,10 @@ def splashbackRadius(z, mdef, R = None, M = None, c = None, Gamma = None,
 	
 	if R is not None:
 		R, is_array = utilities.getArray(R)
-		R = R.astype(np.float)
+		R = R.astype(float)
 	else:
 		M, is_array = utilities.getArray(M)
-		M = M.astype(np.float)
+		M = M.astype(float)
 	
 	if mdef == '200m':
 		if R is None:
@@ -712,7 +712,7 @@ def modelAdhikari14Deltasp(s, Om):
 		[6.070e+01, 6.233e+01, 6.427e+01, 6.661e+01, 6.947e+01, 7.295e+01, 7.719e+01, 8.227e+01, 8.731e+01, 9.444e+01, 1.026e+02, 1.117e+02, 1.218e+02, 1.326e+02, 1.441e+02, 1.559e+02, 1.679e+02, 1.799e+02, 1.920e+02, 2.045e+02],
 		[5.953e+01, 6.114e+01, 6.304e+01, 6.534e+01, 6.814e+01, 7.156e+01, 7.572e+01, 8.070e+01, 8.565e+01, 9.264e+01, 1.006e+02, 1.096e+02, 1.194e+02, 1.301e+02, 1.413e+02, 1.529e+02, 1.647e+02, 1.764e+02, 1.883e+02, 2.005e+02]])
 
-	Om_ = np.ones((len(s)), np.float) * Om
+	Om_ = np.ones((len(s)), float) * Om
 	interp = scipy.interpolate.RectBivariateSpline(bins_Om, bins_s, Deltasp)
 	Delta = interp(Om_, s, grid = False)
 	

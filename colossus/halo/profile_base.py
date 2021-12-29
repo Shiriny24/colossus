@@ -119,7 +119,7 @@ class HaloDensityProfile():
 		
 			# For convenience, also store at what positions in the par array the outer parameters
 			# were inserted.
-			pp = np.zeros((N_added), np.int)
+			pp = np.zeros((N_added), int)
 			key_list = list(self.par.keys())
 			for j in range(N_added):
 				pp[j] = key_list.index(added_parameters[j])
@@ -287,7 +287,7 @@ class HaloDensityProfile():
 		"""		
 				
 		r_array, is_array = utilities.getArray(r)
-		r_array = r_array.astype(np.float)
+		r_array = r_array.astype(float)
 		rho_outer = np.zeros_like(r_array)
 		for i in range(self.N_outer):
 			rho_outer += self._outer_terms[i].density(r_array)
@@ -345,7 +345,7 @@ class HaloDensityProfile():
 		"""
 		
 		r_use, is_array = utilities.getArray(r)
-		r_use = r_use.astype(np.float)
+		r_use = r_use.astype(float)
 		rho_der = np.zeros_like(r_use)
 		for i in range(len(r_use)):	
 			rho_der[i] = scipy.misc.derivative(self.densityInner, r_use[i], dx = 0.001, n = 1, order = 3)
@@ -376,7 +376,7 @@ class HaloDensityProfile():
 		"""
 		
 		r_array, is_array = utilities.getArray(r)
-		rho_der_outer = np.zeros((len(r_array)), np.float)
+		rho_der_outer = np.zeros((len(r_array)), float)
 		for i in range(self.N_outer):
 			rho_der_outer += self._outer_terms[i].densityDerivativeLin(r)
 		if not is_array:
@@ -473,7 +473,7 @@ class HaloDensityProfile():
 			return density_function(r) * 4.0 * np.pi * r**2
 
 		r_use, is_array = utilities.getArray(r)
-		r_use = r_use.astype(np.float)
+		r_use = r_use.astype(float)
 		M = np.zeros_like(r_use)
 		for i in range(len(r_use)):
 			M[i], _ = scipy.integrate.quad(integrand, self.rmin, r_use[i], epsrel = accuracy)
@@ -657,7 +657,7 @@ class HaloDensityProfile():
 			integrand = integrand_exact
 			
 		r_use, is_array = utilities.getArray(r)
-		r_use = r_use.astype(np.float)
+		r_use = r_use.astype(float)
 		surfaceDensity = np.zeros_like(r_use)
 		log_r_use = np.log(r_use)
 		for i in range(len(r_use)):
@@ -802,7 +802,7 @@ class HaloDensityProfile():
 		"""
 
 		if utilities.isArray(r):	
-			sigma_outer = np.zeros((len(r)), np.float)
+			sigma_outer = np.zeros((len(r)), float)
 		else:
 			sigma_outer = 0.0
 			
@@ -851,7 +851,7 @@ class HaloDensityProfile():
 			integrand = integrand_exact
 
 		r_use, is_array = utilities.getArray(r)
-		r_use = r_use.astype(np.float)
+		r_use = r_use.astype(float)
 		deltaSigma = np.zeros_like(r_use)
 		for i in range(len(r_use)):
 			deltaSigma[i], _ = scipy.integrate.quad(integrand, log_min_r, np.log(r_use[i]), 
@@ -1294,7 +1294,7 @@ class HaloDensityProfile():
 	def _fitLikelihood(self, x, r, q, f, covinv, mask):
 
 		n_eval = len(x)
-		res = np.zeros((n_eval), np.float)
+		res = np.zeros((n_eval), float)
 		for i in range(n_eval):
 			self.setParameterArray(x[i], mask = mask)
 			res[i] = np.exp(-0.5 * self._fitChi2(r, q, f, covinv))
@@ -1385,7 +1385,7 @@ class HaloDensityProfile():
 			# account that cov refers to the fitting parameters which may not be the same as the 
 			# standard profile parameters.
 			sigma = np.sqrt(np.diag(cov))
-			err = np.zeros((2, N_par_fit), np.float)
+			err = np.zeros((2, N_par_fit), float)
 			err[0] = self._fitConvertParamsBack(x_fit - sigma, mask)
 			err[1] = self._fitConvertParamsBack(x_fit + sigma, mask)
 
@@ -1393,7 +1393,7 @@ class HaloDensityProfile():
 			
 			msg = 'WARNING: Could not determine uncertainties on fitted parameters. Set all uncertainties to zero.'
 			print(msg)
-			err = np.zeros((2, N_par_fit), np.float)
+			err = np.zeros((2, N_par_fit), float)
 			
 		dict['x_err'] = err
 
@@ -1618,10 +1618,10 @@ class HaloDensityProfile():
 		if q_cov is not None:
 			covinv = np.linalg.inv(q_cov)
 		elif q_err is not None:
-			covinv = np.zeros((N, N), np.float)
+			covinv = np.zeros((N, N), float)
 			np.fill_diagonal(covinv, 1.0 / q_err**2)
 		else:
-			covinv = np.identity((N), np.float)
+			covinv = np.identity((N), float)
 
 		# Perform the fit
 		if method == 'mcmc':
@@ -1655,7 +1655,7 @@ class HaloDensityProfile():
 					if N_outer_par > 0:
 						_df_outer = []
 						_df_outer.append(self._outer_terms[i].__class__.__dict__[deriv_name])
-						pp = np.zeros((N_outer_par), np.int)
+						pp = np.zeros((N_outer_par), int)
 						for j in range(N_outer_par):
 							pp[j] = np.count_nonzero(mask[:par_pos[j]])
 						_df_outer.append(pp)
@@ -1697,7 +1697,7 @@ class HaloDensityProfile():
 					Q[:, i] *= np.sqrt(Lambda[i])
 				Q = Q.T
 			elif q_err is not None:
-				Q = np.zeros((N, N), np.float)
+				Q = np.zeros((N, N), float)
 				np.fill_diagonal(Q, 1.0 / q_err)
 			else:
 				Q = covinv

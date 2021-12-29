@@ -631,7 +631,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	def _fitParamDeriv_rho(self, r, mask, N_par_fit):
 
 		x = self.getParameterArray()
-		deriv = np.zeros((N_par_fit, len(r)), np.float)
+		deriv = np.zeros((N_par_fit, len(r)), float)
 		rrs = r / x[1]
 		rho_r = x[0] / rrs / (1.0 + rrs) ** 2
 
@@ -709,14 +709,14 @@ def radiusFromPdf(M, c, z, mdef, cumulativePdf,
 		return x
 	
 	M_array, is_array = utilities.getArray(M)
-	M_array = M_array.astype(np.float)
+	M_array = M_array.astype(float)
 	R = mass_so.M_to_R(M, z, mdef)
 	N = len(M_array)
 	x = np.zeros_like(M_array)
 	c_array, _ = utilities.getArray(c)
-	c_array = c_array.astype(np.float)
+	c_array = c_array.astype(float)
 	p_array, _ = utilities.getArray(cumulativePdf)
-	p_array = p_array.astype(np.float)
+	p_array = p_array.astype(float)
 	
 	if interpolate:
 

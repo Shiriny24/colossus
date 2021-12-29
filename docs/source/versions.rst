@@ -10,6 +10,7 @@ version 1.1.0. You can download older versions from the
 
 * Small bug fix where evaluating the dark energy density for an array of redshifts sometimes
   returned a number instead of an array.
+* Convert np.int to int and np.float to float to avoid deprecation warnings.
 
 .. rubric:: Version 1.2.19 (released 09/02/2021)
 

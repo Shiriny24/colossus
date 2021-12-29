@@ -176,7 +176,7 @@ class OuterTerm():
 		"""
 
 		r_array, is_array = utilities.getArray(r)
-		r_array = r_array.astype(np.float)
+		r_array = r_array.astype(float)
 		rho = self._density(r_array)
 		if not is_array:
 			rho = rho[0]
@@ -205,7 +205,7 @@ class OuterTerm():
 		"""
 		
 		r_use, is_array = utilities.getArray(r)
-		r_use = r_use.astype(np.float)
+		r_use = r_use.astype(float)
 		density_der = np.zeros_like(r_use)
 		for i in range(len(r_use)):	
 			density_der[i] = scipy.misc.derivative(self.density, r_use[i], dx = 0.001, n = 1, order = 3)
@@ -267,7 +267,7 @@ class OuterTermMeanDensity(OuterTerm):
 		
 		z = self._getParameters()
 		cosmo = cosmology.getCurrent()
-		rho = np.ones((len(r)), np.float) * cosmo.rho_m(z)
+		rho = np.ones((len(r)), float) * cosmo.rho_m(z)
 		
 		return rho
 
@@ -428,7 +428,7 @@ class OuterTermCorrelationFunction(OuterTerm):
 		mask_not_large = (r_com < R_max)
 		mask = (mask_not_small & mask_not_large)
 		
-		xi_mm = np.zeros((len(r)), np.float)
+		xi_mm = np.zeros((len(r)), float)
 
 		if np.count_nonzero(mask) > 0:
 			xi_mm[mask] = cosmo.correlationFunction(r_com[mask], z)
@@ -596,7 +596,7 @@ class OuterTermPowerLaw(OuterTerm):
 
 	def _fitParamDeriv_rho(self, r, mask, N_par_fit):
 		
-		deriv = np.zeros((N_par_fit, len(r)), np.float)
+		deriv = np.zeros((N_par_fit, len(r)), float)
 		norm, slope, r_pivot, max_rho, rho_m = self._getParameters()
 		
 		rro = r / r_pivot
