@@ -435,7 +435,7 @@ class StorageUser():
 							raise Exception('While inverting interpolator %s, found not monotonically increasing values.' \
 										% (object_name))
 						elif (np.min(np.diff(object_raw[1])) == 0.0):
-							mask = np.ones(len(object_raw[1]), np.bool)
+							mask = np.ones(len(object_raw[1]), bool)
 							mask[1:] = (np.diff(object_raw[1]) > 0.0)
 							n_removed = len(mask) - np.count_nonzero(mask)
 							warnings.warn('While inverting interpolator %s, removed %d flat values from the data.' \

@@ -1872,7 +1872,7 @@ class Cosmology(object):
 			mask2 = z_arr > (zt2)
 			mask3 = mask1 & mask2
 		else:
-			mask1 = np.ones_like(z_arr, np.bool)
+			mask1 = np.ones_like(z_arr, bool)
 			
 		# Compute D from integration at low redshift, or integrate ODEs in the case of non-LCDM
 		# dark energy.

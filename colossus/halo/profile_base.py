@@ -1595,7 +1595,7 @@ class HaloDensityProfile():
 
 		# Check whether the parameter mask makes sense
 		if mask is None:
-			mask = np.ones((self.N_par), np.bool)
+			mask = np.ones((self.N_par), bool)
 		else:
 			if len(mask) != self.N_par:
 				msg = 'Mask has %d elements, expected %d.' % (len(mask), self.N_par)

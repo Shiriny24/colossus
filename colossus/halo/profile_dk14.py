@@ -689,7 +689,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		N_par_fit = np.count_nonzero(mask)
 		N_par_fit_inner = np.count_nonzero(mask_inner)
 
-		log_mask = np.zeros((N_par_fit), np.bool)
+		log_mask = np.zeros((N_par_fit), bool)
 		log_mask[:N_par_fit_inner] = self.fit_log_mask[mask_inner]
 		
 		return log_mask

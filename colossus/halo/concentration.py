@@ -1179,7 +1179,7 @@ def modelLudlow16(M200c, z):
 	# We can now find the solution by interpolation: the concentration in the c_array vector
 	# appears where lhs - rhs = 0.
 	c200c = np.zeros_like(M200c)
-	mask = np.ones_like(M200c, np.bool)
+	mask = np.ones_like(M200c, bool)
 	for i in range(len(M200c)):
 		lhs_rhs = M_ratio - rhs[:, i]
 		mask_nan = np.logical_not(np.isnan(lhs_rhs))
@@ -1336,7 +1336,7 @@ def _diemer19_general(M, z, params, ps_args = defaults.PS_ARGS):
 		# At very low concentration and shallow slopes, the LHS begins to rise again. This will cause
 		# issues with the inversion. We set those parts of the curve to the minimum concentration of 
 		# a given n bin.
-		mask_ascending = np.ones_like(lhs, np.bool)
+		mask_ascending = np.ones_like(lhs, bool)
 		mask_ascending[:-1, :] = (np.diff(lhs, axis = 0) > 0.0)
 		
 		# Create a table of c as a function of G and n. First, use the absolute min and max of G as 
