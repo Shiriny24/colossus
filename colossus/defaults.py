@@ -89,7 +89,7 @@ HALO_PROFILE_DELTA_SIGMA_MIN_R_INTERPOLATE = 1E-6
 # HALO PROFILE (SPECIFIC INNER PROFILES)
 ###################################################################################################
 
-HALO_PRPFOLE_DK14_SELECTED_BY = 'M'
+HALO_PROFILE_SELECTED_BY = 'M'
 """The constructor of the :doc:`halo_profile_dk14` sets the profile parameters to either 
 predict the mean profile of halos selected by their mass (``M``) or mass accretion rate and 
 mass (``Gamma``)."""
@@ -117,6 +117,14 @@ HALO_PROFILE_OUTER_PL_MAXRHO = 1000.0
 density, in units of the mean matter density. If this number is set too high, the power-law profile 
 can lead to a spurious density contribution at very small radii, if it is set too high the 
 power-law term will not contribute at all."""
+
+HALO_PROFILE_OUTER_D22_DELTA_MAX = 200.0
+"""The default asymptotic overdensity of the infalling term at the halo center in the formulation
+of Diemer 2022."""
+
+HALO_PROFILE_OUTER_D22_ZETA = 0.5
+"""The default sharpness of the transition of the infalling profile in the formulation of 
+Diemer 2022."""
 
 ###################################################################################################
 # MCMC

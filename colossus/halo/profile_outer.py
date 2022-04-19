@@ -459,7 +459,7 @@ class OuterTermPowerLaw(OuterTerm):
 	fixed or variable pivot radius,
 	
 	.. math::
-		\\rho(r) = \\frac{a \\times \\rho_m(z)}{\\frac{1}{m} + \\left(\\frac{r}{r_{\\rm pivot}}\\right)^{b}}
+		\\rho(r) = \\frac{a \\times \\rho_{\\rm m}(z)}{\\frac{1}{m} + \\left(\\frac{r}{r_{\\rm pivot}}\\right)^{b}}
 		
 	where a is the normalization in units of the mean density of the universe, b the slope, and m 
 	the maximum contribution to the density this term can make. Without such a limit, sufficiently 
@@ -611,6 +611,197 @@ class OuterTermPowerLaw(OuterTerm):
 		# slope
 		if mask[1]:
 			deriv[counter] = -rho * np.log(rro) / t1 * rro**slope
+		
+		return deriv
+
+###################################################################################################
+# OUTER TERM: POWER LAW
+###################################################################################################
+
+class OuterTermD22(OuterTerm):
+	"""
+	Infalling term according to Diemer 2022.
+	
+	This class implements a power-law outer profile with a free normalization and slope, a 
+	fixed or variable pivot radius, and a smooth transition to a maximum value at small radii,
+	
+	.. math::
+		\\rho(r) = \\delta_1 \\rho_{\\rm m}(z) \\left[ \\left( \\frac{\\delta_1}{\\delta_{\\rm max}} \\right)^{1/\\zeta} + \\left( \\frac{r}{r_{\\rm pivot}} \\right)^{s/\\zeta} \\right]^{-\\zeta} 
+		
+	where :math:`\\delta_1` is the normalization in units of the mean density of the universe, 
+	:math:`s` is the slope, :math:`\\delta_{\\rm max}` is the maximum overdensity at the center of
+	the halo, and :math:`\\zeta` determines how rapidly the profile transitions to this density.
+	Note that a more positive slope means a steeper profile. By default, :math:`\\zeta = 0.5`.
+	In the formulation of Diemer 2022, the pivot radius is :math:`R_{\\rm 200m}`, but other radii
+	can also be chosen.
+	
+	The user can also set the internal parameter names of the input variables. If these names are 
+	matched with an existing profile variable, that variable is used instead, meaning the outer
+	term variable is not independent any more.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	norm: float
+		The density normalization of the term, in units of the mean matter density of the universe.
+	slope: float
+		The slope of the power-law profile.
+	zeta: float
+		The sharpness of the transition to the asymptotic value at the halo center.
+	delta_max: float
+		The asymptotic overdensity at the center of the halo.
+	pivot: str
+		Can either be ``'fixed'``, in which case ``pivot_factor`` determines the pivot radius in 
+		physical units, or the name of one of the profile parameters or options.
+	pivot_factor: float
+		There are fundamentally two ways to set the pivot radius. If ``pivot=='fixed'``, 
+		``pivot_factor`` gives the pivot radius in physical kpc/h. Otherwise, ``pivot`` must 
+		indicate the name of a profile parameter or option. In this case, the pivot radius is set to 
+		``pivot_factor`` times the parameter or option in question. For example, for profiles based 
+		on a scale radius, a pivot radius of :math:`2 r_s` can be set by passing ``pivot = 'rs'`` 
+		and ``pivot_factor = 2.0``. 
+	z: float
+		Redshift.
+	norm_name: str
+		The internal name of the normalization parameter. If this name is set to an already existing
+		profile parameter, the normalization is set to this other profile parameter, and thus not an
+		independent parameter any more.
+	slope_name: str
+		The internal name of the slope parameter. See ``norm_name``.
+	zeta_name: str
+		The internal name of the zeta parameter. See ``norm_name``.
+	delta_max_name: str
+		The internal name of the maximum overdensity parameter. See ``norm_name``.
+	pivot_name: str
+		The internal name of the pivot parameter. See ``norm_name``.
+	pivot_factor_name: str
+		The internal name of the pivot_factor parameter. See ``norm_name``.
+	z_name: str
+		The internal name of the redshift parameter. See ``norm_name``.
+	"""
+	
+	def __init__(self, norm = None, slope = None, zeta = defaults.HALO_PROFILE_OUTER_D22_ZETA, 
+				delta_max = defaults.HALO_PROFILE_OUTER_D22_DELTA_MAX, 
+				pivot = None, pivot_factor = None, z = None, 
+				norm_name = 'pl_norm', slope_name = 'pl_slope', zeta_name = 'zeta', delta_max_name = 'delta_max',
+				pivot_name = 'pivot', pivot_factor_name = 'pivot_factor', z_name = 'z'):
+
+		if norm is None:
+			raise Exception('Normalization of power law cannot be None.')
+		if slope is None:
+			raise Exception('Slope of power law cannot be None.')
+		if zeta is None:
+			raise Exception('Sharpness of transition cannot be None.')
+		if delta_max is None:
+			raise Exception('Maximum overdensity cannot be None.')
+		if pivot is None:
+			raise Exception('Pivot of power law cannot be None.')
+		if pivot_factor is None:
+			raise Exception('Pivot factor of power law cannot be None.')
+		if z is None:
+			raise Exception('Redshift of power law cannot be None.')
+		
+		OuterTerm.__init__(self, 
+						[norm, slope, zeta, delta_max], 
+						[pivot, pivot_factor, z],
+						[norm_name, slope_name, zeta_name, delta_max_name], 
+						[pivot_name, pivot_factor_name, z_name])
+
+		return
+
+	###############################################################################################
+
+	def _getParameters(self):
+
+		r_pivot_id = self.opt[self.term_opt_names[0]]
+		if r_pivot_id == 'fixed':
+			r_pivot = 1.0
+		elif r_pivot_id in self.par:
+			r_pivot = self.par[r_pivot_id]
+		elif r_pivot_id in self.opt:
+			r_pivot = self.opt[r_pivot_id]
+		else:
+			msg = 'Could not find the parameter or option "%s".' % (r_pivot_id)
+			raise Exception(msg)
+
+		norm = self.par[self.term_par_names[0]]
+		slope = self.par[self.term_par_names[1]]
+		zeta = self.par[self.term_par_names[2]]
+		delta_max = self.opt[self.term_par_names[3]]
+		
+		r_pivot *= self.opt[self.term_opt_names[1]]
+		z = self.opt[self.term_opt_names[2]]
+		rho_m = cosmology.getCurrent().rho_m(z)
+		
+		return norm, slope, zeta, delta_max, r_pivot, rho_m
+
+	###############################################################################################
+
+	def _density(self, r):
+		
+		norm, slope, zeta, delta_max, r_pivot, rho_m = self._getParameters()
+		rho = rho_m * norm * ((norm / delta_max)**(1.0 / zeta) + (r / r_pivot)**(slope / zeta))**(-zeta)
+
+		return rho
+
+	###############################################################################################
+
+	def densityDerivativeLin(self, r):
+		"""
+		The linear derivative of the density due to the outer term, :math:`d \\rho / dr`. 
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		derivative: array_like
+			The linear derivative in physical :math:`M_{\odot} h / {\\rm kpc}^2`; has the same 
+			dimensions as r.
+		"""
+
+		norm, slope, zeta, delta_max, r_pivot, rho_m = self._getParameters()
+		
+		t1 = (r / r_pivot)**(slope / zeta)
+		Q = (norm / delta_max)**(1.0 / zeta) + t1
+		drho_dr = -rho_m * norm * slope * t1 / (r * Q**(-zeta - 1.0))
+
+		return drho_dr
+
+	###############################################################################################
+
+	def _fitParamDeriv_rho(self, r, mask, N_par_fit):
+
+		deriv = np.zeros((N_par_fit, len(r)), float)
+		norm, slope, zeta, delta_max, r_pivot, rho_m = self._getParameters()
+
+		zeta_inv = 1.0 / zeta
+		rr = r / r_pivot
+		rrsz = rr**(slope * zeta_inv)
+		dd = norm / delta_max
+		dd1z = dd**zeta_inv
+		Q = dd1z + rrsz
+		rho = rho_m * norm * Q**-zeta
+		dd1zq = dd1z / Q
+		logrr = np.log(rr)
+
+		counter = 0
+		# delta1
+		if mask[0]:
+			deriv[counter] = rho * (1.0 - dd1zq)
+			counter += 1
+		# s
+		if mask[1]:
+			deriv[counter] = -rho * slope / Q * rrsz * logrr
+			counter += 1
+		# deltamax
+		if mask[2]:
+			deriv[counter] = rho * dd1zq
+			counter += 1
+		# zeta
+		if mask[3]:
+			deriv[counter] = rho * np.log(Q) / zeta * (dd1z * np.log(dd) + slope * rrsz * logrr)
 		
 		return deriv
 

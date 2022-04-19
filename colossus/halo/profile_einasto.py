@@ -364,7 +364,7 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 	
 	###############################################################################################
 
-	# Return and array of d rho / d ln(rhos) and d rho / d ln(rs)
+	# Return array of d rho / d ln(rhos), d rho / d ln(rs), and d rho / d ln(alpha)
 	
 	def _fitParamDeriv_rho(self, r, mask, N_par_fit):
 

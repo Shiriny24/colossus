@@ -6,7 +6,7 @@ See below for a listing of the most important code and interface changes in Colo
 version 1.1.0. You can download older versions from the 
 `PyPi History <https://pypi.org/project/colossus/#history>`_ for Colossus.
 
-.. rubric:: Version 1.2.20 (released XX/XX/2021)
+.. rubric:: Version 1.2.20 (released XX/XX/2022)
 
 * Small bug fix where evaluating the dark energy density for an array of redshifts sometimes
   returned a number instead of an array.

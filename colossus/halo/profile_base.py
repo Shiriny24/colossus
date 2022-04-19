@@ -21,6 +21,7 @@ import abc
 import collections
 import six
 import copy
+import warnings
 
 from colossus import defaults
 from colossus.utils import utilities
@@ -665,8 +666,9 @@ class HaloDensityProfile():
 										args = (r_use[i]**2, interp), epsrel = accuracy, limit = 1000)
 			surfaceDensity[i] *= 2.0
 
-		if np.count_nonzero(surfaceDensity < 0.0) > 0:
-			raise Exception('Found negative surface density. Please check the integration limits.')
+		if np.any(surfaceDensity < 0.0):
+			surfaceDensity[surfaceDensity < 0.0] = 0.0
+			warnings.warn('Found negative surface density, set to zero. Please check the integration limits.')
 
 		if not is_array:
 			surfaceDensity = surfaceDensity[0]
