@@ -118,7 +118,7 @@ density, in units of the mean matter density. If this number is set too high, th
 can lead to a spurious density contribution at very small radii, if it is set too high the 
 power-law term will not contribute at all."""
 
-HALO_PROFILE_OUTER_D22_DELTA_MAX = 200.0
+HALO_PROFILE_OUTER_D22_DELTA_MAX = 100.0
 """The default asymptotic overdensity of the infalling term at the halo center in the formulation
 of Diemer 2022."""
 

@@ -1,6 +1,6 @@
 ###################################################################################################
 #
-# profile_d22.py            (c) Benedikt Diemer
+# profile_diemer22.py       (c) Benedikt Diemer
 #     				    	    diemer@umd.edu
 #
 ###################################################################################################
@@ -13,16 +13,21 @@ This module implements the Diemer 2022b form of the density profile. Please see
 Basics
 ---------------------------------------------------------------------------------------------------
 
-The D22 profile (`Diemer XXXX <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_)
-is defined by the following density form:
+The `Diemer (2022b) <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_ profile corresponds to an 
+Einasto profile at small radii but steepens around the truncation radius:
 
 	.. math::
-		\\rho(r) = \\rho_{\\rm s} \\exp \\left\\{ -\frac{2}{\alpha} \left[ \\left( \\frac{r}{r_{\\rm s}} \\right)^\\alpha - 1 \right] -\frac{1}{\beta} \left[ \\left( \\frac{r}{r_{\\rm t}} \\right)^\\beta - \\left( \\frac{r_{\\rm s}}{r_{\\rm t}} \\right)^\\beta \right] \\right\\}
-		
-This profile corresponds to an Einasto profile at small radii, and steepens around the truncation 
-radius. The profile formula has 5 free parameters, but most of those can be fixed to particular 
-values that depend on the mass and mass accretion rate of a halo. The parameters have the 
-following meaning:
+		\\rho(r) = \\rho_{\\rm s} \\exp \\left\\{ -\\frac{2}{\\alpha} \\left[ \\left( \\frac{r}{r_{\\rm s}} \\right)^\\alpha - 1 \\right] -\\frac{1}{\\beta} \\left[ \\left( \\frac{r}{r_{\\rm t}} \\right)^\\beta - \\left( \\frac{r_{\\rm s}}{r_{\\rm t}} \\right)^\\beta \\right] \\right\\}
+
+The meaning of this functional form is easiest to understand by considering its logarithmic slope:
+
+	.. math::
+		\\gamma(r) \\equiv \\frac{{\\rm d} \\ln \\rho}{{\\rm d} \\ln r} = -2 \\left( \\frac{r}{r_{\\rm s}} \\right)^\\alpha - \\left( \\frac{r}{r_{\\rm t}} \\right)^\\beta
+
+The profile form was designed to fit the orbiting component of dark matter halos even at radii 
+where the infalling component comes to dominate. The idea is thus to combine this profile form
+with an infalling profile. The formula has 5 free parameters with well-defined physical 
+interpretations:
 
 .. table::
 	:widths: auto
@@ -34,7 +39,7 @@ following meaning:
 	rs      :math:`r_{\\rm s}`     The scale radius in physical kpc/h
 	alpha   :math:`\\alpha`       Determines how quickly the slope of the inner Einasto profile steepens
 	rt      :math:`r_{\\rm t}`     The radius where the profile steepens beyond the Einasto profile, in physical kpc/h
-	beta    :math:`\\beta`        Sharpness of the steepening
+	beta    :math:`\\beta`        Sharpness of the truncation
 	======= ==================== ===================================================================================
 
 There are two ways to initialize a D22 profile. First, the user can pass the fundamental
@@ -49,7 +54,7 @@ mass accretion rate. The user can choose between those by setting ``selected_by 
 ``selected_by = 'Gamma'``. The latter option results in a more accurate representation
 of the density profile, but the mass accretion rate must be known. 
 
-See the :func:`~halo.profile_d22.D22Profile.deriveParameters` function for more details.
+See the :func:`~halo.profile_diemer22.D22Profile.deriveParameters` function for more details.
 
 .. note::
 	The D22 profile makes sense only if some description of the infalling profile is added. 
@@ -57,22 +62,22 @@ See the :func:`~halo.profile_d22.D22Profile.deriveParameters` function for more 
 Adding outer terms is easy using the wrapper function :func:`getD22ProfileWithInfalling`::
 
 	from colossus.cosmology import cosmology
-	from colossus.halo import profile_d22
+	from colossus.halo import profile_diemer22
 
 	cosmology.setCosmology('planck15')
-	p = profile_d22.getD22ProfileWithInfalling(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir')
+	p = profile_diemer22.getD22ProfileWithInfalling(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir')
 	
 This line will return a D22 profile object with a power-law outer profile and the mean density of
 the universe added by default. Alternatively, the user can pass a list of OuterTerm objects 
 (see documentation of the :class:`~halo.profile_base.HaloDensityProfile` parent class). The user
 can pass additional parameters to the outer profile terms::
 
-	p = profile_d22.getD22ProfileWithInfalling(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir',
+	p = profile_diemer22.getD22ProfileWithInfalling(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir',
 			power_law_slope = 1.2)
 
 or change the outer terms altogether::
 
-	p = profile_d22.getD22ProfileWithInfalling(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir', 
+	p = profile_diemer22.getD22ProfileWithInfalling(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir', 
 			outer_term_names = ['mean', 'cf'], derive_bias_from = None, bias = 1.2)
 
 Some of the outer term parameterizations (namely the 2-halo term) rely, in turn, on properties of 
@@ -198,11 +203,11 @@ class D22Profile(profile_base.HaloDensityProfile):
 				self._fundamentalParameters(M, c, z, mdef, selected_by, Gamma = Gamma,
 									acc_warn = acc_warn, acc_err = acc_err)
 			else:
-				raise Exception('The D22 profile needs either (M, c, z, mdef) or (rhos, rs, rt, alpha, beta, R200m) as parameters.')
+				raise Exception('The D22 profile needs either (M, c, z, mdef) or (rhos, rs, rt, alpha, beta) as parameters.')
 
 		# Sanity checks
 		if self.par['rhos'] < 0.0 or self.par['rs'] < 0.0 or self.par['rt'] < 0.0:
-			raise Exception('The DK14 radius parameters cannot be negative, something went wrong (%s).' % (str(self.par)))
+			raise Exception('The radius parameters cannot be negative, something went wrong (%s).' % (str(self.par)))
 
 		# We need to guess a radius when computing vmax
 		self.r_guess = self.par['rs']
@@ -216,24 +221,26 @@ class D22Profile(profile_base.HaloDensityProfile):
 	@staticmethod
 	def deriveParameters(selected_by, nu200m = None, z = None, Gamma = None):
 		"""
-		Calibration of the parameters :math:`\\alpha`, :math:`\\beta`, :math:`\\gamma`, and :math:`r_{\\rm t}`.
+		Calibration of the parameters :math:`\\alpha`, :math:`\\beta`, and :math:`r_{\\rm t}`.
 
-		This function determines the values of those parameters in the DK14 profile that can be 
-		calibrated based on mass, and potentially mass accretion rate. If the profile is chosen to 
-		model halo samples selected by mass (``selected_by = 'M'``), we set
-		:math:`(\\beta, \\gamma) = (4, 8)`. If the sample is selected by both mass and mass 
-		accretion rate (``selected_by = 'Gamma'``), we set :math:`(\\beta, \\gamma) = (6, 4)`.
+		This function determines the values of those parameters in the Diemer22 profile that can be 
+		calibrated based on mass, and potentially mass accretion rate. The latter is the stronger
+		determinant of the profile shape, but may not always be available (e.g., for mass-selected
+		samples).
 		
-		Those choices result in a different calibration of the turnover radius :math:`r_{\\rm t}`. 
-		If ``selected_by = 'M'``, we use Equation 6 in DK14. Though this relation was originally 
-		calibrated for :math:`\\nu = \\nu_{\\rm vir}`, but the difference is small. If 
-		``selected_by = 'Gamma'``, :math:`r_{\\rm t}` is calibrated from ``Gamma`` and ``z``.
-
-		Finally, the parameter that determines how quickly the Einasto profile steepens with
-		radius, :math:`\\alpha`, is calibrated according to the 
-		`Gao et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.387..536G>`_ relation. This 
-		function was also originally calibrated for :math:`\\nu = \\nu_{\\rm vir}`, but the 
-		difference is small.
+		We set :math:`\\alpha = 0.18` and :math:`\\beta = 3`, which are the default parameters for 
+		individual halo profiles. However, they are not necessarily optimal for any type of 
+		averaged sample, where the optimal values vary. We do not calibrate :math:`\\alpha` with 
+		mass as suggested by
+		`Gao et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.387..536G>`_ because we do 
+		not reproduce this relation in our data in Diemer 2022c.
+		
+		The truncation ratius :math:`r_{\\rm t}` is calibrated as suggested by DK14.
+		If ``selected_by = 'M'``, we use Equation 6 in DK14. If ``selected_by = 'Gamma'``, 
+		:math:`r_{\\rm t}` is calibrated from ``Gamma`` and ``z``. The DK14 calibrations are based
+		on slightly different definitions of peak height (:math:`\\nu = \\nu_{\\rm vir}`), 
+		accretion rate, and for a different fitting function. However, the resulting :math:`r_{\\rm t}`
+		values are very similar to the forthcoming analysis in Diemer 2022c. 
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -246,36 +253,41 @@ class D22Profile(profile_base.HaloDensityProfile):
 		z: float
 			Redshift
 		Gamma: float
-			The mass accretion rate as defined in DK14. This parameter only needs to be passed if 
-			``selected_by == 'Gamma'``.
+			The mass accretion rate over the past dynamical time, which is defined as the crossing 
+			time (see func:`~halo.mass_so.dynamicalTime` or Diemer 2017 for details). The definition 
+			in the DK14 profile is slightly different, but the definitions are close enough that they
+			can be used interchangeably without great loss of accuracy. The Gamma parameter only needs 
+			to be passed if ``selected_by == 'Gamma'``.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		alpha: float
+			The Einasto steepening parameter.
+		beta: float
+			The steepening of the truncation term.
+		rt_R200m: float
+			The truncation radius in units of R200m.
 		"""
 
-		# TODO
+		alpha = 0.18
+		beta = 3.0
 
 		if selected_by == 'M':
-			beta = 4.0
-			#gamma = 8.0
 			if (nu200m is not None):
 				rt_R200m = 1.9 - 0.18 * nu200m
 			else:
-				msg = 'Need nu200m to compute rt.'
-				raise Exception(msg)				
+				raise Exception('Need nu200m to compute rt.')				
 			
 		elif selected_by == 'Gamma':
-			beta = 6.0
-			#gamma = 4.0
 			if (Gamma is not None) and (z is not None):
 				cosmo = cosmology.getCurrent()
 				rt_R200m =  0.43 * (1.0 + 0.92 * cosmo.Om(z)) * (1.0 + 2.18 * np.exp(-Gamma / 1.91))
 			else:
-				msg = 'Need Gamma and z to compute rt.'
-				raise Exception(msg)
+				raise Exception('Need Gamma and z to compute rt.')
 
 		else:
 			msg = "Unknown sample selection, %s." % (selected_by)
 			raise Exception(msg)
-
-		alpha = 0.155 + 0.0095 * nu200m**2
 
 		return alpha, beta, rt_R200m
 
@@ -713,6 +725,8 @@ class D22Profile(profile_base.HaloDensityProfile):
 		
 		rrs = r / rs
 		rrt = r / rt
+		
+		# TODO
 		print(rrs)
 		print(alpha)
 		rrsa = rrs**alpha

@@ -8,6 +8,13 @@ version 1.1.0. You can download older versions from the
 
 .. rubric:: Version 1.2.20 (released XX/XX/2022)
 
+The main content of this update are numerous changes in the halo density profiles module:
+
+* Added the new Diemer 2022 density profile (orbiting and infalling terms).
+* Numerical derivative is more efficient.
+
+A few other changes:
+
 * Small bug fix where evaluating the dark energy density for an array of redshifts sometimes
   returned a number instead of an array.
 * Convert np.int to int and np.float to float to avoid deprecation warnings.

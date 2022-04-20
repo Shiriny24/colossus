@@ -126,6 +126,12 @@ class OuterTerm():
 		for i in range(self.N_opt):
 			self.term_opt[self.term_opt_names[i]] = opt_array[i]
 
+		# Set pointers to par/opt arrays. These will be overwritten with the total arrays from the
+		# parent class if this outer term is added to an inner term, but they allow us to use the
+		# outer term standalone as well.
+		self.par = self.term_par
+		self.opt = self.term_opt
+
 		return
 
 	###############################################################################################
@@ -206,9 +212,7 @@ class OuterTerm():
 		
 		r_use, is_array = utilities.getArray(r)
 		r_use = r_use.astype(float)
-		density_der = np.zeros_like(r_use)
-		for i in range(len(r_use)):	
-			density_der[i] = scipy.misc.derivative(self.density, r_use[i], dx = 0.001, n = 1, order = 3)
+		density_der = scipy.misc.derivative(self.density, r_use, dx = 0.001, n = 1, order = 3)
 		if not is_array:
 			density_der = density_der[0]
 			
@@ -711,7 +715,7 @@ class OuterTermD22(OuterTerm):
 	###############################################################################################
 
 	def _getParameters(self):
-
+		
 		r_pivot_id = self.opt[self.term_opt_names[0]]
 		if r_pivot_id == 'fixed':
 			r_pivot = 1.0
@@ -726,7 +730,7 @@ class OuterTermD22(OuterTerm):
 		norm = self.par[self.term_par_names[0]]
 		slope = self.par[self.term_par_names[1]]
 		zeta = self.par[self.term_par_names[2]]
-		delta_max = self.opt[self.term_par_names[3]]
+		delta_max = self.par[self.term_par_names[3]]
 		
 		r_pivot *= self.opt[self.term_opt_names[1]]
 		z = self.opt[self.term_opt_names[2]]
@@ -765,7 +769,9 @@ class OuterTermD22(OuterTerm):
 		
 		t1 = (r / r_pivot)**(slope / zeta)
 		Q = (norm / delta_max)**(1.0 / zeta) + t1
-		drho_dr = -rho_m * norm * slope * t1 / (r * Q**(-zeta - 1.0))
+		
+		rho = rho_m * norm * Q**(-zeta)
+		drho_dr = -(rho / r) * slope / Q * t1
 
 		return drho_dr
 

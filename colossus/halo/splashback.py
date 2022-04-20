@@ -317,11 +317,12 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 		to be mixed up with the definition ``rspdef`` used in the ``diemer20`` model.
 	rspdef: str
 		The definition of the splashback radius. This parameter is ignored by most models, but 
-		used by the ``diemer20`` model to distinguish the ``mean`` of the apocenter distribution
-		or higher percentiles (e.g. ``percentile75``). The function also accepts the newer notation
-		used in the SPARTA code, namely ``sp-apr-mn`` for the mean and ``sp-apr-p75`` and so on
-		for percentiles. For models that use this parameter (``diemer17`` and ``diemer20``), it 
-		must be given, otherwise the function throws an error.
+		used by the ``diemer17`` and ``diemer20`` models to distinguish the ``mean`` of the 
+		apocenter distribution or higher percentiles (e.g. ``percentile75``). The function also 
+		accepts the newer notation used in the SPARTA code, namely ``sp-apr-mn`` for the mean and 
+		``sp-apr-p75`` and so on for percentiles. For models that use this parameter (``diemer17`` 
+		and ``diemer20``), it must be given, otherwise the function throws an error. The acceptable
+		range of percentiles is between 50 and 90.
 	
 	Returns
 	-----------------------------------------------------------------------------------------------

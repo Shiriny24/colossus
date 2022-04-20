@@ -159,3 +159,4 @@ The following documents describe the specific implementations for each profile m
     halo_profile_hernquist
     halo_profile_nfw
     halo_profile_dk14
+    halo_profile_diemer22

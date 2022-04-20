@@ -347,9 +347,7 @@ class HaloDensityProfile():
 		
 		r_use, is_array = utilities.getArray(r)
 		r_use = r_use.astype(float)
-		rho_der = np.zeros_like(r_use)
-		for i in range(len(r_use)):	
-			rho_der[i] = scipy.misc.derivative(self.densityInner, r_use[i], dx = 0.001, n = 1, order = 3)
+		rho_der = scipy.misc.derivative(self.densityInner, r_use, dx = 0.001, n = 1, order = 3)
 		if not is_array:
 			rho_der = rho_der[0]
 
