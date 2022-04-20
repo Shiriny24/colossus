@@ -140,7 +140,7 @@ class HaloDensityProfile():
 		Returns an array of the profile parameters.
 		
 		The profile parameters are internally stored in an ordered dictionary. For some 
-		applications (e.g., fitting), a simply array is more appropriate.
+		applications (e.g., fitting), a simple array is more appropriate.
 		
 		Parameters
 		-------------------------------------------------------------------------------------------

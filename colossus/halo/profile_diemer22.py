@@ -167,7 +167,6 @@ class D22Profile(profile_base.HaloDensityProfile):
 		# Set the fundamental variables par_names and opt_names
 		self.par_names = ['rhos', 'rs', 'rt', 'alpha', 'beta']
 		self.opt_names = ['selected_by', 'Gamma', 'R200m', 'z']
-		#self.fit_log_mask = np.array([False, False, False, False, False])
 		
 		# Run the constructor
 		profile_base.HaloDensityProfile.__init__(self, outer_terms = outer_terms)
@@ -682,21 +681,7 @@ class D22Profile(profile_base.HaloDensityProfile):
 	
 	###############################################################################################
 
-	# When fitting the DK14 profile, use a mixture of linear and logarithmic parameters. Only 
-	# convert the parameters for the inner profile though.
-
-# 	def _getLogMask(self, mask):
-# 
-# 		mask_inner = mask[:self.N_par_inner]
-# 		N_par_fit = np.count_nonzero(mask)
-# 		N_par_fit_inner = np.count_nonzero(mask_inner)
-# 
-# 		log_mask = np.zeros((N_par_fit), bool)
-# 		log_mask[:N_par_fit_inner] = self.fit_log_mask[mask_inner]
-# 		
-# 		return log_mask
-
-	###############################################################################################
+	# We fit all parameters in log space
 
 	def _fitConvertParams(self, p, mask):
 
@@ -710,8 +695,6 @@ class D22Profile(profile_base.HaloDensityProfile):
 
 	###############################################################################################
 	
-	# TODO
-	
 	def _fitParamDeriv_rho(self, r, mask, N_par_fit):
 
 		x = self.getParameterArray()
@@ -719,16 +702,12 @@ class D22Profile(profile_base.HaloDensityProfile):
 
 		rhos = x[0]
 		rs = x[1]
-		alpha = x[2]
-		rt = x[3]
+		rt = x[2]
+		alpha = x[3]
 		beta = x[4]
 		
 		rrs = r / rs
 		rrt = r / rt
-		
-		# TODO
-		print(rrs)
-		print(alpha)
 		rrsa = rrs**alpha
 		rrtb = rrt**beta
 		rsrt = rs / rt
@@ -736,9 +715,6 @@ class D22Profile(profile_base.HaloDensityProfile):
 
 		s = -2.0 / alpha * (rrsa - 1.0) - 1.0 / beta * (rrtb - rsrtb)
 		rho = rhos * utilities.safeExp(s)
-		
-		print(rho.shape, deriv.shape)
-		
 		
 		counter = 0
 		# rhos
@@ -749,13 +725,13 @@ class D22Profile(profile_base.HaloDensityProfile):
 		if mask[1]:
 			deriv[counter] = 2.0 * rrsa + rsrtb
 			counter += 1
-		# alpha
-		if mask[2]:
-			deriv[counter] = 2.0 / alpha * (rrsa * (1.0 - alpha * np.log(rrs)) - 1.0)
-			counter += 1
 		# rt
-		if mask[3]:
+		if mask[2]:
 			deriv[counter] = rrtb - rsrtb
+			counter += 1
+		# alpha
+		if mask[3]:
+			deriv[counter] = 2.0 / alpha * (rrsa * (1.0 - alpha * np.log(rrs)) - 1.0)
 			counter += 1
 		# beta
 		if mask[4]:
