@@ -17,12 +17,8 @@ The D22 profile (`Diemer XXXX <http://adsabs.harvard.edu/abs/2014ApJ...789....1D
 is defined by the following density form:
 
 	.. math::
-		\\rho(r) &= \\rho_{\\rm inner} \\times f_{\\rm trans} + \\rho_{\\rm outer}
+		\\rho(r) = \\rho_{\\rm s} \\exp \\left\\{ -\frac{2}{\alpha} \left[ \\left( \\frac{r}{r_{\\rm s}} \\right)^\\alpha - 1 \right] -\frac{1}{\beta} \left[ \\left( \\frac{r}{r_{\\rm t}} \\right)^\\beta - \\left( \\frac{r_{\\rm s}}{r_{\\rm t}} \\right)^\\beta \right] \\right\\}
 		
-		\\rho_{\\rm inner} &= \\rho_{\\rm Einasto} = \\rho_{\\rm s} \\exp \\left( -\\frac{2}{\\alpha} \\left[ \\left( \\frac{r}{r_{\\rm s}} \\right)^\\alpha -1 \\right] \\right)
-
-		f_{\\rm trans} &= \\left[ 1 + \\left( \\frac{r}{r_{\\rm t}} \\right)^\\beta \\right]^{-\\frac{\\gamma}{\\beta}}
-
 This profile corresponds to an Einasto profile at small radii, and steepens around the truncation 
 radius. The profile formula has 5 free parameters, but most of those can be fixed to particular 
 values that depend on the mass and mass accretion rate of a halo. The parameters have the 
@@ -138,8 +134,11 @@ class D22Profile(profile_base.HaloDensityProfile):
 		rate ``Gamma``. This parameter influences how some of the fixed parameters in the 
 		profile are set, in particular those that describe the steepening term.
 	Gamma: float
-		The mass accretion rate as defined in DK14. This parameter only needs to be passed if 
-		``selected_by == 'Gamma'``.
+		The mass accretion rate over the past dynamical time, which is defined as the crossing 
+		time (see func:`~halo.mass_so.dynamicalTime` or Diemer 2017 for details). The definition 
+		in the DK14 profile is slightly different, but the definitions are close enough that they
+		can be used interchangeably without great loss of accuracy. The Gamma parameter only needs 
+		to be passed if ``selected_by == 'Gamma'``.
 	acc_warn: float
 		If the function achieves a relative accuracy in matching ``M`` less than this value, a 
 		warning is printed.
