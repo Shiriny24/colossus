@@ -174,7 +174,7 @@ def evolveSO(M_i, c_i, z_i, mdef_i, z_f, mdef_f,
 	if profile == 'nfw':
 		
 		# We do not instantiate NFW profile objects, but instead use the faster static functions
-		rhos, rs = profile_nfw.NFWProfile.fundamentalParameters(M_i, c_i, z_i, mdef_i)
+		rhos, rs = profile_nfw.NFWProfile.nfwParameters(M_i, c_i, z_i, mdef_i)
 		density_threshold = mass_so.densityThreshold(z_f, mdef_f)
 		cnew = profile_nfw.NFWProfile.xDelta(rhos, density_threshold)
 		Rnew = rs * cnew

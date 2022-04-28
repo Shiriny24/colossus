@@ -75,33 +75,19 @@ class HernquistProfile(profile_base.HaloDensityProfile):
 	# CONSTRUCTOR
 	###############################################################################################
 
-	def __init__(self, rhos = None, rs = None,
-				M = None, c = None, z = None, mdef = None, **kwargs):
+	def __init__(self, **kwargs):
 	
 		self.par_names = ['rhos', 'rs']
 		self.opt_names = []
-		profile_base.HaloDensityProfile.__init__(self, **kwargs)
-
-		# The fundamental way to define a Hernquist profile by the central density and scale radius
-		if rhos is not None and rs is not None:
-			self.par['rhos'] = rhos
-			self.par['rs'] = rs
-
-		# Alternatively, the user can give a mass and concentration, together with mass definition
-		# and redshift.
-		elif M is not None and c is not None and mdef is not None and z is not None:
-			self.par['rhos'], self.par['rs'] = self.fundamentalParameters(M, c, z, mdef)
 		
-		else:
-			msg = 'A Hernquist profile must be define either using rhos and rs, or M, c, mdef, and z.'
-			raise Exception(msg)
+		profile_base.HaloDensityProfile.__init__(self, **kwargs)
 		
 		return
 
 	###############################################################################################
 
 	@classmethod
-	def fundamentalParameters(cls, M, c, z, mdef):
+	def hernquistParameters(cls, M, c, z, mdef):
 		"""
 		The fundamental Hernquist parameters, :math:`\\rho_{\\rm s}` and :math:`r_{\\rm s}`, from 
 		mass and concentration.
@@ -138,6 +124,34 @@ class HernquistProfile(profile_base.HaloDensityProfile):
 		return rhos, rs
 
 	###############################################################################################
+
+	def nativeParameters(self, M, c, z, mdef, **kwargs):
+		"""
+		The native Hernquist parameters, :math:`\\rho_s` and :math:`r_{\\rm s}`, from mass and 
+		concentration.
+		
+		This routine is equivalent to :func:`nativeParameters`, but it must be called from within
+		an HernquistProfile object and sets the parameters internally instead of returning them.
+	
+		Parameters
+		-------------------------------------------------------------------------------------------
+		M: array_like
+			Spherical overdensity mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
+		c: array_like
+			The concentration, :math:`c = R / r_{\\rm s}`, corresponding to the given halo mass and 
+			mass definition; must have the same dimensions as ``M``.
+		z: float
+			Redshift
+		mdef: str
+			The mass definition in which ``M`` and ``c`` are given. See :doc:`halo_mass` for 
+			details.
+		"""
+		
+		self.par['rhos'], self.par['rs'] = self.hernquistParameters(M, c, z, mdef, **kwargs)
+		
+		return
+
+	###############################################################################################
 	
 	def densityInner(self, r):
 		"""
@@ -162,7 +176,7 @@ class HernquistProfile(profile_base.HaloDensityProfile):
 
 	###############################################################################################
 
-	def enclosedMassInner(self, r, accuracy = None, ):
+	def enclosedMassInner(self, r, accuracy = None):
 		"""
 		The mass enclosed within radius r due to the inner profile term.
 

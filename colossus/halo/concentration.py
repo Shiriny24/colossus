@@ -411,7 +411,9 @@ def concentration(M, mdef, z,
 						MDelta = scipy.optimize.brentq(eq, M_min, M_max, args = args_solver)
 					else:
 						j += 1
-				except Exception:
+				except Exception as e:
+					print('ERROR')
+					print(e)
 					break
 
 			if MDelta is None or MDelta < 0.1:

@@ -92,26 +92,12 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	# CONSTRUCTOR
 	###############################################################################################
 
-	def __init__(self, rhos = None, rs = None,
-				M = None, c = None, z = None, mdef = None, **kwargs):
+	def __init__(self, **kwargs):
 		
 		self.par_names = ['rhos', 'rs']
 		self.opt_names = []
-		profile_base.HaloDensityProfile.__init__(self, **kwargs)
-
-		# The fundamental way to define an NFW profile by the central density and scale radius
-		if rhos is not None and rs is not None:
-			self.par['rhos'] = rhos
-			self.par['rs'] = rs
-
-		# Alternatively, the user can give a mass and concentration, together with mass definition
-		# and redshift.
-		elif M is not None and c is not None and mdef is not None and z is not None:
-			self.par['rhos'], self.par['rs'] = self.fundamentalParameters(M, c, z, mdef)
 		
-		else:
-			msg = 'An NFW profile must be define either using rhos and rs, or M, c, mdef, and z.'
-			raise Exception(msg)
+		profile_base.HaloDensityProfile.__init__(self, **kwargs)
 		
 		return
 
@@ -120,9 +106,9 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	###############################################################################################
 
 	@classmethod
-	def fundamentalParameters(cls, M, c, z, mdef):
+	def nfwParameters(cls, M, c, z, mdef):
 		"""
-		The fundamental NFW parameters, :math:`\\rho_s` and :math:`r_{\\rm s}`, from mass and 
+		The native NFW parameters, :math:`\\rho_s` and :math:`r_{\\rm s}`, from mass and 
 		concentration.
 		
 		This routine is called in the constructor of the NFW profile class (unless :math:`\\rho_s` 
@@ -155,6 +141,34 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		rhos = M / rs**3 / 4.0 / np.pi / cls.mu(c)
 		
 		return rhos, rs
+
+	###############################################################################################
+
+	def nativeParameters(self, M, c, z, mdef, **kwargs):
+		"""
+		The native NFW parameters, :math:`\\rho_s` and :math:`r_{\\rm s}`, from mass and 
+		concentration.
+		
+		This routine is equivalent to :func:`nativeParameters`, but it must be called from within
+		an NFWProfile object and sets the parameters internally instead of returning them.
+	
+		Parameters
+		-------------------------------------------------------------------------------------------
+		M: array_like
+			Spherical overdensity mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
+		c: array_like
+			The concentration, :math:`c = R / r_{\\rm s}`, corresponding to the given halo mass and 
+			mass definition; must have the same dimensions as ``M``.
+		z: float
+			Redshift
+		mdef: str
+			The mass definition in which ``M`` and ``c`` are given. See :doc:`halo_mass` for 
+			details.
+		"""
+		
+		self.par['rhos'], self.par['rs'] = self.nfwParameters(M, c, z, mdef, **kwargs)
+		
+		return
 
 	###############################################################################################
 
@@ -394,7 +408,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 
 	###############################################################################################
 
-	def enclosedMassInner(self, r):
+	def enclosedMassInner(self, r, accuracy = None):
 		"""
 		The mass enclosed within radius r due to the inner profile term.
 
@@ -402,8 +416,6 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		-------------------------------------------------------------------------------------------
 		r: array_like
 			Radius in physical kpc/h; can be a number or a numpy array.
-		accuracy: float
-			The minimum accuracy of the integration.
 			
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -512,7 +524,8 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	###############################################################################################
 	
 	# For the NFW profile, rmax is a constant multiple of the scale radius since vc is maximized
-	# where ln(1+x) = (2x**2 + x) / (1+x)**2
+	# where ln(1+x) = (2x**2 + x) / (1+x)**2. If there are outer terms, however, this does not
+	# hold.
 	
 	def Vmax(self):
 		"""
@@ -528,10 +541,13 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		See also
 		-------------------------------------------------------------------------------------------
 		circularVelocity: The circular velocity, :math:`v_c \\equiv \\sqrt{GM(<r)/r}`.
-		"""		
+		"""
 		
-		rmax = 2.16258 * self.par['rs']
-		vmax = self.circularVelocity(rmax)
+		if self.N_outer == 0:
+			rmax = 2.16258 * self.par['rs']
+			vmax = self.circularVelocity(rmax)
+		else:
+			rmax, vmax = profile_base.HaloDensityProfile.__init__(self)
 		
 		return vmax, rmax
 
@@ -539,18 +555,25 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	
 	# This equation is 0 when the enclosed density matches the given density_threshold. This 
 	# function matches the abstract interface in HaloDensityProfile, but for the NFW profile it is
-	# easier to solve the equation in x (see the _thresholdEquationX() function).
+	# easier to solve the equation in x (see the _thresholdEquationX() function). However, if there
+	# are outer terms, we need to take those into account.
 		
 	def _thresholdEquation(self, r, density_threshold):
+
+		if self.N_outer == 0:
+			ret = self._thresholdEquationX(r / self.par['rs'], self.par['rhos'], density_threshold)
+		else:
+			ret = profile_base.HaloDensityProfile._thresholdEquation(self, r, density_threshold)
 		
-		return self._thresholdEquationX(r / self.par['rs'], self.par['rhos'], density_threshold)
+		return ret
 
 	###############################################################################################
 
 	# Return the spherical overdensity radius (in kpc / h) for a given mass definition and redshift. 
 	# This function is overwritten for the NFW profile as we have a better guess at the resulting
 	# radius, namely the scale radius. Thus, the user can specify a minimum and maximum concentra-
-	# tion that is considered.
+	# tion that is considered. If there are outer terms, we need to fall back to the general 
+	# method.
 
 	def RDelta(self, z, mdef):
 		"""
@@ -574,11 +597,14 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		MDelta: The spherical overdensity mass of a given mass definition.
 		RMDelta: The spherical overdensity radius and mass of a given mass definition.
 		"""		
+
+		if self.N_outer == 0:
+			density_threshold = mass_so.densityThreshold(z, mdef)
+			x = self.xDelta(self.par['rhos'], density_threshold)
+			R = x * self.par['rs']
+		else:
+			R = profile_base.HaloDensityProfile.RDelta(self, z, mdef)
 	
-		density_threshold = mass_so.densityThreshold(z, mdef)
-		x = self.xDelta(self.par['rhos'], density_threshold)
-		R = x * self.par['rs']
-		
 		return R
 
 	###############################################################################################

@@ -52,7 +52,10 @@ class HaloDensityProfile():
 		A list of OuterTerm objects to add to the density profile. 
 	"""
 
-	def __init__(self, outer_terms = []):
+	def __init__(self, outer_terms = [], **kwargs):
+		
+		# -----------------------------------------------------------------------------------------
+		# Set defaults
 		
 		# The radial limits within which the profile is valid. These can be used as integration
 		# limits for surface density, for example.
@@ -66,10 +69,16 @@ class HaloDensityProfile():
 		
 		# For some functions, such as Vmax, we need an intial guess for a radius (in kpc/h).
 		self.r_guess = 100.0
+
+		# -----------------------------------------------------------------------------------------
+		# Process parameter and option names
 		
 		# The parameters of the profile are stored in a dictionary. We separately store the number
 		# of parameters for the inner profile because the total number may include additional 
 		# parameters of the outer profile.
+		if not 'rhos' in self.par_names:
+			raise Exception('Derived profile classes must have a normalization parameter called "rhos". Found %s.' \
+						% (str(self.par_names)))
 		self.par = collections.OrderedDict()
 		self.N_par = len(self.par_names)
 		self.N_par_inner = len(self.par_names)
@@ -89,6 +98,9 @@ class HaloDensityProfile():
 		self.quantities['M'] = self.enclosedMass
 		self.quantities['Sigma'] = self.surfaceDensity
 		self.quantities['DeltaSigma'] = self.deltaSigma
+
+		# -----------------------------------------------------------------------------------------
+		# Deal with outer profiles
 
 		# Now we also add any parameters for the outer term(s)
 		self._outer_terms = copy.copy(outer_terms)
@@ -131,8 +143,51 @@ class HaloDensityProfile():
 		self.N_par = len(self.par)
 		self.N_opt = len(self.opt)
 
-		return
+		# -----------------------------------------------------------------------------------------
+		# Set profile parameters from keyword arguments, either native or from M/c/z
 
+		# Check whether all native parameters are given
+		native_found = True
+		for p in self.par:
+			if not p in kwargs:
+				native_found = False
+				break
+		
+		if native_found:
+			for p in self.par:
+				self.par[p] = kwargs[p]
+		else:
+			mcz_found = True
+			mcz_args = copy.copy(kwargs)
+			for p in ['M', 'c', 'mdef', 'z']:
+				del mcz_args[p]
+				if not p in kwargs:
+					mcz_found = False
+					break
+			if mcz_found:
+				self.nativeParameters(kwargs['M'], kwargs['c'], kwargs['z'], kwargs['mdef'], **mcz_args)
+			else:
+				raise Exception('A profile must be define either using its native parameters (%s), or (M, c, mdef, z).' % (str(self.par.keys())))
+		
+		return
+	
+	###############################################################################################
+
+	@abc.abstractmethod
+	def nativeParameters(self, M, c, z, mdef, **kwargs):
+		"""
+		Determine the native profile parameters from mass and concentration.
+		
+		Abstract function which must be overwritten by child classes.
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		kwargs: kwargs
+			Parameters passed to the constructor of the child class.
+		"""		
+		
+		return
+	
 	###############################################################################################
 
 	def getParameterArray(self, mask = None):
@@ -501,7 +556,7 @@ class HaloDensityProfile():
 			as ``r``.
 		"""		
 
-		return self._enclosedMass(r, accuracy, self.density)
+		return self.enclosedMassInner(r, accuracy = accuracy) + self.enclosedMassOuter(r, accuracy = accuracy)
 
 	###############################################################################################
 

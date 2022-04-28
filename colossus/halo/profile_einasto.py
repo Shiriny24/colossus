@@ -95,32 +95,12 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 	# CONSTRUCTOR
 	###############################################################################################
 
-	def __init__(self, rhos = None, rs = None, alpha = None,
-				M = None, c = None, z = None, mdef = None, **kwargs):
+	def __init__(self, **kwargs):
 	
 		self.par_names = ['rhos', 'rs', 'alpha']
 		self.opt_names = []
+		
 		profile_base.HaloDensityProfile.__init__(self, **kwargs)
-
-		# The fundamental way to define an Einasto profile by the density at the scale radius, 
-		# the scale radius, and alpha.
-		if rhos is not None and rs is not None and alpha is not None:
-			self.par['rhos'] = rhos
-			self.par['rs'] = rs
-			self.par['alpha'] = alpha
-			
-		# Alternatively, the user can give a mass and concentration, together with mass definition
-		# and redshift. Passing alpha is now optional since it can also be estimated from the
-		# Gao et al. 2008 relation between alpha and peak height. This relation was calibrated for
-		# nu_vir, so if the given mass definition is not 'vir' we convert the given mass to Mvir
-		# assuming an NFW profile with the given mass and concentration. This leads to a negligible
-		# inconsistency, but solving for the correct alpha iteratively would be much slower.
-		elif M is not None and c is not None and mdef is not None and z is not None:
-			self.fundamentalParameters(M, c, z, mdef, alpha)
-					
-		else:
-			msg = 'An Einasto profile must be defined either using rhos, rs, and alpha, or M, c, mdef, and z.'
-			raise Exception(msg)
 
 		# We need an initial radius to guess Rmax
 		self.r_guess = self.par['rs']
@@ -134,7 +114,13 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 	# METHODS BOUND TO THE CLASS
 	###############################################################################################
 
-	def fundamentalParameters(self, M, c, z, mdef, alpha = None):
+	# Passing alpha is optional since it can also be estimated from the
+	# Gao et al. 2008 relation between alpha and peak height. This relation was calibrated for
+	# nu_vir, so if the given mass definition is not 'vir' we convert the given mass to Mvir
+	# assuming an NFW profile with the given mass and concentration. This leads to a negligible
+	# inconsistency, but solving for the correct alpha iteratively would be much slower.
+
+	def nativeParameters(self, M, c, z, mdef, alpha = None):
 		"""
 		The fundamental Einasto parameters, :math:`\\rho_{\\rm s}`, :math:`r_{\\rm s}`, and 
 		:math:`\\alpha` from mass and concentration.

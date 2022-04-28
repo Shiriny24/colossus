@@ -156,20 +156,12 @@ class D22Profile(profile_base.HaloDensityProfile):
 	# CONSTRUCTOR
 	###############################################################################################
 	
-	def __init__(self, 
-				rhos = None, rs = None, rt = None, alpha = None, beta = None,
-				M = None, c = None, mdef = None, 
-				z = None, selected_by = defaults.HALO_PROFILE_SELECTED_BY, Gamma = None, 
-				outer_terms = [], 
-				acc_warn = defaults.HALO_PROFILE_DK14_ACC_WARN, 
-				acc_err = defaults.HALO_PROFILE_DK14_ACC_ERR):
+	def __init__(self, z = None, selected_by = defaults.HALO_PROFILE_SELECTED_BY, Gamma = None, 
+				**kwargs):
 
 		# Set the fundamental variables par_names and opt_names
 		self.par_names = ['rhos', 'rs', 'rt', 'alpha', 'beta']
 		self.opt_names = ['selected_by', 'Gamma', 'R200m', 'z']
-		
-		# Run the constructor
-		profile_base.HaloDensityProfile.__init__(self, outer_terms = outer_terms)
 		
 		# The following parameters are not constants, they are temporarily changed by certain 
 		# functions.
@@ -177,33 +169,16 @@ class D22Profile(profile_base.HaloDensityProfile):
 		self.accuracy_radius = 1E-4
 
 		if z is None:
-			raise Exception('Need the redshift z to construct a DK14 profile.')
+			raise Exception('Need the redshift z to construct a Diemer22 profile.')
 
 		self.opt['selected_by'] = selected_by
 		self.opt['Gamma'] = Gamma
 		self.opt['z'] = z
 		self.opt['R200m'] = None
 		
-		if rhos is not None and rs is not None and rt is not None and alpha is not None \
-			and beta is not None:
-			
-			self.par['rhos'] = rhos
-			self.par['rs'] = rs
-			self.par['rt'] = rt
-			self.par['alpha'] = alpha
-			self.par['beta'] = beta
-			
-			# We need to call the update function to compute R200m or any other parameters that
-			# change with the fundamental profile parameters.
-			self.update()
-			
-		else:
-			if M is not None and c is not None and z is not None and mdef is not None:
-				self._fundamentalParameters(M, c, z, mdef, selected_by, Gamma = Gamma,
-									acc_warn = acc_warn, acc_err = acc_err)
-			else:
-				raise Exception('The D22 profile needs either (M, c, z, mdef) or (rhos, rs, rt, alpha, beta) as parameters.')
-
+		# Run the constructor
+		profile_base.HaloDensityProfile.__init__(self, **kwargs)
+	
 		# Sanity checks
 		if self.par['rhos'] < 0.0 or self.par['rs'] < 0.0 or self.par['rt'] < 0.0:
 			raise Exception('The radius parameters cannot be negative, something went wrong (%s).' % (str(self.par)))
@@ -294,7 +269,7 @@ class D22Profile(profile_base.HaloDensityProfile):
 	# METHODS BOUND TO THE CLASS
 	###############################################################################################
 
-	def _fundamentalParameters(self, M, c, z, mdef, selected_by, Gamma = None, 
+	def nativeParameters(self, M, c, z, mdef, selected_by, Gamma = None, 
 							acc_warn = 0.01, acc_err = 0.05):
 
 		# Declare shared variables; these parameters are advanced during the iterations
