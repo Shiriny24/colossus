@@ -15,11 +15,16 @@ the following changes are not backwards compatible:
   derived class now only needs to list its parameter (and perhaps option) names, and the parent
   constructor attempts to construct a profile from these arguments. If not all native parameters
   are given, the constructor looks for a function called ``setNativeParameters`` that sets the
-  parameters based on mass, concentration, and redshift.
+  parameters based on mass, concentration, and redshift. Aside from this function, the entire
+  logic for creating profiles is not contained in the parent class.
+* The ``setNativeParameters`` needs to be able to accept any mass definition unless the 
+  ``allowed_mdefs`` parameter is set when calling the parent constructor. 
 * The generalized constructor fixes a previous issue when creating profiles with outer
   (infalling) terms. If the profile parameters are determined from a mass and concentration,
   and the outer profile depends on a radius such as R200m, the process of finding the profile
   parameters is iterative. This iteration was not performed for all profiles, but is now.
+* In the DK14 profile, all options have been removed as they are only needed for the 
+  constructor.
 * For the NFW profile, the ``fundamentalParameters`` function (which has now been replaced by
   ``setNativeParameters``) was a class method, meaning that it could be called without calling the
   constructor first. This routine has been renamed to ``nativeParameters``.

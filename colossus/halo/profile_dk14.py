@@ -136,10 +136,10 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		Halo mass in :math:`M_{\odot}/h`.
 	c: float
 		Concentration in the same mass definition as ``M``.
-	mdef: str
-		The mass definition to which ``M`` corresponds. See :doc:`halo_mass` for details.
 	z: float
 		Redshift
+	mdef: str
+		The mass definition to which ``M`` corresponds. See :doc:`halo_mass` for details.
 	selected_by: str
 		The halo sample to which this profile refers can be selected mass ``M`` or by accretion
 		rate ``Gamma``. This parameter influences how some of the fixed parameters in the 
@@ -159,24 +159,17 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	# CONSTRUCTOR
 	###############################################################################################
 	
-	def __init__(self, z = None, selected_by = defaults.HALO_PROFILE_SELECTED_BY, Gamma = None,
+	def __init__(self, selected_by = defaults.HALO_PROFILE_SELECTED_BY, Gamma = None,
 				**kwargs):
 
 		# Set the fundamental variables par_names and opt_names
 		self.par_names = ['rhos', 'rs', 'rt', 'alpha', 'beta', 'gamma']
-		self.opt_names = ['selected_by', 'Gamma', 'R200m', 'z']
+		self.opt_names = []
 		self.fit_log_mask = np.array([False, False, False, False, False, False])
-
-		if z is None:
-			raise Exception('Need the redshift z to construct a DK14 profile.')
 		
 		# Run the constructor
-		profile_base.HaloDensityProfile.__init__(self, z = z, selected_by = selected_by, Gamma = Gamma, **kwargs)
-
-		# Set options; R200m has already been taken care of in the parent constructor.
-		self.opt['selected_by'] = selected_by
-		self.opt['Gamma'] = Gamma
-		self.opt['z'] = z
+		profile_base.HaloDensityProfile.__init__(self, allowed_mdefs = ['200m'], 
+							selected_by = selected_by, Gamma = Gamma, **kwargs)
 
 		# Sanity checks
 		if self.par['rhos'] < 0.0 or self.par['rs'] < 0.0 or self.par['rt'] < 0.0:

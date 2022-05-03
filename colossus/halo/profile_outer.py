@@ -395,15 +395,14 @@ class OuterTermCorrelationFunction(OuterTerm):
 	def _getParameters(self):
 
 		z = self.opt[self.term_opt_names[0]]
-		
+
 		if self._derive_bias:
 			if self._rm_bias_name in self.par:
 				rm_bias = self.par[self._rm_bias_name]
 			elif self._rm_bias_name in self.opt:
 				rm_bias = self.opt[self._rm_bias_name]
 			else:
-				msg = 'Could not find the parameter or option "%s".' % (self._rm_bias_name)
-				raise Exception(msg)
+				raise Exception('Could not find the parameter or option "%s".' % (self._rm_bias_name))
 
 			if self._bias_from_radius:
 				rm_bias = mass_so.R_to_M(rm_bias, z, self._bias_from_mdef)

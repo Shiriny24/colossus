@@ -48,11 +48,14 @@ class HaloDensityProfile():
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
+	allowed_mdefs: list
+		A list of mass definitions that the :func:`setNativeParameters` routine of a derived 
+		class can accept. If ``None``, it is assumed that any definition is acceptable. 
 	outer_terms: list
 		A list of OuterTerm objects to add to the density profile. 
 	"""
 
-	def __init__(self, outer_terms = [], **kwargs):
+	def __init__(self, allowed_mdefs = None, outer_terms = [], **kwargs):
 		
 		# -----------------------------------------------------------------------------------------
 		# Set defaults
@@ -182,7 +185,10 @@ class HaloDensityProfile():
 		if not native_found and mcz_found:
 			
 			M, c, z, mdef = kwargs['M'], kwargs['c'], kwargs['z'], kwargs['mdef']
-			if ('R200m' in self.opt) and (mdef != '200m'):
+			do_iterate = ('R200m' in self.opt) and (mdef != '200m')
+			do_iterate = do_iterate or ((allowed_mdefs is not None) and (not mdef in allowed_mdefs))
+			
+			if do_iterate:
 				self.setNativeParametersIteratively(M, c, z, mdef, **mcz_args)
 			else:
 				R = mass_so.M_to_R(M, z, mdef)
