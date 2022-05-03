@@ -166,11 +166,6 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		self.par_names = ['rhos', 'rs', 'rt', 'alpha', 'beta', 'gamma']
 		self.opt_names = ['selected_by', 'Gamma', 'R200m', 'z']
 		self.fit_log_mask = np.array([False, False, False, False, False, False])
-		
-		# The following parameters are not constants, they are temporarily changed by certain 
-		# functions.
-		self.accuracy_mass = 1E-4
-		self.accuracy_radius = 1E-4
 
 		if z is None:
 			raise Exception('Need the redshift z to construct a DK14 profile.')
@@ -178,10 +173,10 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		# Run the constructor
 		profile_base.HaloDensityProfile.__init__(self, z = z, selected_by = selected_by, Gamma = Gamma, **kwargs)
 
+		# Set options; R200m has already been taken care of in the parent constructor.
 		self.opt['selected_by'] = selected_by
 		self.opt['Gamma'] = Gamma
 		self.opt['z'] = z
-		#self.opt['R200m'] = None
 
 		# Sanity checks
 		if self.par['rhos'] < 0.0 or self.par['rs'] < 0.0 or self.par['rt'] < 0.0:
@@ -264,167 +259,51 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	# METHODS BOUND TO THE CLASS
 	###############################################################################################
 
-	def nativeParameters(self, M, c, z, mdef, selected_by, Gamma = None, 
-							acc_warn = defaults.HALO_PROFILE_DK14_ACC_WARN, 
-							acc_err = defaults.HALO_PROFILE_DK14_ACC_ERR):
-
-		# Declare shared variables; these parameters are advanced during the iterations
-		par2 = {}
-		par2['RDelta'] = 0.0
-		
-		RTOL = 0.01
-		MTOL = 0.01
-		GUESS_TOL = 2.5
-		
-		self.accuracy_mass = MTOL
-		self.accuracy_radius = RTOL
-	
-		# -----------------------------------------------------------------------------------------
-
-		# Try a radius R200m, compute the resulting RDelta using the old RDelta as a starting guess
-		
-		def radius_diff(R200m, par2, Gamma, rho_target, R_target):
-			
-			self.opt['R200m'] = R200m
-			M200m = mass_so.R_to_M(R200m, z, '200m')
-			nu200m = peaks.peakHeight(M200m, z)
-
-			self.par['alpha'], self.par['beta'], self.par['gamma'], rt_R200m = \
-				self.deriveParameters(selected_by, nu200m = nu200m, z = z, Gamma = Gamma)
-			self.par['rt'] = rt_R200m * R200m
-			self.par['rhos'] *= self._normalizeInner(R200m, M200m)
-
-			par2['RDelta'] = self._RDeltaLowlevel(par2['RDelta'], rho_target, 
-												guess_tolerance = GUESS_TOL)
-			
-			return par2['RDelta'] - R_target
-		
-		# -----------------------------------------------------------------------------------------
-		
-		# The user needs to set a cosmology before this function can be called
-		R_target = mass_so.M_to_R(M, z, mdef)
-		self.par['rs'] = R_target / c
-		
-		if mdef == '200m':
-			
-			# The user has supplied M200m, the parameters follow directly from the input
-			M200m = M
-			self.opt['R200m'] = mass_so.M_to_R(M200m, z, '200m')
-			nu200m = peaks.peakHeight(M200m, z)
-			self.par['alpha'], self.par['beta'], self.par['gamma'], rt_R200m = \
-				self.deriveParameters(selected_by, nu200m = nu200m, z = z, Gamma = Gamma)
-			self.par['rt'] = rt_R200m * self.opt['R200m']
-
-			# Guess rhos = 1.0, then re-normalize			
-			self.par['rhos'] = 1.0
-			self.par['rhos'] *= self._normalizeInner(self.opt['R200m'], M200m)
-			
-		else:
-			
-			# The user has supplied some other mass definition, we need to iterate.
-			_, R200m_guess, _ = mass_defs.changeMassDefinition(M, c, z, mdef, '200m')
-			par2['RDelta'] = R_target
-			self.par['rhos'] = 1.0
-
-			# Iterate to find an M200m for which the desired mass is correct
-			rho_target = mass_so.densityThreshold(z, mdef)
-			args = par2, Gamma, rho_target, R_target
-			self.opt['R200m'] = scipy.optimize.brentq(radius_diff, R200m_guess / 1.3, R200m_guess * 1.3,
-								args = args, xtol = RTOL)
-
-			# Check the accuracy of the result; M should be very close to MDelta now
-			M_result = mass_so.R_to_M(par2['RDelta'], z, mdef)
-			err = (M_result - M) / M
-			
-			if abs(err) > acc_warn:
-				msg = 'WARNING: DK14 profile parameters converged to an accuracy of %.1f percent.' % (abs(err) * 100.0)
-				print(msg)
-			
-			if abs(err) > acc_err:
-				msg = 'DK14 profile parameters not converged (%.1f percent error).' % (abs(err) * 100.0)
-				raise Exception(msg)
-		
-		return
-
-	###############################################################################################
-
-	def update(self):
+	def setNativeParameters(self, M, c, z, mdef, selected_by = None, Gamma = None):
 		"""
-		Update the profile options after a parameter change.
-		
-		The DK14 profile has one internal option, ``opt['R200m']``, that does not stay in sync with
-		the other profile parameters if they are changed (either inside or outside the constructor). 
-		This function adjusts :math:`R_{\\rm 200m}`, in addition to whatever action is taken in the
-		update function of the super class. Note that this adjustment needs to be done iteratively 
-		if any outer profiles rely on :math:`R_{\\rm 200m}`.
+		Set the native DK14 parameters from mass and concentration (and optionally others).
+
+		The DK14 profile has six free parameters, which are set by this function. The mass and 
+		concentration must be given as :math:`M_{\rm 200m}` and :math:`c_{\rm 200m}`. Other 
+		mass definitions demand iteration, which can be achieved with the initialization routine
+		in the parent class. This function ignores the presence of outer profiles.
+	
+		Parameters
+		-------------------------------------------------------------------------------------------
+		M: array_like
+			Spherical overdensity mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
+		c: array_like
+			The concentration, :math:`c = R / r_{\\rm s}`, corresponding to the given halo mass and 
+			mass definition; must have the same dimensions as ``M``.
+		z: float
+			Redshift
+		mdef: str
+			The mass definition in which ``M`` and ``c`` are given. See :doc:`halo_mass` for 
+			details.
+		selected_by: str
+			The halo sample to which this profile refers can be selected mass ``M`` or by accretion
+			rate ``Gamma``.
+		Gamma: float
+			The mass accretion rate as defined in DK14. This parameter only needs to be passed if 
+			``selected_by == 'Gamma'``.
 		"""
 
-		# -----------------------------------------------------------------------------------------
-		# This is a special version of the normal difference equation for finding R_Delta. Here, 
-		# the given radius corresponds to R200m, and we set that R200m in the options so that it
-		# can be evaluated by the outer terms.
-		
-		def _thresholdEquationR200m(r, prof_object, density_threshold):
-			
-			prof_object.opt['R200m'] = r
-			diff = self.enclosedMass(r) / 4.0 / np.pi * 3.0 / r**3 - density_threshold
-			
-			return diff
+		if selected_by is None:
+			raise Exception('The selected_by option must be set in DK14 profile, found None.')
+		if mdef != '200m':
+			raise Exception('The DK14 parameters can only be constructed from the M200m definition, found %s.' % (mdef))
 
-		# -----------------------------------------------------------------------------------------
+		M200m = M
+		R200m = mass_so.M_to_R(M200m, z, mdef)
+		nu200m = peaks.peakHeight(M200m, z)
 
-		GUESS_FACTOR = 5.0
-		MAX_GUESSES = 20
-	
-		profile_base.HaloDensityProfile.update(self)
-		
-		density_threshold = mass_so.densityThreshold(self.opt['z'], '200m')
+		self.par['rs'] = R200m / c
+		self.par['alpha'], self.par['beta'], self.par['gamma'], rt_R200m = \
+			self.deriveParameters(selected_by, nu200m = nu200m, z = z, Gamma = Gamma)
+		self.par['rt'] = rt_R200m * R200m
+		self.par['rhos'] = 1.0
+		self.par['rhos'] *= M200m / self.enclosedMassInner(R200m)
 
-		# If we have not at all computed R200m yet, we don't even have an initial guess for that
-		# computation. But even if we have, the user could have changed the parameters in some 
-		# drastic fashion, for example by lowering the central density significantly to create a 
-		# much less dense halo. Thus, we start from a guess radius and increase / decrease the 
-		# upper/lower bounds until the threshold equation is positive at the lower bound 
-		# (indicating that the density there is higher than the threshold) and negative at the
-		# upper bound. If we do not have a previous R200m, we begin by guessing a concentration of
-		# five.
-		if self.opt['R200m'] is None:
-			R_guess = self.par['rs'] * 5.0
-		else:
-			R_guess = self.opt['R200m']
-
-		R_low = R_guess
-		found = False
-		i = 0
-		while i <= MAX_GUESSES:
-			if _thresholdEquationR200m(R_low, self, density_threshold) > 0.0:
-				found = True
-				break
-			R_low /= GUESS_FACTOR
-			i += 1
-		if not found:
-			raise Exception('Cound not find radius where the enclosed density was smaller than threshold (r %.2e kpc/h, rho_threshold %.2e).' \
-						% (R_low, density_threshold))
-
-		R_high = R_guess
-		found = False
-		i = 0
-		while i <= MAX_GUESSES:
-			if _thresholdEquationR200m(R_high, self, density_threshold) < 0.0:
-				found = True
-				break
-			R_high *= GUESS_FACTOR
-			i += 1
-		if not found:
-			raise Exception('Cound not find radius where the enclosed density was larger than threshold (r %.2e kpc/h, rho_threshold %.2e).' \
-						% (R_high, density_threshold))
-		
-		# Note that we cannot just use the RDelta function here. While that function iterates, it
-		# does not set R200m between iterations, meaning that the outer terms are evaluated with 
-		# the input R200m. 
-		self.opt['R200m'] = scipy.optimize.brentq(_thresholdEquationR200m, R_low, R_high, 
-							args = (self, density_threshold), xtol = self.accuracy_radius)
-				
 		return
 
 	###############################################################################################
@@ -487,19 +366,6 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		
 		return drho_dr
 
-	###############################################################################################
-
-	# Low-level function to compute a spherical overdensity radius given the parameters of a DK14 
-	# profile, the desired overdensity threshold, and an initial guess. A more user-friendly version
-	# can be found above (DK14_getMR).
-	
-	def _RDeltaLowlevel(self, R_guess, density_threshold, guess_tolerance = 5.0):
-			
-		R = scipy.optimize.brentq(self._thresholdEquation, R_guess / guess_tolerance,
-				R_guess * guess_tolerance, args = density_threshold, xtol = self.accuracy_radius)
-		
-		return R
-	
 	###############################################################################################
 
 	# This function returns the spherical overdensity radius (in kpc / h) given a mass definition

@@ -120,7 +120,7 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 	# assuming an NFW profile with the given mass and concentration. This leads to a negligible
 	# inconsistency, but solving for the correct alpha iteratively would be much slower.
 
-	def nativeParameters(self, M, c, z, mdef, alpha = None):
+	def setNativeParameters(self, M, c, z, mdef, alpha = None):
 		"""
 		The fundamental Einasto parameters, :math:`\\rho_{\\rm s}`, :math:`r_{\\rm s}`, and 
 		:math:`\\alpha` from mass and concentration.
@@ -169,7 +169,8 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 		self.par['alpha'] = alpha
 		self.par['rhos'] = 1.0
 		self._computeMassTerms()
-		self.par['rhos'] = self._normalizeInner(R, M)
+		self.par['rhos'] *= M / self.enclosedMassInner(R)
+		self._computeMassTerms()
 		
 		return
 	
@@ -304,7 +305,7 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 
 	###############################################################################################
 
-	def enclosedMassInner(self, r):
+	def enclosedMassInner(self, r, accuracy = None):
 		"""
 		The mass enclosed within radius r.
 

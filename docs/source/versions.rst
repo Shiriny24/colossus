@@ -14,11 +14,15 @@ the following changes are not backwards compatible:
 * The profile constructor was generalized to work with the keyword arguments given by the user. A
   derived class now only needs to list its parameter (and perhaps option) names, and the parent
   constructor attempts to construct a profile from these arguments. If not all native parameters
-  are given, the constructor looks for a function called ``nativeParameters`` that sets the
-  parameters based on mass, concentration, and redshift. 
+  are given, the constructor looks for a function called ``setNativeParameters`` that sets the
+  parameters based on mass, concentration, and redshift.
+* The generalized constructor fixes a previous issue when creating profiles with outer
+  (infalling) terms. If the profile parameters are determined from a mass and concentration,
+  and the outer profile depends on a radius such as R200m, the process of finding the profile
+  parameters is iterative. This iteration was not performed for all profiles, but is now.
 * For the NFW profile, the ``fundamentalParameters`` function (which has now been replaced by
-  ``nativeParameters``) was a class method, meaning that it could be called without calling the
-  constructor first. This routine has been renamed to ``nfwParameters``.
+  ``setNativeParameters``) was a class method, meaning that it could be called without calling the
+  constructor first. This routine has been renamed to ``nativeParameters``.
 * All derived classes must contain a normalization ``rhos`` because this variable is used to
   renormalize the profile in the presence of outer terms. 
 * Added the new Diemer 2022 density profile (orbiting and infalling terms).

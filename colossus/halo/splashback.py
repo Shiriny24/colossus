@@ -760,7 +760,7 @@ def modelAdhikari14RspR200m(Delta, c, z):
 
 	cosmo = cosmology.getCurrent()
 	rho_m = cosmo.rho_m(z)
-	rhos, rs = profile_nfw.NFWProfile.nfwParameters(1E10, c, z, 'vir')
+	rhos, rs = profile_nfw.NFWProfile.nativeParameters(1E10, c, z, 'vir')
 	xsp = profile_nfw.NFWProfile.xDelta(rhos, Delta * rho_m)
 	Rsp = xsp * rs
 	x200m = profile_nfw.NFWProfile.xDelta(rhos, 200.0 * rho_m)

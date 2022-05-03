@@ -43,6 +43,7 @@ Module reference
 import numpy as np
 import scipy.optimize
 import scipy.interpolate
+import warnings
 
 from colossus.utils import utilities
 from colossus.halo import mass_so
@@ -99,6 +100,10 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		
 		profile_base.HaloDensityProfile.__init__(self, **kwargs)
 		
+		# We need an initial radius to guess Rmax. Even though this quantity can be analytically
+		# computed for an NFW profile, we might have outer terms.
+		self.r_guess = self.par['rs']
+
 		return
 
 	###############################################################################################
@@ -106,7 +111,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	###############################################################################################
 
 	@classmethod
-	def nfwParameters(cls, M, c, z, mdef):
+	def nativeParameters(cls, M, c, z, mdef):
 		"""
 		The native NFW parameters, :math:`\\rho_s` and :math:`r_{\\rm s}`, from mass and 
 		concentration.
@@ -144,13 +149,23 @@ class NFWProfile(profile_base.HaloDensityProfile):
 
 	###############################################################################################
 
-	def nativeParameters(self, M, c, z, mdef, **kwargs):
-		"""
-		The native NFW parameters, :math:`\\rho_s` and :math:`r_{\\rm s}`, from mass and 
-		concentration.
+	@classmethod
+	def fundamentalParameters(cls, M, c, z, mdef):
 		
-		This routine is equivalent to :func:`nativeParameters`, but it must be called from within
-		an NFWProfile object and sets the parameters internally instead of returning them.
+		warnings.warn('The function NFWProfile.fundamentalParameters is deprecated and has been renamed to nativeParameters.')
+		rhos, rs = cls.nativeParameters(M, c, z, mdef)
+		
+		return rhos, rs
+
+	###############################################################################################
+
+	def setNativeParameters(self, M, c, z, mdef, **kwargs):
+		"""
+		Set the native NFW parameters from mass and concentration.
+
+		The NFW profile has :math:`\\rho_s` and :math:`r_{\\rm s}` as internal parameters, which 
+		are computed from a mass and concentration. This function ignores the presence of outer 
+		profiles.
 	
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -166,7 +181,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 			details.
 		"""
 		
-		self.par['rhos'], self.par['rs'] = self.nfwParameters(M, c, z, mdef, **kwargs)
+		self.par['rhos'], self.par['rs'] = self.nativeParameters(M, c, z, mdef, **kwargs)
 		
 		return
 

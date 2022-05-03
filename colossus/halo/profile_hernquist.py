@@ -37,6 +37,7 @@ Module reference
 """
 
 import numpy as np
+import warnings
 
 from colossus.halo import mass_so
 from colossus.halo import profile_base
@@ -81,13 +82,16 @@ class HernquistProfile(profile_base.HaloDensityProfile):
 		self.opt_names = []
 		
 		profile_base.HaloDensityProfile.__init__(self, **kwargs)
-		
+
+		# We need an initial radius to guess Rmax.
+		self.r_guess = self.par['rs']
+	
 		return
 
 	###############################################################################################
 
 	@classmethod
-	def hernquistParameters(cls, M, c, z, mdef):
+	def nativeParameters(cls, M, c, z, mdef):
 		"""
 		The fundamental Hernquist parameters, :math:`\\rho_{\\rm s}` and :math:`r_{\\rm s}`, from 
 		mass and concentration.
@@ -125,13 +129,23 @@ class HernquistProfile(profile_base.HaloDensityProfile):
 
 	###############################################################################################
 
-	def nativeParameters(self, M, c, z, mdef, **kwargs):
-		"""
-		The native Hernquist parameters, :math:`\\rho_s` and :math:`r_{\\rm s}`, from mass and 
-		concentration.
+	@classmethod
+	def fundamentalParameters(cls, M, c, z, mdef):
 		
-		This routine is equivalent to :func:`nativeParameters`, but it must be called from within
-		an HernquistProfile object and sets the parameters internally instead of returning them.
+		warnings.warn('The function HernquistProfile.fundamentalParameters is deprecated and has been renamed to nativeParameters.')
+		rhos, rs = cls.nativeParameters(M, c, z, mdef)
+		
+		return rhos, rs
+
+	###############################################################################################
+
+	def setNativeParameters(self, M, c, z, mdef, **kwargs):
+		"""
+		Set the native Hernquist parameters from mass and concentration.
+
+		The Hernquist profile has :math:`\\rho_s` and :math:`r_{\\rm s}` as internal parameters, 
+		which are computed from a mass and concentration. This function ignores the presence of 
+		outer profiles.
 	
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -147,7 +161,7 @@ class HernquistProfile(profile_base.HaloDensityProfile):
 			details.
 		"""
 		
-		self.par['rhos'], self.par['rs'] = self.hernquistParameters(M, c, z, mdef, **kwargs)
+		self.par['rhos'], self.par['rs'] = self.nativeParameters(M, c, z, mdef, **kwargs)
 		
 		return
 

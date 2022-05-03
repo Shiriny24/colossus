@@ -534,8 +534,16 @@ class OuterTermPowerLaw(OuterTerm):
 		if max_rho is None:
 			raise Exception('Maximum of power law cannot be None.')
 		
-		OuterTerm.__init__(self, [norm, slope], [pivot, pivot_factor, z, max_rho],
-						[norm_name, slope_name], [pivot_name, pivot_factor_name, z_name, max_rho_name])
+		par_array = [norm, slope]
+		opt_array = [pivot, pivot_factor, z, max_rho]
+		par_names = [norm_name, slope_name]
+		opt_names = [pivot_name, pivot_factor_name, z_name, max_rho_name]
+		
+		if pivot == 'R200m':
+			opt_array.append(None)
+			opt_names.append('R200m')
+		
+		OuterTerm.__init__(self, par_array, opt_array, par_names, opt_names)
 
 		return
 
@@ -553,6 +561,10 @@ class OuterTermPowerLaw(OuterTerm):
 		else:
 			msg = 'Could not find the parameter or option "%s".' % (r_pivot_id)
 			raise Exception(msg)
+
+		if r_pivot is None:
+			raise Exception('Outer profile was trying to use the internal radius %s, but found None.' \
+						% (r_pivot_id))
 
 		norm = self.par[self.term_par_names[0]]
 		slope = self.par[self.term_par_names[1]]

@@ -47,7 +47,7 @@ class HaloDensityProfile():
 	added to any derived density profile class without adding new code.
 
 	Parameters
-	-------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------
 	outer_terms: list
 		A list of OuterTerm objects to add to the density profile. 
 	"""
@@ -100,6 +100,32 @@ class HaloDensityProfile():
 		self.quantities['DeltaSigma'] = self.deltaSigma
 
 		# -----------------------------------------------------------------------------------------
+		# Set profile parameters from keyword arguments
+
+		# Check whether all native parameters are given
+		native_found = True
+		for p in self.par:
+			if not p in kwargs:
+				native_found = False
+				break
+		
+		if native_found:
+			for p in self.par:
+				self.par[p] = kwargs[p]
+		else:
+			mcz_found = True
+			mcz_args = copy.copy(kwargs)
+			for p in ['M', 'c', 'mdef', 'z']:
+				if not p in kwargs:
+					mcz_found = False
+					break
+				del mcz_args[p]
+
+			if not mcz_found:
+				raise Exception('A profile must be define either using its native parameters (%s), or (M, c, mdef, z).' \
+							% (str(self.par_names)))
+		
+		# -----------------------------------------------------------------------------------------
 		# Deal with outer profiles
 
 		# Now we also add any parameters for the outer term(s)
@@ -144,37 +170,131 @@ class HaloDensityProfile():
 		self.N_opt = len(self.opt)
 
 		# -----------------------------------------------------------------------------------------
-		# Set profile parameters from keyword arguments, either native or from M/c/z
+		# Set parameters from mass; this needs to happen after the outer profiles because their
+		# contribution will figure into the profile normalization. There are two basic ways of 
+		# doing this. If any profile component needs and absolute radial scale 'R200m' to self-
+		# calibrate and we are given the mass in another definition, then we need to iteratively
+		# solve for the parameters. Otherwise, we set 'R200m' if necessary and execute the simple
+		# setNativeParameters() function implemented by the profile object. This sets only the 
+		# inner profile parameters, so if there are outer profile parameters, we normalize the 
+		# rhos parameter.
 
-		# Check whether all native parameters are given
-		native_found = True
-		for p in self.par:
-			if not p in kwargs:
-				native_found = False
-				break
-		
-		if native_found:
-			for p in self.par:
-				self.par[p] = kwargs[p]
-		else:
-			mcz_found = True
-			mcz_args = copy.copy(kwargs)
-			for p in ['M', 'c', 'mdef', 'z']:
-				del mcz_args[p]
-				if not p in kwargs:
-					mcz_found = False
-					break
-			if mcz_found:
-				self.nativeParameters(kwargs['M'], kwargs['c'], kwargs['z'], kwargs['mdef'], **mcz_args)
+		if not native_found and mcz_found:
+			
+			M, c, z, mdef = kwargs['M'], kwargs['c'], kwargs['z'], kwargs['mdef']
+			if ('R200m' in self.opt) and (mdef != '200m'):
+				self.setNativeParametersIteratively(M, c, z, mdef, **mcz_args)
 			else:
-				raise Exception('A profile must be define either using its native parameters (%s), or (M, c, mdef, z).' % (str(self.par.keys())))
+				R = mass_so.M_to_R(M, z, mdef)
+				if 'R200m' in self.opt:
+					self.opt['R200m'] = R
+				self.setNativeParameters(M, c, z, mdef, **mcz_args)
+				self.par['rhos'] *= self._normalizeInner(R, M)
+
+		else:
+			
+			if ('R200m' in self.opt) and (self.opt['R200m'] is None):
+				if 'R200m' in kwargs:
+					self.opt['R200m'] = kwargs['R200m']
+				else:
+					raise Exception('Creating profile from native parameters, but also need R200m option.')
+
+			if ('z' in self.opt) and (self.opt['z'] is None):
+				if 'z' in kwargs:
+					self.opt['z'] = kwargs['z']
+				else:
+					raise Exception('Creating profile from native parameters, but also need z option.')
+
+		return
+
+	###############################################################################################
+	
+	def setNativeParametersIteratively(self, M, c, z, mdef, 
+							acc_warn = defaults.HALO_PROFILE_ACC_WARN, 
+							acc_err = defaults.HALO_PROFILE_ACC_ERR,
+							**kwargs):
+
+		global R_last
+		
+		# -----------------------------------------------------------------------------------------
+		
+		def radius_diff(R200m, rho_target, R_target):
+			
+			global R_last 
+
+			M200m = mass_so.R_to_M(R200m, z, '200m')
+			c200m = c * R200m / R_target
+			self.opt['R200m'] = R200m
+			self.setNativeParameters(M200m, c200m, z, '200m', **kwargs)
+			self.par['rhos'] *= self._normalizeInner(R200m, M200m)
+			R_guess = self._RDeltaLowlevel(R_last, rho_target)
+			R_last = R_guess
+			
+			return R_guess - R_target
+		
+		# -----------------------------------------------------------------------------------------
+
+		def eq_rdelta_nfw(r, rhos, rs, rho_target):
+			
+			x = r / rs 
+			mu = np.log(1.0 + x) - x / (1.0 + x)
+			diff = 3.0 * rhos * mu / x**3 - rho_target
+			
+			return diff
+		
+		# -----------------------------------------------------------------------------------------
+
+		# Set target radius and density from given mass
+		R_target = mass_so.M_to_R(M, z, mdef)
+		rho_target = mass_so.densityThreshold(z, mdef)
+
+		# We need to estimate R200m but cannot use the NFW profile module because that would 
+		# constitute a circular include. Thus, we manually solve the NFW equations.
+		rho_200m = mass_so.densityThreshold(z, '200m')
+		nfw_rs = R_target / c
+		nfw_mu = np.log(1.0 + c) - c / (1.0 + c)
+		nfw_rhos = M / (nfw_rs**3 * 4.0 * np.pi * nfw_mu)
+		args = nfw_rhos, nfw_rs, rho_200m
+		R200m_guess = scipy.optimize.brentq(eq_rdelta_nfw, R_target / 20.0, R_target * 20.0, args = args, xtol = 0.01)
+
+		# Now iterate to find an R200m that creates a profile with M(R, mdef) = M_given. We 
+		# increase the search range iteratively.		
+		R_last = R_target
+		args = rho_target, R_target
+		guess_tol = [1.2, 2.0, 5.0, 20.0, 100.0]
+		success = False
+		i = -1
+		while not success:
+			i += 1
+			if i >= len(guess_tol):
+				raise Exception('Could not find SO radius.')
+			R_lo = R200m_guess / guess_tol[i]
+			R_hi = R200m_guess * guess_tol[i]
+			val_lo = radius_diff(R_lo, *args)
+			val_hi = radius_diff(R_hi, *args)
+			if val_lo * val_hi < 0.0:
+				self.opt['R200m'] = scipy.optimize.brentq(radius_diff, R_lo, R_hi,
+							args = args, xtol = defaults.HALO_PROFILE_ACC_RADIUS)
+				success = True
+
+		# Check the accuracy of the result; M should be very close to MDelta now
+		M_result = mass_so.R_to_M(R_last, z, mdef)
+		err = (M_result - M) / M
+		
+		if abs(err) > acc_err:
+			msg = 'Profile parameters not converged (%.1f percent error).' % (abs(err) * 100.0)
+			raise Exception(msg)
+		
+		if abs(err) > acc_warn:
+			msg = 'WARNING: Profile parameters converged to an accuracy of %.1f percent.' % (abs(err) * 100.0)
+			print(msg)
 		
 		return
 	
 	###############################################################################################
 
 	@abc.abstractmethod
-	def nativeParameters(self, M, c, z, mdef, **kwargs):
+	def setNativeParameters(self, M, c, z, mdef, **kwargs):
 		"""
 		Determine the native profile parameters from mass and concentration.
 		
@@ -272,6 +392,90 @@ class HaloDensityProfile():
 		profile properties that depend on the parameters.
 		"""
 		
+		if 'R200m' in self.opt:
+			self.updateR200m()
+		
+		return
+
+	###############################################################################################
+
+	def updateR200m(self):
+		"""
+		Update the internally stored R200m after a parameter change.
+		
+		If the profile has the internal option ``opt['R200m']`` option, that does not stay in sync with
+		the other profile parameters if they are changed (either inside or outside the constructor). 
+		This function adjusts :math:`R_{\\rm 200m}`, in addition to whatever action is taken in the
+		update function of the super class. Note that this adjustment needs to be done iteratively 
+		if any outer profiles rely on :math:`R_{\\rm 200m}`.
+		"""
+
+		# -----------------------------------------------------------------------------------------
+		# This is a special version of the normal difference equation for finding R_Delta. Here, 
+		# the given radius corresponds to R200m, and we set that R200m in the options so that it
+		# can be evaluated by the outer terms.
+		
+		def _thresholdEquationR200m(r, prof_object, density_threshold):
+			
+			prof_object.opt['R200m'] = r
+			diff = self.enclosedMass(r) / 4.0 / np.pi * 3.0 / r**3 - density_threshold
+			
+			return diff
+
+		# -----------------------------------------------------------------------------------------
+
+		GUESS_FACTOR = 5.0
+		MAX_GUESSES = 20
+
+		if not 'z' in self.opt:
+			raise Exception('If R200m is a profile option, z must be too.')
+		density_threshold = mass_so.densityThreshold(self.opt['z'], '200m')
+
+		# If we have not at all computed R200m yet, we don't even have an initial guess for that
+		# computation. But even if we have, the user could have changed the parameters in some 
+		# drastic fashion, for example by lowering the central density significantly to create a 
+		# much less dense halo. Thus, we start from a guess radius and increase / decrease the 
+		# upper/lower bounds until the threshold equation is positive at the lower bound 
+		# (indicating that the density there is higher than the threshold) and negative at the
+		# upper bound. If we do not have a previous R200m, we begin by guessing a concentration of
+		# five.
+		if self.opt['R200m'] is None:
+			R_guess = self.par['rs'] * 5.0
+		else:
+			R_guess = self.opt['R200m']
+
+		R_low = R_guess
+		found = False
+		i = 0
+		while i <= MAX_GUESSES:
+			if _thresholdEquationR200m(R_low, self, density_threshold) > 0.0:
+				found = True
+				break
+			R_low /= GUESS_FACTOR
+			i += 1
+		if not found:
+			raise Exception('Cound not find radius where the enclosed density was smaller than threshold (r %.2e kpc/h, rho_threshold %.2e).' \
+						% (R_low, density_threshold))
+
+		R_high = R_guess
+		found = False
+		i = 0
+		while i <= MAX_GUESSES:
+			if _thresholdEquationR200m(R_high, self, density_threshold) < 0.0:
+				found = True
+				break
+			R_high *= GUESS_FACTOR
+			i += 1
+		if not found:
+			raise Exception('Cound not find radius where the enclosed density was larger than threshold (r %.2e kpc/h, rho_threshold %.2e).' \
+						% (R_high, density_threshold))
+		
+		# Note that we cannot just use the RDelta function here. While that function iterates, it
+		# does not set R200m between iterations, meaning that the outer terms are evaluated with 
+		# the input R200m. 
+		self.opt['R200m'] = scipy.optimize.brentq(_thresholdEquationR200m, R_low, R_high, 
+							args = (self, density_threshold), xtol = defaults.HALO_PROFILE_ACC_RADIUS)
+				
 		return
 
 	###############################################################################################
@@ -1151,6 +1355,9 @@ class HaloDensityProfile():
 		Mr_outer = self.enclosedMassOuter(R)
 		norm = (M - Mr_outer) / Mr_inner
 		
+		if norm <= 0.0:
+			raise Exception('Failure when trying to normalize inner profile because outer profile mass is larger than total.')
+		
 		return norm
 
 	###############################################################################################
@@ -1164,6 +1371,35 @@ class HaloDensityProfile():
 		
 		return diff
 
+	###############################################################################################
+
+	# Low-level function to compute a spherical overdensity radius given an approximate guess.
+	
+	def _RDeltaLowlevel(self, R_guess, density_threshold):
+		
+		guess_tol = [2.0, 5.0, 20.0, 100.0]
+		success = False
+		i = -1
+		
+		args = density_threshold
+		
+		while not success:
+			i += 1
+			if i >= len(guess_tol):
+				raise Exception('Could not find SO radius.')
+			
+			R_lo = R_guess / guess_tol[i]
+			R_hi = R_guess * guess_tol[i]
+			val_lo = self._thresholdEquation(R_lo, args)
+			val_hi = self._thresholdEquation(R_hi, args)
+			
+			if val_lo * val_hi < 0.0:
+				R = scipy.optimize.brentq(self._thresholdEquation, R_lo, R_hi, args = args, 
+										xtol = defaults.HALO_PROFILE_ACC_RADIUS)
+				success = True
+		
+		return R
+	
 	###############################################################################################
 
 	def RDelta(self, z, mdef):

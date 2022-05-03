@@ -100,7 +100,6 @@ from colossus.cosmology import cosmology
 from colossus.lss import peaks
 from colossus.halo import mass_so
 from colossus.halo import profile_base
-from colossus.halo import profile_outer
 from colossus.halo import mass_defs
 
 ###################################################################################################
@@ -162,11 +161,6 @@ class D22Profile(profile_base.HaloDensityProfile):
 		# Set the fundamental variables par_names and opt_names
 		self.par_names = ['rhos', 'rs', 'rt', 'alpha', 'beta']
 		self.opt_names = ['selected_by', 'Gamma', 'R200m', 'z']
-		
-		# The following parameters are not constants, they are temporarily changed by certain 
-		# functions.
-		self.accuracy_mass = 1E-4
-		self.accuracy_radius = 1E-4
 
 		if z is None:
 			raise Exception('Need the redshift z to construct a Diemer22 profile.')
@@ -269,7 +263,7 @@ class D22Profile(profile_base.HaloDensityProfile):
 	# METHODS BOUND TO THE CLASS
 	###############################################################################################
 
-	def nativeParameters(self, M, c, z, mdef, selected_by, Gamma = None, 
+	def setNativeParameters(self, M, c, z, mdef, selected_by, Gamma = None, 
 							acc_warn = 0.01, acc_err = 0.05):
 
 		# Declare shared variables; these parameters are advanced during the iterations
@@ -279,10 +273,7 @@ class D22Profile(profile_base.HaloDensityProfile):
 		RTOL = 0.01
 		MTOL = 0.01
 		GUESS_TOL = 2.5
-		
-		self.accuracy_mass = MTOL
-		self.accuracy_radius = RTOL
-	
+
 		# -----------------------------------------------------------------------------------------
 
 		# Try a radius R200m, compute the resulting RDelta using the old RDelta as a starting guess
@@ -348,87 +339,6 @@ class D22Profile(profile_base.HaloDensityProfile):
 				msg = 'D22 profile parameters not converged (%.1f percent error).' % (abs(err) * 100.0)
 				raise Exception(msg)
 		
-		return
-
-	###############################################################################################
-
-	def update(self):
-		"""
-		Update the profile options after a parameter change.
-		
-		The D22 profile has one internal option, ``opt['R200m']``, that does not stay in sync with
-		the other profile parameters if they are changed (either inside or outside the constructor). 
-		This function adjusts :math:`R_{\\rm 200m}`, in addition to whatever action is taken in the
-		update function of the super class. Note that this adjustment needs to be done iteratively 
-		if any outer profiles rely on :math:`R_{\\rm 200m}`.
-		"""
-
-		# -----------------------------------------------------------------------------------------
-		# This is a special version of the normal difference equation for finding R_Delta. Here, 
-		# the given radius corresponds to R200m, and we set that R200m in the options so that it
-		# can be evaluated by the outer terms.
-		
-		def _thresholdEquationR200m(r, prof_object, density_threshold):
-			
-			prof_object.opt['R200m'] = r
-			diff = self.enclosedMass(r) / 4.0 / np.pi * 3.0 / r**3 - density_threshold
-			
-			return diff
-
-		# -----------------------------------------------------------------------------------------
-
-		GUESS_FACTOR = 5.0
-		MAX_GUESSES = 20
-	
-		profile_base.HaloDensityProfile.update(self)
-		
-		density_threshold = mass_so.densityThreshold(self.opt['z'], '200m')
-
-		# If we have not at all computed R200m yet, we don't even have an initial guess for that
-		# computation. But even if we have, the user could have changed the parameters in some 
-		# drastic fashion, for example by lowering the central density significantly to create a 
-		# much less dense halo. Thus, we start from a guess radius and increase / decrease the 
-		# upper/lower bounds until the threshold equation is positive at the lower bound 
-		# (indicating that the density there is higher than the threshold) and negative at the
-		# upper bound. If we do not have a previous R200m, we begin by guessing a concentration of
-		# five.
-		if self.opt['R200m'] is None:
-			R_guess = self.par['rs'] * 5.0
-		else:
-			R_guess = self.opt['R200m']
-
-		R_low = R_guess
-		found = False
-		i = 0
-		while i <= MAX_GUESSES:
-			if _thresholdEquationR200m(R_low, self, density_threshold) > 0.0:
-				found = True
-				break
-			R_low /= GUESS_FACTOR
-			i += 1
-		if not found:
-			raise Exception('Cound not find radius where the enclosed density was smaller than threshold (r %.2e kpc/h, rho_threshold %.2e).' \
-						% (R_low, density_threshold))
-
-		R_high = R_guess
-		found = False
-		i = 0
-		while i <= MAX_GUESSES:
-			if _thresholdEquationR200m(R_high, self, density_threshold) < 0.0:
-				found = True
-				break
-			R_high *= GUESS_FACTOR
-			i += 1
-		if not found:
-			raise Exception('Cound not find radius where the enclosed density was larger than threshold (r %.2e kpc/h, rho_threshold %.2e).' \
-						% (R_high, density_threshold))
-		
-		# Note that we cannot just use the RDelta function here. While that function iterates, it
-		# does not set R200m between iterations, meaning that the outer terms are evaluated with 
-		# the input R200m. 
-		self.opt['R200m'] = scipy.optimize.brentq(_thresholdEquationR200m, R_low, R_high, 
-							args = (self, density_threshold), xtol = self.accuracy_radius)
-				
 		return
 
 	###############################################################################################
@@ -508,19 +418,6 @@ class D22Profile(profile_base.HaloDensityProfile):
 
 		return der
 		
-	###############################################################################################
-
-	# Low-level function to compute a spherical overdensity radius given the parameters of a DK14 
-	# profile, the desired overdensity threshold, and an initial guess. A more user-friendly version
-	# can be found above (DK14_getMR).
-	
-	def _RDeltaLowlevel(self, R_guess, density_threshold, guess_tolerance = 5.0):
-			
-		R = scipy.optimize.brentq(self._thresholdEquation, R_guess / guess_tolerance,
-				R_guess * guess_tolerance, args = density_threshold, xtol = self.accuracy_radius)
-		
-		return R
-	
 	###############################################################################################
 
 	# This function returns the spherical overdensity radius (in kpc / h) given a mass definition
@@ -715,98 +612,3 @@ class D22Profile(profile_base.HaloDensityProfile):
 		deriv[:, :] *= rho[None, :]
 
 		return deriv
-
-###################################################################################################
-# DIEMER & KRAVTSOV 2014 PROFILE
-###################################################################################################
-
-def getD22ProfileWithInfalling(outer_term_names = ['mean', 'pl'],
-				# Parameters for a power-law outer profile
-				power_law_norm = defaults.HALO_PROFILE_DK14_PL_NORM,
-				power_law_slope = defaults.HALO_PROFILE_DK14_PL_SLOPE,
-				power_law_max = defaults.HALO_PROFILE_OUTER_PL_MAXRHO,
-				# Parameters for a correlation function outer profile
-				derive_bias_from = 'R200m', bias = 1.0, 
-				# The parameters for the DK14 inner profile
-				**kwargs):
-	"""
-	A wrapper function to create a DK14 profile with one or many outer profile terms.
-
-	The DK14 profile only makes sense if some description of the outer profile is added. This
-	function provides a convenient way to construct such profiles without having to set the 
-	properties of the outer terms manually. Valid keys for outer terms include the following.
-	
-	* ``mean``: The mean density of the universe at redshift ``z`` (see the documentation of 
-	  :class:`~halo.profile_outer.OuterTermMeanDensity`).
-	* ``pl``: A power-law profile in radius (see the documentation of 
-	  :class:`~halo.profile_outer.OuterTermPowerLaw`). For the DK14 profile, the chosen pivot
-	  radius is :math:`5 R_{\\rm 200m}`. Note that :math:`R_{\\rm 200m}` is set as a profile option 
-	  in the constructor once, but not adjusted thereafter unless the 
-	  :func:`~halo.profile_dk14.DK14Profile.update` function is called. Thus, in a fit, the fitted 
-	  norm and slope refer to a pivot of the original :math:`R_{\\rm 200m}` until update() is called 
-	  which adjusts these parameters. Furthermore, the parameters for the power-law outer profile 
-	  (norm and slope, called :math:`b_{\\rm e}` and :math:`s_{\\rm e}` in the DK14 paper) exhibit 
-	  a complicated dependence on halo mass, redshift and cosmology. At low redshift, and for the 
-	  cosmology considered in DK14, ``power_law_norm = 1.0`` and ``power_law_slope = 1.5`` are 
-	  reasonable values over a wide range of masses (see Figure 18 in DK14), but these values are 
-	  by no means universal or accurate. 
-	* ``cf``: The matter-matter correlation function times halo bias (see the documentation of 
-  	  :class:`~halo.profile_outer.OuterTermCorrelationFunction`). Here, the user has a choice
-	  regarding halo bias: it can enter the profile as a parameter (if ``derive_bias_from == 
-	  None`` or it can be derived according to the default model of halo bias based on 
-	  :math:`M_{\\rm 200m}` (in which case ``derive_bias_from = 'R200m'`` and the bias parameter 
-	  is ignored). The latter option can make the constructor slow because of the iterative 
-	  evaluation of bias and :math:`M_{\\rm 200m}`.
-
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	outer_term_names: array_like
-		A list of outer profile term identifiers, can be ``mean``, ``pl``, or ``cf``.
-	power_law_norm: float
-		The normalization of a power-law term (called :math:`b_{\\rm e}` in DK14).
-	power_law_slope: float
-		The negative slope of a power-law term (called :math:`s_{\\rm e}` in DK14).
-	power_law_max: float
-		The maximum density contributed by a power-law term.	
-	derive_bias_from: str
-		See ``cf`` section above.
-	bias: float
-		See ``cf`` section above.
-	kwargs: kwargs
-		The arguments passed to the DK14 profile constructor (i.e., the fundamental parameters or 
-		``M``, ``c`` etc).
-	"""
-	
-	outer_terms = []
-	if len(outer_term_names) > 0:
-		if not 'z' in kwargs:
-			raise Exception('Expect redshift z in arguments.')
-		else:
-			z = kwargs['z']
-	
-	for i in range(len(outer_term_names)):
-		
-		if outer_term_names[i] == 'mean':
-			if z is None:
-				raise Exception('Redshift z must be set if a mean density outer term is chosen.')
-			t = profile_outer.OuterTermMeanDensity(z)
-		
-		elif outer_term_names[i] == 'pl':
-			t = profile_outer.OuterTermPowerLaw(norm = power_law_norm, slope = power_law_slope, 
-							pivot = 'R200m', pivot_factor = 5.0, z = z, max_rho = power_law_max)
-		
-		elif outer_term_names[i] == 'cf':
-			t = profile_outer.OuterTermCorrelationFunction(derive_bias_from = derive_bias_from,
-														z = z, bias = bias)
-	
-		else:
-			msg = 'Unknown outer term name, %s.' % (outer_terms[i])
-			raise Exception(msg)
-	
-		outer_terms.append(t)
-
-	prof = D22Profile(outer_terms = outer_terms, **kwargs)
-	
-	return prof
-
-###################################################################################################
