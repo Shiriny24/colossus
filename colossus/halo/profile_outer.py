@@ -41,6 +41,30 @@ Models for the outer term
 	:class:`OuterTermPowerLaw`              A power-law profile
 	======================================= =======================================================
 
+Description of the outer terms:
+
+* ``mean``: The mean density of the universe at redshift ``z`` (see the documentation of 
+  :class:`~halo.profile_outer.OuterTermMeanDensity`).
+* ``cf``: The matter-matter correlation function times halo bias (see the documentation of 
+	  :class:`~halo.profile_outer.OuterTermCorrelationFunction`). Here, the user has a choice
+  regarding halo bias: it can enter the profile as a parameter (if ``derive_bias_from == 
+  None`` or it can be derived according to the default model of halo bias based on 
+  :math:`M_{\\rm 200m}` (in which case ``derive_bias_from = 'R200m'`` and the bias parameter 
+  is ignored). The latter option can make the constructor slow because of the iterative 
+  evaluation of bias and :math:`M_{\\rm 200m}`.
+* ``pl``: A power-law profile in radius (see the documentation of 
+  :class:`~halo.profile_outer.OuterTermPowerLaw`). For the DK14 profile, the chosen pivot
+  radius is :math:`5 R_{\\rm 200m}`. Note that :math:`R_{\\rm 200m}` is set as a profile option 
+  in the constructor once, but not adjusted thereafter unless the 
+  :func:`~halo.profile_dk14.DK14Profile.update` function is called. Thus, in a fit, the fitted 
+  norm and slope refer to a pivot of the original :math:`R_{\\rm 200m}` until update() is called 
+  which adjusts these parameters. Furthermore, the parameters for the power-law outer profile 
+  (norm and slope, called :math:`b_{\\rm e}` and :math:`s_{\\rm e}` in the DK14 paper) exhibit 
+  a complicated dependence on halo mass, redshift and cosmology. At low redshift, and for the 
+  cosmology considered in DK14, ``power_law_norm = 1.0`` and ``power_law_slope = 1.5`` are 
+  reasonable values over a wide range of masses (see Figure 18 in DK14), but these values are 
+  by no means universal or accurate. 
+
 ---------------------------------------------------------------------------------------------------
 Module reference
 ---------------------------------------------------------------------------------------------------
@@ -218,6 +242,15 @@ class OuterTerm():
 			
 		return density_der
 
+	###############################################################################################
+
+	def update(self):
+		"""
+		Update the profile object after a change in parameters or cosmology.
+		"""
+		
+		return
+
 ###################################################################################################
 # OUTER TERM: MEAN DENSITY
 ###################################################################################################
@@ -248,12 +281,14 @@ class OuterTermMeanDensity(OuterTerm):
 		independent option any more.
 	"""
 
-	def __init__(self, z = None, z_name = 'z'):
+	def __init__(self, z = None, z_name = 'z', **kwargs):
 		
 		if z is None:
 			raise Exception('Redshift cannot be None.')
 		
 		OuterTerm.__init__(self, [], [z], [], [z_name])
+		
+		self.initialized = False
 
 		return
 
@@ -267,11 +302,22 @@ class OuterTermMeanDensity(OuterTerm):
 
 	###############################################################################################
 
-	def _density(self, r):
-		
+	def update(self):
+
 		z = self._getParameters()
 		cosmo = cosmology.getCurrent()
-		rho = np.ones((len(r)), float) * cosmo.rho_m(z)
+		self.rho_m = cosmo.rho_m(z)
+		
+		return
+
+	###############################################################################################
+
+	def _density(self, r):
+
+		if not self.initialized:
+			self.update()
+			
+		rho = np.ones((len(r)), float) * self.rho_m
 		
 		return rho
 
@@ -362,7 +408,7 @@ class OuterTermCorrelationFunction(OuterTerm):
 	"""
 
 	def __init__(self, z = None, derive_bias_from = None, bias = None, z_name = 'z', 
-				bias_name = 'bias'):
+				bias_name = 'bias', **kwargs):
 		
 		if z is None:
 			raise Exception('Redshift cannot be None.')
@@ -387,6 +433,8 @@ class OuterTermCorrelationFunction(OuterTerm):
 			self._rm_bias_name = derive_bias_from
 			
 		OuterTerm.__init__(self, par_array, opt_array, par_names, opt_names)
+		
+		self.initialized = False
 		
 		return
 
@@ -416,37 +464,70 @@ class OuterTermCorrelationFunction(OuterTerm):
 
 	###############################################################################################
 
+	def update(self):
+
+		z, _ = self._getParameters()
+		cosmo = cosmology.getCurrent()
+		
+		self.rho_m = cosmo.rho_m(z)
+		self.D2 = cosmo.growthFactor(z)**2
+		
+		self.xi_interp = cosmo._correlationFunctionInterpolator(defaults.PS_ARGS)
+		self.R_min = cosmo.R_xi[0] * 1.00001
+		self.R_max = cosmo.R_xi[-1] * 0.99999
+		
+		return
+
+	###############################################################################################
+
 	# We have to be a little careful when evaluating the matter-matter correlation function, since
 	# it may not be defined at very small or large radii.
 
-	def _xi_mm(self, r, z):
-
-		cosmo = cosmology.getCurrent()
-		r_com = r / 1000.0 * (1 + z)
-		
-		R_min = cosmo.R_xi[0] * 1.00001
-		R_max = cosmo.R_xi[-1] * 0.99999
-		
-		mask_not_small = (r_com > R_min)
-		mask_not_large = (r_com < R_max)
-		mask = (mask_not_small & mask_not_large)
-		
-		xi_mm = np.zeros((len(r)), float)
-
-		if np.count_nonzero(mask) > 0:
-			xi_mm[mask] = cosmo.correlationFunction(r_com[mask], z)
-
-		xi_mm[np.logical_not(mask_not_small)] = cosmo.correlationFunction(R_min, z)
-		xi_mm[np.logical_not(mask_not_large)] = cosmo.correlationFunction(R_max, z)
-		
-		return xi_mm
+# 	def _xi_mm(self, r, z):
+# 
+# 		cosmo = cosmology.getCurrent()
+# 		r_com = r / 1000.0 * (1 + z)
+# 		
+# 		R_min = cosmo.R_xi[0] * 1.00001
+# 		R_max = cosmo.R_xi[-1] * 0.99999
+# 		
+# 		mask_not_small = (r_com > R_min)
+# 		mask_not_large = (r_com < R_max)
+# 		mask = (mask_not_small & mask_not_large)
+# 		
+# 		xi_mm = np.zeros((len(r)), float)
+# 
+# 		if np.count_nonzero(mask) > 0:
+# 			xi_mm[mask] = cosmo.correlationFunction(r_com[mask], z)
+# 
+# 		xi_mm[np.logical_not(mask_not_small)] = cosmo.correlationFunction(R_min, z)
+# 		xi_mm[np.logical_not(mask_not_large)] = cosmo.correlationFunction(R_max, z)
+# 		
+# 		return xi_mm
 
 	###############################################################################################
 
 	def _density(self, r):
+
+		if not self.initialized:
+			self.update()
 		
 		z, bias = self._getParameters()
-		rho = cosmology.getCurrent().rho_m(z) * bias * self._xi_mm(r, z)
+		r_com = r / 1000.0 * (1 + z)
+
+		if np.any(r_com < self.R_min) or np.any(r_com > self.R_max):
+			mask_not_small = (r_com > self.R_min)
+			mask_not_large = (r_com < self.R_max)
+			mask = (mask_not_small & mask_not_large)
+			xi = np.zeros((len(r)), float)
+			xi[mask] = self.xi_interp(r_com[mask])
+			xi[np.logical_not(mask_not_small)] = self.xi_interp(self.R_min)
+			xi[np.logical_not(mask_not_large)] = self.xi_interp(self.R_max)
+		else:
+			xi = self.xi_interp(r_com)
+			
+		xi *= self.D2
+		rho = self.rho_m * bias * xi
 
 		return rho
 
@@ -518,7 +599,7 @@ class OuterTermPowerLaw(OuterTerm):
 				z = None, max_rho = defaults.HALO_PROFILE_OUTER_PL_MAXRHO, 
 				norm_name = 'pl_norm', slope_name = 'pl_slope', 
 				pivot_name = 'pivot', pivot_factor_name = 'pivot_factor', z_name = 'z', 
-				max_rho_name = 'pl_max_rho'):
+				max_rho_name = 'pl_max_rho', **kwargs):
 
 		if norm is None:
 			raise Exception('Normalization of power law cannot be None.')
@@ -633,7 +714,7 @@ class OuterTermPowerLaw(OuterTerm):
 # OUTER TERM: POWER LAW
 ###################################################################################################
 
-class OuterTermD22(OuterTerm):
+class OuterTermDiemer22(OuterTerm):
 	"""
 	Infalling term according to Diemer 2022.
 	
@@ -698,7 +779,7 @@ class OuterTermD22(OuterTerm):
 				delta_max = defaults.HALO_PROFILE_OUTER_D22_DELTA_MAX, 
 				pivot = None, pivot_factor = None, z = None, 
 				norm_name = 'pl_norm', slope_name = 'pl_slope', zeta_name = 'zeta', delta_max_name = 'delta_max',
-				pivot_name = 'pivot', pivot_factor_name = 'pivot_factor', z_name = 'z'):
+				pivot_name = 'pivot', pivot_factor_name = 'pivot_factor', z_name = 'z', **kwargs):
 
 		if norm is None:
 			raise Exception('Normalization of power law cannot be None.')

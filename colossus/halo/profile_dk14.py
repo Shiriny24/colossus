@@ -97,15 +97,13 @@ Module reference
 """
 
 import numpy as np
-import scipy.optimize
+import warnings
 
 from colossus import defaults
 from colossus.cosmology import cosmology
 from colossus.lss import peaks
 from colossus.halo import mass_so
 from colossus.halo import profile_base
-from colossus.halo import profile_outer
-from colossus.halo import mass_defs
 
 ###################################################################################################
 # DIEMER & KRAVTSOV 2014 PROFILE
@@ -159,8 +157,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	# CONSTRUCTOR
 	###############################################################################################
 	
-	def __init__(self, selected_by = defaults.HALO_PROFILE_SELECTED_BY, Gamma = None,
-				**kwargs):
+	def __init__(self, selected_by = defaults.HALO_PROFILE_SELECTED_BY, Gamma = None, **kwargs):
 
 		# Set the fundamental variables par_names and opt_names
 		self.par_names = ['rhos', 'rs', 'rt', 'alpha', 'beta', 'gamma']
@@ -252,7 +249,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	# METHODS BOUND TO THE CLASS
 	###############################################################################################
 
-	def setNativeParameters(self, M, c, z, mdef, selected_by = None, Gamma = None):
+	def setNativeParameters(self, M, c, z, mdef, selected_by = None, Gamma = None, **kwargs):
 		"""
 		Set the native DK14 parameters from mass and concentration (and optionally others).
 
@@ -263,11 +260,11 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	
 		Parameters
 		-------------------------------------------------------------------------------------------
-		M: array_like
-			Spherical overdensity mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
-		c: array_like
+		M: float
+			Spherical overdensity mass in :math:`M_{\odot}/h`.
+		c: float
 			The concentration, :math:`c = R / r_{\\rm s}`, corresponding to the given halo mass and 
-			mass definition; must have the same dimensions as ``M``.
+			mass definition.
 		z: float
 			Redshift
 		mdef: str
@@ -361,122 +358,19 @@ class DK14Profile(profile_base.HaloDensityProfile):
 
 	###############################################################################################
 
-	# This function returns the spherical overdensity radius (in kpc / h) given a mass definition
-	# and redshift. We know R200m and thus M200m for a DK14 profile, and use those parameters to
-	# compute what R would be for an NFW profile and use this radius as an initial guess.
-	
-	def RDelta(self, z, mdef):
-		"""
-		The spherical overdensity radius of a given mass definition.
-
-		Parameters
-		-------------------------------------------------------------------------------------------
-		z: float
-			Redshift
-		mdef: str
-			The mass definition for which the spherical overdensity radius is computed.
-			See :doc:`halo_mass` for details.
-			
-		Returns
-		-------------------------------------------------------------------------------------------
-		R: float
-			Spherical overdensity radius in physical kpc/h.
-
-		See also
-		-------------------------------------------------------------------------------------------
-		MDelta: The spherical overdensity mass of a given mass definition.
-		RMDelta: The spherical overdensity radius and mass of a given mass definition.
-		"""		
-	
-		M200m = mass_so.R_to_M(self.opt['R200m'], z, mdef)
-		_, R_guess, _ = mass_defs.changeMassDefinition(M200m, self.opt['R200m'] / self.par['rs'], z, '200m', mdef)
-		density_threshold = mass_so.densityThreshold(z, mdef)
-		R = self._RDeltaLowlevel(R_guess, density_threshold)
-	
-		return R
-
-	###############################################################################################
-
-	def M4rs(self):
-		"""
-		The mass within 4 scale radii, :math:`M_{<4rs}`.
-		
-		This mass definition was suggested by 
-		`More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`_, see the 
-		:doc:`halo_mass_adv` section for details.
-
-		Returns
-		-------------------------------------------------------------------------------------------
-		M4rs: float
-			The mass within 4 scale radii, :math:`M_{<4rs}`, in :math:`M_{\odot} / h`.
-		"""
-		
-		M = self.enclosedMass(4.0 * self.par['rs'])
-		
-		return M
-
-	###############################################################################################
-
 	def Rsp(self, search_range = 5.0):
-		"""
-		The splashback radius, :math:`R_{\\rm sp}`.
-		
-		See the :doc:`halo_splashback` section for a detailed description of the splashback radius.
-		Here, we define :math:`R_{\\rm sp}` as the radius where the profile reaches its steepest 
-		logarithmic slope.
-		
-		Parameters
-		-------------------------------------------------------------------------------------------
-		search_range: float
-			When searching for the radius of steepest slope, search within this factor of 
-			:math:`R_{\\rm 200m}` (optional).
-			
-		Returns
-		-------------------------------------------------------------------------------------------
-		Rsp: float
-			The splashback radius, :math:`R_{\\rm sp}`, in physical kpc/h.
-			
-		See also
-		-------------------------------------------------------------------------------------------
-		RMsp: The splashback radius and mass within, :math:`R_{\\rm sp}` and :math:`M_{\\rm sp}`.
-		Msp: The mass enclosed within :math:`R_{\\rm sp}`, :math:`M_{\\rm sp}`.
-		"""
-		
-		R200m = self.opt['R200m']
-		rc = scipy.optimize.fminbound(self.densityDerivativeLog, R200m / search_range, R200m * search_range)
 
-		return rc
+		warnings.warn('The DK14Profile.Rsp() function is deprecated and will be removed. Please use Rsteepest() instead.')
+
+		return self.Rsteepest()
 	
 	###############################################################################################
 
 	def RMsp(self, search_range = 5.0):
-		"""
-		The splashback radius and mass within, :math:`R_{\\rm sp}` and :math:`M_{\\rm sp}`.
-		
-		See the :doc:`halo_splashback` section for a detailed description of the splashback radius.
-		Here, we define :math:`R_{\\rm sp}` as the radius where the profile reaches its steepest 
-		logarithmic slope.
-		
-		Parameters
-		-------------------------------------------------------------------------------------------
-		search_range: float
-			When searching for the radius of steepest slope, search within this factor of 
-			:math:`R_{\\rm 200m}` (optional).
-			
-		Returns
-		-------------------------------------------------------------------------------------------
-		Rsp: float
-			The splashback radius, :math:`R_{\\rm sp}`, in physical kpc/h.
-		Msp: float
-			The mass enclosed within the splashback radius, :math:`M_{\\rm sp}`, in :math:`M_{\odot} / h`.
-			
-		See also
-		-------------------------------------------------------------------------------------------
-		Rsp: The splashback radius, :math:`R_{\\rm sp}`.
-		Msp: The mass enclosed within :math:`R_{\\rm sp}`, :math:`M_{\\rm sp}`.
-		"""
-		
-		Rsp = self.Rsp(search_range = search_range)
+
+		warnings.warn('The DK14Profile.RMsp() function is deprecated and will be removed. Please use Rsteepest() instead.')
+
+		Rsp = self.Rsteepest()
 		Msp = self.enclosedMass(Rsp)
 
 		return Rsp, Msp
@@ -484,30 +378,9 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	###############################################################################################
 
 	def Msp(self, search_range = 5.0):
-		"""
-		The mass enclosed within :math:`R_{\\rm sp}`, :math:`M_{\\rm sp}`.
-		
-		See the :doc:`halo_splashback` section for a detailed description of the splashback radius.
-		Here, we define :math:`R_{\\rm sp}` as the radius where the profile reaches its steepest 
-		logarithmic slope.
-		
-		Parameters
-		-------------------------------------------------------------------------------------------
-		search_range: float
-			When searching for the radius of steepest slope, search within this factor of 
-			:math:`R_{\\rm 200m}` (optional).
-			
-		Returns
-		-------------------------------------------------------------------------------------------
-		Msp: float
-			The mass enclosed within the splashback radius, :math:`M_{\\rm sp}`, in :math:`M_{\odot} / h`.
-			
-		See also
-		-------------------------------------------------------------------------------------------
-		Rsp: The splashback radius, :math:`R_{\\rm sp}`.
-		RMsp: The splashback radius and mass within, :math:`R_{\\rm sp}` and :math:`M_{\\rm sp}`.
-		"""
-		
+
+		warnings.warn('The DK14Profile.Msp() function is deprecated and will be removed. Please use Rsteepest() instead.')
+
 		_, Msp = self.RMsp(search_range = search_range)
 
 		return Msp
@@ -603,98 +476,5 @@ class DK14Profile(profile_base.HaloDensityProfile):
 				counter += 1
 		
 		return deriv
-
-###################################################################################################
-# DIEMER & KRAVTSOV 2014 PROFILE
-###################################################################################################
-
-def getDK14ProfileWithOuterTerms(outer_term_names = ['mean', 'pl'],
-				# Parameters for a power-law outer profile
-				power_law_norm = defaults.HALO_PROFILE_DK14_PL_NORM,
-				power_law_slope = defaults.HALO_PROFILE_DK14_PL_SLOPE,
-				power_law_max = defaults.HALO_PROFILE_OUTER_PL_MAXRHO,
-				# Parameters for a correlation function outer profile
-				derive_bias_from = 'R200m', bias = 1.0, 
-				# The parameters for the DK14 inner profile
-				**kwargs):
-	"""
-	A wrapper function to create a DK14 profile with one or many outer profile terms.
-
-	The DK14 profile only makes sense if some description of the outer profile is added. This
-	function provides a convenient way to construct such profiles without having to set the 
-	properties of the outer terms manually. Valid keys for outer terms include the following.
-	
-	* ``mean``: The mean density of the universe at redshift ``z`` (see the documentation of 
-	  :class:`~halo.profile_outer.OuterTermMeanDensity`).
-	* ``pl``: A power-law profile in radius (see the documentation of 
-	  :class:`~halo.profile_outer.OuterTermPowerLaw`). For the DK14 profile, the chosen pivot
-	  radius is :math:`5 R_{\\rm 200m}`. Note that :math:`R_{\\rm 200m}` is set as a profile option 
-	  in the constructor once, but not adjusted thereafter unless the 
-	  :func:`~halo.profile_dk14.DK14Profile.update` function is called. Thus, in a fit, the fitted 
-	  norm and slope refer to a pivot of the original :math:`R_{\\rm 200m}` until update() is called 
-	  which adjusts these parameters. Furthermore, the parameters for the power-law outer profile 
-	  (norm and slope, called :math:`b_{\\rm e}` and :math:`s_{\\rm e}` in the DK14 paper) exhibit 
-	  a complicated dependence on halo mass, redshift and cosmology. At low redshift, and for the 
-	  cosmology considered in DK14, ``power_law_norm = 1.0`` and ``power_law_slope = 1.5`` are 
-	  reasonable values over a wide range of masses (see Figure 18 in DK14), but these values are 
-	  by no means universal or accurate. 
-	* ``cf``: The matter-matter correlation function times halo bias (see the documentation of 
-  	  :class:`~halo.profile_outer.OuterTermCorrelationFunction`). Here, the user has a choice
-	  regarding halo bias: it can enter the profile as a parameter (if ``derive_bias_from == 
-	  None`` or it can be derived according to the default model of halo bias based on 
-	  :math:`M_{\\rm 200m}` (in which case ``derive_bias_from = 'R200m'`` and the bias parameter 
-	  is ignored). The latter option can make the constructor slow because of the iterative 
-	  evaluation of bias and :math:`M_{\\rm 200m}`.
-
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	outer_term_names: array_like
-		A list of outer profile term identifiers, can be ``mean``, ``pl``, or ``cf``.
-	power_law_norm: float
-		The normalization of a power-law term (called :math:`b_{\\rm e}` in DK14).
-	power_law_slope: float
-		The negative slope of a power-law term (called :math:`s_{\\rm e}` in DK14).
-	power_law_max: float
-		The maximum density contributed by a power-law term.	
-	derive_bias_from: str
-		See ``cf`` section above.
-	bias: float
-		See ``cf`` section above.
-	kwargs: kwargs
-		The arguments passed to the DK14 profile constructor (i.e., the fundamental parameters or 
-		``M``, ``c`` etc).
-	"""
-	
-	outer_terms = []
-	if len(outer_term_names) > 0:
-		if not 'z' in kwargs:
-			raise Exception('Expect redshift z in arguments.')
-		else:
-			z = kwargs['z']
-	
-	for i in range(len(outer_term_names)):
-		
-		if outer_term_names[i] == 'mean':
-			if z is None:
-				raise Exception('Redshift z must be set if a mean density outer term is chosen.')
-			t = profile_outer.OuterTermMeanDensity(z)
-		
-		elif outer_term_names[i] == 'pl':
-			t = profile_outer.OuterTermPowerLaw(norm = power_law_norm, slope = power_law_slope, 
-							pivot = 'R200m', pivot_factor = 5.0, z = z, max_rho = power_law_max)
-		
-		elif outer_term_names[i] == 'cf':
-			t = profile_outer.OuterTermCorrelationFunction(derive_bias_from = derive_bias_from,
-														z = z, bias = bias)
-	
-		else:
-			msg = 'Unknown outer term name, %s.' % (outer_terms[i])
-			raise Exception(msg)
-	
-		outer_terms.append(t)
-
-	prof = DK14Profile(outer_terms = outer_terms, **kwargs)
-	
-	return prof
 
 ###################################################################################################

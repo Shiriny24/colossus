@@ -169,11 +169,11 @@ class NFWProfile(profile_base.HaloDensityProfile):
 	
 		Parameters
 		-------------------------------------------------------------------------------------------
-		M: array_like
-			Spherical overdensity mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
-		c: array_like
+		M: float
+			Spherical overdensity mass in :math:`M_{\odot}/h`.
+		c: float
 			The concentration, :math:`c = R / r_{\\rm s}`, corresponding to the given halo mass and 
-			mass definition; must have the same dimensions as ``M``.
+			mass definition.
 		z: float
 			Redshift
 		mdef: str

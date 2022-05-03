@@ -92,7 +92,6 @@ Module reference
 """
 
 import numpy as np
-import scipy.optimize
 
 from colossus import defaults
 from colossus.utils import utilities
@@ -100,13 +99,12 @@ from colossus.cosmology import cosmology
 from colossus.lss import peaks
 from colossus.halo import mass_so
 from colossus.halo import profile_base
-from colossus.halo import mass_defs
 
 ###################################################################################################
 # DIEMER & KRAVTSOV 2014 PROFILE
 ###################################################################################################
 
-class D22Profile(profile_base.HaloDensityProfile):
+class ModelAProfile(profile_base.HaloDensityProfile):
 	"""
 	The Diemer 2022 density profile.
 	
@@ -155,23 +153,15 @@ class D22Profile(profile_base.HaloDensityProfile):
 	# CONSTRUCTOR
 	###############################################################################################
 	
-	def __init__(self, z = None, selected_by = defaults.HALO_PROFILE_SELECTED_BY, Gamma = None, 
-				**kwargs):
+	def __init__(self, selected_by = defaults.HALO_PROFILE_SELECTED_BY, Gamma = None, **kwargs):
 
 		# Set the fundamental variables par_names and opt_names
 		self.par_names = ['rhos', 'rs', 'rt', 'alpha', 'beta']
-		self.opt_names = ['selected_by', 'Gamma', 'R200m', 'z']
+		self.opt_names = []
 
-		if z is None:
-			raise Exception('Need the redshift z to construct a Diemer22 profile.')
-
-		self.opt['selected_by'] = selected_by
-		self.opt['Gamma'] = Gamma
-		self.opt['z'] = z
-		self.opt['R200m'] = None
-		
 		# Run the constructor
-		profile_base.HaloDensityProfile.__init__(self, **kwargs)
+		profile_base.HaloDensityProfile.__init__(self, allowed_mdefs = ['200m'], 
+							selected_by = selected_by, Gamma = Gamma, **kwargs)
 	
 		# Sanity checks
 		if self.par['rhos'] < 0.0 or self.par['rs'] < 0.0 or self.par['rt'] < 0.0:
@@ -263,84 +253,53 @@ class D22Profile(profile_base.HaloDensityProfile):
 	# METHODS BOUND TO THE CLASS
 	###############################################################################################
 
-	def setNativeParameters(self, M, c, z, mdef, selected_by, Gamma = None, 
-							acc_warn = 0.01, acc_err = 0.05):
+	def setNativeParameters(self, M, c, z, mdef, selected_by = None, Gamma = None, **kwargs):
+		"""
+		Set the native Diemer22 parameters from mass and concentration (and optionally others).
 
-		# Declare shared variables; these parameters are advanced during the iterations
-		par2 = {}
-		par2['RDelta'] = 0.0
-		
-		RTOL = 0.01
-		MTOL = 0.01
-		GUESS_TOL = 2.5
+		The D22 profile has five free parameters, which are set by this function. The mass and 
+		concentration must be given as :math:`M_{\rm 200m}` and :math:`c_{\rm 200m}`. Other 
+		mass definitions demand iteration, which can be achieved with the initialization routine
+		in the parent class. This function ignores the presence of outer profiles.
+	
+		Parameters
+		-------------------------------------------------------------------------------------------
+		M: float
+			Spherical overdensity mass in :math:`M_{\odot}/h`.
+		c: float
+			The concentration, :math:`c = R / r_{\\rm s}`, corresponding to the given halo mass and 
+			mass definition.
+		z: float
+			Redshift
+		mdef: str
+			The mass definition in which ``M`` and ``c`` are given. See :doc:`halo_mass` for 
+			details.
+		selected_by: str
+			The halo sample to which this profile refers can be selected mass ``M`` or by accretion
+			rate ``Gamma``.
+		Gamma: float
+			The mass accretion rate as defined in DK14. This parameter only needs to be passed if 
+			``selected_by == 'Gamma'``.
+		"""
 
-		# -----------------------------------------------------------------------------------------
+		if selected_by is None:
+			raise Exception('The selected_by option must be set in Diemer22 profile, found None.')
+		if mdef != '200m':
+			raise Exception('The Diemer22 parameters can only be constructed from the M200m definition, found %s.' % (mdef))
 
-		# Try a radius R200m, compute the resulting RDelta using the old RDelta as a starting guess
-		
-		def radius_diff(R200m, par2, Gamma, rho_target, R_target):
-			
-			self.opt['R200m'] = R200m
-			M200m = mass_so.R_to_M(R200m, z, '200m')
-			nu200m = peaks.peakHeight(M200m, z)
+		M200m = M
+		R200m = mass_so.M_to_R(M200m, z, mdef)
+		nu200m = peaks.peakHeight(M200m, z)
 
-			self.par['alpha'], self.par['beta'], rt_R200m = \
-				self.deriveParameters(selected_by, nu200m = nu200m, z = z, Gamma = Gamma)
-			self.par['rt'] = rt_R200m * R200m
-			self.par['rhos'] *= self._normalizeInner(R200m, M200m)
+		self.par['rs'] = R200m / c
+		self.par['alpha'], self.par['beta'], rt_R200m = \
+			self.deriveParameters(selected_by, nu200m = nu200m, z = z, Gamma = Gamma)
+		self.par['rt'] = rt_R200m * R200m
+		self.par['rhos'] = 1.0
+		self.par['rhos'] *= M200m / self.enclosedMassInner(R200m)
 
-			par2['RDelta'] = self._RDeltaLowlevel(par2['RDelta'], rho_target, 
-												guess_tolerance = GUESS_TOL)
-			
-			return par2['RDelta'] - R_target
-		
-		# -----------------------------------------------------------------------------------------
-		
-		# The user needs to set a cosmology before this function can be called
-		R_target = mass_so.M_to_R(M, z, mdef)
-		self.par['rs'] = R_target / c
-		
-		if mdef == '200m':
-			
-			# The user has supplied M200m, the parameters follow directly from the input
-			M200m = M
-			self.opt['R200m'] = mass_so.M_to_R(M200m, z, '200m')
-			nu200m = peaks.peakHeight(M200m, z)
-			self.par['alpha'], self.par['beta'], rt_R200m = \
-				self.deriveParameters(selected_by, nu200m = nu200m, z = z, Gamma = Gamma)
-			self.par['rt'] = rt_R200m * self.opt['R200m']
-
-			# Guess rhos = 1.0, then re-normalize			
-			self.par['rhos'] = 1.0
-			self.par['rhos'] *= self._normalizeInner(self.opt['R200m'], M200m)
-			
-		else:
-			
-			# The user has supplied some other mass definition, we need to iterate.
-			_, R200m_guess, _ = mass_defs.changeMassDefinition(M, c, z, mdef, '200m')
-			par2['RDelta'] = R_target
-			self.par['rhos'] = 1.0
-
-			# Iterate to find an M200m for which the desired mass is correct
-			rho_target = mass_so.densityThreshold(z, mdef)
-			args = par2, Gamma, rho_target, R_target
-			self.opt['R200m'] = scipy.optimize.brentq(radius_diff, R200m_guess / 1.3, R200m_guess * 1.3,
-								args = args, xtol = RTOL)
-
-			# Check the accuracy of the result; M should be very close to MDelta now
-			M_result = mass_so.R_to_M(par2['RDelta'], z, mdef)
-			err = (M_result - M) / M
-			
-			if abs(err) > acc_warn:
-				msg = 'WARNING: D22 profile parameters converged to an accuracy of %.1f percent.' % (abs(err) * 100.0)
-				print(msg)
-			
-			if abs(err) > acc_err:
-				msg = 'D22 profile parameters not converged (%.1f percent error).' % (abs(err) * 100.0)
-				raise Exception(msg)
-		
 		return
-
+	
 	###############################################################################################
 	
 	def densityInner(self, r):
@@ -420,139 +379,6 @@ class D22Profile(profile_base.HaloDensityProfile):
 		
 	###############################################################################################
 
-	# This function returns the spherical overdensity radius (in kpc / h) given a mass definition
-	# and redshift. We know R200m and thus M200m for a DK14 profile, and use those parameters to
-	# compute what R would be for an NFW profile and use this radius as an initial guess.
-	
-	def RDelta(self, z, mdef):
-		"""
-		The spherical overdensity radius of a given mass definition.
-
-		Parameters
-		-------------------------------------------------------------------------------------------
-		z: float
-			Redshift
-		mdef: str
-			The mass definition for which the spherical overdensity radius is computed.
-			See :doc:`halo_mass` for details.
-			
-		Returns
-		-------------------------------------------------------------------------------------------
-		R: float
-			Spherical overdensity radius in physical kpc/h.
-
-		See also
-		-------------------------------------------------------------------------------------------
-		MDelta: The spherical overdensity mass of a given mass definition.
-		RMDelta: The spherical overdensity radius and mass of a given mass definition.
-		"""		
-	
-		M200m = mass_so.R_to_M(self.opt['R200m'], z, mdef)
-		_, R_guess, _ = mass_defs.changeMassDefinition(M200m, self.opt['R200m'] / self.par['rs'], z, '200m', mdef)
-		density_threshold = mass_so.densityThreshold(z, mdef)
-		R = self._RDeltaLowlevel(R_guess, density_threshold)
-	
-		return R
-
-	###############################################################################################
-
-	def Rsp(self, search_range = 5.0):
-		"""
-		The splashback radius, :math:`R_{\\rm sp}`.
-		
-		See the :doc:`halo_splashback` section for a detailed description of the splashback radius.
-		Here, we define :math:`R_{\\rm sp}` as the radius where the profile reaches its steepest 
-		logarithmic slope.
-		
-		Parameters
-		-------------------------------------------------------------------------------------------
-		search_range: float
-			When searching for the radius of steepest slope, search within this factor of 
-			:math:`R_{\\rm 200m}` (optional).
-			
-		Returns
-		-------------------------------------------------------------------------------------------
-		Rsp: float
-			The splashback radius, :math:`R_{\\rm sp}`, in physical kpc/h.
-			
-		See also
-		-------------------------------------------------------------------------------------------
-		RMsp: The splashback radius and mass within, :math:`R_{\\rm sp}` and :math:`M_{\\rm sp}`.
-		Msp: The mass enclosed within :math:`R_{\\rm sp}`, :math:`M_{\\rm sp}`.
-		"""
-		
-		R200m = self.opt['R200m']
-		rc = scipy.optimize.fminbound(self.densityDerivativeLog, R200m / search_range, R200m * search_range)
-
-		return rc
-	
-	###############################################################################################
-
-	def RMsp(self, search_range = 5.0):
-		"""
-		The splashback radius and mass within, :math:`R_{\\rm sp}` and :math:`M_{\\rm sp}`.
-		
-		See the :doc:`halo_splashback` section for a detailed description of the splashback radius.
-		Here, we define :math:`R_{\\rm sp}` as the radius where the profile reaches its steepest 
-		logarithmic slope.
-		
-		Parameters
-		-------------------------------------------------------------------------------------------
-		search_range: float
-			When searching for the radius of steepest slope, search within this factor of 
-			:math:`R_{\\rm 200m}` (optional).
-			
-		Returns
-		-------------------------------------------------------------------------------------------
-		Rsp: float
-			The splashback radius, :math:`R_{\\rm sp}`, in physical kpc/h.
-		Msp: float
-			The mass enclosed within the splashback radius, :math:`M_{\\rm sp}`, in :math:`M_{\odot} / h`.
-			
-		See also
-		-------------------------------------------------------------------------------------------
-		Rsp: The splashback radius, :math:`R_{\\rm sp}`.
-		Msp: The mass enclosed within :math:`R_{\\rm sp}`, :math:`M_{\\rm sp}`.
-		"""
-		
-		Rsp = self.Rsp(search_range = search_range)
-		Msp = self.enclosedMass(Rsp)
-
-		return Rsp, Msp
-	
-	###############################################################################################
-
-	def Msp(self, search_range = 5.0):
-		"""
-		The mass enclosed within :math:`R_{\\rm sp}`, :math:`M_{\\rm sp}`.
-		
-		See the :doc:`halo_splashback` section for a detailed description of the splashback radius.
-		Here, we define :math:`R_{\\rm sp}` as the radius where the profile reaches its steepest 
-		logarithmic slope.
-		
-		Parameters
-		-------------------------------------------------------------------------------------------
-		search_range: float
-			When searching for the radius of steepest slope, search within this factor of 
-			:math:`R_{\\rm 200m}` (optional).
-			
-		Returns
-		-------------------------------------------------------------------------------------------
-		Msp: float
-			The mass enclosed within the splashback radius, :math:`M_{\\rm sp}`, in :math:`M_{\odot} / h`.
-			
-		See also
-		-------------------------------------------------------------------------------------------
-		Rsp: The splashback radius, :math:`R_{\\rm sp}`.
-		RMsp: The splashback radius and mass within, :math:`R_{\\rm sp}` and :math:`M_{\\rm sp}`.
-		"""
-		
-		_, Msp = self.RMsp(search_range = search_range)
-
-		return Msp
-	
-	###############################################################################################
-
 	# We fit all parameters in log space
 
 	def _fitConvertParams(self, p, mask):
@@ -612,3 +438,5 @@ class D22Profile(profile_base.HaloDensityProfile):
 		deriv[:, :] *= rho[None, :]
 
 		return deriv
+
+###################################################################################################

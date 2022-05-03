@@ -278,6 +278,7 @@ class HaloDensityProfile():
 			R_hi = R200m_guess * guess_tol[i]
 			val_lo = radius_diff(R_lo, *args)
 			val_hi = radius_diff(R_hi, *args)
+			
 			if val_lo * val_hi < 0.0:
 				self.opt['R200m'] = scipy.optimize.brentq(radius_diff, R_lo, R_hi,
 							args = args, xtol = defaults.HALO_PROFILE_ACC_RADIUS)
@@ -390,16 +391,21 @@ class HaloDensityProfile():
 
 	def update(self):
 		"""
-		Update the profile object after a change in parameters.
+		Update the profile object after a change in parameters or cosmology.
 		
 		If the parameters dictionary has been changed (e.g. by the user or during fitting), this 
 		function must be called to ensure consistency within the profile object. This involves
 		deleting any pre-computed quantities (e.g., tabulated enclosed masses) and re-computing
-		profile properties that depend on the parameters.
+		profile properties that depend on the parameters. The corresponding functions for outer 
+		terms are automatically called as well.
 		"""
 		
 		if 'R200m' in self.opt:
 			self.updateR200m()
+		
+		if self.N_outer > 0:
+			for i in range(self.N_outer):
+				self._outer_terms[i].update()
 		
 		return
 
@@ -1398,7 +1404,7 @@ class HaloDensityProfile():
 			R_hi = R_guess * guess_tol[i]
 			val_lo = self._thresholdEquation(R_lo, args)
 			val_hi = self._thresholdEquation(R_hi, args)
-			
+
 			if val_lo * val_hi < 0.0:
 				R = scipy.optimize.brentq(self._thresholdEquation, R_lo, R_hi, args = args, 
 										xtol = defaults.HALO_PROFILE_ACC_RADIUS)
@@ -1499,6 +1505,52 @@ class HaloDensityProfile():
 		_, M = self.RMDelta(z, mdef)
 		
 		return M
+	
+	###############################################################################################
+
+	def Rsteepest(self, search_range = 10.0):
+		"""
+		The radius where the logarithmic slope of the density profile is steepest.
+		
+		This function finds the radius where the logarithmic slope of the profile is minimal, 
+		within some very generous bounds. The function makes sense only if at least one outer term 
+		is set, because the inner profile steepens with radius (for any reasonable functional 
+		form). 
+		
+		The radius of steepest slope is often taken as a proxy for the splashback radius, 
+		:math:`R_{\\rm sp}`, but this correspondence is only approximate because the 
+		:math:`R_{\\rm steep}` is the result of a tradeoff between the orbiting and infalling 
+		profiles, whereas the splashback radius is determined by the dynamics of orbiting 
+		particles. See the :doc:`halo_splashback` section for a detailed description of the 
+		splashback radius.
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		search_range: float
+			When searching for the radius of steepest slope, search within this factor of 
+			:math:`R_{\\rm 200m}`, :math:`r_{\\rm s}`, or another initial guess, which is 
+			determined automatically.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		Rsteep: float
+			The radius where the slope is steepest, in physical kpc/h.
+		"""
+		
+		if self.N_outer == 0:
+			raise Exception('The steepest radius can only be evaluated if outer terms are set.')
+		
+		if 'R200m' in self.opt:
+			r_guess = self.opt['R200m']
+		elif 'rs' in self.par:
+			r_guess = self.par['rs']
+		else:
+			r_guess = self.r_guess
+		
+		r_steep = scipy.optimize.fminbound(self.densityDerivativeLog, 
+									r_guess / search_range, r_guess * search_range)
+
+		return r_steep
 	
 	###############################################################################################
 
@@ -2018,3 +2070,5 @@ class HaloDensityProfile():
 			utilities.printLine()
 
 		return dict
+
+###################################################################################################

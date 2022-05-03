@@ -6,10 +6,18 @@ See below for a listing of the most important code and interface changes in Colo
 version 1.1.0. You can download older versions from the 
 `PyPi History <https://pypi.org/project/colossus/#history>`_ for Colossus.
 
-.. rubric:: Version 1.2.20 (released XX/XX/2022)
+.. rubric:: Version 1.3.0 (released XX/XX/2022)
 
-The main content of this update are numerous changes in the halo density profiles module. Some of
-the following changes are not backwards compatible:
+The main content of this update is a ground-up rewrite of the halo density profiles module. 
+Some of the following changes are unfortunately not backwards compatible. 
+
+The general philosophy of the new structure is to generalize the creation of profiles as much
+as possible, including the addition of outer (infalling) terms. The function signatures have been
+radically simplified to mostly take arbitrary keyword arguments, which are parsed by the respective
+constructors and functions called by them. 
+
+Please feel free to get in touch if you have trouble migrating your code to the new version. The
+main changes are as follows:
 
 * The profile constructor was generalized to work with the keyword arguments given by the user. A
   derived class now only needs to list its parameter (and perhaps option) names, and the parent
@@ -25,6 +33,12 @@ the following changes are not backwards compatible:
   parameters is iterative. This iteration was not performed for all profiles, but is now.
 * In the DK14 profile, all options have been removed as they are only needed for the 
   constructor.
+* The ``getDK14ProfileWithOuterTerms`` function has been removed from the DK14 profile module, 
+  and has been replaced by the general :func:`profile_composite.compositeProfile` function. The
+  signature is similar, but the parameter names are now consistent with the constructors of the 
+  respective outer terms. 
+* The function :func:`halo.profile_dk14.DK14Profile.M4rs` has been removed. The result can easily
+  be found by evaluating the enclosed mass within four scale radii.
 * For the NFW profile, the ``fundamentalParameters`` function (which has now been replaced by
   ``setNativeParameters``) was a class method, meaning that it could be called without calling the
   constructor first. This routine has been renamed to ``nativeParameters``.

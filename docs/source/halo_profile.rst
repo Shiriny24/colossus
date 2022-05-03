@@ -54,20 +54,35 @@ module. For more examples of how to use the Colossus profile modules, see :doc:`
 Density profile models
 ----------------------
 
-The following functional forms for the density profile are currently implemented:
+The following functional forms for the inner (orbiting) density profile are currently implemented:
 
 .. table::
    :widths: auto
 
-   =================================================== =========================================== =========================
-   Class                                               Explanation                                 Paper                    
-   =================================================== =========================================== =========================
-   :class:`~halo.profile_spline.SplineProfile`         An arbitrary density profile                --
-   :class:`~halo.profile_einasto.EinastoProfile`       Einasto profile                             `Einasto 1965 <http://adsabs.harvard.edu/abs/1965TrAlm...5...87E>`_
-   :class:`~halo.profile_hernquist.HernquistProfile`   Hernquist profile                           `Hernquist 1990 <http://adsabs.harvard.edu/abs/1990ApJ...356..359H>`_
-   :class:`~halo.profile_nfw.NFWProfile`               Navarro-Frenk-White profile                 `Navarro et al. 1997 <http://adsabs.harvard.edu/abs/1997ApJ...490..493N>`_
-   :class:`~halo.profile_dk14.DK14Profile`             Diemer & Kravtsov profile                   `Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_
-   =================================================== =========================================== =========================
+   ================= =================================================== =========================================== =========================
+   Short code        Class                                               Explanation                                 Reference                    
+   ================= =================================================== =========================================== =========================
+   ``spline``        :class:`~halo.profile_spline.SplineProfile`         An arbitrary density profile                --
+   ``einasto``       :class:`~halo.profile_einasto.EinastoProfile`       Einasto profile                             `Einasto 1965 <http://adsabs.harvard.edu/abs/1965TrAlm...5...87E>`_
+   ``hernquist``     :class:`~halo.profile_hernquist.HernquistProfile`   Hernquist profile                           `Hernquist 1990 <http://adsabs.harvard.edu/abs/1990ApJ...356..359H>`_
+   ``nfw``           :class:`~halo.profile_nfw.NFWProfile`               Navarro-Frenk-White profile                 `Navarro et al. 1997 <http://adsabs.harvard.edu/abs/1997ApJ...490..493N>`_
+   ``dk14``          :class:`~halo.profile_dk14.DK14Profile`             Diemer & Kravtsov profile                   `Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_
+   ================= =================================================== =========================================== =========================
+
+The following functional forms for the outer (infalling and two-halo) density profile are currently 
+implemented:
+
+.. table::
+   :widths: auto
+
+   ================= =========================================================== ============================================== =========================
+   Short code        Class                                                       Explanation                                    Reference                    
+   ================= =========================================================== ============================================== =========================
+   ``mean``          :class:`~halo.profile_outer.OuterTermMeanDensity`           The mean matter density of the Universe        --
+   ``cf``            :class:`~halo.profile_outer.OuterTermCorrelationFunction`   Matter-matter correlation times bias           --
+   ``pl``            :class:`~halo.profile_outer.OuterTermPowerLaw`              Power law in overdensity                       --
+   ``plsmooth``      :class:`~halo.profile_outer.OuterTermDiemer22`              Power law with smooth transition to constant   --
+   ================= =========================================================== ============================================== =========================
 
 ----------------------------
 Creating a new profile class
@@ -148,6 +163,7 @@ The following documents describe the general functionality of inner and outer pr
 
     halo_profile_base
     halo_profile_outer
+    halo_profile_composite
 
 The following documents describe the specific implementations for each profile model:
 

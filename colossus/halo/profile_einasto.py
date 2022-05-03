@@ -120,7 +120,7 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 	# assuming an NFW profile with the given mass and concentration. This leads to a negligible
 	# inconsistency, but solving for the correct alpha iteratively would be much slower.
 
-	def setNativeParameters(self, M, c, z, mdef, alpha = None):
+	def setNativeParameters(self, M, c, z, mdef, alpha = None, **kwargs):
 		"""
 		The fundamental Einasto parameters, :math:`\\rho_{\\rm s}`, :math:`r_{\\rm s}`, and 
 		:math:`\\alpha` from mass and concentration.
@@ -132,10 +132,10 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 		Parameters
 		-------------------------------------------------------------------------------------------
 		M: float
-			Spherical overdensity mass in :math:`M_{\odot}/h`; can be a number or a numpy array.
+			Spherical overdensity mass in :math:`M_{\odot}/h`.
 		c: float
 			The concentration, :math:`c = R / r_{\\rm s}`, corresponding to the given halo mass and 
-			mass definition; must have the same dimensions as ``M``.
+			mass definition.
 		z: float
 			Redshift
 		mdef: str
@@ -371,3 +371,5 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 			deriv[counter] = rho_r * 2.0 / x[2] * rrs**x[2] * (1.0 - rrs**(-x[2]) - x[2] * np.log(rrs))
 
 		return deriv
+
+###################################################################################################

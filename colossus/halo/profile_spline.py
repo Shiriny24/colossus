@@ -264,3 +264,5 @@ class SplineProfile(profile_base.HaloDensityProfile):
 		"""		
 
 		return np.exp(self.M_spline(np.log(r)))
+
+###################################################################################################
