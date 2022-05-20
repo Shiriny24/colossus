@@ -59,6 +59,8 @@ def compositeProfile(inner_name = None, outer_names = ['mean', 'pl'], **kwargs):
 		inner_cls = profile_dk14.DK14Profile
 	elif inner_name == 'diemer22':
 		inner_cls = profile_diemer22.ModelAProfile
+	elif inner_name == 'diemer22b':
+		inner_cls = profile_diemer22.ModelBProfile
 	else:
 		raise Exception('Unknown type of inner profile, %s.' % (str(inner_name)))
 	

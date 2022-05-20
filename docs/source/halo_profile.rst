@@ -67,6 +67,8 @@ The following functional forms for the inner (orbiting) density profile are curr
    ``hernquist``     :class:`~halo.profile_hernquist.HernquistProfile`   Hernquist profile                           `Hernquist 1990 <http://adsabs.harvard.edu/abs/1990ApJ...356..359H>`_
    ``nfw``           :class:`~halo.profile_nfw.NFWProfile`               Navarro-Frenk-White profile                 `Navarro et al. 1997 <http://adsabs.harvard.edu/abs/1997ApJ...490..493N>`_
    ``dk14``          :class:`~halo.profile_dk14.DK14Profile`             Diemer & Kravtsov profile                   `Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_
+   ``diemer22``      :class:`~halo.profile_diemer22.ModelAProfile`       Truncated exponential profile (default)     `Diemer 2022 <>`_
+   ``diemer22b``     :class:`~halo.profile_diemer22.ModelBProfile`       Truncated exponential profile (adjusted)    `Diemer 2022 <>`_
    ================= =================================================== =========================================== =========================
 
 The following functional forms for the outer (infalling and two-halo) density profile are currently 
@@ -81,7 +83,7 @@ implemented:
    ``mean``          :class:`~halo.profile_outer.OuterTermMeanDensity`           The mean matter density of the Universe        --
    ``cf``            :class:`~halo.profile_outer.OuterTermCorrelationFunction`   Matter-matter correlation times bias           --
    ``pl``            :class:`~halo.profile_outer.OuterTermPowerLaw`              Power law in overdensity                       --
-   ``plsmooth``      :class:`~halo.profile_outer.OuterTermDiemer22`              Power law with smooth transition to constant   --
+   ``infalling``     :class:`~halo.profile_outer.OuterTermInfalling`             Power law with smooth transition to constant   `Diemer 2022 <>`_
    ================= =========================================================== ============================================== =========================
 
 ----------------------------

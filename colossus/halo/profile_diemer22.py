@@ -101,63 +101,18 @@ from colossus.halo import mass_so
 from colossus.halo import profile_base
 
 ###################################################################################################
-# DIEMER & KRAVTSOV 2014 PROFILE
+# GENERIC BASE CLASS
 ###################################################################################################
 
-class ModelAProfile(profile_base.HaloDensityProfile):
+class GenericD22Profile(profile_base.HaloDensityProfile):
 	"""
-	The Diemer 2022 density profile.
+	Base class for D22 profiles.
 	
-	The redshift must always be passed to this constructor, regardless of whether the 
-	fundamental parameters or a mass and concentration are given.
-	
-	Parameters
-	-----------------------------------------------------------------------------------------------
-	rhos: float
-		The central scale density, in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`.
-	rs: float
-		The scale radius in physical kpc/h.
-	rt: float
-		The radius where the profile steepens, in physical kpc/h.
-	alpha: float
-		Determines how quickly the slope of the inner Einasto profile steepens.
-	beta: float
-		Sharpness of the steepening.
-	M: float
-		Halo mass in :math:`M_{\odot}/h`.
-	c: float
-		Concentration in the same mass definition as ``M``.
-	mdef: str
-		The mass definition to which ``M`` corresponds. See :doc:`halo_mass` for details.
-	z: float
-		Redshift
-	selected_by: str
-		The halo sample to which this profile refers can be selected mass ``M`` or by accretion
-		rate ``Gamma``. This parameter influences how some of the fixed parameters in the 
-		profile are set, in particular those that describe the steepening term.
-	Gamma: float
-		The mass accretion rate over the past dynamical time, which is defined as the crossing 
-		time (see func:`~halo.mass_so.dynamicalTime` or Diemer 2017 for details). The definition 
-		in the DK14 profile is slightly different, but the definitions are close enough that they
-		can be used interchangeably without great loss of accuracy. The Gamma parameter only needs 
-		to be passed if ``selected_by == 'Gamma'``.
-	acc_warn: float
-		If the function achieves a relative accuracy in matching ``M`` less than this value, a 
-		warning is printed.
-	acc_err: float
-		If the function achieves a relative accuracy in matching ``M`` less than this value, an 
-		exception is raised.
+	Generic profile class for methods that are common to the Model A and B variants. This class
+	should never be instantiated by the user.
 	"""
-	
-	###############################################################################################
-	# CONSTRUCTOR
-	###############################################################################################
 	
 	def __init__(self, selected_by = defaults.HALO_PROFILE_SELECTED_BY, Gamma = None, **kwargs):
-
-		# Set the fundamental variables par_names and opt_names
-		self.par_names = ['rhos', 'rs', 'rt', 'alpha', 'beta']
-		self.opt_names = []
 
 		# Run the constructor
 		profile_base.HaloDensityProfile.__init__(self, allowed_mdefs = ['200m'], 
@@ -301,6 +256,108 @@ class ModelAProfile(profile_base.HaloDensityProfile):
 	
 	###############################################################################################
 	
+	def densityDerivativeLinInner(self, r):
+		"""
+		The linear derivative of the inner density, :math:`d \\rho_{\\rm inner} / dr`. 
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		derivative: array_like
+			The linear derivative in physical :math:`M_{\odot} h / {\\rm kpc}^2`; has the same 
+			dimensions as r.
+		"""
+		
+		d_lnrho_d_lnr = self.densityDerivativeLogInner(r)
+		rho = self.density(r)
+		der = d_lnrho_d_lnr * rho / r
+		
+		return der
+
+	###############################################################################################
+
+	# We fit all parameters in log space
+
+	def _fitConvertParams(self, p, mask):
+
+		return np.log(p)
+
+	###############################################################################################
+	
+	def _fitConvertParamsBack(self, p, mask):
+	
+		return np.exp(p)
+
+###################################################################################################
+# MODEL A (STANDARD)
+###################################################################################################
+
+class ModelAProfile(GenericD22Profile):
+	"""
+	The Diemer 2022 density profile (default version).
+	
+	The redshift must always be passed to this constructor, regardless of whether the 
+	fundamental parameters or a mass and concentration are given.
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	rhos: float
+		The central scale density, in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`.
+	rs: float
+		The scale radius in physical kpc/h.
+	rt: float
+		The radius where the profile steepens, in physical kpc/h.
+	alpha: float
+		Determines how quickly the slope of the inner Einasto profile steepens.
+	beta: float
+		Sharpness of the steepening.
+	M: float
+		Halo mass in :math:`M_{\odot}/h`.
+	c: float
+		Concentration in the same mass definition as ``M``.
+	mdef: str
+		The mass definition to which ``M`` corresponds. See :doc:`halo_mass` for details.
+	z: float
+		Redshift
+	selected_by: str
+		The halo sample to which this profile refers can be selected mass ``M`` or by accretion
+		rate ``Gamma``. This parameter influences how some of the fixed parameters in the 
+		profile are set, in particular those that describe the steepening term.
+	Gamma: float
+		The mass accretion rate over the past dynamical time, which is defined as the crossing 
+		time (see func:`~halo.mass_so.dynamicalTime` or Diemer 2017 for details). The definition 
+		in the DK14 profile is slightly different, but the definitions are close enough that they
+		can be used interchangeably without great loss of accuracy. The Gamma parameter only needs 
+		to be passed if ``selected_by == 'Gamma'``.
+	acc_warn: float
+		If the function achieves a relative accuracy in matching ``M`` less than this value, a 
+		warning is printed.
+	acc_err: float
+		If the function achieves a relative accuracy in matching ``M`` less than this value, an 
+		exception is raised.
+	"""
+	
+	###############################################################################################
+	# CONSTRUCTOR
+	###############################################################################################
+	
+	def __init__(self, selected_by = defaults.HALO_PROFILE_SELECTED_BY, Gamma = None, **kwargs):
+
+		# Set the fundamental variables par_names and opt_names
+		self.par_names = ['rhos', 'rs', 'rt', 'alpha', 'beta']
+		self.opt_names = []
+
+		# Run the generic constructor
+		GenericD22Profile.__init__(self, selected_by = selected_by, Gamma = Gamma, **kwargs)
+	
+		return
+
+	###############################################################################################
+	
 	def densityInner(self, r):
 		"""
 		Density of the inner profile as a function of radius.
@@ -329,30 +386,6 @@ class ModelAProfile(profile_base.HaloDensityProfile):
 
 	###############################################################################################
 	
-	def densityDerivativeLinInner(self, r):
-		"""
-		The linear derivative of the inner density, :math:`d \\rho_{\\rm inner} / dr`. 
-		
-		Parameters
-		-------------------------------------------------------------------------------------------
-		r: array_like
-			Radius in physical kpc/h; can be a number or a numpy array.
-
-		Returns
-		-------------------------------------------------------------------------------------------
-		derivative: array_like
-			The linear derivative in physical :math:`M_{\odot} h / {\\rm kpc}^2`; has the same 
-			dimensions as r.
-		"""
-		
-		d_lnrho_d_lnr = self.densityDerivativeLogInner(r)
-		rho = self.density(r)
-		der = d_lnrho_d_lnr * rho / r
-		
-		return der
-
-	###############################################################################################
-	
 	def densityDerivativeLogInner(self, r):
 		"""
 		The logarithmic derivative of the inner density, :math:`d \log(\\rho_{\\rm inner}) / d \log(r)`. 
@@ -376,20 +409,6 @@ class ModelAProfile(profile_base.HaloDensityProfile):
 
 		return der
 		
-	###############################################################################################
-
-	# We fit all parameters in log space
-
-	def _fitConvertParams(self, p, mask):
-
-		return np.log(p)
-
-	###############################################################################################
-	
-	def _fitConvertParamsBack(self, p, mask):
-	
-		return np.exp(p)
-
 	###############################################################################################
 	
 	def _fitParamDeriv_rho(self, r, mask, N_par_fit):
@@ -434,6 +453,245 @@ class ModelAProfile(profile_base.HaloDensityProfile):
 		if mask[4]:
 			deriv[counter] = rrtb * (1.0 / beta - np.log(rrt)) - rsrtb * (1.0 / beta - np.log(rsrt))
 
+		deriv[:, :] *= rho[None, :]
+
+		return deriv
+
+###################################################################################################
+# MODEL B (CORRECTION FOR SCALE RADIUS)
+###################################################################################################
+
+class ModelBProfile(GenericD22Profile):
+	"""
+	The Diemer 2022 density profile (Model B).
+	
+	This version corrects a minor flaw in the default Diemer22 model: the logarithmic slope at the
+	scale radius is not -2 in the default model (called Model A). In this Model B, this condition
+	is enforced at the cost of an extra term, which gradually adjusts the slope between the center
+	(where it is still zero) and the scale radius, where it offsets the effect of the truncation
+	term. However, this correction is usually very small (except for extreme values of beta or 
+	rt). Thus, Model A and Model B profiles are virtually the same for almost all parameters.
+	Model B can be a little more stable in fits to profiles without a clear scale radius. The
+	nuissance parameter is set to :math:`\\eta = 0.1` by default; it is not recommended to change
+	this parameter or to adjust it in fits.
+	
+	The redshift must always be passed to this constructor, regardless of whether the 
+	fundamental parameters or a mass and concentration are given.
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	rhos: float
+		The central scale density, in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`.
+	rs: float
+		The scale radius in physical kpc/h.
+	rt: float
+		The radius where the profile steepens, in physical kpc/h.
+	alpha: float
+		Determines how quickly the slope of the inner Einasto profile steepens.
+	beta: float
+		Sharpness of the steepening.
+	eta: float
+		Nuissance parameter that determines how quickly the slope approaches zero at the halo
+		center.  
+	M: float
+		Halo mass in :math:`M_{\odot}/h`.
+	c: float
+		Concentration in the same mass definition as ``M``.
+	mdef: str
+		The mass definition to which ``M`` corresponds. See :doc:`halo_mass` for details.
+	z: float
+		Redshift
+	selected_by: str
+		The halo sample to which this profile refers can be selected mass ``M`` or by accretion
+		rate ``Gamma``. This parameter influences how some of the fixed parameters in the 
+		profile are set, in particular those that describe the steepening term.
+	Gamma: float
+		The mass accretion rate over the past dynamical time, which is defined as the crossing 
+		time (see func:`~halo.mass_so.dynamicalTime` or Diemer 2017 for details). The definition 
+		in the DK14 profile is slightly different, but the definitions are close enough that they
+		can be used interchangeably without great loss of accuracy. The Gamma parameter only needs 
+		to be passed if ``selected_by == 'Gamma'``.
+	acc_warn: float
+		If the function achieves a relative accuracy in matching ``M`` less than this value, a 
+		warning is printed.
+	acc_err: float
+		If the function achieves a relative accuracy in matching ``M`` less than this value, an 
+		exception is raised.
+	"""
+	
+	###############################################################################################
+	# CONSTRUCTOR
+	###############################################################################################
+	
+	def __init__(self, selected_by = defaults.HALO_PROFILE_SELECTED_BY, Gamma = None, 
+				eta = defaults.HALO_PROFILE_D22_ETA, **kwargs):
+
+		# Set the fundamental variables par_names and opt_names
+		self.par_names = ['rhos', 'rs', 'rt', 'alpha', 'beta', 'eta']
+		self.opt_names = []
+
+		# Run the generic constructor
+		GenericD22Profile.__init__(self, selected_by = selected_by, Gamma = Gamma, eta = eta, **kwargs)
+	
+		return
+	
+	###############################################################################################
+
+	def setNativeParameters(self, M, c, z, mdef, eta = defaults.HALO_PROFILE_D22_ETA, 
+						selected_by = None, Gamma = None, **kwargs):
+		"""
+		Set the native Diemer22 parameters from mass and concentration (and optionally others).
+
+		The D22 profile has five free parameters, which are set by this function. The mass and 
+		concentration must be given as :math:`M_{\rm 200m}` and :math:`c_{\rm 200m}`. Other 
+		mass definitions demand iteration, which can be achieved with the initialization routine
+		in the parent class. This function ignores the presence of outer profiles.
+	
+		Parameters
+		-------------------------------------------------------------------------------------------
+		M: float
+			Spherical overdensity mass in :math:`M_{\odot}/h`.
+		c: float
+			The concentration, :math:`c = R / r_{\\rm s}`, corresponding to the given halo mass and 
+			mass definition.
+		z: float
+			Redshift
+		mdef: str
+			The mass definition in which ``M`` and ``c`` are given. See :doc:`halo_mass` for 
+			details.
+		eta: float
+			Nuissance parameter that determines how quickly the slope approaches zero at the halo
+			center.
+		selected_by: str
+			The halo sample to which this profile refers can be selected mass ``M`` or by accretion
+			rate ``Gamma``.
+		Gamma: float
+			The mass accretion rate as defined in DK14. This parameter only needs to be passed if 
+			``selected_by == 'Gamma'``.
+		"""
+		
+		self.par['eta'] = eta
+		
+		GenericD22Profile.setNativeParameters(self, M, c, z, mdef, eta = eta, 
+											selected_by = selected_by, Gamma = Gamma, **kwargs)
+
+		return
+	
+	###############################################################################################
+	
+	def densityInner(self, r):
+		"""
+		Density of the inner profile as a function of radius.
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		density: array_like
+			Density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`; has the same dimensions 
+			as ``r``.
+		"""
+		
+		rs = self.par['rs']
+		rt = self.par['rt']
+		alpha = self.par['alpha']
+		beta = self.par['beta']
+		eta = self.par['eta']
+		
+		rrs = r / rs
+		rsrtb = (rs / rt)**beta
+		S = -2.0 / alpha * (rrs**alpha - 1.0) - 1.0 / beta * ((r / rt)**beta - rsrtb) \
+			+ 1.0 / eta * rsrtb * (rrs**eta - 1.0)
+		rho = self.par['rhos'] * utilities.safeExp(S)
+
+		return rho
+
+	###############################################################################################
+	
+	def densityDerivativeLogInner(self, r):
+		"""
+		The logarithmic derivative of the inner density, :math:`d \log(\\rho_{\\rm inner}) / d \log(r)`. 
+
+		This function evaluates the logarithmic derivative based on the linear derivative. If there
+		is an analytic expression for the logarithmic derivative, child classes should overwrite 
+		this function.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		r: array_like
+			Radius in physical kpc/h; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		derivative: array_like
+			The dimensionless logarithmic derivative; has the same dimensions as ``r``.
+		"""
+
+		rs = self.par['rs']
+		rt = self.par['rt']
+		alpha = self.par['alpha']
+		beta = self.par['beta']
+		eta = self.par['eta']
+
+		rrs = 	r / self.par['rs']	
+		der = -2.0 * rrs**alpha - (r / rt)**beta + (rs / rt)**beta * rrs**eta
+
+		return der
+		
+	###############################################################################################
+	
+	def _fitParamDeriv_rho(self, r, mask, N_par_fit):
+
+		x = self.getParameterArray()
+		deriv = np.zeros((N_par_fit, len(r)), float)
+
+		rhos = x[0]
+		rs = x[1]
+		rt = x[2]
+		alpha = x[3]
+		beta = x[4]
+		eta = x[5]
+		
+		rrs = r / rs
+		logrrs = np.log(rrs)
+		rrt = r / rt
+		rrsa = rrs**alpha
+		rrtb = rrt**beta
+		rsrt = rs / rt
+		rsrtb = rsrt**beta
+		rrse = rrs**eta
+
+		s = -2.0 / alpha * (rrsa - 1.0) - 1.0 / beta * (rrtb - rsrtb)
+		rho = rhos * utilities.safeExp(s)
+		
+		counter = 0
+		# rhos
+		if mask[0]:
+			deriv[counter][:] = 1.0
+			counter += 1
+		# rs
+		if mask[1]:
+			deriv[counter] = 2.0 * rrsa + (beta / eta - 1.0) * rsrtb * (rrse - 1)
+			counter += 1
+		# rt
+		if mask[2]:
+			deriv[counter] = rrtb - rsrtb * (beta / eta * (rrse - 1.0) + 1.0)
+			counter += 1
+		# alpha
+		if mask[3]:
+			deriv[counter] = 2.0 / alpha * (rrsa * (1.0 - alpha * logrrs) - 1)
+			counter += 1
+		# beta
+		if mask[4]:
+			deriv[counter] = rrtb * (1.0 / beta - np.log(rrt)) - rsrtb * (1.0 / beta - np.log(rsrt) * (beta / eta * (rrse - 1.0) + 1.0))
+			counter += 1
+		# eta
+		if mask[5]:
+			deriv[counter] = 1.0 / eta * rsrtb * (rrse * (eta * logrrs - 1.0) + 1.0)
+			
 		deriv[:, :] *= rho[None, :]
 
 		return deriv

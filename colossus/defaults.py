@@ -111,6 +111,9 @@ HALO_PROFILE_DK14_PL_NORM = 1.0
 HALO_PROFILE_DK14_PL_SLOPE = 1.5
 """The default slope of the power-law outer profile for the DK14 profile."""
 
+HALO_PROFILE_D22_ETA = 0.1
+"""The default nuissance parameter for the Diemer 22 Model B profile."""
+
 ###################################################################################################
 # HALO PROFILE (SPECIFIC OUTER PROFILE TERMS)
 ###################################################################################################
