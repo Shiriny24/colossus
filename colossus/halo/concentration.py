@@ -238,10 +238,10 @@ INVALID_CONCENTRATION = -1.0
 storageUser = None
 
 def _getName():
-	return "concentration"
+	return 'concentration'
 
 def _getHash():
-	return "concentration"
+	return 'concentration'
 
 def _getStorageUser():
 
@@ -886,7 +886,7 @@ def _diemer15(nu, n, statistic = 'median', original_params = False):
 		alpha = DIEMER15_MEAN_ALPHA
 		beta = DIEMER15_MEAN_BETA
 	else:
-		raise Exception("Unknown statistic.")
+		raise Exception('Unknown statistic.')
 	
 	c = 0.5 * floor * ((nu0 / nu)**alpha + (nu / nu0)**beta)
 	
@@ -916,7 +916,7 @@ def _diemer15_k_R(M, original_params = False):
 def _diemer15_n(k_R):
 
 	if np.min(k_R) < 0:
-		raise Exception("k_R < 0.")
+		raise Exception('k_R < 0.')
 
 	cosmo = cosmology.getCurrent()
 	

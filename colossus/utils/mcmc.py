@@ -123,7 +123,7 @@ def initWalkers(x_initial,
 	"""
 	
 	if nwalkers % 2:
-		raise ValueError("The number of walkers must be divisible by 2.")
+		raise ValueError('The number of walkers must be divisible by 2.')
 
 	nparams = len(x_initial)
 	walkers = np.zeros([2, nwalkers // 2, nparams])
@@ -204,9 +204,9 @@ def runChain(L_func, walkers, args = (),
 	# ---------------------------------------------------------------------------------------------
 
 	if len(walkers.shape) != 3:
-		raise ValueError("The walkers array must be 3-dimensional.")
+		raise ValueError('The walkers array must be 3-dimensional.')
 	if len(walkers) != 2:
-		raise ValueError("The first dimension of the walkers array must have length 1.")
+		raise ValueError('The first dimension of the walkers array must have length 1.')
 	nwalkers = len(walkers[0]) * 2
 	nparams = len(walkers[0][0])
 	

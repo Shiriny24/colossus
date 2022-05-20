@@ -118,9 +118,9 @@ class TCBase(test_colossus.ColosssusTestCase):
 	
 		if verbose:
 			utilities.printLine()
-			print(("Profile properties as a function of radius"))
+			print(('Profile properties as a function of radius'))
 			utilities.printLine()
-			print(("Density"))
+			print(('Density'))
 		
 		for i in range(len(profs)):
 			res = profs[i].density(r_test)
@@ -134,7 +134,7 @@ class TCBase(test_colossus.ColosssusTestCase):
 							
 		if verbose:
 			utilities.printLine()
-			print(("Density Linear Derivative"))
+			print(('Density Linear Derivative'))
 		
 		for i in range(len(profs)):
 			res = profs[i].densityDerivativeLin(r_test)
@@ -148,7 +148,7 @@ class TCBase(test_colossus.ColosssusTestCase):
 	
 		if verbose:
 			utilities.printLine()
-			print(("Density Logarithmic Derivative"))
+			print(('Density Logarithmic Derivative'))
 		
 		for i in range(len(profs)):
 			res = profs[i].densityDerivativeLog(r_test)
@@ -162,7 +162,7 @@ class TCBase(test_colossus.ColosssusTestCase):
 		
 		if verbose:
 			utilities.printLine()
-			print(("Enclosed mass"))
+			print(('Enclosed mass'))
 		
 		for i in range(len(profs)):
 			res = profs[i].enclosedMass(r_test)
@@ -176,7 +176,7 @@ class TCBase(test_colossus.ColosssusTestCase):
 	
 		if verbose:
 			utilities.printLine()
-			print(("Surface density"))
+			print(('Surface density'))
 		
 		for i in range(len(profs)):
 			res = profs[i].surfaceDensity(r_test)
@@ -190,7 +190,7 @@ class TCBase(test_colossus.ColosssusTestCase):
 	
 		if verbose:
 			utilities.printLine()
-			print(("Circular velocity"))
+			print(('Circular velocity'))
 		
 		for i in range(len(profs)):
 			res = profs[i].circularVelocity(r_test)
@@ -204,7 +204,7 @@ class TCBase(test_colossus.ColosssusTestCase):
 		
 		if verbose:
 			utilities.printLine()
-			print(("Rmax"))
+			print(('Rmax'))
 		
 		for i in range(len(profs)):
 			_, res = profs[i].Vmax()
@@ -218,7 +218,7 @@ class TCBase(test_colossus.ColosssusTestCase):
 		
 		if verbose:
 			utilities.printLine()
-			print(("Vmax"))
+			print(('Vmax'))
 		
 		for i in range(len(profs)):
 			res, _ = profs[i].Vmax()
@@ -232,9 +232,9 @@ class TCBase(test_colossus.ColosssusTestCase):
 	
 		if verbose:
 			utilities.printLine()
-			print(("Spherical overdensity radii and masses"))
+			print(('Spherical overdensity radii and masses'))
 			utilities.printLine()
-			print(("Spherical overdensity radius"))
+			print(('Spherical overdensity radius'))
 		
 		for i in range(len(profs)):
 			res = profs[i].RDelta(z_test, mdef_test)
@@ -248,7 +248,7 @@ class TCBase(test_colossus.ColosssusTestCase):
 	
 		if verbose:
 			utilities.printLine()
-			print(("Spherical overdensity mass"))
+			print(('Spherical overdensity mass'))
 		
 		for i in range(len(profs)):
 			res = profs[i].MDelta(z_test, mdef_test)

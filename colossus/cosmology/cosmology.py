@@ -637,7 +637,7 @@ class Cosmology(object):
 		
 		if self.storageUser.checkForChangedHash():
 			if self.print_warnings:
-				print("Cosmology: Detected change in cosmological parameters.")
+				print('Cosmology: Detected change in cosmological parameters.')
 			self._deriveParameters()
 			self.storageUser.resetStorage()
 			
@@ -920,7 +920,7 @@ class Cosmology(object):
 		
 		if use_array:
 			if min_is_array and max_is_array and len(z_min) != len(z_max):
-				raise Exception("If both z_min and z_max are arrays, they need to have the same size.")
+				raise Exception('If both z_min and z_max are arrays, they need to have the same size.')
 			integ = np.zeros_like(z_min_use)
 			for i in range(len(z_min_use)):
 				integ[i], _ = scipy.integrate.quad(integrand, z_min_use[i], z_max_use[i])
@@ -962,7 +962,7 @@ class Cosmology(object):
 		
 		if interpolator is None:
 			if self.print_info:
-				print("Computing lookup table in z.")
+				print('Computing lookup table in z.')
 			
 			if future:
 				log_min = np.log(1.0 + self.z_min_compute)
@@ -976,7 +976,7 @@ class Cosmology(object):
 			self.storageUser.storeObject(table_name, np.array([zp1_log_table, x_table]))
 				
 			if self.print_info:
-				print("Lookup table completed.")
+				print('Lookup table completed.')
 			interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, inverse = inverse)
 		
 		return interpolator
@@ -1055,9 +1055,9 @@ class Cosmology(object):
 				
 		else:
 			if derivative > 0:
-				raise Exception("Derivative can only be evaluated if interpolation == True.")
+				raise Exception('Derivative can only be evaluated if interpolation == True.')
 			if inverse:
-				raise Exception("Inverse can only be evaluated if interpolation == True.")
+				raise Exception('Inverse can only be evaluated if interpolation == True.')
 
 			ret = func(z)
 		
@@ -2084,7 +2084,7 @@ class Cosmology(object):
 				# We are dealing with a non-user supplied power spectrum, meaning we can decide the
 				# k array for the table.
 				if self.print_info:
-					print("Cosmology.matterPowerSpectrum: Computing lookup table.")				
+					print('Cosmology.matterPowerSpectrum: Computing lookup table.')				
 				data_k = np.zeros((np.sum(self.k_Pk_Nbins) + 1), float)
 				n_regions = len(self.k_Pk_Nbins)
 				k_computed = 0
@@ -2109,14 +2109,14 @@ class Cosmology(object):
 				table_ = np.array([np.log10(data_k), np.log10(data_Pk)])
 				self.storageUser.storeObject(table_name, table_)
 				if self.print_info:
-					print("Cosmology.matterPowerSpectrum: Lookup table completed.")	
+					print('Cosmology.matterPowerSpectrum: Lookup table completed.')	
 
 			else:
 				
 				# If the interpolator has not been created yet, we need to normalize the table
 				# to the correct sigma8 which happens in the exact Pk function.
 				if self.print_info:
-					print("Cosmology.matterPowerSpectrum: Loading power spectrum from file %s." % (path))				
+					print('Cosmology.matterPowerSpectrum: Loading power spectrum from file %s.' % (path))				
 				table_name = self._matterPowerSpectrumName(model)
 				table = self.storageUser.getStoredObject(table_name, path = path)
 				
@@ -2230,7 +2230,7 @@ class Cosmology(object):
 		else:
 			
 			if derivative:
-				raise Exception("Derivative can only be evaluated if interpolation == True.")
+				raise Exception('Derivative can only be evaluated if interpolation == True.')
 
 			if utilities.isArray(k):
 				Pk = np.zeros_like(k)
@@ -2487,7 +2487,7 @@ class Cosmology(object):
 							print('Test k (in h/Mpc) and sigma-integrand:')
 							print(np.exp(test_k))
 							print(test_k_integrand)
-							raise Exception("Could not find lower integration limit for sigma. Value of integrand at limit (%.2e) is %.2e of max, too high." \
+							raise Exception('Could not find lower integration limit for sigma. Value of integrand at limit (%.2e) is %.2e of max, too high.' \
 								% (test_k_integrand[min_index + 1], test_k_integrand[min_index + 1] / integrand_max))
 					min_k_use = test_k[min_index]
 				else:
@@ -2503,7 +2503,7 @@ class Cosmology(object):
 							print('Test k (in h/Mpc) and sigma-integrand:')
 							print(np.exp(test_k))
 							print(test_k_integrand)
-							raise Exception("Could not find upper integration limit for sigma. Value of integrand at limit (%.2e) is %.2e of max, too high." \
+							raise Exception('Could not find upper integration limit for sigma. Value of integrand at limit (%.2e) is %.2e of max, too high.' \
 								% (test_k_integrand[max_index - 1], test_k_integrand[max_index - 1] / integrand_max))
 					max_k_use = test_k[max_index]
 				else:
@@ -2559,7 +2559,7 @@ class Cosmology(object):
 		
 		if interpolator is None:
 			if self.print_info:
-				print("Cosmology.sigma: Computing lookup table.")
+				print('Cosmology.sigma: Computing lookup table.')
 			max_log = np.log10(self.R_max_sigma)
 			log_range = max_log - np.log10(self.R_min_sigma)
 			max_loglog = np.log10(log_range + 1.0)
@@ -2578,7 +2578,7 @@ class Cosmology(object):
 			table_ = np.array([np.log10(data_R), np.log10(data_sigma)])
 			self.storageUser.storeObject(table_name, table_)
 			if self.print_info:
-				print("Cosmology.sigma: Lookup table completed.")
+				print('Cosmology.sigma: Lookup table completed.')
 
 			interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, inverse = inverse)
 	
@@ -2839,7 +2839,7 @@ class Cosmology(object):
 		
 		if interpolator is None:
 			if self.print_info:
-				print("correlationFunction: Computing lookup table. This may take a few minutes, please do not interrupt.")
+				print('correlationFunction: Computing lookup table. This may take a few minutes, please do not interrupt.')
 			
 			data_R = np.zeros((np.sum(self.R_xi_Nbins) + 1), float)
 			n_regions = len(self.R_xi_Nbins)
@@ -2869,7 +2869,7 @@ class Cosmology(object):
 			table_ = np.array([data_R, data_xi])
 			self.storageUser.storeObject(table_name, table_)
 			if self.print_info:
-				print("correlationFunction: Lookup table completed.")
+				print('correlationFunction: Lookup table completed.')
 			interpolator = self.storageUser.getStoredObject(table_name, interpolator = True)
 		
 		return interpolator

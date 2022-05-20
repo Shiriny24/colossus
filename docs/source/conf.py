@@ -119,7 +119,7 @@ html_theme = 'scipy'
 # documentation.
 if html_theme == 'scipy':
 	html_theme_options = {"edit_link": False, "sidebar": 'right', 'navigation_links': True,
-	'rootlinks': [("https://bitbucket.org/bdiemer/colossus", "BitBucket Repository")], 'scipy_org_logo': True}
+	'rootlinks': [('https://bitbucket.org/bdiemer/colossus', 'BitBucket Repository')], 'scipy_org_logo': True}
 
 	theme_path = os.getcwd() + '/' + html_theme_path[0] + '/'
 	logo_path = theme_path + 'logo_colossus.gif'

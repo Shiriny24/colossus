@@ -220,7 +220,7 @@ class StorageUser():
 			filename_pickle = self.getUniqueFilename()
 			if os.path.exists(filename_pickle):
 				try:
-					input_file = open(filename_pickle, "rb")
+					input_file = open(filename_pickle, 'rb')
 					self.storage_pers = pickle.load(input_file)
 					
 					# Check if a version was stored with this file. If not, assume it is old.
@@ -278,7 +278,7 @@ class StorageUser():
 			
 			if self.persistence_write:
 				filename_pickle = self.getUniqueFilename()
-				output_file = open(filename_pickle, "wb")
+				output_file = open(filename_pickle, 'wb')
 				pickle.dump(self.storage_pers, output_file, pickle.HIGHEST_PROTOCOL)
 				output_file.close()  
 
