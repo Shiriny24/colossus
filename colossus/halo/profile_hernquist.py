@@ -161,7 +161,7 @@ class HernquistProfile(profile_base.HaloDensityProfile):
 			details.
 		"""
 		
-		self.par['rhos'], self.par['rs'] = self.nativeParameters(M, c, z, mdef, **kwargs)
+		self.par['rhos'], self.par['rs'] = self.nativeParameters(M, c, z, mdef)
 		
 		return
 

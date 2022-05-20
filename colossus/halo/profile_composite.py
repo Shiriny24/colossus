@@ -70,8 +70,8 @@ def compositeProfile(inner_name = None, outer_names = ['mean', 'pl'], **kwargs):
 			outer_cls = profile_outer.OuterTermCorrelationFunction
 		elif outer_names[i] == 'pl':
 			outer_cls = profile_outer.OuterTermPowerLaw
-		elif outer_names[i] == 'plsmooth':
-			outer_cls = profile_outer.OuterTermDiemer22
+		elif outer_names[i] == 'infalling':
+			outer_cls = profile_outer.OuterTermInfalling
 		else:
 			raise Exception('Unknown outer term name, %s.' % (outer_names[i]))
 		outer_obj = outer_cls(**kwargs)

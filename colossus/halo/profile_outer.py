@@ -275,18 +275,14 @@ class OuterTermMeanDensity(OuterTerm):
 	-----------------------------------------------------------------------------------------------
 	z: float
 		The redshift at which the profile is modeled.
-	z_name: str
-		The internal name of the redshift option. If this name is set to an already existing
-		profile option, the redshift is set to this other profile option, and thus not an
-		independent option any more.
 	"""
 
-	def __init__(self, z = None, z_name = 'z', **kwargs):
+	def __init__(self, z = None, **kwargs):
 		
 		if z is None:
 			raise Exception('Redshift cannot be None.')
 		
-		OuterTerm.__init__(self, [], [z], [], [z_name])
+		OuterTerm.__init__(self, [], [z], [], ['z'])
 		
 		self.initialized = False
 
@@ -296,7 +292,7 @@ class OuterTermMeanDensity(OuterTerm):
 
 	def _getParameters(self):
 
-		z = self.opt[self.term_opt_names[0]]
+		z = self.opt['z']
 		
 		return z
 
@@ -397,18 +393,13 @@ class OuterTermCorrelationFunction(OuterTerm):
 		the bias is updated from that quantity every time the density is computed. 
 	bias: float
 		The halo bias.
-	z_name: str
-		The internal name of the redshift option. If this name is set to an already existing
-		profile option, the redshift is set to this other profile option, and thus not an
-		independent option any more.
 	bias_name: str
 		The internal name of the bias parameter. If this name is set to an already existing
 		profile parameter, the bias is set to this other profile parameter, and thus not an
 		independent parameter any more.
 	"""
 
-	def __init__(self, z = None, derive_bias_from = None, bias = None, z_name = 'z', 
-				bias_name = 'bias', **kwargs):
+	def __init__(self, z = None, derive_bias_from = None, bias = None, bias_name = 'bias', **kwargs):
 		
 		if z is None:
 			raise Exception('Redshift cannot be None.')
@@ -416,7 +407,7 @@ class OuterTermCorrelationFunction(OuterTerm):
 		par_array = []
 		opt_array = [z]
 		par_names = []
-		opt_names = [z_name]
+		opt_names = ['z']
 		
 		if derive_bias_from is None:
 			if bias is None:
@@ -442,7 +433,7 @@ class OuterTermCorrelationFunction(OuterTerm):
 
 	def _getParameters(self):
 
-		z = self.opt[self.term_opt_names[0]]
+		z = self.opt['z']
 
 		if self._derive_bias:
 			if self._rm_bias_name in self.par:
@@ -482,30 +473,6 @@ class OuterTermCorrelationFunction(OuterTerm):
 
 	# We have to be a little careful when evaluating the matter-matter correlation function, since
 	# it may not be defined at very small or large radii.
-
-# 	def _xi_mm(self, r, z):
-# 
-# 		cosmo = cosmology.getCurrent()
-# 		r_com = r / 1000.0 * (1 + z)
-# 		
-# 		R_min = cosmo.R_xi[0] * 1.00001
-# 		R_max = cosmo.R_xi[-1] * 0.99999
-# 		
-# 		mask_not_small = (r_com > R_min)
-# 		mask_not_large = (r_com < R_max)
-# 		mask = (mask_not_small & mask_not_large)
-# 		
-# 		xi_mm = np.zeros((len(r)), float)
-# 
-# 		if np.count_nonzero(mask) > 0:
-# 			xi_mm[mask] = cosmo.correlationFunction(r_com[mask], z)
-# 
-# 		xi_mm[np.logical_not(mask_not_small)] = cosmo.correlationFunction(R_min, z)
-# 		xi_mm[np.logical_not(mask_not_large)] = cosmo.correlationFunction(R_max, z)
-# 		
-# 		return xi_mm
-
-	###############################################################################################
 
 	def _density(self, r):
 
@@ -549,10 +516,10 @@ class OuterTermPowerLaw(OuterTerm):
 	the maximum contribution to the density this term can make. Without such a limit, sufficiently 
 	steep power-law profiles can lead to a spurious density contribution at the halo center. Note 
 	that the slope is inverted, i.e. that a more positive slope means a steeper profile.
-	
-	The user can also set the internal parameter names of the input variables. If these names are 
-	matched with an existing profile variable, that variable is used instead, meaning the outer
-	term variable is not independent any more.
+
+	This outer profile is kept for backward compatibility; for new code, please use 
+	:class:`OuterTermDiemer22`, which fulfils the same function if the smoothness parameter is 
+	set to its default, :math:`\\zeta = 0.5`.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -583,23 +550,10 @@ class OuterTermPowerLaw(OuterTerm):
 		The internal name of the normalization parameter. If this name is set to an already existing
 		profile parameter, the normalization is set to this other profile parameter, and thus not an
 		independent parameter any more.
-	slope_name: str
-		The internal name of the slope parameter. See ``norm_name``.
-	pivot_name: str
-		The internal name of the pivot parameter. See ``norm_name``.
-	pivot_factor_name: str
-		The internal name of the pivot_factor parameter. See ``norm_name``.
-	z_name: str
-		The internal name of the redshift parameter. See ``norm_name``.
-	max_rho_name: str
-		The internal name of the maximum density parameter. See ``norm_name``.
 	"""
 	
 	def __init__(self, norm = None, slope = None, pivot = None, pivot_factor = None, 
-				z = None, max_rho = defaults.HALO_PROFILE_OUTER_PL_MAXRHO, 
-				norm_name = 'pl_norm', slope_name = 'pl_slope', 
-				pivot_name = 'pivot', pivot_factor_name = 'pivot_factor', z_name = 'z', 
-				max_rho_name = 'pl_max_rho', **kwargs):
+				z = None, max_rho = defaults.HALO_PROFILE_OUTER_PL_MAXRHO, **kwargs):
 
 		if norm is None:
 			raise Exception('Normalization of power law cannot be None.')
@@ -616,8 +570,8 @@ class OuterTermPowerLaw(OuterTerm):
 		
 		par_array = [norm, slope]
 		opt_array = [pivot, pivot_factor, z, max_rho]
-		par_names = [norm_name, slope_name]
-		opt_names = [pivot_name, pivot_factor_name, z_name, max_rho_name]
+		par_names = ['norm', 'slope']
+		opt_names = ['pivot', 'pivot_factor', 'z', 'max_rho']
 		
 		if pivot == 'R200m':
 			opt_array.append(None)
@@ -631,7 +585,7 @@ class OuterTermPowerLaw(OuterTerm):
 
 	def _getParameters(self):
 
-		r_pivot_id = self.opt[self.term_opt_names[0]]
+		r_pivot_id = self.opt['pivot']
 		if r_pivot_id == 'fixed':
 			r_pivot = 1.0
 		elif r_pivot_id in self.par:
@@ -646,11 +600,11 @@ class OuterTermPowerLaw(OuterTerm):
 			raise Exception('Outer profile was trying to use the internal radius %s, but found None.' \
 						% (r_pivot_id))
 
-		norm = self.par[self.term_par_names[0]]
-		slope = self.par[self.term_par_names[1]]
-		r_pivot *= self.opt[self.term_opt_names[1]]
-		z = self.opt[self.term_opt_names[2]]
-		max_rho = self.opt[self.term_opt_names[3]]
+		norm = self.par['norm']
+		slope = self.par['slope']
+		r_pivot *= self.opt['pivot_factor']
+		z = self.opt['z']
+		max_rho = self.opt['max_rho']
 		rho_m = cosmology.getCurrent().rho_m(z)
 		
 		return norm, slope, r_pivot, max_rho, rho_m
@@ -714,9 +668,9 @@ class OuterTermPowerLaw(OuterTerm):
 # OUTER TERM: POWER LAW
 ###################################################################################################
 
-class OuterTermDiemer22(OuterTerm):
+class OuterTermInfalling(OuterTerm):
 	"""
-	Infalling term according to Diemer 2022.
+	Infalling term according to Diemer 2022, modeled as a power law with smooth transition.
 	
 	This class implements a power-law outer profile with a free normalization and slope, a 
 	fixed or variable pivot radius, and a smooth transition to a maximum value at small radii,
@@ -737,14 +691,16 @@ class OuterTermDiemer22(OuterTerm):
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
-	norm: float
-		The density normalization of the term, in units of the mean matter density of the universe.
-	slope: float
-		The slope of the power-law profile.
-	zeta: float
-		The sharpness of the transition to the asymptotic value at the halo center.
-	delta_max: float
-		The asymptotic overdensity at the center of the halo.
+	pl_delta_1: float
+		The normalization of the infalling profile at the pivot radius (R200m by default) in units 
+		of the mean matter density of the universe.
+	pl_s: float
+		The (negative) slope of the power-law profile.
+	pl_zeta: float
+		The smoothness of the transition to the asymptotic value at the halo center.
+	pl_delta_max: float
+		The asymptotic overdensity at the center of the halo, in units of the mean matter density 
+		of the universe.
 	pivot: str
 		Can either be ``'fixed'``, in which case ``pivot_factor`` determines the pivot radius in 
 		physical units, or the name of one of the profile parameters or options.
@@ -757,37 +713,19 @@ class OuterTermDiemer22(OuterTerm):
 		and ``pivot_factor = 2.0``. 
 	z: float
 		Redshift.
-	norm_name: str
-		The internal name of the normalization parameter. If this name is set to an already existing
-		profile parameter, the normalization is set to this other profile parameter, and thus not an
-		independent parameter any more.
-	slope_name: str
-		The internal name of the slope parameter. See ``norm_name``.
-	zeta_name: str
-		The internal name of the zeta parameter. See ``norm_name``.
-	delta_max_name: str
-		The internal name of the maximum overdensity parameter. See ``norm_name``.
-	pivot_name: str
-		The internal name of the pivot parameter. See ``norm_name``.
-	pivot_factor_name: str
-		The internal name of the pivot_factor parameter. See ``norm_name``.
-	z_name: str
-		The internal name of the redshift parameter. See ``norm_name``.
 	"""
 	
-	def __init__(self, norm = None, slope = None, zeta = defaults.HALO_PROFILE_OUTER_D22_ZETA, 
-				delta_max = defaults.HALO_PROFILE_OUTER_D22_DELTA_MAX, 
-				pivot = None, pivot_factor = None, z = None, 
-				norm_name = 'pl_norm', slope_name = 'pl_slope', zeta_name = 'zeta', delta_max_name = 'delta_max',
-				pivot_name = 'pivot', pivot_factor_name = 'pivot_factor', z_name = 'z', **kwargs):
+	def __init__(self, pl_delta_1 = None, pl_s = None, pl_zeta = defaults.HALO_PROFILE_OUTER_D22_ZETA, 
+				pl_delta_max = defaults.HALO_PROFILE_OUTER_D22_DELTA_MAX, 
+				pivot = 'R200m', pivot_factor = 1.0, z = None, **kwargs):
 
-		if norm is None:
-			raise Exception('Normalization of power law cannot be None.')
-		if slope is None:
-			raise Exception('Slope of power law cannot be None.')
-		if zeta is None:
-			raise Exception('Sharpness of transition cannot be None.')
-		if delta_max is None:
+		if pl_delta_1 is None:
+			raise Exception('Normalization of power law (delta_1) cannot be None.')
+		if pl_s is None:
+			raise Exception('Slope of power law (s) cannot be None.')
+		if pl_zeta is None:
+			raise Exception('Sharpness of transition (zeta) cannot be None.')
+		if pl_delta_max is None:
 			raise Exception('Maximum overdensity cannot be None.')
 		if pivot is None:
 			raise Exception('Pivot of power law cannot be None.')
@@ -795,12 +733,17 @@ class OuterTermDiemer22(OuterTerm):
 			raise Exception('Pivot factor of power law cannot be None.')
 		if z is None:
 			raise Exception('Redshift of power law cannot be None.')
+
+		par_array = [pl_delta_1, pl_s, pl_zeta, pl_delta_max]
+		opt_array = [pivot, pivot_factor, z]
+		par_names = ['pl_delta_1', 'pl_s', 'pl_zeta', 'pl_delta_max']
+		opt_names = ['pivot', 'pivot_factor', 'z']
 		
-		OuterTerm.__init__(self, 
-						[norm, slope, zeta, delta_max], 
-						[pivot, pivot_factor, z],
-						[norm_name, slope_name, zeta_name, delta_max_name], 
-						[pivot_name, pivot_factor_name, z_name])
+		if pivot == 'R200m':
+			opt_array.append(None)
+			opt_names.append('R200m')
+		
+		OuterTerm.__init__(self, par_array, opt_array, par_names, opt_names)
 
 		return
 
@@ -808,7 +751,7 @@ class OuterTermDiemer22(OuterTerm):
 
 	def _getParameters(self):
 		
-		r_pivot_id = self.opt[self.term_opt_names[0]]
+		r_pivot_id = self.opt['pivot']
 		if r_pivot_id == 'fixed':
 			r_pivot = 1.0
 		elif r_pivot_id in self.par:
@@ -819,23 +762,23 @@ class OuterTermDiemer22(OuterTerm):
 			msg = 'Could not find the parameter or option "%s".' % (r_pivot_id)
 			raise Exception(msg)
 
-		norm = self.par[self.term_par_names[0]]
-		slope = self.par[self.term_par_names[1]]
-		zeta = self.par[self.term_par_names[2]]
-		delta_max = self.par[self.term_par_names[3]]
+		delta_1 = self.par['pl_delta_1']
+		s = self.par['pl_s']
+		zeta = self.par['pl_zeta']
+		delta_max = self.par['pl_delta_max']
 		
-		r_pivot *= self.opt[self.term_opt_names[1]]
-		z = self.opt[self.term_opt_names[2]]
+		r_pivot *= self.opt['pivot_factor']
+		z = self.opt['z']
 		rho_m = cosmology.getCurrent().rho_m(z)
 		
-		return norm, slope, zeta, delta_max, r_pivot, rho_m
+		return delta_1, s, zeta, delta_max, r_pivot, rho_m
 
 	###############################################################################################
 
 	def _density(self, r):
 		
-		norm, slope, zeta, delta_max, r_pivot, rho_m = self._getParameters()
-		rho = rho_m * norm * ((norm / delta_max)**(1.0 / zeta) + (r / r_pivot)**(slope / zeta))**(-zeta)
+		delta_1, s, zeta, delta_max, r_pivot, rho_m = self._getParameters()
+		rho = rho_m * delta_1 * ((delta_1 / delta_max)**(1.0 / zeta) + (r / r_pivot)**(s / zeta))**(-zeta)
 
 		return rho
 
@@ -857,13 +800,13 @@ class OuterTermDiemer22(OuterTerm):
 			dimensions as r.
 		"""
 
-		norm, slope, zeta, delta_max, r_pivot, rho_m = self._getParameters()
+		delta_1, s, zeta, delta_max, r_pivot, rho_m = self._getParameters()
 		
-		t1 = (r / r_pivot)**(slope / zeta)
-		Q = (norm / delta_max)**(1.0 / zeta) + t1
+		t1 = (r / r_pivot)**(s / zeta)
+		Q = (delta_1 / delta_max)**(1.0 / zeta) + t1
 		
-		rho = rho_m * norm * Q**(-zeta)
-		drho_dr = -(rho / r) * slope / Q * t1
+		rho = rho_m * delta_1 * Q**(-zeta)
+		drho_dr = -(rho / r) * s / Q * t1
 
 		return drho_dr
 
@@ -872,15 +815,15 @@ class OuterTermDiemer22(OuterTerm):
 	def _fitParamDeriv_rho(self, r, mask, N_par_fit):
 
 		deriv = np.zeros((N_par_fit, len(r)), float)
-		norm, slope, zeta, delta_max, r_pivot, rho_m = self._getParameters()
+		delta_1, s, zeta, delta_max, r_pivot, rho_m = self._getParameters()
 
 		zeta_inv = 1.0 / zeta
 		rr = r / r_pivot
-		rrsz = rr**(slope * zeta_inv)
-		dd = norm / delta_max
+		rrsz = rr**(s * zeta_inv)
+		dd = delta_1 / delta_max
 		dd1z = dd**zeta_inv
 		Q = dd1z + rrsz
-		rho = rho_m * norm * Q**-zeta
+		rho = rho_m * delta_1 * Q**-zeta
 		dd1zq = dd1z / Q
 		logrr = np.log(rr)
 
@@ -891,7 +834,7 @@ class OuterTermDiemer22(OuterTerm):
 			counter += 1
 		# s
 		if mask[1]:
-			deriv[counter] = -rho * slope / Q * rrsz * logrr
+			deriv[counter] = -rho * s / Q * rrsz * logrr
 			counter += 1
 		# deltamax
 		if mask[2]:
@@ -899,7 +842,7 @@ class OuterTermDiemer22(OuterTerm):
 			counter += 1
 		# zeta
 		if mask[3]:
-			deriv[counter] = rho * np.log(Q) / zeta * (dd1z * np.log(dd) + slope * rrsz * logrr)
+			deriv[counter] = rho * np.log(Q) / zeta * (dd1z * np.log(dd) + s * rrsz * logrr)
 		
 		return deriv
 
