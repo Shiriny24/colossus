@@ -222,6 +222,9 @@ class DK14Profile(profile_base.HaloDensityProfile):
 			beta = 4.0
 			gamma = 8.0
 			if (nu200m is not None):
+				if (nu200m > 10.0):
+					raise Exception('Found nu200m = %.2f, which is unrealistic and breaks the profile initialization.' \
+								% nu200m)
 				rt_R200m = 1.9 - 0.18 * nu200m
 			else:
 				raise Exception('Need nu200m to compute rt.')

@@ -148,8 +148,9 @@ class GenericD22Profile(profile_base.HaloDensityProfile):
 		`Gao et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.387..536G>`_ because we do 
 		not reproduce this relation in our data in Diemer 2022c.
 		
-		The truncation ratius :math:`r_{\\rm t}` is calibrated as suggested by DK14.
-		If ``selected_by = 'M'``, we use Equation 6 in DK14. If ``selected_by = 'Gamma'``, 
+		The truncation ratius :math:`r_{\\rm t}` is calibrated as suggested by DK14 for
+		Gamma-selected samples. If ``selected_by = 'M'``, we use a new parametrization because the 
+		meaning of rt differs for the different slope parameters of the DK14 profile. If ``selected_by = 'Gamma'``, 
 		:math:`r_{\\rm t}` is calibrated from ``Gamma`` and ``z``. The DK14 calibrations are based
 		on slightly different definitions of peak height (:math:`\\nu = \\nu_{\\rm vir}`), 
 		accretion rate, and for a different fitting function. However, the resulting :math:`r_{\\rm t}`
@@ -187,7 +188,10 @@ class GenericD22Profile(profile_base.HaloDensityProfile):
 
 		if selected_by == 'M':
 			if (nu200m is not None):
-				rt_R200m = 1.9 - 0.18 * nu200m
+				if (nu200m > 10.0):
+					raise Exception('Found nu200m = %.2f, which is unrealistic and breaks the profile initialization.' \
+								% nu200m)
+				rt_R200m = 1.4 - 0.21 * nu200m
 			else:
 				raise Exception('Need nu200m to compute rt.')				
 			
@@ -273,7 +277,7 @@ class GenericD22Profile(profile_base.HaloDensityProfile):
 		"""
 		
 		d_lnrho_d_lnr = self.densityDerivativeLogInner(r)
-		rho = self.density(r)
+		rho = self.densityInner(r)
 		der = d_lnrho_d_lnr * rho / r
 		
 		return der

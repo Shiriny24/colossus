@@ -589,7 +589,7 @@ class HaloDensityProfile():
 		drho_dr = self.densityDerivativeLinInner(r)
 		if self.N_outer > 0:
 			drho_dr += self.densityDerivativeLinOuter(r)
-		
+
 		return drho_dr
 
 	###############################################################################################

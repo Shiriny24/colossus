@@ -26,7 +26,7 @@ from colossus.halo import profile_diemer22
 
 def compositeProfile(inner_name = None, outer_names = ['mean', 'pl'], **kwargs):
 	"""
-	A wrapper function to create a profile with one or many outer profile terms.
+	A wrapper function to create a profile with or without outer profile term(s).
 	
 	At large radii, fitting functions for halo density profiles only make sense if they are 
 	combined with a description of the profile of infalling matter and/or the two-halo term, that is,
