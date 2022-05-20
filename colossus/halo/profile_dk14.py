@@ -224,8 +224,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 			if (nu200m is not None):
 				rt_R200m = 1.9 - 0.18 * nu200m
 			else:
-				msg = 'Need nu200m to compute rt.'
-				raise Exception(msg)				
+				raise Exception('Need nu200m to compute rt.')
 			
 		elif selected_by == 'Gamma':
 			beta = 6.0
@@ -234,12 +233,10 @@ class DK14Profile(profile_base.HaloDensityProfile):
 				cosmo = cosmology.getCurrent()
 				rt_R200m =  0.43 * (1.0 + 0.92 * cosmo.Om(z)) * (1.0 + 2.18 * np.exp(-Gamma / 1.91))
 			else:
-				msg = 'Need Gamma and z to compute rt.'
-				raise Exception(msg)
+				raise Exception('Need Gamma and z to compute rt.')
 
 		else:
-			msg = "Unknown sample selection, %s." % (selected_by)
-			raise Exception(msg)
+			raise Exception('Unknown sample selection, %s.' % (selected_by))
 
 		alpha = 0.155 + 0.0095 * nu200m**2
 

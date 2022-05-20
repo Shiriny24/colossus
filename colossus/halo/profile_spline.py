@@ -104,8 +104,7 @@ class SplineProfile(profile_base.HaloDensityProfile):
 		self.max_RDelta = self.rmax
 
 		if rho is None and M is None:
-			msg = 'Either mass or density must be specified.'
-			raise Exception(msg)
+			raise Exception('Either mass or density must be specified.')
 		
 		self.rho_spline = None
 		self.M_spline = None

@@ -718,11 +718,9 @@ def modelAdhikari14Deltasp(s, Om):
 	Delta = interp(Om_, s, grid = False)
 	
 	if np.max(s) > np.max(bins_s):
-		msg = 'Found s = %.2f, greater than max %.2f.' % (np.max(s), np.max(bins_s))
-		raise Exception(msg)
+		raise Exception('Found s = %.2f, greater than max %.2f.' % (np.max(s), np.max(bins_s)))
 	if np.min(s) < np.min(bins_s):
-		msg = 'Found s = %.2f, smaller than min %.2f.' % (np.min(s), np.min(bins_s))
-		raise Exception(msg)
+		raise Exception('Found s = %.2f, smaller than min %.2f.' % (np.min(s), np.min(bins_s)))
 	
 	c = np.interp(s, bins_s, c)
 	if np.count_nonzero(c < 0.0) > 0:
@@ -806,19 +804,16 @@ def modelMore15RspR200m(nu200m = None, z = None, Gamma = None, statistic = 'medi
 		elif statistic == 'mean':
 			ratio = 0.58 * (1.0 + 0.63 * cosmo.Om(z)) * (1 + 1.08 * np.exp(-Gamma / 2.26))
 		else:
-			msg = 'Unknown statistic, %s.' % statistic
-			raise Exception(msg)
+			raise Exception('Unknown statistic, %s.' % statistic)
 	elif nu200m is not None:
 		if statistic == 'median':
 			ratio = 0.81 * (1.0 + 0.97 * np.exp(-nu200m / 2.44))
 		elif statistic == 'mean':
 			ratio = 0.88 * (1.0 + 0.77 * np.exp(-nu200m / 1.95))
 		else:
-			msg = 'Unknown statistic, %s.' % statistic
-			raise Exception(msg)
+			raise Exception('Unknown statistic, %s.' % statistic)
 	else:
-		msg = 'Need either Gamma and z, or nu.'
-		raise Exception(msg)
+		raise Exception('Need either Gamma and z, or nu.')
 
 	return ratio
 
@@ -858,19 +853,16 @@ def modelMore15MspM200m(nu200m = None, z = None, Gamma = None, statistic = 'medi
 		elif statistic == 'mean':
 			ratio = 0.70 * (1.0 + 0.37 * cosmo.Om(z)) * (1 + 0.62 * np.exp(-Gamma / 2.69))
 		else:
-			msg = 'Unknown statistic, %s.' % statistic
-			raise Exception(msg)
+			raise Exception('Unknown statistic, %s.' % statistic)
 	elif nu200m is not None:
 		if statistic == 'median':
 			ratio = 0.82 * (1.0 + 0.63 * np.exp(-nu200m / 3.52))
 		elif statistic == 'mean':
 			ratio = 0.92 * (1.0 + 0.45 * np.exp(-nu200m / 2.26))
 		else:
-			msg = 'Unknown statistic, %s.' % statistic
-			raise Exception(msg)
+			raise Exception('Unknown statistic, %s.' % statistic)
 	else:
-		msg = 'Need either Gamma and z, or nu.'
-		raise Exception(msg)
+		raise Exception('Need either Gamma and z, or nu.')
 	
 	return ratio
 

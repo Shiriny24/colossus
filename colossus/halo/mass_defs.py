@@ -187,8 +187,7 @@ def evolveSO(M_i, c_i, z_i, mdef_i, z_f, mdef_f,
 			cnew[i] = Rnew[i] / prof.par['rs']
 
 	else:
-		msg = 'This function is not defined for profile %s.' % (profile)
-		raise Exception(msg)
+		raise Exception('This function is not defined for profile %s.' % (profile))
 
 	if not M_is_array and not c_is_array:
 		Rnew = Rnew[0]

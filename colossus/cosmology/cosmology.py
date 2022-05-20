@@ -1012,17 +1012,15 @@ class Cosmology(object):
 			
 			if np.min(z) < min_:
 				if inverse:
-					msg = "Value f = %.3f outside range of interpolation table (min. %.3f)." % (np.min(z), min_)
+					raise Exception('Value f = %.3f outside range of interpolation table (min. %.3f).' % (np.min(z), min_))
 				else:
-					msg = "Redshift z = %.3f outside range of interpolation table (min. z is %.3f)." % (np.min(z), min_)
-				raise Exception(msg)
+					raise Exception('Redshift z = %.3f outside range of interpolation table (min. z is %.3f).' % (np.min(z), min_))
 				
 			if np.max(z) > max_:
 				if inverse:
-					msg = "Value f = %.3f outside range of interpolation table (max. f is %.3f)." % (np.max(z), max_)
+					raise Exception('Value f = %.3f outside range of interpolation table (max. f is %.3f).' % (np.max(z), max_))
 				else:
-					msg = "Redshift z = %.3f outside range of interpolation table (max. z is %.3f)." % (np.max(z), max_)
-				raise Exception(msg)
+					raise Exception('Redshift z = %.3f outside range of interpolation table (max. z is %.3f).' % (np.max(z), max_))
 
 			if inverse:
 				f = z
@@ -1997,8 +1995,7 @@ class Cosmology(object):
 			table_name = self._matterPowerSpectrumName(model)
 			table = self.storageUser.getStoredObject(table_name, path = path)
 			if table is None:
-				msg = "Could not load data table, %s." % (table_name)
-				raise Exception(msg)
+				raise Exception('Could not load data table, %s.' % (table_name))
 			k_min = 10**table[0][0]
 			k_max = 10**table[0][-1]
 				
@@ -2025,17 +2022,14 @@ class Cosmology(object):
 			table = self.storageUser.getStoredObject(table_name, path = path)
 			
 			if table is None:
-				msg = "Could not load data table, %s. Please check that the power spectrum model name is valid." \
-					% (table_name)
-				raise Exception(msg)
+				raise Exception('Could not load data table, %s. Please check that the power spectrum model name is valid.' \
+					% (table_name))
 			k_min = 10**table[0][0]
 			if np.min(k) < k_min:
-				msg = "k (%.2e) is smaller than min. k in table (%.2e)." % (np.min(k), k_min)
-				raise Exception(msg)
+				raise Exception('k (%.2e) is smaller than min. k in table (%.2e).' % (np.min(k), k_min))
 			k_max = 10**table[0][-1]
 			if np.max(k) > k_max:
-				msg = "k (%.2e) is larger than max. k in table (%.2e)." % (np.max(k), k_max)
-				raise Exception(msg)
+				raise Exception('k (%.2e) is larger than max. k in table (%.2e).' % (np.max(k), k_max))
 
 			# We do not store the interpolator here, because it might have the wrong normalization.
 			interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, 
@@ -2220,14 +2214,12 @@ class Cosmology(object):
 			k_req = np.min(k)
 			k_min = 10**interpolator.get_knots()[0]
 			if k_req < k_min:
-				msg = "k = %.2e is too small (min. k = %.2e)" % (k_req, k_min)
-				raise Exception(msg)
+				raise Exception('k = %.2e is too small (min. k = %.2e)' % (k_req, k_min))
 
 			k_req = np.max(k)
 			k_max = 10**interpolator.get_knots()[-1]
 			if k_req > k_max:
-				msg = "k = %.2e is too large (max. k = %.2e)" % (k_req, k_max)
-				raise Exception(msg)
+				raise Exception('k = %.2e is too large (max. k = %.2e)' % (k_req, k_max))
 
 			if derivative:
 				Pk = interpolator(np.log10(k), nu = 1)
@@ -2311,8 +2303,7 @@ class Cosmology(object):
 			ret = np.exp(-x**2 * 0.5)
 		
 		else:
-			msg = "Invalid filter, %s." % (filt)
-			raise Exception(msg)
+			raise Exception('Invalid filter, %s.' % (filt))
 			
 		return ret
 
@@ -2538,8 +2529,7 @@ class Cosmology(object):
 			sigma = np.sqrt(sigma2 / 2.0 / np.pi**2)
 		
 		if np.isnan(sigma):
-			msg = "Result is nan (cosmology %s, filter %s, R %.2e, j %d." % (self.name, filt, R, j)
-			raise Exception(msg)
+			raise Exception('Result is nan (cosmology %s, filter %s, R %.2e, j %d.' % (self.name, filt, R, j))
 			
 		return sigma
 	
@@ -2688,16 +2678,14 @@ class Cosmology(object):
 				R_req = np.min(R)
 				if R_req < self.R_min_sigma:
 					M_min = 4.0 / 3.0 * np.pi * self.R_min_sigma**3 * self.rho_m(0.0) * 1E9
-					msg = "R = %.2e is too small (min. R = %.2e, min. M = %.2e)" \
-						% (R_req, self.R_min_sigma, M_min)
-					raise Exception(msg)
+					raise Exception('R = %.2e is too small (min. R = %.2e, min. M = %.2e)' \
+						% (R_req, self.R_min_sigma, M_min))
 			
 				R_req = np.max(R)
 				if R_req > self.R_max_sigma:
 					M_max = 4.0 / 3.0 * np.pi * self.R_max_sigma**3 * self.rho_m(0.0) * 1E9
-					msg = "R = %.2e is too large (max. R = %.2e, max. M = %.2e)" \
-						% (R_req, self.R_max_sigma, M_max)
-					raise Exception(msg)
+					raise Exception('R = %.2e is too large (max. R = %.2e, max. M = %.2e)' \
+						% (R_req, self.R_max_sigma, M_max))
 	
 				if derivative:
 					ret = interpolator(np.log10(R), nu = 1)
@@ -2735,13 +2723,13 @@ class Cosmology(object):
 				# If the requested sigma is outside the range, give a detailed error message.
 				sigma_req = np.max(sigma_)
 				if sigma_req > sigma_max:
-					msg = "Variance sigma = %.2e is too large to invert to radius (max. sigma = %.2e)." % (sigma_req, sigma_max)
-					raise Exception(msg)
+					raise Exception('Variance sigma = %.2e is too large to invert to radius (max. sigma = %.2e).' \
+								% (sigma_req, sigma_max))
 					
 				sigma_req = np.min(sigma_)
 				if sigma_req < sigma_min:
-					msg = "Variance sigma = %.2e is too small to invert to radius (min. sigma = %.2e)." % (sigma_req, sigma_min)
-					raise Exception(msg)
+					raise Exception('Variance sigma = %.2e is too small to invert to radius (min. sigma = %.2e).' \
+								% (sigma_req, sigma_min))
 				
 				# Interpolate to get R(sigma)
 				if derivative: 
@@ -2834,8 +2822,7 @@ class Cosmology(object):
 			xi /= 2.0 * np.pi**2
 	
 			if np.isnan(xi):
-				msg = 'Result is nan (cosmology %s, R %.2e).' % (self.name, R)
-				raise Exception(msg)
+				raise Exception('Result is nan (cosmology %s, R %.2e).' % (self.name, R))
 
 		return xi
 	
@@ -2936,13 +2923,11 @@ class Cosmology(object):
 			# If the requested radius is outside the range, give a detailed error message.
 			R_req = np.min(R)
 			if R_req < self.R_xi[0]:
-				msg = 'R = %.2e is too small (min. R = %.2e)' % (R_req, self.R_xi[0])
-				raise Exception(msg)
+				raise Exception('R = %.2e is too small (min. R = %.2e)' % (R_req, self.R_xi[0]))
 		
 			R_req = np.max(R)
 			if R_req > self.R_xi[-1]:
-				msg = 'R = %.2e is too large (max. R = %.2e)' % (R_req, self.R_xi[-1])
-				raise Exception(msg)
+				raise Exception('R = %.2e is too large (max. R = %.2e)' % (R_req, self.R_xi[-1]))
 	
 			# Interpolate to get xi(R). Note that the interpolation is performed in linear 
 			# space, since xi can be negative.
@@ -3016,8 +3001,7 @@ def setCosmology(cosmo_name, params = None):
 		if params is not None:
 			param_dict = params.copy()
 		else:
-			msg = "Invalid cosmology (%s)." % (cosmo_name)
-			raise Exception(msg)
+			raise Exception('Invalid cosmology (%s).' % (cosmo_name))
 		
 	param_dict['name'] = cosmo_name
 	cosmo = Cosmology(**(param_dict))

@@ -244,8 +244,7 @@ class ModelAProfile(profile_base.HaloDensityProfile):
 				raise Exception('Need Gamma and z to compute rt.')
 
 		else:
-			msg = "Unknown sample selection, %s." % (selected_by)
-			raise Exception(msg)
+			raise Exception('Unknown sample selection, %s.' % (selected_by))
 
 		return alpha, beta, rt_R200m
 

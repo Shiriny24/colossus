@@ -289,12 +289,11 @@ class HaloDensityProfile():
 		err = (M_result - M) / M
 		
 		if abs(err) > acc_err:
-			msg = 'Profile parameters not converged (%.1f percent error).' % (abs(err) * 100.0)
-			raise Exception(msg)
+			raise Exception('Profile parameters not converged (%.1f percent error).' % (abs(err) * 100.0))
 		
 		if abs(err) > acc_warn:
-			msg = 'WARNING: Profile parameters converged to an accuracy of %.1f percent.' % (abs(err) * 100.0)
-			print(msg)
+			print('WARNING: Profile parameters converged to an accuracy of %.1f percent.' \
+				% (abs(err) * 100.0))
 		
 		return
 	
@@ -370,14 +369,12 @@ class HaloDensityProfile():
 				self.par[self.par_names[i]] = pars[i]
 		else:
 			if len(mask) != self.N_par:
-				msg = 'Received %d mask elements for %d parameters.' % \
-					(np.count_nonzero(mask), self.N_par)
-				raise Exception(msg)
+				raise Exception('Received %d mask elements for %d parameters.' % \
+					(np.count_nonzero(mask), self.N_par))
 				
 			if len(pars) != np.count_nonzero(mask):
-				msg = 'Received %d parameters and %d mask elements that are True.' % \
-					(len(pars), np.count_nonzero(mask))
-				raise Exception(msg)
+				raise Exception('Received %d parameters and %d mask elements that are True.' % \
+					(len(pars), np.count_nonzero(mask)))
 			
 			counter = 0
 			for i in range(self.N_par):
@@ -857,8 +854,7 @@ class HaloDensityProfile():
 		elif mdef is not None and z is not None:
 			Rmax_use = self.RDelta(z, mdef)
 		else:
-			msg = 'The cumulative pdf function needs an outer radius for the profile.'
-			raise Exception(msg)
+			raise Exception('The cumulative pdf function needs an outer radius for the profile.')
 			
 		pdf = self.enclosedMass(r) / self.enclosedMass(Rmax_use)
 		
@@ -903,10 +899,8 @@ class HaloDensityProfile():
 			log_max_r = min(log_max_r, np.log(max_r_integrate))
 
 		if np.max(r) > np.exp(log_max_r) / 10.0:
-			msg = 'Cannot evaluate surface density for radius %.2e, must be smaller than %.2e. ' \
-				% (np.max(r), np.exp(log_max_r) / 10.0)
-			msg += 'You may want to turn the interpolate option off or change the integration limits.'
-			raise Exception(msg)
+			raise Exception('Cannot evaluate surface density for radius %.2e, must be smaller than %.2e. You may want to turn the interpolate option off or change the integration limits.' \
+				% (np.max(r), np.exp(log_max_r) / 10.0))
 
 		if interpolate:
 			table_log_r = np.arange(log_min_r, log_max_r + 0.01, 0.1)
@@ -914,8 +908,7 @@ class HaloDensityProfile():
 			if np.min(rho) < 0.0:
 				print('Current profile parameters:')
 				print(self.par)
-				msg = 'Found negative value in density, cannot create interpolation table. Try computing surface density with interpolate = False.'
-				raise Exception(msg)
+				raise Exception('Found negative value in density, cannot create interpolation table. Try computing surface density with interpolate = False.')
 			if np.min(rho) == 0.0:
 				min_val = np.min(rho[rho > 0.0])
 				rho[rho == 0.0] = min_val
@@ -1104,9 +1097,8 @@ class HaloDensityProfile():
 			return ret
 
 		if np.max(r) > self.rmax:
-			msg = 'Cannot evaluate DeltaSigma for radius %.2e, must be smaller than %.2e for this profile type.' \
-				% (np.max(r), self.rmax)
-			raise Exception(msg)
+			raise Exception('Cannot evaluate DeltaSigma for radius %.2e, must be smaller than %.2e for this profile type.' \
+				% (np.max(r), self.rmax))
 
 		log_min_r = np.log(min_r_interpolate)
 		log_max_r = np.log(np.max(r) * 1.01)
@@ -1714,8 +1706,7 @@ class HaloDensityProfile():
 		
 		# Check the output
 		if not err_code in [1, 2, 3, 4]:
-			msg = 'Fitting failed, message: %s' % (fit_msg)
-			raise Warning(msg)
+			raise Exception('Fitting failed, message: %s' % (fit_msg))
 
 		# Set the best-fit parameters
 		x = self._fitConvertParamsBack(x_fit, mask)
@@ -1740,23 +1731,20 @@ class HaloDensityProfile():
 
 		else:
 			
-			msg = 'WARNING: Could not determine uncertainties on fitted parameters. Set all uncertainties to zero.'
-			print(msg)
+			print('WARNING: Could not determine uncertainties on fitted parameters. Set all uncertainties to zero.')
 			err = np.zeros((2, N_par_fit), float)
 			
 		dict['x_err'] = err
 
 		# Print solution
 		if verbose:
-			msg = 'Found solution in %d steps. Best-fit parameters:' % (dict['nfev'])
-			print(msg)
+			print('Found solution in %d steps. Best-fit parameters:' % (dict['nfev']))
 			counter = 0
 			for i in range(self.N_par):
 				if mask is None or mask[i]:
-					msg = 'Parameter %10s = %7.2e [%7.2e .. %7.2e]' \
-						% (self.par_names[i], x[counter], err[0, counter], err[1, counter])
+					print('Parameter %10s = %7.2e [%7.2e .. %7.2e]' \
+						% (self.par_names[i], x[counter], err[0, counter], err[1, counter]))
 					counter += 1
-					print(msg)
 					
 		return x, dict
 
@@ -1947,14 +1935,12 @@ class HaloDensityProfile():
 			mask = np.ones((self.N_par), bool)
 		else:
 			if len(mask) != self.N_par:
-				msg = 'Mask has %d elements, expected %d.' % (len(mask), self.N_par)
-				raise Exception(msg)
+				raise Exception('Mask has %d elements, expected %d.' % (len(mask), self.N_par))
 		N_par_fit = np.count_nonzero(mask)
 		if N_par_fit < 1:
 			raise Exception('The mask contains no True elements, meaning there are no parameters to vary.')
 		if verbose:
-			msg = 'Profile fit: Varying %d / %d parameters.' % (N_par_fit, self.N_par)
-			print(msg)
+			print('Profile fit: Varying %d / %d parameters.' % (N_par_fit, self.N_par))
 		
 		# Set the correct function to evaluate during the fitting process. We could just pass
 		# quantity, but that would mean many evaluations of the dictionary entry.
@@ -2055,8 +2041,7 @@ class HaloDensityProfile():
 									Q, mask, N_par_fit, verbose, tolerance, maxfev)
 			
 		else:
-			msg = 'Unknown fitting method, %s.' % method
-			raise Exception(msg)
+			raise Exception('Unknown fitting method, %s.' % method)
 		
 		# Compute a few convenient outputs
 		dict['x'] = x

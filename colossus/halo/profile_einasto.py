@@ -170,7 +170,6 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 		self.par['rhos'] = 1.0
 		self._computeMassTerms()
 		self.par['rhos'] *= M / self.enclosedMassInner(R)
-		self._computeMassTerms()
 		
 		return
 	
@@ -178,9 +177,9 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 
 	def _computeMassTerms(self):
 		
-		self.mass_norm = np.pi * self.par['rhos'] * self.par['rs']**3 * 2.0**(2.0 - 3.0 / self.par['alpha']) \
-			* self.par['alpha']**(-1.0 + 3.0 / self.par['alpha']) * np.exp(2.0 / self.par['alpha']) 
-		self.gamma_3alpha = scipy.special.gamma(3.0 / self.par['alpha'])
+		self.mass_norm = np.pi * self.par['rs']**3 * 2.0**(2.0 - 3.0 / self.par['alpha']) \
+			* self.par['alpha']**(-1.0 + 3.0 / self.par['alpha']) * np.exp(2.0 / self.par['alpha']) \
+			* scipy.special.gamma(3.0 / self.par['alpha'])
 		
 		return
 	
@@ -314,7 +313,8 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 		r: array_like
 			Radius in physical kpc/h; can be a number or a numpy array.
 		accuracy: float
-			The minimum accuracy of the integration.
+			The minimum accuracy of the integration. This parameter has no effect because the 
+			function uses an analytical expression.
 			
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -322,7 +322,7 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 			The mass enclosed within radius r, in :math:`M_{\odot}/h`; has the same dimensions as r.
 		"""		
 		
-		mass = self.mass_norm * self.gamma_3alpha * scipy.special.gammainc(3.0 / self.par['alpha'],
+		mass = self.par['rhos'] * self.mass_norm * scipy.special.gammainc(3.0 / self.par['alpha'],
 								2.0 / self.par['alpha'] * (r / self.par['rs'])**self.par['alpha'])
 		
 		return mass

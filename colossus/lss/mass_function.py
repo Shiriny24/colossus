@@ -339,8 +339,7 @@ def massFunction(x, z, q_in = 'M', q_out = 'f', mdef = 'fof',
 
 	# Check that the model exists
 	if not model in models.keys():
-		msg = 'Unknown model, %s.' % (model)
-		raise Exception(msg)
+		raise Exception('Unknown model, %s.' % (model))
 	model_props = models[model]
 	
 	# Check that the mass definition and model are compatible.

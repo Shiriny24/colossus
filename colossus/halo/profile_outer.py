@@ -126,14 +126,12 @@ class OuterTerm():
 	def __init__(self, par_array, opt_array, par_names, opt_names):
 		
 		if len(par_array) != len(par_names):
-			msg = 'Arrays with parameters and parameter names must have the same length (%d, %d).' % \
-				(len(par_array), len(par_names))
-			raise Exception(msg)
+			raise Exception('Arrays with parameters and parameter names must have the same length (%d, %d).' % \
+				(len(par_array), len(par_names)))
 		
 		if len(opt_array) != len(opt_names):
-			msg = 'Arrays with options and option names must have the same length (%d, %d).' % \
-				(len(opt_array), len(opt_names))
-			raise Exception(msg)
+			raise Exception('Arrays with options and option names must have the same length (%d, %d).' % \
+				(len(opt_array), len(opt_names)))
 
 		self.term_par_names = par_names
 		self.term_opt_names = opt_names
@@ -593,8 +591,7 @@ class OuterTermPowerLaw(OuterTerm):
 		elif r_pivot_id in self.opt:
 			r_pivot = self.opt[r_pivot_id]
 		else:
-			msg = 'Could not find the parameter or option "%s".' % (r_pivot_id)
-			raise Exception(msg)
+			raise Exception('Could not find the parameter or option "%s".' % (r_pivot_id))
 
 		if r_pivot is None:
 			raise Exception('Outer profile was trying to use the internal radius %s, but found None.' \
@@ -759,8 +756,7 @@ class OuterTermInfalling(OuterTerm):
 		elif r_pivot_id in self.opt:
 			r_pivot = self.opt[r_pivot_id]
 		else:
-			msg = 'Could not find the parameter or option "%s".' % (r_pivot_id)
-			raise Exception(msg)
+			raise Exception('Could not find the parameter or option "%s".' % (r_pivot_id))
 
 		delta_1 = self.par['pl_delta_1']
 		s = self.par['pl_s']

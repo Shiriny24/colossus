@@ -171,8 +171,7 @@ def getHomeDir():
 
 	else:
 	
-		msg = 'Unknown operating system type, %s. Cannot find home directory.' % os.name
-		raise Warning(msg)
+		raise Warning('Unknown operating system type, %s. Cannot find home directory.' % os.name)
 		home_dir = None
 	
 	return home_dir

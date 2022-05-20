@@ -177,8 +177,7 @@ def haloBiasFromNu(nu, z = None, mdef = None, model = defaults.HALO_BIAS_MODEL, 
 	elif model == 'comparat17':
 		bias = modelComparat17(nu, **kwargs)
 	else:
-		msg = 'Unkown model, %s.' % (model)
-		raise Exception(msg)
+		raise Exception('Unkown model, %s.' % (model))
 
 	return bias
 

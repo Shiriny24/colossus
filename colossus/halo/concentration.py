@@ -344,8 +344,7 @@ def concentration(M, mdef, z,
 	# Distinguish between models
 		
 	if not model in models.keys():
-		msg = 'Unknown model, %s.' % (model)
-		raise Exception(msg)
+		raise Exception('Unknown model, %s.' % (model))
 	
 	mdefs_model = models[model].mdefs
 	universal = models[model].universal
@@ -418,9 +417,8 @@ def concentration(M, mdef, z,
 
 			if MDelta is None or MDelta < 0.1:
 				if range_warning:
-					msg = 'Could not find concentration for model %s, mass %.2e, mdef %s.' \
-						% (model, M_array[i], mdef)
-					warnings.warn(msg)
+					warnings.warn('Could not find concentration for model %s, mass %.2e, mdef %s.' \
+						% (model, M_array[i], mdef))
 				c[i] = INVALID_CONCENTRATION
 				mask[i] = False
 			
@@ -554,8 +552,7 @@ def modelDuffy08(M, z, mdef):
 		B = -0.081
 		C = -1.01
 	else:
-		msg = 'Invalid mass definition for Duffy et al. 2008 model, %s.' % mdef
-		raise Exception(msg)
+		raise Exception('Invalid mass definition for Duffy et al. 2008 model, %s.' % mdef)
 
 	c = A * (M / 2E12)**B * (1.0 + z)**C
 	mask = (M >= 1E11) & (M <= 1E15) & (z <= 2.0)
@@ -688,8 +685,7 @@ def modelBhattacharya13(M, z, mdef):
 	elif mdef == '200m':
 		c_fit = 9.0 * D**1.15 * nu**-0.29
 	else:
-		msg = 'Invalid mass definition for Bhattacharya et al. 2013 model, %s.' % mdef
-		raise Exception(msg)
+		raise Exception('Invalid mass definition for Bhattacharya et al. 2013 model, %s.' % mdef)
 				
 	M_min = 2E12
 	M_max = 2E15
@@ -738,8 +734,7 @@ def modelDutton14(M, z, mdef):
 		a = 0.537 + (1.025 - 0.537) * np.exp(-0.718 * z**1.08)
 		b = -0.097 + 0.024 * z
 	else:
-		msg = 'Invalid mass definition for Dutton & Maccio 2014 model, %s.' % mdef
-		raise Exception(msg)
+		raise Exception('Invalid mass definition for Dutton & Maccio 2014 model, %s.' % mdef)
 	
 	logc = a + b * np.log10(M / 1E12)
 	c = 10**logc
@@ -1004,8 +999,7 @@ def modelKlypin16fromM(M, z, mdef):
 	"""
 	
 	if not mdef in ['200c', 'vir']:
-		msg = 'Invalid mass definition for Klypin et al 2016 m-based model, %s.' % mdef
-		raise Exception(msg)
+		raise Exception('Invalid mass definition for Klypin et al 2016 m-based model, %s.' % mdef)
 
 	cosmo = cosmology.getCurrent()
 
@@ -1032,8 +1026,7 @@ def modelKlypin16fromM(M, z, mdef):
 			M0_bins = [2E6, 7E3, 550.0, 90.0, 11.0, 6.0, 2.5, 1.0]
 		
 	else:
-		msg = 'Invalid cosmology for Klypin et al 2016 m-based model, %s.' % cosmo.name
-		raise Exception(msg)
+		raise Exception('Invalid cosmology for Klypin et al 2016 m-based model, %s.' % cosmo.name)
 
 	C0 = np.interp(z, z_bins, C0_bins)
 	gamma = np.interp(z, z_bins, gamma_bins)
@@ -1092,8 +1085,7 @@ def modelKlypin16fromNu(M, z, mdef):
 		a0_bins = [0.75, 0.9, 0.97, 1.12, 1.28, 1.52, 1.62]
 		b0_bins = [0.567, 0.541, 0.529, 0.496, 0.474, 0.421, 0.393]
 	else:
-		msg = 'Invalid mass definition for Klypin et al 2016 peak height-based model, %s.' % mdef
-		raise Exception(msg)
+		raise Exception('Invalid mass definition for Klypin et al 2016 peak height-based model, %s.' % mdef)
 
 	nu = peaks.peakHeight(M, z)
 	sigma = constants.DELTA_COLLAPSE / nu
