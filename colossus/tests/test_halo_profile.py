@@ -62,10 +62,7 @@ class TCBase(test_colossus.ColosssusTestCase):
 				
 				self.par_names = ['rhos', 'rs']
 				self.opt_names = []
-				profile_base.HaloDensityProfile.__init__(self)
-				
-				self.par['rhos'] = rhos
-				self.par['rs'] = rs
+				profile_base.HaloDensityProfile.__init__(self, rhos = rhos, rs = rs)
 				
 				return
 			
@@ -76,6 +73,10 @@ class TCBase(test_colossus.ColosssusTestCase):
 				
 				return density
 		
+			def setNativeParameters(self, M, c, z, mdef, **kwargs):
+				
+				return
+
 		# Properties of the test halo
 		M = 1E12
 		c = 10.0
