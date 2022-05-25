@@ -51,11 +51,15 @@ class HaloDensityProfile():
 	allowed_mdefs: list
 		A list of mass definitions that the :func:`setNativeParameters` routine of a derived 
 		class can accept. If ``None``, it is assumed that any definition is acceptable. 
+	ignore_params: bool
+		If True, the constructor does not attempt to set the profile parameters from a given mass
+		and concentration. Instead, the profile is accepted as is. This option can be set for 
+		parameter-free child classes such as spline profiles.
 	outer_terms: list
 		A list of OuterTerm objects to add to the density profile. 
 	"""
 
-	def __init__(self, allowed_mdefs = None, outer_terms = [], **kwargs):
+	def __init__(self, allowed_mdefs = None, ignore_params = False, outer_terms = [], **kwargs):
 		
 		# -----------------------------------------------------------------------------------------
 		# Set defaults
@@ -79,7 +83,7 @@ class HaloDensityProfile():
 		# The parameters of the profile are stored in a dictionary. We separately store the number
 		# of parameters for the inner profile because the total number may include additional 
 		# parameters of the outer profile.
-		if not 'rhos' in self.par_names:
+		if (not ignore_params) and (not 'rhos' in self.par_names):
 			raise Exception('Derived profile classes must have a normalization parameter called "rhos". Found %s.' \
 						% (str(self.par_names)))
 		self.par = collections.OrderedDict()
@@ -106,28 +110,29 @@ class HaloDensityProfile():
 		# Set profile parameters from keyword arguments
 
 		# Check whether all native parameters are given
-		native_found = True
-		for p in self.par:
-			if not p in kwargs:
-				native_found = False
-				break
-		
-		if native_found:
+		if not ignore_params:
+			native_found = True
 			for p in self.par:
-				self.par[p] = kwargs[p]
-		else:
-			mcz_found = True
-			mcz_args = copy.copy(kwargs)
-			for p in ['M', 'c', 'mdef', 'z']:
 				if not p in kwargs:
-					mcz_found = False
+					native_found = False
 					break
-				del mcz_args[p]
-
-			if not mcz_found:
-				raise Exception('A profile must be define either using its native parameters (%s), or (M, c, mdef, z).' \
-							% (str(self.par_names)))
-		
+			
+			if native_found:
+				for p in self.par:
+					self.par[p] = kwargs[p]
+			else:
+				mcz_found = True
+				mcz_args = copy.copy(kwargs)
+				for p in ['M', 'c', 'mdef', 'z']:
+					if not p in kwargs:
+						mcz_found = False
+						break
+					del mcz_args[p]
+	
+				if not mcz_found:
+					raise Exception('A profile must be define either using its native parameters (%s), or (M, c, mdef, z).' \
+								% (str(self.par_names)))
+			
 		# -----------------------------------------------------------------------------------------
 		# Deal with outer profiles
 
@@ -181,6 +186,10 @@ class HaloDensityProfile():
 		# setNativeParameters() function implemented by the profile object. This sets only the 
 		# inner profile parameters, so if there are outer profile parameters, we normalize the 
 		# rhos parameter.
+
+		# If we are not setting parameters, we exit here.
+		if ignore_params:
+			return
 
 		if not native_found and mcz_found:
 			

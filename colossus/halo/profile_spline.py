@@ -95,7 +95,7 @@ class SplineProfile(profile_base.HaloDensityProfile):
 		
 		self.par_names = []
 		self.opt_names = []
-		profile_base.HaloDensityProfile.__init__(self)
+		profile_base.HaloDensityProfile.__init__(self, ignore_params = True)
 		
 		self.rmin = np.min(r)
 		self.rmax = np.max(r)
