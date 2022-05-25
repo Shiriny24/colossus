@@ -1633,6 +1633,8 @@ class HaloDensityProfile():
 		for j in range(N_par_fit):
 			deriv[j] = np.dot(Q, deriv[j])
 		
+		deriv = deriv.T
+		
 		return deriv
 
 	###############################################################################################
@@ -1700,7 +1702,7 @@ class HaloDensityProfile():
 	###############################################################################################
 
 	def _fitMethodLeastsq(self, r, q, f, df_inner, df_outer, Q, mask, N_par_fit, verbose,
-						tolerance, maxfev):
+						tolerance, maxfev, use_legacy_leastsq = False, fit_method = 'trf'):
 		
 		# Prepare arguments
 		if df_inner is None:
@@ -1717,42 +1719,84 @@ class HaloDensityProfile():
 					s += '%10s' % list(self.par.keys())[i]
 			print(s)
 
-		# Run the actual fit
+		# Run the actual fit. For backwards compatibility, the user can choose the 
+		# use_legacy_leastsq option which uses the old-style scipy solver. 
 		ini_guess = self._fitConvertParams(self.getParameterArray(mask = mask), mask)
-		x_fit, cov, dic, fit_msg, err_code = scipy.optimize.leastsq(self._fitDiffFunction, 
-							ini_guess, Dfun = deriv_func, col_deriv = 1, args = args, 
-							full_output = 1, xtol = tolerance, maxfev = maxfev)
 		
-		# Check the output
-		if not err_code in [1, 2, 3, 4]:
-			raise Exception('Fitting failed, message: %s' % (fit_msg))
-
-		# Set the best-fit parameters
-		x = self._fitConvertParamsBack(x_fit, mask)
-		self.setParameterArray(x, mask = mask)
-
-		# The fitter sometimes fails to derive a covariance matrix
-		if cov is not None:
+		if use_legacy_leastsq:
 			
-			# The covariance matrix is in relative units, i.e. needs to be multiplied with the 
-			# residual chi2
-			diff = self._fitDiffFunction(x_fit, *args)
-			residual = np.sum(diff**2) / (len(r) - N_par_fit)
-			cov *= residual
+			if maxfev == 0:
+				warnings.warn('maxfev = 0 is deprecated; please use maxfev = None instead.')
+			if maxfev is None:
+				maxfev = 0
+			x_fit, cov, dic, fit_msg, err_code = scipy.optimize.leastsq(self._fitDiffFunction, 
+							ini_guess, Dfun = deriv_func, col_deriv = False, args = args, 
+							full_output = 1, xtol = tolerance, maxfev = maxfev)
 
-			# Derive an estimate of the uncertainty from the covariance matrix. We need to take into
-			# account that cov refers to the fitting parameters which may not be the same as the 
-			# standard profile parameters.
-			sigma = np.sqrt(np.diag(cov))
+			if not err_code in [1, 2, 3, 4]:
+				raise Exception('Fitting failed, message: %s' % (fit_msg))
+			
+			# The fitter sometimes fails to derive a covariance matrix. If not, the covariance 
+			# matrix is in relative units, i.e. needs to be multiplied with the residual chi2.
+			if cov is not None:
+				diff = self._fitDiffFunction(x_fit, *args)
+				residual = np.sum(diff**2) / (len(r) - N_par_fit)
+				cov *= residual
+			else:
+				print('WARNING: Could not determine uncertainties on fitted parameters. Set all uncertainties to zero.')
+				err = np.zeros((2, N_par_fit), float)
+						
+		else:
+
+			bounds = (-np.inf, np.inf)
+			sol = scipy.optimize.least_squares(self._fitDiffFunction, ini_guess, 
+						args = args, jac = deriv_func, bounds = bounds, 
+						method = fit_method, loss = 'linear', tr_solver = None, x_scale = 'jac',
+						max_nfev = maxfev, xtol = tolerance, verbose = 0)
+			
+			x_fit = sol.x
+			cov = sol.jac
+			fit_msg = sol.message
+			dic = {}
+			dic['nfev'] = sol.nfev
+			
+			# With least_squares, the covariance matrix is not returned but can be computed from 
+			# the Jacobian. The units (or normalization) of the resulting covariance matrix depends 
+			# on the uncertainties sigma assumed in the residual function. Since we do not have 
+			# meaningful error estimates in general, the resulting parameter uncertainties would 
+			# also be meaningless. To still compute them, we assume (!) that the fit is good, i.e., 
+			# that chi2/Ndof = 1, and we rescale the covariance matrix accordingly (by multiplying 
+			# with chi2/Ndof). The parameter uncertainties are then estimated from the diagonals of 
+			# the rescaled covariance matrix.
+			chi2ndof = np.sum(sol.fun**2) / (len(sol.fun) - len(sol.x))
+			if chi2ndof <= 0.0:
+				raise Exception('Got invalid chi2/ndof.')
+			try:
+				J = sol.jac
+				cov = np.linalg.inv(J.T.dot(J)) * chi2ndof
+			except:
+				cov = None
+
+		# Derive an estimate of the uncertainty from the covariance matrix. We need to take into
+		# account that cov refers to the fitting parameters which may not be the same as the 
+		# standard profile parameters.
+		if cov is not None:
+
+			diag_vals = np.diag(cov)
+			diag_vals = np.maximum(diag_vals, 0.0)
+			sigma = np.sqrt(diag_vals)
 			err = np.zeros((2, N_par_fit), float)
 			err[0] = self._fitConvertParamsBack(x_fit - sigma, mask)
 			err[1] = self._fitConvertParamsBack(x_fit + sigma, mask)
 
 		else:
 			
-			print('WARNING: Could not determine uncertainties on fitted parameters. Set all uncertainties to zero.')
+			warnings.warn('Could not determine uncertainties on fitted parameters. Set all uncertainties to zero.')
 			err = np.zeros((2, N_par_fit), float)
-			
+
+		# Set the best-fit parameters
+		x = self._fitConvertParamsBack(x_fit, mask)
+		self.setParameterArray(x, mask = mask)
 		dic['x_err'] = err
 
 		# Print solution
@@ -1778,7 +1822,7 @@ class HaloDensityProfile():
 		# General fitting options: method, parameters to vary
 		method = 'leastsq', mask = None, verbose = True,
 		# Options specific to leastsq
-		tolerance = 1E-5, maxfev = 0,
+		tolerance = 1E-5, maxfev = None, leastsq_method = 'trf', use_legacy_leastsq = False, 
 		# Options specific to the MCMC initialization
 		initial_step = 0.1, nwalkers = 100, random_seed = None,
 		# Options specific to running the MCMC chain and its analysis
@@ -1849,7 +1893,15 @@ class HaloDensityProfile():
 			are found.
 		maxfev: int
 			Only active when ``method == 'leastsq'``. The maximum number of function evaluations before
-			the fit is aborted. If zero, the default value of the scipy leastsq function is used.
+			the fit is aborted. If ``None``, the default value of the scipy least_squares function is used.
+		leastsq_method: str
+			Only active when ``method == 'leastsq'``. Can be any of the methods accepted by the 
+			scipy least_squares() function. Default is ``trf`` (trust region reflective), which 
+			works well for profile fits.
+		use_legacy_leastsq: bool
+			Only active when ``method == 'leastsq'``. If ``True``, this setting falls back to the
+			old leastsq() in scipy rather than using the newer least_squares(). Should only be used
+			for backward compatibility.
 		initial_step: array_like
 			Only active when ``method == 'mcmc'``. The MCMC samples ("walkers") are initially 
 			distributed in a Gaussian around the initial guess. The width of the Gaussian is given
@@ -2062,7 +2114,8 @@ class HaloDensityProfile():
 				Q = covinv
 				
 			x, dic = self._fitMethodLeastsq(r, q, f, df_inner, df_outer,
-									Q, mask, N_par_fit, verbose, tolerance, maxfev)
+						Q, mask, N_par_fit, verbose, tolerance, maxfev,
+						use_legacy_leastsq = use_legacy_leastsq, fit_method = leastsq_method)
 			
 		else:
 			raise Exception('Unknown fitting method, %s.' % method)
