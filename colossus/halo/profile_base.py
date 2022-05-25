@@ -1074,7 +1074,8 @@ class HaloDensityProfile():
 			if 'surfaceDensity' in self._outer_terms[i].__class__.__dict__:
 				sigma_outer += self._outer_terms[i].surfaceDensity(r)
 			else:
-				sigma_outer += self._surfaceDensity(r, self._outer_terms[i].density, interpolate = interpolate, accuracy = accuracy,
+				sigma_outer += self._surfaceDensity(r, self._outer_terms[i].density, 
+						interpolate = interpolate, accuracy = accuracy,
 						max_r_interpolate = max_r_interpolate, max_r_integrate = max_r_integrate)
 
 		return sigma_outer

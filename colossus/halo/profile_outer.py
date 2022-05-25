@@ -39,6 +39,7 @@ Models for the outer term
 	:class:`OuterTermMeanDensity`           The mean matter density of the universe  
 	:class:`OuterTermCorrelationFunction`   A term based on the matter-matter correlation      
 	:class:`OuterTermPowerLaw`              A power-law profile
+	:class:`OuterTermInfalling`             Infalling term: power-law profile with max. at center
 	======================================= =======================================================
 
 Description of the outer terms:
@@ -64,6 +65,7 @@ Description of the outer terms:
   cosmology considered in DK14, ``power_law_norm = 1.0`` and ``power_law_slope = 1.5`` are 
   reasonable values over a wide range of masses (see Figure 18 in DK14), but these values are 
   by no means universal or accurate. 
+* ``infalling``: 
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -403,9 +405,9 @@ class OuterTermCorrelationFunction(OuterTerm):
 			raise Exception('Redshift cannot be None.')
 		
 		par_array = []
-		opt_array = [z]
+		opt_array = [z, derive_bias_from, bias]
 		par_names = []
-		opt_names = ['z']
+		opt_names = ['z', 'derive_bias_from', bias_name]
 		
 		if derive_bias_from is None:
 			if bias is None:
@@ -421,6 +423,10 @@ class OuterTermCorrelationFunction(OuterTerm):
 			self._derive_bias = True
 			self._rm_bias_name = derive_bias_from
 			
+			if derive_bias_from == 'R200m':
+				opt_array.append(None)
+				opt_names.append('R200m')
+				
 		OuterTerm.__init__(self, par_array, opt_array, par_names, opt_names)
 		
 		self.initialized = False
