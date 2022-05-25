@@ -18,10 +18,6 @@ from colossus.halo import profile_outer
 from colossus.halo import profile_composite
 from colossus.halo import profile_spline
 from colossus.halo import profile_nfw
-from colossus.halo import profile_einasto
-from colossus.halo import profile_hernquist
-from colossus.halo import profile_dk14
-from colossus.halo import profile_diemer22
 from colossus.halo import concentration
 
 ###################################################################################################
@@ -55,20 +51,7 @@ class TCCreation(test_colossus.ColosssusTestCase):
 		self.ot_sets = [['pl'], ['infalling'], ['infalling', 'mean']]
 		self.p_objs = []
 		for pname in all_profs_inner:
-			if pname == 'nfw':
-				p_obj = profile_nfw.NFWProfile
-			elif pname == 'hernquist':
-				p_obj = profile_hernquist.HernquistProfile
-			elif pname == 'einasto':
-				p_obj = profile_einasto.EinastoProfile
-			elif pname == 'dk14':
-				p_obj = profile_dk14.DK14Profile
-			elif pname == 'diemer22':
-				p_obj = profile_diemer22.ModelAProfile
-			elif pname == 'diemer22b':
-				p_obj = profile_diemer22.ModelBProfile
-			else:
-				raise Exception('Unknown profile.')
+			p_obj = profile_composite.getProfileClass(pname)
 			self.p_objs.append(p_obj)
 	
 	def test_creation_inner(self):

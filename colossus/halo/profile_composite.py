@@ -11,6 +11,15 @@ and one ore more outer (infalling, 2-halo) terms. Please see
 :doc:`halo_profile` for a general introduction and :doc:`tutorials` for coding examples.
 
 ---------------------------------------------------------------------------------------------------
+Module contents
+---------------------------------------------------------------------------------------------------
+
+.. autosummary:: 
+
+	compositeProfile
+	getProfileClass
+
+---------------------------------------------------------------------------------------------------
 Module reference
 ---------------------------------------------------------------------------------------------------
 """
@@ -49,38 +58,59 @@ def compositeProfile(inner_name = None, outer_names = ['mean', 'pl'], **kwargs):
 		The arguments passed to the profile constructors.
 	"""
 
-	if inner_name == 'nfw':
-		inner_cls = profile_nfw.NFWProfile
-	elif inner_name == 'hernquist':
-		inner_cls = profile_hernquist.HernquistProfile
-	elif inner_name == 'einasto':
-		inner_cls = profile_einasto.EinastoProfile
-	elif inner_name == 'dk14':
-		inner_cls = profile_dk14.DK14Profile
-	elif inner_name == 'diemer22':
-		inner_cls = profile_diemer22.ModelAProfile
-	elif inner_name == 'diemer22b':
-		inner_cls = profile_diemer22.ModelBProfile
-	else:
-		raise Exception('Unknown type of inner profile, %s.' % (str(inner_name)))
-	
 	outer_terms = []
 	for i in range(len(outer_names)):
-		if outer_names[i] == 'mean':
-			outer_cls = profile_outer.OuterTermMeanDensity
-		elif outer_names[i] == 'cf':
-			outer_cls = profile_outer.OuterTermCorrelationFunction
-		elif outer_names[i] == 'pl':
-			outer_cls = profile_outer.OuterTermPowerLaw
-		elif outer_names[i] == 'infalling':
-			outer_cls = profile_outer.OuterTermInfalling
-		else:
-			raise Exception('Unknown outer term name, %s.' % (outer_names[i]))
+		outer_cls = getProfileClass(outer_names[i])
 		outer_obj = outer_cls(**kwargs)
 		outer_terms.append(outer_obj)
 
+	inner_cls = getProfileClass(inner_name)
 	inner_obj = inner_cls(outer_terms = outer_terms, **kwargs)
 	
 	return inner_obj
+
+###################################################################################################
+
+def getProfileClass(name):
+	"""
+	Utility function that translates the name of a profile model into its class.
+	
+	This function does not distinguish between inner and outer profiles.
+	
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	name: str
+		A shortcode for a density profile class (see :doc:`halo_profile` for a list).
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	cls: class
+		The profile class.
+	"""
+
+	if name == 'nfw':
+		cls = profile_nfw.NFWProfile
+	elif name == 'hernquist':
+		cls = profile_hernquist.HernquistProfile
+	elif name == 'einasto':
+		cls = profile_einasto.EinastoProfile
+	elif name == 'dk14':
+		cls = profile_dk14.DK14Profile
+	elif name == 'diemer22':
+		cls = profile_diemer22.ModelAProfile
+	elif name == 'diemer22b':
+		cls = profile_diemer22.ModelBProfile
+	elif name == 'mean':
+		cls = profile_outer.OuterTermMeanDensity
+	elif name == 'cf':
+		cls = profile_outer.OuterTermCorrelationFunction
+	elif name == 'pl':
+		cls = profile_outer.OuterTermPowerLaw
+	elif name == 'infalling':
+		cls = profile_outer.OuterTermInfalling
+	else:
+		raise Exception('Unknown profile model name, %s.' % (name))
+
+	return cls
 
 ###################################################################################################

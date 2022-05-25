@@ -357,7 +357,7 @@ class ModelAProfile(GenericD22Profile):
 
 		# Run the generic constructor
 		GenericD22Profile.__init__(self, selected_by = selected_by, Gamma = Gamma, **kwargs)
-	
+
 		return
 
 	###############################################################################################

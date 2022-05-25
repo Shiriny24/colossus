@@ -46,6 +46,7 @@ main changes are as follows:
   renormalize the profile in the presence of outer terms. 
 * Added the new Diemer 2022 density profile (orbiting and infalling terms).
 * Numerical derivative is more efficient.
+* New unit tests.
 
 A few other changes:
 

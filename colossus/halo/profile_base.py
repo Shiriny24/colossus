@@ -259,6 +259,10 @@ class HaloDensityProfile():
 		
 		# -----------------------------------------------------------------------------------------
 
+		# Remember whether the 'R200m' option was set at the beginning; if not, we should remove 
+		# it later.
+		has_r200m_opt = ('R200m' in self.opt)
+
 		# Set target radius and density from given mass
 		R_target = mass_so.M_to_R(M, z, mdef)
 		rho_target = mass_so.densityThreshold(z, mdef)
@@ -303,6 +307,11 @@ class HaloDensityProfile():
 		if abs(err) > acc_warn:
 			print('WARNING: Profile parameters converged to an accuracy of %.1f percent.' \
 				% (abs(err) * 100.0))
+		
+		# Remove the R200m option if it was not originally present. Otherwise this option can 
+		# trigger operations that may be unnecessary for this profile.
+		if not has_r200m_opt:
+			del self.opt['R200m']
 		
 		return
 	
@@ -1669,15 +1678,15 @@ class HaloDensityProfile():
 							args = args, converged_GR = converged_GR, verbose = verbose, output_every_n = output_every_n)
 		mean, median, stddev, p = mcmc.analyzeChain(chain_thin, self.par_names, verbose = verbose)
 
-		dict = {}
-		dict['x_initial'] = xi
-		dict['chain_full'] = chain_full
-		dict['chain_thin'] = chain_thin
-		dict['R'] = R
-		dict['x_mean'] = mean
-		dict['x_median'] = median
-		dict['x_stddev'] = stddev
-		dict['x_percentiles'] = p
+		dic = {}
+		dic['x_initial'] = xi
+		dic['chain_full'] = chain_full
+		dic['chain_thin'] = chain_thin
+		dic['R'] = R
+		dic['x_mean'] = mean
+		dic['x_median'] = median
+		dic['x_stddev'] = stddev
+		dic['x_percentiles'] = p
 		
 		if best_fit == 'mean':
 			x = mean
@@ -1686,7 +1695,7 @@ class HaloDensityProfile():
 
 		self.setParameterArray(x, mask = mask)
 		
-		return x, dict
+		return x, dic
 
 	###############################################################################################
 
@@ -1710,7 +1719,7 @@ class HaloDensityProfile():
 
 		# Run the actual fit
 		ini_guess = self._fitConvertParams(self.getParameterArray(mask = mask), mask)
-		x_fit, cov, dict, fit_msg, err_code = scipy.optimize.leastsq(self._fitDiffFunction, 
+		x_fit, cov, dic, fit_msg, err_code = scipy.optimize.leastsq(self._fitDiffFunction, 
 							ini_guess, Dfun = deriv_func, col_deriv = 1, args = args, 
 							full_output = 1, xtol = tolerance, maxfev = maxfev)
 		
@@ -1744,11 +1753,11 @@ class HaloDensityProfile():
 			print('WARNING: Could not determine uncertainties on fitted parameters. Set all uncertainties to zero.')
 			err = np.zeros((2, N_par_fit), float)
 			
-		dict['x_err'] = err
+		dic['x_err'] = err
 
 		# Print solution
 		if verbose:
-			print('Found solution in %d steps. Best-fit parameters:' % (dict['nfev']))
+			print('Found solution in %d steps. Best-fit parameters:' % (dic['nfev']))
 			counter = 0
 			for i in range(self.N_par):
 				if mask is None or mask[i]:
@@ -1756,7 +1765,7 @@ class HaloDensityProfile():
 						% (self.par_names[i], x[counter], err[0, counter], err[1, counter]))
 					counter += 1
 					
-		return x, dict
+		return x, dic
 
 	###############################################################################################
 
@@ -1940,6 +1949,11 @@ class HaloDensityProfile():
 		if verbose:
 			utilities.printLine()
 
+		# If there is at least one outer profile, and the 'R200m' option exists, this may
+		# indicate a parameter dependence that is not handled, and we output a warning.
+		if (self.N_outer > 0) and ('R200m' in self.opt):
+			warnings.warn('Fitting with an outer profile that may depend on R200m. This dependence is not updated in a fit, and it is recommended to parameterize using a fixed radial scale instead.')
+
 		# Check whether the parameter mask makes sense
 		if mask is None:
 			mask = np.ones((self.N_par), bool)
@@ -1974,7 +1988,7 @@ class HaloDensityProfile():
 			if q_cov is None and q_err is None:
 				raise Exception('MCMC cannot be run without uncertainty vector or covariance matrix.')
 			
-			x, dict = self._fitMethodMCMC(r, q, f, covinv, mask, N_par_fit, verbose,
+			x, dic = self._fitMethodMCMC(r, q, f, covinv, mask, N_par_fit, verbose,
 				converged_GR, nwalkers, best_fit, initial_step, random_seed, convergence_step, output_every_n)
 			
 		elif method == 'leastsq':
@@ -2047,23 +2061,23 @@ class HaloDensityProfile():
 			else:
 				Q = covinv
 				
-			x, dict = self._fitMethodLeastsq(r, q, f, df_inner, df_outer,
+			x, dic = self._fitMethodLeastsq(r, q, f, df_inner, df_outer,
 									Q, mask, N_par_fit, verbose, tolerance, maxfev)
 			
 		else:
 			raise Exception('Unknown fitting method, %s.' % method)
 		
 		# Compute a few convenient outputs
-		dict['x'] = x
-		dict['q_fit'] = f(r)
-		dict['chi2'] = self._fitChi2(r, q, f, covinv)
-		dict['ndof'] = (len(r) - N_par_fit)
-		dict['chi2_ndof'] = dict['chi2'] / dict['ndof']
+		dic['x'] = x
+		dic['q_fit'] = f(r)
+		dic['chi2'] = self._fitChi2(r, q, f, covinv)
+		dic['ndof'] = (len(r) - N_par_fit)
+		dic['chi2_ndof'] = dic['chi2'] / dic['ndof']
 		
 		if verbose:
-			print('chi2 / Ndof = %.1f / %d = %.2f' % (dict['chi2'], dict['ndof'], dict['chi2_ndof']))
+			print('chi2 / Ndof = %.1f / %d = %.2f' % (dic['chi2'], dic['ndof'], dic['chi2_ndof']))
 			utilities.printLine()
 
-		return dict
+		return dic
 
 ###################################################################################################
