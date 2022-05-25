@@ -1749,8 +1749,13 @@ class HaloDensityProfile():
 		else:
 
 			bounds = (-np.inf, np.inf)
+
+			if deriv_func is None:
+				jac = '2-point'
+			else:
+				jac = deriv_func
 			sol = scipy.optimize.least_squares(self._fitDiffFunction, ini_guess, 
-						args = args, jac = deriv_func, bounds = bounds, 
+						args = args, jac = jac, bounds = bounds, 
 						method = fit_method, loss = 'linear', tr_solver = None, x_scale = 'jac',
 						max_nfev = maxfev, xtol = tolerance, verbose = 0)
 			
@@ -1762,9 +1767,9 @@ class HaloDensityProfile():
 			
 			# With least_squares, the covariance matrix is not returned but can be computed from 
 			# the Jacobian. The units (or normalization) of the resulting covariance matrix depends 
-			# on the uncertainties sigma assumed in the residual function. Since we do not have 
-			# meaningful error estimates in general, the resulting parameter uncertainties would 
-			# also be meaningless. To still compute them, we assume (!) that the fit is good, i.e., 
+			# on the uncertainties sigma assumed in the residual function. If we do not have 
+			# meaningful error estimates, the resulting parameter uncertainties would also be 
+			# meaningless. To still compute them, we assume (!) that the fit is good, i.e., 
 			# that chi2/Ndof = 1, and we rescale the covariance matrix accordingly (by multiplying 
 			# with chi2/Ndof). The parameter uncertainties are then estimated from the diagonals of 
 			# the rescaled covariance matrix.
