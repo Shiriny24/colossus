@@ -1,5 +1,5 @@
 ====================================
-Combined orbiting+infalling profiles
+Creating composite profiles
 ====================================
 
 .. automodule:: halo.profile_composite

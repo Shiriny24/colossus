@@ -47,6 +47,10 @@ main changes are as follows:
 * Added the new Diemer 2022 density profile (orbiting and infalling terms).
 * Numerical derivative is more efficient.
 * New unit tests.
+* The user can now pass parameter bounds in least-squares fits.
+* The MCMC fits can now also be performed in log space.
+* All parameters, including those of the outer profiles, are now by default fit in log space.
+  This can lead to slightly different results compared to previous versions.
 
 A few other changes:
 

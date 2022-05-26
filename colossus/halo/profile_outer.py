@@ -8,64 +8,44 @@
 """
 This module implements terms that describe the outer halo density profile. Specific terms are 
 derived from the :class:`OuterTerm` base class. The :doc:`tutorials` contain more detailed code
-examples.
+examples. For an introduction on how to use the outer terms, please see :doc:`halo_profile`.
 
 ---------------------------------------------------------------------------------------------------
 Basics
 ---------------------------------------------------------------------------------------------------
 
-Let us create an NFW profile, but add a description of the outer profile using the matter-matter 
-correlation function::
-    
-    from colossus.halo import profile_nfw
-    from colossus.halo import profile_outer
+The following outer terms are currently implemented:
 
-    outer_term = profile_outer.OuterTermCorrelationFunction(z = 0.0, bias = 2.0)
-    profile = profile_nfw.NFWProfile(M = 1E12, mdef = 'vir', z = 0.0, c = 10.0, outer_terms = [outer_term])
-
-The ``outer_terms`` keyword can be used with any class derived from 
-:class:`~halo.profile_base.HaloDensityProfile`.
-
----------------------------------------------------------------------------------------------------
-Models for the outer term
----------------------------------------------------------------------------------------------------
-
-.. table::
-	:widths: auto
-
-	======================================= =======================================================
-	Class                                   Explanation
-	======================================= =======================================================
-	:class:`OuterTermMeanDensity`           The mean matter density of the universe  
-	:class:`OuterTermCorrelationFunction`   A term based on the matter-matter correlation      
-	:class:`OuterTermPowerLaw`              A power-law profile
-	:class:`OuterTermInfalling`             Infalling term: power-law profile with max. at center
-	======================================= =======================================================
-
-Description of the outer terms:
-
-* ``mean``: The mean density of the universe at redshift ``z`` (see the documentation of 
-  :class:`~halo.profile_outer.OuterTermMeanDensity`).
-* ``cf``: The matter-matter correlation function times halo bias (see the documentation of 
-	  :class:`~halo.profile_outer.OuterTermCorrelationFunction`). Here, the user has a choice
+* :class:`OuterTermMeanDensity` (shortcode ``mean``):
+  The mean density of the universe at redshift ``z``. This term should generally be present, given
+  that density profiles must eventually approach the mean density at very large radii. However, it
+  can be advantageous to omit this term, for example when computing surface densities.
+* :class:`OuterTermCorrelationFunction` (shortcode ``cf``): 
+  The matter-matter correlation function times a halo bias. Here, the user has a choice
   regarding halo bias: it can enter the profile as a parameter (if ``derive_bias_from == 
   None`` or it can be derived according to the default model of halo bias based on 
   :math:`M_{\\rm 200m}` (in which case ``derive_bias_from = 'R200m'`` and the bias parameter 
   is ignored). The latter option can make the constructor slow because of the iterative 
   evaluation of bias and :math:`M_{\\rm 200m}`.
-* ``pl``: A power-law profile in radius (see the documentation of 
-  :class:`~halo.profile_outer.OuterTermPowerLaw`). For the DK14 profile, the chosen pivot
-  radius is :math:`5 R_{\\rm 200m}`. Note that :math:`R_{\\rm 200m}` is set as a profile option 
-  in the constructor once, but not adjusted thereafter unless the 
+* :class:`OuterTermPowerLaw` (shortcode ``pl``): 
+  A power-law profile in overdensity. This form was suggested to be added to the DK14 profile, 
+  with a pivot radius of :math:`5 R_{\\rm 200m}`. Note that :math:`R_{\\rm 200m}` is set as a 
+  profile option in the constructor once, but not adjusted thereafter unless the 
   :func:`~halo.profile_dk14.DK14Profile.update` function is called. Thus, in a fit, the fitted 
   norm and slope refer to a pivot of the original :math:`R_{\\rm 200m}` until update() is called 
-  which adjusts these parameters. Furthermore, the parameters for the power-law outer profile 
-  (norm and slope, called :math:`b_{\\rm e}` and :math:`s_{\\rm e}` in the DK14 paper) exhibit 
-  a complicated dependence on halo mass, redshift and cosmology. At low redshift, and for the 
-  cosmology considered in DK14, ``power_law_norm = 1.0`` and ``power_law_slope = 1.5`` are 
-  reasonable values over a wide range of masses (see Figure 18 in DK14), but these values are 
-  by no means universal or accurate. 
-* ``infalling``: 
+  which adjusts these parameters. Thus, it is often better to fix the pivot radius by setting
+  ``pivot = 'fixed'`` and ``pivot_factor = 100.0`` or some other chosen radius in physical units.
+  The parameters for the power-law outer profile (norm and slope, called :math:`b_{\\rm e}` and 
+  :math:`s_{\\rm e}` in DK14) exhibit a complicated dependence on halo mass, redshift and 
+  cosmology. At low redshift, and for the cosmology considered in DK14, ``power_law_norm = 1.0`` 
+  and ``power_law_slope = 1.5`` are reasonable values over a wide range of masses (see Figure 18 
+  in DK14), but these values are by no means universal or accurate. 
+* :class:`OuterTermInfalling` (shortcode ``infalling``): 
+  Infalling term: another power-law profile in overdensity with an asymptotic maximum density at
+  the center, but also with a parameter that controls the smoothness of the transition to this
+  fixed overdensity. This parameter is usually fixed to 0.5. This profile was specifically 
+  designed to fit the infalling term in simulations. It is parameterized somewhat differently
+  than the ``pl`` profile. See Diemer 2022b for details.
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -95,12 +75,8 @@ class OuterTerm():
 	"""
 	Base class for outer profile terms.
 	
-	In Colossus, the density profile is assumed to consist of an inner term (i.e., a description
-	of the 1-halo term, such as an NFW profile) as well as one or multiple outer terms which are 
-	added to the inner term. 
-	
-	These outer terms must be derived from the OuterTerm base class, and must at least overwrite 
-	the _density() routine. The derived outer terms must also, in their constructor, call the 
+	All outer terms must be derived from this OuterTerm base class overwrite at least the
+	the ``_density()`` routine. The derived outer terms must also, in their constructor, call the 
 	constructor of this class with the parameters specified below. The user interface to such
 	derived classes will, in general, be much simpler than the constructor of this super class.
 	
@@ -389,8 +365,8 @@ class OuterTermCorrelationFunction(OuterTerm):
 		If ``None``, the bias is passed through the bias parameter and added to the profile 
 		parameters. If ``derive_bias_from`` is a string, it must correspond to a profile parameter 
 		or option. Furthermore, this parameter or option must represent a valid spherical overdensity 
-		mass or radius such as ``'R200m'`` or ``'Mvir'`` from which the bias can be computed. If so, 
-		the bias is updated from that quantity every time the density is computed. 
+		mass or radius such as ``'R200m'`` or ``'Mvir'`` from which the bias can be computed. If set
+		to ``'R200m'``, the bias is automatically updated when the profile is changed.
 	bias: float
 		The halo bias.
 	bias_name: str
@@ -522,8 +498,9 @@ class OuterTermPowerLaw(OuterTerm):
 	that the slope is inverted, i.e. that a more positive slope means a steeper profile.
 
 	This outer profile is kept for backward compatibility; for new code, please use 
-	:class:`OuterTermDiemer22`, which fulfils the same function if the smoothness parameter is 
-	set to its default, :math:`\\zeta = 0.5`.
+	:class:`OuterTermInfalling`, which fulfils the same function if the smoothness parameter is 
+	set to its default, :math:`\\zeta = 1` (although the recommended value is now 
+	:math:`\\zeta = 0.5`).
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -532,15 +509,15 @@ class OuterTermPowerLaw(OuterTerm):
 	slope: float
 		The slope of the power-law profile.
 	pivot: str
-		Can either be ``'fixed'``, in which case ``pivot_factor`` determines the pivot radius in 
-		physical units, or the name of one of the profile parameters or options.
-	pivot_factor: float
 		There are fundamentally two ways to set the pivot radius. If ``pivot=='fixed'``, 
 		``pivot_factor`` gives the pivot radius in physical kpc/h. Otherwise, ``pivot`` must 
 		indicate the name of a profile parameter or option. In this case, the pivot radius is set to 
 		``pivot_factor`` times the parameter or option in question. For example, for profiles based 
 		on a scale radius, a pivot radius of :math:`2 r_s` can be set by passing ``pivot = 'rs'`` 
-		and ``pivot_factor = 2.0``. 
+		and ``pivot_factor = 2.0``. However, only setting the pivot to ``R200m`` ensures that the 
+		profile is kept consistent.
+	pivot_factor: float
+		See above.
 	z: float
 		Redshift.
 	max_rho: float
@@ -685,13 +662,10 @@ class OuterTermInfalling(OuterTerm):
 	:math:`s` is the slope, :math:`\\delta_{\\rm max}` is the maximum overdensity at the center of
 	the halo, and :math:`\\zeta` determines how rapidly the profile transitions to this density.
 	Note that a more positive slope means a steeper profile. By default, :math:`\\zeta = 0.5`.
-	In the formulation of Diemer 2022, the pivot radius is :math:`R_{\\rm 200m}`, but other radii
-	can also be chosen.
+	In the formulation of Diemer 2022, the pivot radius is :math:`R_{\\rm 200m}`; other radii
+	can be chosen but then the profile is not automatically kept up to date if the parameters of
+	the inner profile change.
 	
-	The user can also set the internal parameter names of the input variables. If these names are 
-	matched with an existing profile variable, that variable is used instead, meaning the outer
-	term variable is not independent any more.
-
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	pl_delta_1: float
@@ -705,15 +679,16 @@ class OuterTermInfalling(OuterTerm):
 		The asymptotic overdensity at the center of the halo, in units of the mean matter density 
 		of the universe.
 	pivot: str
-		Can either be ``'fixed'``, in which case ``pivot_factor`` determines the pivot radius in 
-		physical units, or the name of one of the profile parameters or options.
-	pivot_factor: float
 		There are fundamentally two ways to set the pivot radius. If ``pivot=='fixed'``, 
 		``pivot_factor`` gives the pivot radius in physical kpc/h. Otherwise, ``pivot`` must 
 		indicate the name of a profile parameter or option. In this case, the pivot radius is set to 
 		``pivot_factor`` times the parameter or option in question. For example, for profiles based 
 		on a scale radius, a pivot radius of :math:`2 r_s` can be set by passing ``pivot = 'rs'`` 
-		and ``pivot_factor = 2.0``. 
+		and ``pivot_factor = 2.0``. However, only setting the pivot to ``R200m`` ensures that the 
+		profile is kept consistent. When fitting, a fixed pivot radius is recommended because even
+		R200m is not updated with every iteration in a fit, leading to inconsistencies.
+	pivot_factor: float
+		See above.
 	z: float
 		Redshift.
 	"""

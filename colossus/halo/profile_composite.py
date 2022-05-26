@@ -8,7 +8,8 @@
 """
 This unit implements a constructor for profiles that consist of an inner (orbiting, or 1-halo) term
 and one ore more outer (infalling, 2-halo) terms. Please see 
-:doc:`halo_profile` for a general introduction and :doc:`tutorials` for coding examples.
+:doc:`halo_profile` for a general introduction and a list of implemented profile forms, as well
+as :doc:`tutorials` for coding examples.
 
 ---------------------------------------------------------------------------------------------------
 Module contents
@@ -82,7 +83,7 @@ def getProfileClass(name):
 	name: str
 		A shortcode for a density profile class (see :doc:`halo_profile` for a list).
 
-	Parameters
+	Returns
 	-----------------------------------------------------------------------------------------------
 	cls: class
 		The profile class.

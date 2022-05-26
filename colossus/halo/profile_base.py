@@ -36,27 +36,32 @@ from colossus.halo import mass_so
 @six.add_metaclass(abc.ABCMeta)
 class HaloDensityProfile():
 	"""
-	Abstract base class for a halo density profile in physical units.
+	Abstract base class for a halo density profile.
 	
 	A particular functional form for the density profile can be implemented by inheriting this 
-	class and overwriting the constructor and :func:`density` method. In practice, a number of 
-	other functions should also be overwritten for speed and convenience.
+	class. These child classes must set their parameter and option names before calling this
+	constructor, and they must overwrite the :func:`density` and :func:`setNativeParameters` 
+	methods. In practice, a number of other functions should also be overwritten for speed and 
+	convenience.
 	
-	Furthermore, this base class provides a general implementation of outer profile terms, 
-	i.e. descriptions of the outer profile beyond the virial radius. Thus, these terms can be
+	This base class provides a general implementation of outer profile terms, i.e., descriptions 
+	of the infalling and 2-halo profile beyond the virial radius. These terms can be
 	added to any derived density profile class without adding new code.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	allowed_mdefs: list
 		A list of mass definitions that the :func:`setNativeParameters` routine of a derived 
-		class can accept. If ``None``, it is assumed that any definition is acceptable. 
+		class can accept. If ``None``, it is assumed that any definition is acceptable. If the 
+		user passes a mass definition different from the allowed one(s), the constructor
+		automatically iterates to find the correct parameters.
 	ignore_params: bool
 		If True, the constructor does not attempt to set the profile parameters from a given mass
-		and concentration. Instead, the profile is accepted as is. This option can be set for 
-		parameter-free child classes such as spline profiles.
+		and concentration. Instead, the profile is accepted as is. This option should only be set 
+		for parameter-free child classes such as spline profiles.
 	outer_terms: list
-		A list of OuterTerm objects to add to the density profile. 
+		A list of :class:`~.halo.profile_outer.OuterTerm` objects to be added to the density 
+		profile. 
 	"""
 
 	def __init__(self, allowed_mdefs = None, ignore_params = False, outer_terms = [], **kwargs):
@@ -198,7 +203,7 @@ class HaloDensityProfile():
 			do_iterate = do_iterate or ((allowed_mdefs is not None) and (not mdef in allowed_mdefs))
 			
 			if do_iterate:
-				self.setNativeParametersIteratively(M, c, z, mdef, **mcz_args)
+				self._setNativeParametersIteratively(M, c, z, mdef, **mcz_args)
 			else:
 				R = mass_so.M_to_R(M, z, mdef)
 				if 'R200m' in self.opt:
@@ -224,7 +229,7 @@ class HaloDensityProfile():
 
 	###############################################################################################
 	
-	def setNativeParametersIteratively(self, M, c, z, mdef, 
+	def _setNativeParametersIteratively(self, M, c, z, mdef, 
 							acc_warn = defaults.HALO_PROFILE_ACC_WARN, 
 							acc_err = defaults.HALO_PROFILE_ACC_ERR,
 							**kwargs):
@@ -326,6 +331,16 @@ class HaloDensityProfile():
 		
 		Parameters
 		-------------------------------------------------------------------------------------------
+		M: float
+			Spherical overdensity mass in :math:`M_{\odot}/h`.
+		c: float
+			The concentration, :math:`c = R / r_{\\rm s}`, corresponding to the given halo mass and 
+			mass definition.
+		z: float
+			Redshift
+		mdef: str
+			The mass definition in which ``M`` and ``c`` are given. See :doc:`halo_mass` for 
+			details.
 		kwargs: kwargs
 			Parameters passed to the constructor of the child class.
 		"""		
@@ -546,7 +561,7 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		density: array_like
-			Density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions 
+			Density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`; has the same dimensions 
 			as ``r``.
 		"""		
 		
@@ -794,6 +809,8 @@ class HaloDensityProfile():
 	def enclosedMassInner(self, r, accuracy = defaults.HALO_PROFILE_ENCLOSED_MASS_ACCURACY):
 		"""
 		The mass enclosed within radius r due to the inner profile term.
+		
+		This function should be overwritten by child classes if an analytical expression exists.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -1525,8 +1542,8 @@ class HaloDensityProfile():
 		
 		This function finds the radius where the logarithmic slope of the profile is minimal, 
 		within some very generous bounds. The function makes sense only if at least one outer term 
-		is set, because the inner profile steepens with radius (for any reasonable functional 
-		form). 
+		has been added because the inner profile steepens with radius without ever become 
+		shallower again (for any reasonable functional form). 
 		
 		The radius of steepest slope is often taken as a proxy for the splashback radius, 
 		:math:`R_{\\rm sp}`, but this correspondence is only approximate because the 
@@ -1867,13 +1884,13 @@ class HaloDensityProfile():
 		# General fitting options: method, parameters to vary
 		method = 'leastsq', mask = None, verbose = True,
 		# Options specific to leastsq
-		tolerance = 1E-5, maxfev = None, leastsq_method = 'trf', use_legacy_leastsq = False, bounds = None,
+		tolerance = 1E-5, maxfev = None, leastsq_algorithm = 'trf', use_legacy_leastsq = False, bounds = None,
 		# Options specific to the MCMC initialization
 		initial_step = 0.01, nwalkers = 100, random_seed = None,
 		# Options specific to running the MCMC chain and its analysis
 		convergence_step = 100, converged_GR = 0.01, best_fit = 'median', output_every_n = 100):
 		"""
-		Fit the density, mass, or surface density profile to a given set of data points.
+		Fit the density, mass, surface density, or DeltaSigma profile to a given set of data points.
 		
 		This function represents a general interface for finding the best-fit parameters of a 
 		halo density profile given a set of data points. These points can represent a number of
@@ -1886,17 +1903,20 @@ class HaloDensityProfile():
 		minimize the absolute difference between points, strongly favoring the high densities at 
 		the center.
 		
-		There are two fundamental methods for performing the fit, a least-squares minimization 
-		(``method = 'leastsq'``) and a Markov-Chain Monte Carlo (``method = 'mcmc'``). The MCMC 
-		method has some specific options (see below). In either case, the current parameters of 
-		the profile instance serve as an initial guess. Finally, the user can choose to vary only 
-		a sub-set of the profile parameters through the ``mask`` parameter.
+		The user can choose to vary only a sub-set of the profile parameters through the ``mask`` 
+		parameter. The current parameters of the profile instance serve as an initial guess. 
 		
-		The function returns a dictionary with outputs that depend on which method is chosen. After
-		this function has completed, the profile instance represents the best-fit profile to the 
-		data points (i.e., its parameters are the best-fit parameters). Note that all output 
-		parameters are bundled into one dictionary. The explanations below refer to the entries in
-		this dictionary.
+		By default, the parameters are transformed into log space during fitting to ensure 
+		positivity. Child classes can change this behavior by overwriting the 
+		``_fitConvertParams()`` and ``_fitConvertParamsBack()`` functions.
+		
+		There are two fundamental methods for performing the fit, a least-squares minimization 
+		(``method = 'leastsq'``) and a Markov-Chain Monte Carlo (``method = 'mcmc'``). Both 
+		variants obey a few specific options (see below). The function returns a dictionary with 
+		outputs that somewhat depend on which method is chosen. After the function has completed, 
+		the profile instance represents the best-fit profile to the data points (i.e., its 
+		parameters are the best-fit parameters). Note that all output parameters are bundled into 
+		one dictionary. The explanations below refer to the entries in this dictionary.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -1939,7 +1959,7 @@ class HaloDensityProfile():
 		maxfev: int
 			Only active when ``method == 'leastsq'``. The maximum number of function evaluations before
 			the fit is aborted. If ``None``, the default value of the scipy least_squares function is used.
-		leastsq_method: str
+		leastsq_algorithm: str
 			Only active when ``method == 'leastsq'``. Can be any of the methods accepted by the 
 			scipy least_squares() function. Default is ``trf`` (trust region reflective), which 
 			works well for profile fits.
@@ -2168,7 +2188,7 @@ class HaloDensityProfile():
 				
 			x, dic = self._fitMethodLeastsq(r, q, f, df_inner, df_outer,
 						Q, mask, N_par_fit, verbose, tolerance, maxfev,
-						use_legacy_leastsq = use_legacy_leastsq, fit_method = leastsq_method,
+						use_legacy_leastsq = use_legacy_leastsq, fit_method = leastsq_algorithm,
 						bounds = bounds)
 			
 		else:
