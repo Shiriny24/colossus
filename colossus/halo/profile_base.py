@@ -1565,23 +1565,23 @@ class HaloDensityProfile():
 	
 	###############################################################################################
 
-	# Return a numpy array of fitting parameters, given the standard profile parameters. By default, 
-	# the parameters used in a fit are the same as the fundamental parameters. Derived classes 
-	# might want to change that, for example to fit log(p) instead of p if the value can only be 
-	# positive. 
+	# Return a numpy array of fitting parameters, given the standard profile parameters. By 
+	# default, all parameters are fit in log space to ensure positivity. Derived classes might want
+	# to change that, for example if a parameter is allowed to be negative, or if another transform
+	# gives better fit results.
 	#
 	# The p array passed to _fitConvertParams and _fitConvertParamsBack is a copy, meaning these
 	# functions are allowed to manipulate it. 
 
 	def _fitConvertParams(self, p, mask):
 		
-		return p
+		return np.log(p)
 
 	###############################################################################################
 	
 	def _fitConvertParamsBack(self, p, mask):
 		
-		return p
+		return np.exp(p)
 
 	###############################################################################################
 

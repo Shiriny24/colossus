@@ -326,32 +326,11 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 								2.0 / self.par['alpha'] * (r / self.par['rs'])**self.par['alpha'])
 		
 		return mass
-	
-	###############################################################################################
-
-	# When fitting the Einasto profile, use log(rhos), log(rs) and log(alpha)
-
-	def _fitConvertParams(self, p, mask):
-
-		N_convert = np.count_nonzero(mask[:3])
-		pp = p.copy()
-		pp[:N_convert] = np.log(pp[:N_convert])
-				
-		return pp
 
 	###############################################################################################
-	
-	def _fitConvertParamsBack(self, p, mask):
-		
-		N_convert = np.count_nonzero(mask[:3])
-		pp = p.copy()
-		pp[:N_convert] = np.exp(pp[:N_convert])
-		
-		return pp
-	
-	###############################################################################################
 
-	# Return array of d rho / d ln(rhos), d rho / d ln(rs), and d rho / d ln(alpha)
+	# Return array of d rho / d ln(rhos), d rho / d ln(rs), and d rho / d ln(alpha), since the 
+	# parameters are fitted in log space.
 	
 	def _fitParamDeriv_rho(self, r, mask, N_par_fit):
 

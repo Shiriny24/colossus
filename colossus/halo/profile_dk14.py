@@ -162,7 +162,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		# Set the fundamental variables par_names and opt_names
 		self.par_names = ['rhos', 'rs', 'rt', 'alpha', 'beta', 'gamma']
 		self.opt_names = []
-		self.fit_log_mask = np.array([False, False, False, False, False, False])
+		self.fit_log_mask = np.array([True, True, True, True, True, True])
 		
 		# Run the constructor
 		profile_base.HaloDensityProfile.__init__(self, allowed_mdefs = ['200m'], 
@@ -386,42 +386,6 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		return Msp
 	
 	###############################################################################################
-
-	# When fitting the DK14 profile, use a mixture of linear and logarithmic parameters. Only 
-	# convert the parameters for the inner profile though.
-
-	def _getLogMask(self, mask):
-
-		mask_inner = mask[:self.N_par_inner]
-		N_par_fit = np.count_nonzero(mask)
-		N_par_fit_inner = np.count_nonzero(mask_inner)
-
-		log_mask = np.zeros((N_par_fit), bool)
-		log_mask[:N_par_fit_inner] = self.fit_log_mask[mask_inner]
-		
-		return log_mask
-	
-	###############################################################################################
-
-	def _fitConvertParams(self, p, mask):
-		
-		p_fit = p.copy()
-		log_mask = self._getLogMask(mask)
-		p_fit[log_mask] = np.log(p_fit[log_mask])
-
-		return p_fit
-
-	###############################################################################################
-	
-	def _fitConvertParamsBack(self, p, mask):
-		
-		p_def = p.copy()
-		log_mask = self._getLogMask(mask)
-		p_def[log_mask] = np.exp(p_def[log_mask])
-
-		return p_def
-
-	###############################################################################################
 	
 	def _fitParamDeriv_rho(self, r, mask, N_par_fit):
 
@@ -429,7 +393,6 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		deriv = np.zeros((N_par_fit, len(r)), float)
 		rho_inner = self.densityInner(r)
 
-		rhos = x[0]
 		rs = x[1]
 		rt = x[2]
 		alpha = x[3]
@@ -443,38 +406,30 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		counter = 0
 		# rho_s
 		if mask[0]:
-			deriv[counter] = rho_inner / rhos
+			deriv[counter] = rho_inner
 			counter += 1
 		# rs
 		if mask[1]:
-			deriv[counter] = rho_inner / rs * rrs**alpha * 2.0
+			deriv[counter] = rho_inner * rrs**alpha * 2.0
 			counter += 1
 		# rt
 		if mask[2]:
-			deriv[counter] = rho_inner * gamma / rt / term1 * rrt**beta
+			deriv[counter] = rho_inner * gamma / term1 * rrt**beta
 			counter += 1
 		# alpha
 		if mask[3]:
-			deriv[counter] = rho_inner * 2.0 / alpha**2 * rrs**alpha * (1.0 - rrs**(-alpha) - alpha * np.log(rrs))
+			deriv[counter] = rho_inner * 2.0 / alpha * rrs**alpha * (1.0 - rrs**(-alpha) - alpha * np.log(rrs))
 			counter += 1
 		# beta
 		if mask[4]:
 			deriv[counter] = rho_inner * (gamma * np.log(term1) / beta**2 - gamma * \
-										rrt**beta * np.log(rrt) / beta / term1)
+										rrt**beta * np.log(rrt) / term1)
 			counter += 1
 		# gamma
 		if mask[5]:
-			deriv[counter] = -rho_inner * np.log(term1) / beta
+			deriv[counter] = -rho_inner * np.log(term1) / beta / gamma
 			counter += 1
 
-		# Correct for log parameters
-		counter = 0
-		for i in range(6):
-			if self.fit_log_mask[i] and mask[i]:
-				deriv[counter] *= x[i]
-			if mask[i]:
-				counter += 1
-		
 		return deriv
 
 ###################################################################################################
