@@ -137,7 +137,7 @@ def initWalkers(x_initial,
 		step_array = x_initial * initial_step
 		
 	for i in range(nparams):
-		walkers[:, :, i] = np.reshape(np.random.normal(x_initial[i], step_array[i], nwalkers),
+		walkers[:, :, i] = np.reshape(np.random.normal(x_initial[i], np.abs(step_array[i]), nwalkers),
 										(2, nwalkers // 2))
 
 	return walkers

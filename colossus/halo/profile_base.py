@@ -1571,7 +1571,10 @@ class HaloDensityProfile():
 	# gives better fit results.
 	#
 	# The p array passed to _fitConvertParams and _fitConvertParamsBack is a copy, meaning these
-	# functions are allowed to manipulate it. 
+	# functions are allowed to manipulate it.
+	#
+	# Note that this function must be able to handle an array of parameter sets, i.e., a 2D p 
+	# array of dimensionality [N_sets, N_par], where the mask refers to the N_par dimension.
 
 	def _fitConvertParams(self, p, mask):
 		
@@ -1652,13 +1655,19 @@ class HaloDensityProfile():
 	# Evaluate the likelihood for a vector of parameter sets x. In this case, the vector is 
 	# evaluated element-by-element, but the function is expected to handle a vector since this 
 	# could be much faster for a simpler likelihood.
+	#
+	# The values of x may have been transformed (e.g., into log space), so we need to convert them
+	# back before evaluating the function.
 	
 	def _fitLikelihood(self, x, r, q, f, covinv, mask):
 
 		n_eval = len(x)
 		res = np.zeros((n_eval), float)
+
+		x_lin = self._fitConvertParamsBack(x, mask)
+		
 		for i in range(n_eval):
-			self.setParameterArray(x[i], mask = mask)
+			self.setParameterArray(x_lin[i], mask = mask)
 			res[i] = np.exp(-0.5 * self._fitChi2(r, q, f, covinv))
 		
 		return res
@@ -1668,16 +1677,23 @@ class HaloDensityProfile():
 	# Note that the MCMC fitter does NOT use the converted fitting parameters, but just the 
 	# parameters themselves. Otherwise, interpreting the chain becomes very complicated.
 
-	def _fitMethodMCMC(self, r, q, f, covinv, mask, N_par_fit, verbose,
-				converged_GR, nwalkers, best_fit, initial_step, random_seed,
-				convergence_step, output_every_n):
-		
+	def _fitMethodMCMC(self, r, q, f, covinv, mask, verbose, converged_GR, nwalkers, best_fit, 
+					initial_step, random_seed, convergence_step, output_every_n):
+
+		# Get initial parameters from profile and transform		
 		x0 = self.getParameterArray(mask = mask)
+		x0 = self._fitConvertParams(x0, mask)
+		
+		# Run MCMC
 		args = r, q, f, covinv, mask
 		walkers = mcmc.initWalkers(x0, initial_step = initial_step, nwalkers = nwalkers, random_seed = random_seed)
 		xi = np.reshape(walkers, (len(walkers[0]) * 2, len(walkers[0, 0])))
 		chain_thin, chain_full, R = mcmc.runChain(self._fitLikelihood, walkers, convergence_step = convergence_step,
 							args = args, converged_GR = converged_GR, verbose = verbose, output_every_n = output_every_n)
+		
+		# Convert the chain back into linear / untransformed variables before analysing
+		chain_thin = self._fitConvertParamsBack(chain_thin, mask)
+		chain_full = self._fitConvertParamsBack(chain_full, mask)
 		mean, median, stddev, p = mcmc.analyzeChain(chain_thin, self.par_names, verbose = verbose)
 
 		dic = {}
@@ -1829,7 +1845,7 @@ class HaloDensityProfile():
 		# Options specific to leastsq
 		tolerance = 1E-5, maxfev = None, leastsq_method = 'trf', use_legacy_leastsq = False, 
 		# Options specific to the MCMC initialization
-		initial_step = 0.1, nwalkers = 100, random_seed = None,
+		initial_step = 0.01, nwalkers = 100, random_seed = None,
 		# Options specific to running the MCMC chain and its analysis
 		convergence_step = 100, converged_GR = 0.01, best_fit = 'median', output_every_n = 100):
 		"""
@@ -2045,7 +2061,7 @@ class HaloDensityProfile():
 			if q_cov is None and q_err is None:
 				raise Exception('MCMC cannot be run without uncertainty vector or covariance matrix.')
 			
-			x, dic = self._fitMethodMCMC(r, q, f, covinv, mask, N_par_fit, verbose,
+			x, dic = self._fitMethodMCMC(r, q, f, covinv, mask, verbose,
 				converged_GR, nwalkers, best_fit, initial_step, random_seed, convergence_step, output_every_n)
 			
 		elif method == 'leastsq':
