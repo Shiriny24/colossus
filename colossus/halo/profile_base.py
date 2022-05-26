@@ -1718,7 +1718,8 @@ class HaloDensityProfile():
 	###############################################################################################
 
 	def _fitMethodLeastsq(self, r, q, f, df_inner, df_outer, Q, mask, N_par_fit, verbose,
-						tolerance, maxfev, use_legacy_leastsq = False, fit_method = 'trf'):
+						tolerance, maxfev, use_legacy_leastsq = False, fit_method = 'trf',
+						bounds = None):
 		
 		# Prepare arguments
 		if df_inner is None:
@@ -1764,14 +1765,37 @@ class HaloDensityProfile():
 						
 		else:
 
-			bounds = (-np.inf, np.inf)
-
+			if bounds is None:
+				bounds_use = (-np.inf, np.inf)
+			else:
+				n_par = len(ini_guess)
+				mask_all = np.ones((n_par), bool)
+				bounds_use = np.zeros_like(bounds)
+				bounds = np.array(bounds)
+				if (len(bounds.shape) != 2) or (bounds.shape[0] != 2) or (bounds.shape[1] != n_par):
+					raise Exception('Expected bounds array of shape (2, %d), found %s.' % (n_par, str(bounds.shape)))
+				bounds_use[0, :] = self._fitConvertParams(bounds[0, :], mask_all)
+				bounds_use[1, :] = self._fitConvertParams(bounds[1, :], mask_all)
+				if np.any(np.isnan(bounds_use)):
+					print('Original:')
+					print(bounds)
+					print('Transformed:')
+					print(bounds_use)
+					raise Exception('Found nan in transformed bounds array; please check your bounds.')
+				if np.any(ini_guess < bounds_use[0]) or np.any(ini_guess > bounds_use[1]):
+					print('Bounds (transformed):')
+					print(bounds_use)
+					print('Initial guess (transformed):')
+					print(ini_guess)
+					raise Exception('Initial guess is not within bounds. Please change initial guess.')
+				
 			if deriv_func is None:
 				jac = '2-point'
 			else:
 				jac = deriv_func
+				
 			sol = scipy.optimize.least_squares(self._fitDiffFunction, ini_guess, 
-						args = args, jac = jac, bounds = bounds, 
+						args = args, jac = jac, bounds = bounds_use, 
 						method = fit_method, loss = 'linear', tr_solver = None, x_scale = 'jac',
 						max_nfev = maxfev, xtol = tolerance, verbose = 0)
 			
@@ -1843,7 +1867,7 @@ class HaloDensityProfile():
 		# General fitting options: method, parameters to vary
 		method = 'leastsq', mask = None, verbose = True,
 		# Options specific to leastsq
-		tolerance = 1E-5, maxfev = None, leastsq_method = 'trf', use_legacy_leastsq = False, 
+		tolerance = 1E-5, maxfev = None, leastsq_method = 'trf', use_legacy_leastsq = False, bounds = None,
 		# Options specific to the MCMC initialization
 		initial_step = 0.01, nwalkers = 100, random_seed = None,
 		# Options specific to running the MCMC chain and its analysis
@@ -1923,6 +1947,14 @@ class HaloDensityProfile():
 			Only active when ``method == 'leastsq'``. If ``True``, this setting falls back to the
 			old leastsq() in scipy rather than using the newer least_squares(). Should only be used
 			for backward compatibility.
+		bounds: array_like
+			Only active when ``method == 'leastsq'`` and ``use_legacy_leastsq == False``. If not 
+			None, this parameter must be an array of dimensions [2, N_par], giving two sets (lower
+			and upper limits) of the fitted parameters (not the entire parameter array, if a mask
+			is imposed). The limits must be given in linear space. If the parameters are fitted in
+			log space (or some other transformation), that transformation is automatically applied
+			to the bounds. For example, when fitting in log space (the default), the lower bounds
+			must be positive, but the upper bounds can be np.inf.
 		initial_step: array_like
 			Only active when ``method == 'mcmc'``. The MCMC samples ("walkers") are initially 
 			distributed in a Gaussian around the initial guess. The width of the Gaussian is given
@@ -2136,7 +2168,8 @@ class HaloDensityProfile():
 				
 			x, dic = self._fitMethodLeastsq(r, q, f, df_inner, df_outer,
 						Q, mask, N_par_fit, verbose, tolerance, maxfev,
-						use_legacy_leastsq = use_legacy_leastsq, fit_method = leastsq_method)
+						use_legacy_leastsq = use_legacy_leastsq, fit_method = leastsq_method,
+						bounds = bounds)
 			
 		else:
 			raise Exception('Unknown fitting method, %s.' % method)
