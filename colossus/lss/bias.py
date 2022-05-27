@@ -42,19 +42,19 @@ number of different papers. The rest of the models was calibrated using numerica
 	============== =========================== =========================== =========================================
 	ID             Parameters                  z-dependence                Reference
 	============== =========================== =========================== =========================================
-	cole89         M/nu                        No                          `Cole & Kaiser 1989 <http://adsabs.harvard.edu/abs/1989MNRAS.237.1127C>`_, `Mo & White 1996 <http://adsabs.harvard.edu/abs/1996MNRAS.282..347M>`_
-	jing98         M/nu, z                     Through non-linear mass     `Jing 1998 <http://adsabs.harvard.edu/abs/1998ApJ...503L...9J>`_
-	sheth01        M/nu                        No                          `Sheth et al. 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.323....1S>`_
-	seljak04       M/nu, z                     Through non-linear mass     `Seljak & Warren 2004 <http://adsabs.harvard.edu/abs/2004MNRAS.355..129S>`_
-	pillepich10    M/nu                        No                          `Pillepich et al. 2010 <http://adsabs.harvard.edu/abs/2010MNRAS.402..191P>`_
-	tinker10       M/nu, z, mdef               Through mass definition     `Tinker et al. 2010 <http://adsabs.harvard.edu/abs/2010ApJ...724..878T>`_       
-	bhattacharya11 M/nu, z                     Yes                         `Bhattacharya et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...732..122B>`_
-	comparat17     M/nu                        No                          `Comparat et al. 2017 <https://ui.adsabs.harvard.edu//#abs/2017MNRAS.469.4157C/abstract>`_
+	cole89         M/nu                        No                          `Cole & Kaiser 1989 <http://adsabs.harvard.edu/abs/1989MNRAS.237.1127C>`__, `Mo & White 1996 <http://adsabs.harvard.edu/abs/1996MNRAS.282..347M>`__
+	jing98         M/nu, z                     Through non-linear mass     `Jing 1998 <http://adsabs.harvard.edu/abs/1998ApJ...503L...9J>`__
+	sheth01        M/nu                        No                          `Sheth et al. 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.323....1S>`__
+	seljak04       M/nu, z                     Through non-linear mass     `Seljak & Warren 2004 <http://adsabs.harvard.edu/abs/2004MNRAS.355..129S>`__
+	pillepich10    M/nu                        No                          `Pillepich et al. 2010 <http://adsabs.harvard.edu/abs/2010MNRAS.402..191P>`__
+	tinker10       M/nu, z, mdef               Through mass definition     `Tinker et al. 2010 <http://adsabs.harvard.edu/abs/2010ApJ...724..878T>`__    
+	bhattacharya11 M/nu, z                     Yes                         `Bhattacharya et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...732..122B>`__
+	comparat17     M/nu                        No                          `Comparat et al. 2017 <https://ui.adsabs.harvard.edu//#abs/2017MNRAS.469.4157C/abstract>`__
 	============== =========================== =========================== =========================================
 
 The z-dependence column indicates whether a model predicts a bias that varies with redshift at 
 fixed peak height. At fixed mass, all models predict a strongly varying bias.
-The `Tinker et al. 2010 <http://adsabs.harvard.edu/abs/2010ApJ...724..878T>`_ model was 
+The `Tinker et al. 2010 <http://adsabs.harvard.edu/abs/2010ApJ...724..878T>`__ model was 
 calibrated for a range of overdensities with respect to the mean density of the universe. Thus, 
 depending on the mass definition used, this model can predict a slight redshift evolution.
 
@@ -271,8 +271,8 @@ def modelCole89(nu):
 	The peak-background split prediction for halo bias.
 	
 	For a derivation of this model, see 
-	`Cole & Kaiser 1989 <http://adsabs.harvard.edu/abs/1989MNRAS.237.1127C>`_ or 
-	`Mo & White 1996 <http://adsabs.harvard.edu/abs/1996MNRAS.282..347M>`_.
+	`Cole & Kaiser 1989 <http://adsabs.harvard.edu/abs/1989MNRAS.237.1127C>`__ or 
+	`Mo & White 1996 <http://adsabs.harvard.edu/abs/1996MNRAS.282..347M>`__.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -361,7 +361,7 @@ def modelSeljak04(nu, z, cosmo_term = False):
 	A numerically calibrated bias model.
 	
 	This bias model corresponds to Equation 5 in 
-	`Seljak & Warren 2004 <http://adsabs.harvard.edu/abs/2004MNRAS.355..129S>`_. If 
+	`Seljak & Warren 2004 <http://adsabs.harvard.edu/abs/2004MNRAS.355..129S>`__. If 
 	``cosmo_term == True``, Equation 6 is used. Colossus currently does not implement a running of
 	the spectral index, the corresponding parameter :math:`\\alpha_{\\rm s}` is thus set to zero.
 

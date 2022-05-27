@@ -96,7 +96,7 @@ Converting to and from Astropy cosmologies
 ***************************************************************************************************
 
 Colossus can easily interface with the cosmology module of the popular 
-`Astropy <https://www.astropy.org/>`_ code. Astropy cosmology objects can be converted to Colossus 
+`Astropy <https://www.astropy.org/>`__ code. Astropy cosmology objects can be converted to Colossus 
 cosmologies with the :func:`fromAstropy` function::
 
 	import astropy.cosmology
@@ -141,35 +141,35 @@ The following sets of cosmological parameters can be chosen using the
 .. table::
 	:widths: auto
 
-	================== ================================================================================ =========== ===============================================
-	ID                 Paper                                                                            Location    Explanation
-	================== ================================================================================ =========== ===============================================
-	planck18-only      `Planck Collab. 2018 <https://arxiv.org/abs/1807.06209>`_                        Table 2     Best-fit, Planck only (column 5) 					
-	planck18           `Planck Collab. 2018 <https://arxiv.org/abs/1807.06209>`_ 	                    Table 2     Best-fit with BAO (column 6)			
-	planck15-only  	   `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`_     Table 4     Best-fit, Planck only (column 2) 					
-	planck15           `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`_ 	Table 4     Best-fit with ext (column 6)			
-	planck13-only      `Planck Collab. 2013 <http://adsabs.harvard.edu/abs/2014A%26A...571A..16P>`_     Table 2     Best-fit, Planck only 					
-	planck13           `Planck Collab. 2013 <http://adsabs.harvard.edu/abs/2014A%26A...571A..16P>`_     Table 5     Best-fit with BAO etc. 					
-	WMAP9-only         `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`_       Table 2     Max. likelihood, WMAP only 				
-	WMAP9-ML           `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`_       Table 2     Max. likelihood, with eCMB, BAO and H0 	
-	WMAP9              `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`_       Table 4     Best-fit, with eCMB, BAO and H0 		
-	WMAP7-only         `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`_       Table 1     Max. likelihood, WMAP only 				
-	WMAP7-ML           `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`_       Table 1     Max. likelihood, with BAO and H0 		
-	WMAP7 	           `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`_	    Table 1     Best-fit, with BAO and H0 				
-	WMAP5-only         `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`_	    Table 1     Max. likelihood, WMAP only 			
-	WMAP5-ML           `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`_	    Table 1     Max. likelihood, with BAO and SN 		
-	WMAP5 	           `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`_	    Table 1     Best-fit, with BAO and SN 			
-	WMAP3-ML           `Spergel et al. 2007 <http://adsabs.harvard.edu/abs/2007ApJS..170..377S>`_       Table 2     Max.likelihood, WMAP only 				
-	WMAP3              `Spergel et al. 2007 <http://adsabs.harvard.edu/abs/2007ApJS..170..377S>`_       Table 5     Best fit, WMAP only 					
-	WMAP1-ML           `Spergel et al. 2003 <http://adsabs.harvard.edu/abs/2003ApJS..148..175S>`_       Table 1/4   Max.likelihood, WMAP only 				
-	WMAP1              `Spergel et al. 2003 <http://adsabs.harvard.edu/abs/2003ApJS..148..175S>`_       Table 7/4   Best fit, WMAP only 					
-	illustris          `Vogelsberger et al. 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.444.1518V>`_  --          Cosmology of the Illustris simulation
-	bolshoi	           `Klypin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...740..102K>`_        --          Cosmology of the Bolshoi simulation
-	multidark-planck   `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_        Table 1     Cosmology of the Multidark-Planck simulations
-	millennium         `Springel et al. 2005 <http://adsabs.harvard.edu/abs/2005Natur.435..629S>`_      --          Cosmology of the Millennium simulation 
-	EdS                --                                                                               --          Einstein-de Sitter cosmology
-	powerlaw           --                                                                               --          Default settings for power-law cosms.
-	================== ================================================================================ =========== ===============================================
+	================== ================================================================================= =========== ===============================================
+	ID                 Paper                                                                             Location    Explanation
+	================== ================================================================================= =========== ===============================================
+	planck18-only      `Planck Collab. 2018 <https://arxiv.org/abs/1807.06209>`__                        Table 2     Best-fit, Planck only (column 5) 					
+	planck18           `Planck Collab. 2018 <https://arxiv.org/abs/1807.06209>`__ 	                     Table 2     Best-fit with BAO (column 6)			
+	planck15-only  	   `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`__     Table 4     Best-fit, Planck only (column 2) 					
+	planck15           `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`__ 	 Table 4     Best-fit with ext (column 6)			
+	planck13-only      `Planck Collab. 2013 <http://adsabs.harvard.edu/abs/2014A%26A...571A..16P>`__     Table 2     Best-fit, Planck only 					
+	planck13           `Planck Collab. 2013 <http://adsabs.harvard.edu/abs/2014A%26A...571A..16P>`__     Table 5     Best-fit with BAO etc. 					
+	WMAP9-only         `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`__       Table 2     Max. likelihood, WMAP only 				
+	WMAP9-ML           `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`__       Table 2     Max. likelihood, with eCMB, BAO and H0 	
+	WMAP9              `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`__       Table 4     Best-fit, with eCMB, BAO and H0 		
+	WMAP7-only         `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`__       Table 1     Max. likelihood, WMAP only 				
+	WMAP7-ML           `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`__       Table 1     Max. likelihood, with BAO and H0 		
+	WMAP7 	           `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`__	     Table 1     Best-fit, with BAO and H0 				
+	WMAP5-only         `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`__	     Table 1     Max. likelihood, WMAP only 			
+	WMAP5-ML           `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`__	     Table 1     Max. likelihood, with BAO and SN 		
+	WMAP5 	           `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`__	     Table 1     Best-fit, with BAO and SN 			
+	WMAP3-ML           `Spergel et al. 2007 <http://adsabs.harvard.edu/abs/2007ApJS..170..377S>`__       Table 2     Max.likelihood, WMAP only 				
+	WMAP3              `Spergel et al. 2007 <http://adsabs.harvard.edu/abs/2007ApJS..170..377S>`__       Table 5     Best fit, WMAP only 					
+	WMAP1-ML           `Spergel et al. 2003 <http://adsabs.harvard.edu/abs/2003ApJS..148..175S>`__       Table 1/4   Max.likelihood, WMAP only 				
+	WMAP1              `Spergel et al. 2003 <http://adsabs.harvard.edu/abs/2003ApJS..148..175S>`__       Table 7/4   Best fit, WMAP only 					
+	illustris          `Vogelsberger et al. 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.444.1518V>`__  --          Cosmology of the Illustris simulation
+	bolshoi	           `Klypin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...740..102K>`__        --          Cosmology of the Bolshoi simulation
+	multidark-planck   `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`__        Table 1     Cosmology of the Multidark-Planck simulations
+	millennium         `Springel et al. 2005 <http://adsabs.harvard.edu/abs/2005Natur.435..629S>`__      --          Cosmology of the Millennium simulation 
+	EdS                --                                                                                --          Einstein-de Sitter cosmology
+	powerlaw           --                                                                                --          Default settings for power-law cosms.
+	================== ================================================================================= =========== ===============================================
 
 Those cosmologies that refer to particular simulations (such as ``bolshoi`` and ``millennium``) are
 generally set to ignore relativistic species, i.e. photons and neutrinos, because they are not
@@ -347,9 +347,9 @@ class Cosmology(object):
 	sub-dominant impact on the computations. For such parameters, default values are pre-set so 
 	that the user does not have to choose them manually. This includes the CMB temperature today 
 	(``Tcmb0`` = 2.7255 K, 
-	`Fixsen 2009 <https://ui.adsabs.harvard.edu//#abs/2009ApJ...707..916F/abstract>`_) 
+	`Fixsen 2009 <https://ui.adsabs.harvard.edu//#abs/2009ApJ...707..916F/abstract>`__) 
 	and the effective number of neutrino species (``Neff`` = 3.046, 
-	`Planck Collaboration 2018 <https://arxiv.org/abs/1807.06209>`_). These 
+	`Planck Collaboration 2018 <https://arxiv.org/abs/1807.06209>`__). These 
 	values are compatible with the most recent observational measurements and can be changed by 
 	the user if necessary.
 	
@@ -387,7 +387,7 @@ class Cosmology(object):
 		of state can either be a cosmological constant (``de_model = lambda``), a constant w 
 		(``de_model = w0``, the ``w0`` parameter must be set), a linear function of the scale 
 		factor according to the parameterization of 
-		`Linder 2003 <http://adsabs.harvard.edu/abs/2003PhRvL..90i1301L>`_ where 
+		`Linder 2003 <http://adsabs.harvard.edu/abs/2003PhRvL..90i1301L>`__ where 
 		:math:`w(z) = w_0 + w_a (1 - a)`  (``de_model = w0wa``, the ``w0`` and ``wa`` parameters 
 		must be set), or a function supplied by the user (``de_model = user``). In the latter case, 
 		the w(z) function must be passed using the ``wz_function`` parameter.
@@ -1369,7 +1369,7 @@ class Cosmology(object):
 		The sound horizon at recombination.
 
 		This function returns the sound horizon in Mpc/h, according to 
-		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_, Equation 26. 
+		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`__, Equation 26. 
 		This fitting function is accurate to 2% where :math:`\Omega_{\\rm b} h^2 > 0.0125` and 
 		:math:`0.025 < \Omega_{\\rm m} h^2 < 0.5`.
 
@@ -1729,17 +1729,17 @@ class Cosmology(object):
 		matter density field. There are three regimes: 
 		
 		* In the matter-radiation regime, we use an approximate analytical formula (Equation 5 in 
-		  `Gnedin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..194...46G>`_. If 
+		  `Gnedin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..194...46G>`__. If 
 		  relativistic species are ignored, :math:`D_+(z) \propto a`. 
 		* In the matter-dominated regime, :math:`D_+(z) \propto a`. 
 		* In the matter-dark energy regime, we evaluate :math:`D_+(z)` 
 		  through integration as defined in 
-		  `Eisenstein & Hu 1999 <http://adsabs.harvard.edu/abs/1999ApJ...511....5E>`_, Equation 8 
-		  (see also `Heath 1977 <http://adsabs.harvard.edu/abs/1977MNRAS.179..351H>`_) for 
+		  `Eisenstein & Hu 1999 <http://adsabs.harvard.edu/abs/1999ApJ...511....5E>`__, Equation 8 
+		  (see also `Heath 1977 <http://adsabs.harvard.edu/abs/1977MNRAS.179..351H>`__) for 
 		  LCDM cosmologies. For cosmologies where :math:`w(z) \\neq -1`, this expression is not
 		  valid and we instead solve the ordinary differential equation for the evolution of the
 		  growth factor (Equation 11 in 
-		  `Linder & Jenkins 2003 <https://ui.adsabs.harvard.edu//#abs/2003MNRAS.346..573L/abstract>`_).
+		  `Linder & Jenkins 2003 <https://ui.adsabs.harvard.edu//#abs/2003MNRAS.346..573L/abstract>`__).
 		
 		At the transition between the integral and analytic approximation regimes, the two 
 		expressions do not quite match up, with differences of the order <1E-3. in order to avoid
@@ -1748,7 +1748,7 @@ class Cosmology(object):
 		
 		The normalization is such that the growth factor approaches :math:`D_+(a) = a` in the 
 		matter-dominated regime. There are other normalizations of the growth factor (e.g., 
-		`Percival 2005 <http://adsabs.harvard.edu/abs/2005A%26A...443..819P>`_, Equation 15), but 
+		`Percival 2005 <http://adsabs.harvard.edu/abs/2005A%26A...443..819P>`__, Equation 15), but 
 		since we almost always care about the growth factor normalized to z = 0, the normalization 
 		does not matter too much (see the :func:`growthFactor` function).
 		
@@ -2155,7 +2155,7 @@ class Cosmology(object):
 		
 		By default, the power spectrum is computed using a model for the transfer function 
 		(see the :func:`~cosmology.power_spectrum.transferFunction` function). The default 
-		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_ 
+		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`__ 
 		approximation is accurate to about 5%, and the interpolation introduces errors 
 		significantly smaller than that.
 		
@@ -2601,7 +2601,7 @@ class Cosmology(object):
 		of :func:`filterFunction` for possible filters.
 		
 		By default, the power spectrum is computed using the transfer function approximation of 
-		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_ (see the 
+		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`__ (see the 
 		:mod:`cosmology.power_spectrum` module). With this approximation, the variance is accurate
 		to about 2% or better (see the Colossus code paper for details). Using a tabulated power 
 		spectrum can make this computation more accurate, but please note that the limits of the 
@@ -2609,7 +2609,7 @@ class Cosmology(object):
 		
 		Higher moments of the variance (such as :math:`\sigma_1`, :math:`\sigma_2` etc) can be 
 		computed by setting j > 0 (see 
-		`Bardeen et al. 1986 <http://adsabs.harvard.edu/abs/1986ApJ...304...15B>`_). Furthermore, 
+		`Bardeen et al. 1986 <http://adsabs.harvard.edu/abs/1986ApJ...304...15B>`__). Furthermore, 
 		the logarithmic derivative :math:`d \log(\sigma) / d \log(R)` can be evaluated by setting 
 		``derivative == True``.
 		
@@ -2623,7 +2623,7 @@ class Cosmology(object):
 		j: integer
 			The order of the integral. j = 0 corresponds to the variance, j = 1 to the same integral 
 			with an extra :math:`k^2` term etc; see 
-			`Bardeen et al. 1986 <http://adsabs.harvard.edu/abs/1986ApJ...304...15B>`_ for 
+			`Bardeen et al. 1986 <http://adsabs.harvard.edu/abs/1986ApJ...304...15B>`__ for 
 			mathematical details.
 		filt: str
 			Either ``tophat``, ``sharp-k`` or ``gaussian`` (see :func:`filterFunction`). Higher 
@@ -2887,7 +2887,7 @@ class Cosmology(object):
 		
 		where P(k) is the :func:`matterPowerSpectrum`. By default, the power spectrum is computed 
 		using the transfer function approximation of 
-		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_ (see the 
+		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`__ (see the 
 		:mod:`cosmology.power_spectrum` module). With this approximation, the correlation function
 		is accurate to ~5% over the range :math:`10^{-2} < R < 200` (see the Colossus code paper 
 		for details). Using a tabulated power spectrum can make this computation more accurate, 

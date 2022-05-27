@@ -13,11 +13,11 @@ This module implements the Navarro-Frenk-White form of the density profile. Plea
 Basics
 ---------------------------------------------------------------------------------------------------
 
-The NFW profile (`Navarro et al. 1997 <http://adsabs.harvard.edu/abs/1997ApJ...490..493N>`_) is
+The NFW profile (`Navarro et al. 1997 <http://adsabs.harvard.edu/abs/1997ApJ...490..493N>`__) is
 defined by the density function
 	
-	.. math::
-		\\rho(r) = \\frac{\\rho_s}{\\left(\\frac{r}{r_{\\rm s}}\\right) \\left(1 + \\frac{r}{r_s}\\right)^{2}}
+.. math::
+	\\rho(r) = \\frac{\\rho_s}{\\left(\\frac{r}{r_{\\rm s}}\\right) \\left(1 + \\frac{r}{r_s}\\right)^{2}}
 
 The profile class can be initialized by either passing its fundamental parameters 
 :math:`\\rho_{\\rm s}` and :math:`r_{\\rm s}`, but the more convenient initialization is via mass 
@@ -26,7 +26,7 @@ and concentration::
 	from colossus.cosmology import cosmology
 	from colossus.halo import profile_nfw
 	
-	cosmology.setCosmology('planck15')
+	cosmology.setCosmology('planck18')
 	p_nfw = profile_nfw.NFWProfile(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir')
 
 The NFW profile class is optimized by using analytical expressions instead of numerical
@@ -456,7 +456,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		The projected surface density at radius r due to the inner profile.
 		
 		This function uses the analytical formula of 
-		`Lokas & Mamon 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.321..155L>`_ rather than 
+		`Lokas & Mamon 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.321..155L>`__ rather than 
 		numerical integration.
 
 		Parameters
@@ -629,7 +629,7 @@ class NFWProfile(profile_base.HaloDensityProfile):
 		The mass within 4 scale radii, :math:`M_{<4rs}`.
 		
 		This mass definition was suggested by 
-		`More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`_, see the 
+		`More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`__, see the 
 		:doc:`halo_mass_adv` section for details.
 
 		Returns

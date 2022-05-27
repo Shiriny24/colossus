@@ -49,23 +49,23 @@ be passed as the ``model`` parameter to the :func:`massFunction` function:
 ============== ================ =========== ======================================
 ID             mdefs            z-dep.      Reference
 ============== ================ =========== ======================================
-press74        fof  	        delta_c     `Press& Schechter 1974 <http://adsabs.harvard.edu/abs/1974ApJ...187..425P>`_
-sheth99	       fof  	        delta_c     `Sheth & Tormen 1999 <http://adsabs.harvard.edu/abs/1999MNRAS.308..119S>`_
-jenkins01      fof  	        No	        `Jenkins et al. 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.321..372J>`_
-reed03	       fof  	        delta_c     `Reed et al. 2003 <http://adsabs.harvard.edu/abs/2003MNRAS.346..565R>`_
-warren06       fof  	        No	        `Warren et al. 2006 <http://adsabs.harvard.edu/abs/2006ApJ...646..881W>`_
-reed07	       fof   	        delta_c     `Reed et al. 2007 <http://adsabs.harvard.edu/abs/2007MNRAS.374....2R>`_
-tinker08       Any SO 	        Yes	        `Tinker et al. 2008 <http://adsabs.harvard.edu/abs/2008ApJ...688..709T>`_
-crocce10       fof   	        No          `Crocce et al. 2010 <http://adsabs.harvard.edu/abs/2010MNRAS.403.1353C>`_
-bhattacharya11 fof   	        Yes         `Bhattacharya et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...732..122B>`_
-courtin11      fof              No          `Courtin et al. 2011 <http://adsabs.harvard.edu/abs/2011MNRAS.410.1911C>`_
-angulo12       fof  	        No          `Angulo et al. 2012 <http://adsabs.harvard.edu/abs/2012MNRAS.426.2046A>`_
-watson13       fof, any SO      Yes (SO)    `Watson et al. 2013 <http://adsabs.harvard.edu/abs/2013MNRAS.433.1230W>`_
-bocquet16      200m,200c,500c   Yes         `Bocquet et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.456.2361B>`_
-despali16      Any SO           Yes         `Despali et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.456.2486D>`_
-comparat17     vir              No          `Comparat et al. 2017 <https://ui.adsabs.harvard.edu//#abs/2017MNRAS.469.4157C/abstract>`_
-diemer20       sp-apr-*         No          `Diemer 2020b <https://ui.adsabs.harvard.edu/abs/2020arXiv200710346D/abstract>`_
-seppi20        vir              Yes         `Seppi et al. 2020 <https://ui.adsabs.harvard.edu/abs/2020arXiv200803179S/abstract>`_
+press74        fof  	        delta_c     `Press& Schechter 1974 <http://adsabs.harvard.edu/abs/1974ApJ...187..425P>`__
+sheth99	       fof  	        delta_c     `Sheth & Tormen 1999 <http://adsabs.harvard.edu/abs/1999MNRAS.308..119S>`__
+jenkins01      fof  	        No	        `Jenkins et al. 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.321..372J>`__
+reed03	       fof  	        delta_c     `Reed et al. 2003 <http://adsabs.harvard.edu/abs/2003MNRAS.346..565R>`__
+warren06       fof  	        No	        `Warren et al. 2006 <http://adsabs.harvard.edu/abs/2006ApJ...646..881W>`__
+reed07	       fof   	        delta_c     `Reed et al. 2007 <http://adsabs.harvard.edu/abs/2007MNRAS.374....2R>`__
+tinker08       Any SO 	        Yes	        `Tinker et al. 2008 <http://adsabs.harvard.edu/abs/2008ApJ...688..709T>`__
+crocce10       fof   	        No          `Crocce et al. 2010 <http://adsabs.harvard.edu/abs/2010MNRAS.403.1353C>`__
+bhattacharya11 fof   	        Yes         `Bhattacharya et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...732..122B>`__
+courtin11      fof              No          `Courtin et al. 2011 <http://adsabs.harvard.edu/abs/2011MNRAS.410.1911C>`__
+angulo12       fof  	        No          `Angulo et al. 2012 <http://adsabs.harvard.edu/abs/2012MNRAS.426.2046A>`__
+watson13       fof, any SO      Yes (SO)    `Watson et al. 2013 <http://adsabs.harvard.edu/abs/2013MNRAS.433.1230W>`__
+bocquet16      200m,200c,500c   Yes         `Bocquet et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.456.2361B>`__
+despali16      Any SO           Yes         `Despali et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.456.2486D>`__
+comparat17     vir              No          `Comparat et al. 2017 <https://ui.adsabs.harvard.edu//#abs/2017MNRAS.469.4157C/abstract>`__
+diemer20       sp-apr-*         No          `Diemer 2020b <https://ui.adsabs.harvard.edu/abs/2020arXiv200710346D/abstract>`__
+seppi20        vir              Yes         `Seppi et al. 2020 <https://ui.adsabs.harvard.edu/abs/2020arXiv200803179S/abstract>`__
 ============== ================ =========== ======================================
 
 Note that the mass definition (set to ``fof`` by default) needs to match one of the allowed mass 
@@ -495,13 +495,13 @@ def modelSheth99(sigma, z, deltac_args = {'corrections': True}):
 	The mass function model of Sheth & Tormen 1999.
 	
 	This model was created to account for the differences between the classic 
-	`Press& Schechter 1974 <http://adsabs.harvard.edu/abs/1974ApJ...187..425P>`_ model
+	`Press& Schechter 1974 <http://adsabs.harvard.edu/abs/1974ApJ...187..425P>`__ model
 	and measurements of the halo abundance in numerical simulations. The model is given in Equation 
 	10. Note that, by default, the collapse overdensity is computed including corrections due to 
 	cosmology. Compared to the paper, the equation implemented here contains an extra factor of 2 
 	because the original equation refers to the A = 1/2 normalization of Press & Schechter.
 	This model is sometimes also known as "SMT" for 
-	`Sheth, Mo and Tormen 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.323....1S>`_ who use the
+	`Sheth, Mo and Tormen 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.323....1S>`__ who use the
 	same fitting function.
 	
 	Parameters
@@ -560,7 +560,7 @@ def modelReed03(sigma, z, deltac_args = {'corrections': True}):
 	The mass function model of Reed et al 2003.
 	
 	This model corrects the 
-	`Sheth & Tormen 1999 <http://adsabs.harvard.edu/abs/1999MNRAS.308..119S>`_ model at high 
+	`Sheth & Tormen 1999 <http://adsabs.harvard.edu/abs/1999MNRAS.308..119S>`__ model at high 
 	masses, the functional form is given in Equation 9.
 	
 	Parameters
@@ -770,12 +770,12 @@ def modelCourtin11(sigma):
 	The mass function model of Courtin et al 2011.
 	
 	The model uses the same functional form as the 
-	`Sheth & Tormen 1999 <http://adsabs.harvard.edu/abs/1999MNRAS.308..119S>`_, but with different
+	`Sheth & Tormen 1999 <http://adsabs.harvard.edu/abs/1999MNRAS.308..119S>`__, but with different
 	parameters and a fixed collapse overdensity :math:`\\delta_{\\rm c} = 1.673`. Note that there
 	appears to be an error in Equations 8 and 22: the factor of :math:`\sqrt{a}` should be in the 
 	numerator rather than denominator in order to reproduce the ST expression. Other authors have 
 	taken the formula literally, e.g. 
-	`Watson et al. 2013 <http://adsabs.harvard.edu/abs/2013MNRAS.433.1230W>`_. Here, we assume that 
+	`Watson et al. 2013 <http://adsabs.harvard.edu/abs/2013MNRAS.433.1230W>`__. Here, we assume that 
 	the intended expression is, indeed, that of ST.
 	
 	Parameters

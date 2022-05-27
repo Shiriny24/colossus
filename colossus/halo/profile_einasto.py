@@ -13,8 +13,8 @@ This module implements the Einasto form of the density profile. Please see
 Basics
 ---------------------------------------------------------------------------------------------------
 
-The Einasto profile (`Einasto 1965 <http://adsabs.harvard.edu/abs/1965TrAlm...5...87E>`_) is 
-defined by the density function
+The Einasto profile (`Einasto 1965 <http://adsabs.harvard.edu/abs/1965TrAlm...5...87E>`__) is 
+defined by the function
 
 .. math::
 	\\rho(r) = \\rho_s \\exp \\left( -\\frac{2}{\\alpha} \\left[ \\left( \\frac{r}{r_s} \\right)^{\\alpha} - 1 \\right] \\right)
@@ -32,11 +32,11 @@ concentration::
 	from colossus.cosmology import cosmology
 	from colossus.halo import profile_einasto
 	
-	cosmology.setCosmology('planck15')
+	cosmology.setCosmology('planck18')
 	p_einasto = profile_einasto.EinastoProfile(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir')
 
 In this case, :math:`\\alpha` is determined automatically using the formula of 
-`Gao et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.387..536G>`_, 
+`Gao et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.387..536G>`__, 
 
 .. math::
 	\\alpha = 0.155 + 0.0095 \\nu_{\\rm vir}^2
@@ -68,8 +68,8 @@ class EinastoProfile(profile_base.HaloDensityProfile):
 	radius, and alpha), or a spherical overdensity mass and concentration (in this case the mass 
 	definition and redshift also need to be specified). In the latter case, the user can specify 
 	alpha or let the constructor compute it from its tight correlation with peak height 
-	(`Gao et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.387..536G>`_). In the latter case, 
-	a cosmology must be set before instantiating the profile object.
+	(`Gao et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.387..536G>`__); a cosmology must 
+	be set before instantiating the profile object this way.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------

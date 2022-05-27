@@ -137,17 +137,17 @@ def collapseOverdensity(corrections = False, z = None):
 	The linear overdensity threshold for halo collapse.
 	
 	The linear overdensity threshold for halo collapse according to the spherical top-hat collapse 
-	model (`Gunn & Gott 1972 <http://adsabs.harvard.edu/abs/1972ApJ...176....1G>`_). In an EdS
+	model (`Gunn & Gott 1972 <http://adsabs.harvard.edu/abs/1972ApJ...176....1G>`__). In an EdS
 	universe, this number is :math:`3/5 (3\pi/2)^{2/3}=1.686`.
 	
 	This value is modified very slightly in a non-EdS universe (by less than 3% for any realistic
 	cosmology). Such corrections are applied if desired, by default this function returns the 
 	constant value (see, e.g., 
-	`Mo, van den Bosch & White <http://adsabs.harvard.edu/abs/2010gfe..book.....M>`_ 
+	`Mo, van den Bosch & White <http://adsabs.harvard.edu/abs/2010gfe..book.....M>`__ 
 	for a derivation of the corrections). Note that correction formulae are implemented for flat
 	cosmologies and cosmologies without dark energy, but not for the general case (both 
 	curvature and dark energy). The correction is essentially identical in effect to the Equation 
-	A6 of `Kitayama & Suto 1996 <https://ui.adsabs.harvard.edu/abs/1996ApJ...469..480K/abstract>`_.
+	A6 of `Kitayama & Suto 1996 <https://ui.adsabs.harvard.edu/abs/1996ApJ...469..480K/abstract>`__.
 
 	Parameters
 	-------------------------------------------------------------------------------------------
@@ -435,7 +435,7 @@ def peakCurvature(M, z, exact = False, ps_args = defaults.PS_ARGS,
 	:func:`~cosmology.cosmology.Cosmology.sigma` function).
 	
 	This function computes the average curvature of peaks in a Gaussian random field, <x>,
-	according to `Bardeen et al. 1986 <http://adsabs.harvard.edu/abs/1986ApJ...304...15B>`_ 
+	according to `Bardeen et al. 1986 <http://adsabs.harvard.edu/abs/1986ApJ...304...15B>`__ 
 	(BBKS), for halos of a certain mass M. This mass is converted to a lagrangian scale R 
 	which serves as the scale on which the variance and its moments are evaluated. The 
 	computation can be performed by integration of Equation A14 in BBKS (if ``exact == True``), 

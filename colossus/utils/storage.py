@@ -15,7 +15,7 @@ Basics
 
 There are two levels of storage: all stored fields are stored in dictionaries in memory. The data
 can be of any type, if persistent storage is used the data must be 
-`pickleable <https://docs.python.org/3/library/pickle.html#what-can-be-pickled-and-unpickled>`_. 
+`pickleable <https://docs.python.org/3/library/pickle.html#what-can-be-pickled-and-unpickled>`__. 
 The persistent storage can be turned on and off by the user, both generally and for each field 
 individually. 
 

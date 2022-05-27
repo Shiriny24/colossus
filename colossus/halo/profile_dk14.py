@@ -13,15 +13,15 @@ This module implements the Diemer & Kravtsov 2014 form of the density profile. P
 Basics
 ---------------------------------------------------------------------------------------------------
 
-The DK14 profile (`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_)
+The DK14 profile (`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`__)
 is defined by the following density form:
 
-	.. math::
-		\\rho(r) &= \\rho_{\\rm inner} \\times f_{\\rm trans} + \\rho_{\\rm outer}
-		
-		\\rho_{\\rm inner} &= \\rho_{\\rm Einasto} = \\rho_{\\rm s} \\exp \\left( -\\frac{2}{\\alpha} \\left[ \\left( \\frac{r}{r_{\\rm s}} \\right)^\\alpha -1 \\right] \\right)
+.. math::
+	\\rho(r) &= \\rho_{\\rm inner} \\times f_{\\rm trans} + \\rho_{\\rm outer}
+	
+	\\rho_{\\rm inner} &= \\rho_{\\rm Einasto} = \\rho_{\\rm s} \\exp \\left( -\\frac{2}{\\alpha} \\left[ \\left( \\frac{r}{r_{\\rm s}} \\right)^\\alpha -1 \\right] \\right)
 
-		f_{\\rm trans} &= \\left[ 1 + \\left( \\frac{r}{r_{\\rm t}} \\right)^\\beta \\right]^{-\\frac{\\gamma}{\\beta}}
+	f_{\\rm trans} &= \\left[ 1 + \\left( \\frac{r}{r_{\\rm t}} \\right)^\\beta \\right]^{-\\frac{\\gamma}{\\beta}}
 
 This profile corresponds to an Einasto profile at small radii, and steepens around the virial 
 radius. The profile formula has 6 free parameters, but most of those can be fixed to particular 
@@ -34,62 +34,44 @@ following meaning:
 	======= ==================== ===================================================================================
 	Param.  Symbol               Explanation	
 	======= ==================== ===================================================================================
-	rhos	:math:`\\rho_s`       The central scale density, in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`
+	rhos	:math:`\\rho_s`       The density at the scale radius in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`
 	rs      :math:`r_{\\rm s}`     The scale radius in physical kpc/h
 	alpha   :math:`\\alpha`       Determines how quickly the slope of the inner Einasto profile steepens
-	rt      :math:`r_{\\rm t}`     The radius where the profile steepens beyond the Einasto profile, in physical kpc/h
+	rt      :math:`r_{\\rm t}`     The truncation radius where the profile steepens beyond the Einasto profile, in physical kpc/h
 	beta    :math:`\\beta`        Sharpness of the steepening
 	gamma	:math:`\\gamma`       Asymptotic negative slope of the steepening term
 	======= ==================== ===================================================================================
 
-There are two ways to initialize a DK14 profile. First, the user can pass the fundamental
-parameters of the profile listed above. Second, the user can pass a spherical overdensity mass 
-and concentration, the conversion to the native parameters then relies on the calibrations 
-in DK14. In this case, the user can give additional information about the profile that can be 
-used in setting the fundamental parameters. 
-
-In particular, the fitting function was calibrated for the median and mean profiles of two 
-types of halo samples, namely samples selected by mass, and samples selected by both mass and 
-mass accretion rate. The user can choose between those by setting ``selected_by = 'M'`` or 
-``selected_by = 'Gamma'``. The latter option results in a more accurate representation
-of the density profile, but the mass accretion rate must be known. 
+As with all profile models, the user can pass these fundamental parameters or mass and 
+concentration. In the latter case, the user can give additional information to create a more
+accurate profile model. In particular, the fitting function was calibrated for the median and 
+mean profiles of halo samples selected by mass (``selected_by = 'M'``) and selected by both mass 
+and mass accretion rate (``selected_by = 'Gamma'``). The latter option results in a more accurate 
+representation of the density profile, but the mass accretion rate must be known. 
 
 If the profile is chosen to model halo samples selected by mass, we set 
 :math:`(\\beta, \\gamma) = (4, 8)`. If the sample is selected by both mass and mass 
 accretion rate, we set :math:`(\\beta, \\gamma) = (6, 4)`. Those choices result in a different 
-calibration of the turnover radius :math:`r_{\\rm t}`. In the latter case, both ``z`` and ``Gamma`` 
+calibration of the truncation radius :math:`r_{\\rm t}`. In the latter case, both ``z`` and ``Gamma`` 
 must not be ``None``. See the :func:`~halo.profile_dk14.DK14Profile.deriveParameters` function 
 for more details.
 
-.. note::
-	The DK14 profile makes sense only if some description of the outer profile is added. 
-	
-Adding outer terms is easy using the wrapper function :func:`getDK14ProfileWithOuterTerms`::
+The DK14 profile makes sense only if some description of the outer profile is added. This can
+easily be done with the :func:`~halo.profile_composite.compositeProfile` function::
 
 	from colossus.cosmology import cosmology
-	from colossus.halo import profile_dk14
-
-	cosmology.setCosmology('planck15')
-	p = profile_dk14.getDK14ProfileWithOuterTerms(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir')
+	from colossus.halo import profile_composite
 	
-This line will return a DK14 profile object with a power-law outer profile and the mean density of
-the universe added by default. Alternatively, the user can pass a list of OuterTerm objects 
-(see documentation of the :class:`~halo.profile_base.HaloDensityProfile` parent class). The user
-can pass additional parameters to the outer profile terms::
-
-	p = profile_dk14.getDK14ProfileWithOuterTerms(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir',
-			power_law_slope = 1.2)
-
-or change the outer terms altogether::
-
-	p = profile_dk14.getDK14ProfileWithOuterTerms(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir', 
-			outer_term_names = ['mean', 'cf'], derive_bias_from = None, bias = 1.2)
-
-Some of the outer term parameterizations (namely the 2-halo term) rely, in turn, on properties of 
-the total profile such as the mass. In those cases, the constructor determines the mass iteratively,
-taking the changing contribution of the outer term into account. This procedure can make the 
-constructor slow. Thus, it is generally preferred to initialize the outer terms with fixed 
-parameters (e.g., pivot radius or bias). Please see the :doc:`tutorials` for more code examples.
+	cosmology.setCosmology('planck18')
+	p = profile_composite.compositeProfile('dk14', outer_names = ['mean', 'pl'],
+				M = 1E12, c = 10.0, z = 0.0, mdef = 'vir', norm = 1.0, slope = 1.5)
+	
+This line will return a DK14 profile object with two outer terms: the mean density of the Universe
+and a power law infalling profile (normalized at 5 R200m by default). When a parameterization 
+relies on properties of the total profile (such as R200m), the constructor determines the 
+normalization iteratively. This procedure can be slow or even inconsistent when fitting; in that
+case, it is generally preferred to initialize the outer terms with fixed parameters (e.g., fixed
+pivot radius or bias). Please see the :doc:`tutorials` for more code examples.
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -145,12 +127,6 @@ class DK14Profile(profile_base.HaloDensityProfile):
 	Gamma: float
 		The mass accretion rate as defined in DK14. This parameter only needs to be passed if 
 		``selected_by == 'Gamma'``.
-	acc_warn: float
-		If the function achieves a relative accuracy in matching ``M`` less than this value, a 
-		warning is printed.
-	acc_err: float
-		If the function achieves a relative accuracy in matching ``M`` less than this value, an 
-		exception is raised.
 	"""
 	
 	###############################################################################################
@@ -162,7 +138,6 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		# Set the fundamental variables par_names and opt_names
 		self.par_names = ['rhos', 'rs', 'rt', 'alpha', 'beta', 'gamma']
 		self.opt_names = []
-		self.fit_log_mask = np.array([True, True, True, True, True, True])
 		
 		# Run the constructor
 		profile_base.HaloDensityProfile.__init__(self, allowed_mdefs = ['200m'], 
@@ -192,14 +167,14 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		:math:`(\\beta, \\gamma) = (4, 8)`. If the sample is selected by both mass and mass 
 		accretion rate (``selected_by = 'Gamma'``), we set :math:`(\\beta, \\gamma) = (6, 4)`.
 		
-		Those choices result in a different calibration of the turnover radius :math:`r_{\\rm t}`. 
+		Those choices result in a different calibration of the truncation radius :math:`r_{\\rm t}`. 
 		If ``selected_by = 'M'``, we use Equation 6 in DK14. Though this relation was originally 
 		calibrated for :math:`\\nu = \\nu_{\\rm vir}`, but the difference is small. If 
 		``selected_by = 'Gamma'``, :math:`r_{\\rm t}` is calibrated from ``Gamma`` and ``z``.
 
 		Finally, the parameter that determines how quickly the Einasto profile steepens with
 		radius, :math:`\\alpha`, is calibrated according to the 
-		`Gao et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.387..536G>`_ relation. This 
+		`Gao et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.387..536G>`__ relation. This 
 		function was also originally calibrated for :math:`\\nu = \\nu_{\\rm vir}`, but the 
 		difference is small.
 
@@ -254,7 +229,7 @@ class DK14Profile(profile_base.HaloDensityProfile):
 		Set the native DK14 parameters from mass and concentration (and optionally others).
 
 		The DK14 profile has six free parameters, which are set by this function. The mass and 
-		concentration must be given as :math:`M_{\rm 200m}` and :math:`c_{\rm 200m}`. Other 
+		concentration must be given as :math:`M_{\\rm 200m}` and :math:`c_{\\rm 200m}`. Other 
 		mass definitions demand iteration, which can be achieved with the initialization routine
 		in the parent class. This function ignores the presence of outer profiles.
 	

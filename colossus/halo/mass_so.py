@@ -173,7 +173,7 @@ def deltaVir(z):
 	The virial overdensity in units of the critical density.
 	
 	This function uses the fitting formula of 
-	`Bryan & Norman 1998 <http://adsabs.harvard.edu/abs/1998ApJ...495...80B>`_ to determine the 
+	`Bryan & Norman 1998 <http://adsabs.harvard.edu/abs/1998ApJ...495...80B>`__ to determine the 
 	virial overdensity. While the universe is dominated by matter, this overdensity is about 178. 
 	Once dark energy starts to matter, it decreases. 
 	

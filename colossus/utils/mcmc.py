@@ -7,7 +7,7 @@
 
 """
 This module implements a Markov Chain Monte-Carlo sampler based on the 
-`Goodman & Weare 2010 <http://adsabs.harvard.edu/abs/2010CAMCS...5...65G>`_ algorithm. The code was
+`Goodman & Weare 2010 <http://adsabs.harvard.edu/abs/2010CAMCS...5...65G>`__ algorithm. The code was
 originally written by Andrey Kravtsov and adapted for Colossus by Benedikt Diemer.
 
 ---------------------------------------------------------------------------------------------------

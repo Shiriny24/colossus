@@ -13,21 +13,22 @@ This module implements the Diemer 2022b form of the density profile. Please see
 Basics
 ---------------------------------------------------------------------------------------------------
 
-The `Diemer (2022b) <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_ profile corresponds to an 
-Einasto profile at small radii but steepens around the truncation radius:
+The `Diemer (2022b) <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`__ profile was designed to 
+fit the orbiting component of dark matter halos, even at large radii where the infalling component 
+comes to dominate. The orbiting component has a sharp truncation that cannot be described by a
+power-law steepening term (as in the DK14 profile), but it can be described by the following
+"truncated exponential" form:
 
-	.. math::
-		\\rho(r) = \\rho_{\\rm s} \\exp \\left\\{ -\\frac{2}{\\alpha} \\left[ \\left( \\frac{r}{r_{\\rm s}} \\right)^\\alpha - 1 \\right] -\\frac{1}{\\beta} \\left[ \\left( \\frac{r}{r_{\\rm t}} \\right)^\\beta - \\left( \\frac{r_{\\rm s}}{r_{\\rm t}} \\right)^\\beta \\right] \\right\\}
+.. math::
+	\\rho(r) = \\rho_{\\rm s} \\exp \\left\\{ -\\frac{2}{\\alpha} \\left[ \\left( \\frac{r}{r_{\\rm s}} \\right)^\\alpha - 1 \\right] -\\frac{1}{\\beta} \\left[ \\left( \\frac{r}{r_{\\rm t}} \\right)^\\beta - \\left( \\frac{r_{\\rm s}}{r_{\\rm t}} \\right)^\\beta \\right] \\right\\}
 
 The meaning of this functional form is easiest to understand by considering its logarithmic slope:
 
-	.. math::
-		\\gamma(r) \\equiv \\frac{{\\rm d} \\ln \\rho}{{\\rm d} \\ln r} = -2 \\left( \\frac{r}{r_{\\rm s}} \\right)^\\alpha - \\left( \\frac{r}{r_{\\rm t}} \\right)^\\beta
+.. math::
+	\\gamma(r) \\equiv \\frac{{\\rm d} \\ln \\rho}{{\\rm d} \\ln r} = -2 \\left( \\frac{r}{r_{\\rm s}} \\right)^\\alpha - \\left( \\frac{r}{r_{\\rm t}} \\right)^\\beta
 
-The profile form was designed to fit the orbiting component of dark matter halos even at radii 
-where the infalling component comes to dominate. The idea is thus to combine this profile form
-with an infalling profile. The formula has 5 free parameters with well-defined physical 
-interpretations:
+The first term is identical to an Einasto profile, and the second term causes a more or less sharp
+truncation. The formula has 5 free parameters with well-defined physical interpretations:
 
 .. table::
 	:widths: auto
@@ -42,49 +43,72 @@ interpretations:
 	beta    :math:`\\beta`        Sharpness of the truncation
 	======= ==================== ===================================================================================
 
-There are two ways to initialize a D22 profile. First, the user can pass the fundamental
-parameters of the profile listed above. Second, the user can pass a spherical overdensity mass 
-and concentration, the conversion to the native parameters then relies on the calibrations 
-in Diemer 22c. In this case, the user can give additional information about the profile that can be 
-used in setting the fundamental parameters. 
+As with all profile models, the user can pass these fundamental parameters or mass and 
+concentration to the constructor of the :class:`ModelAProfile` class (the reason for the name 
+will become apparent later). In the latter case, the user can also give additional information to 
+create a more accurate profile model. In particular, the fitting function was calibrated for the 
+median and mean profiles of halo samples selected by mass (``selected_by = 'M'``) and selected by 
+both mass and mass accretion rate (``selected_by = 'Gamma'``). The latter option results in a more 
+accurate representation of the density profile, but the mass accretion rate must be known. See the 
+:func:`~halo.profile_diemer22.ModelAProfile.deriveParameters` function for details.
 
-In particular, the fitting function was calibrated for the median and mean profiles of two 
-types of halo samples, namely samples selected by mass, and samples selected by both mass and 
-mass accretion rate. The user can choose between those by setting ``selected_by = 'M'`` or 
-``selected_by = 'Gamma'``. The latter option results in a more accurate representation
-of the density profile, but the mass accretion rate must be known. 
+---------------------------------------------------------------------------------------------------
+Adding an infalling profile
+---------------------------------------------------------------------------------------------------
 
-See the :func:`~halo.profile_diemer22.D22Profile.deriveParameters` function for more details.
-
-.. note::
-	The D22 profile makes sense only if some description of the infalling profile is added. 
-	
-Adding outer terms is easy using the wrapper function :func:`getD22ProfileWithInfalling`::
+In most real-world applications, we are interested in the total density rather than only that of 
+orbiting matter. We thus want to add the overdensity of matter on a first infall (or "infalling 
+profile"), as well as the mean density of the Universe. Such a composite orbiting+infalling model
+can easily be created with the :func:`~halo.profile_composite.compositeProfile` function::
 
 	from colossus.cosmology import cosmology
-	from colossus.halo import profile_diemer22
-
-	cosmology.setCosmology('planck15')
-	p = profile_diemer22.getD22ProfileWithInfalling(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir')
+	from colossus.halo import profile_composite
 	
-This line will return a D22 profile object with a power-law outer profile and the mean density of
-the universe added by default. Alternatively, the user can pass a list of OuterTerm objects 
-(see documentation of the :class:`~halo.profile_base.HaloDensityProfile` parent class). The user
-can pass additional parameters to the outer profile terms::
+	cosmology.setCosmology('planck18')
+	p = profile_composite.compositeProfile('diemer22', outer_names = ['mean', 'infalling'],
+				M = 1E12, c = 10.0, z = 0.0, mdef = 'vir', pl_delta_1 = 10.0, pl_s = 1.5)
 
-	p = profile_diemer22.getD22ProfileWithInfalling(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir',
-			power_law_slope = 1.2)
+With a single command, we have created a truncated exponential profile with two outer terms, 
+the constant mean density and an infalling profile of the form
 
-or change the outer terms altogether::
+.. math::
+	\\rho_{\\rm inf}(r) = \\delta_1 \\rho_{\\rm m}(z) \\left[ \\left( \\frac{\\delta_1}{\\delta_{\\rm max}} \\right)^{1/\\zeta} + \\left( \\frac{r}{r_{\\rm pivot}} \\right)^{s/\\zeta} \\right]^{-\\zeta} 
 
-	p = profile_diemer22.getD22ProfileWithInfalling(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir', 
-			outer_term_names = ['mean', 'cf'], derive_bias_from = None, bias = 1.2)
+where :math:`\\delta_1` is the overdensity normalization and :math:`s` the slope. These parameters
+depend on the mass, accretion rate, and cosmology of the halo sample in question (see
+`Diemer 2022b <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`__). The maximum 
+overdensity at the center can safely be left to its default value unless the infalling profile is
+known in detail, as can :math:`\\zeta = 0.5`. The pivot radius is, by default, set to 
+:math:`R_{\\rm 200m}`. This parameterization relies on the parameters of the inner profile, which
+is correctly handled by the constructor. When fitting, however, such an interdependence can create
+issues and it is recommended to set a fixed physical radius as a pivot. For more details, see the 
+:class:`~halo.profile_outer.OuterTermInfalling` class, as well as the code :doc:`tutorials`.
 
-Some of the outer term parameterizations (namely the 2-halo term) rely, in turn, on properties of 
-the total profile such as the mass. In those cases, the constructor determines the mass iteratively,
-taking the changing contribution of the outer term into account. This procedure can make the 
-constructor slow. Thus, it is generally preferred to initialize the outer terms with fixed 
-parameters (e.g., pivot radius or bias). Please see the :doc:`tutorials` for more code examples.
+---------------------------------------------------------------------------------------------------
+Model variant with correction at scale radius
+---------------------------------------------------------------------------------------------------
+
+The orbiting profile model described above has one technically unaesthetic property: the 
+logarithmic slope at the scale radius is no longer -2. Thus, 
+`Diemer 2022b <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`__ also proposed a corrected
+variant called Model B, which can be created using the :class:`ModelBProfile` class. Here, an extra
+term has been inserted into the slope to ensure that it remains -2 at :math:`r_{\\rm s}`,
+
+.. math::
+	\\gamma(r) \\equiv \\frac{{\\rm d} \\ln \\rho}{{\\rm d} \\ln r} = -2 \\left( \\frac{r}{r_{\\rm s}} \\right)^\\alpha - \\left( \\frac{r}{r_{\\rm t}} \\right)^\\beta + \\left( \\frac{r_{\\rm s}}{r_{\\rm t}} \\right)^\\beta \\left( \\frac{r}{r_{\\rm s}} \\right)^\\eta
+
+where :math:`\\eta = 0.1` is a nuissance parameter that determines how quickly the correction term
+vanishes at small radii. The density function also becomes somewhat more complicated, but the user
+can ignore the underlying equations and use Model B exactly as Model A. The differences are so 
+small that the parameters have virtually the same meaning. The main advantage of Model B is that 
+it can be more stable in fits to profiles with a poorly defined scale radius, that is, profiles
+with a slope that is roughly -2 across a wide range of radii. Otherwise, we recommend using Model
+A for most applications. Given the Model A/B split is implemented via an abstract class and two
+specific derived classes:
+
+* :class:`GenericD22Profile` (should never be instantiated by the user)
+* :class:`ModelAProfile` (the default)
+* :class:`ModelBProfile` (if correction at scale radius is needed)
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -106,7 +130,7 @@ from colossus.halo import profile_base
 
 class GenericD22Profile(profile_base.HaloDensityProfile):
 	"""
-	Base class for D22 profiles.
+	Base class for truncated exponential profiles.
 	
 	Generic profile class for methods that are common to the Model A and B variants. This class
 	should never be instantiated by the user.
@@ -145,8 +169,8 @@ class GenericD22Profile(profile_base.HaloDensityProfile):
 		individual halo profiles. However, they are not necessarily optimal for any type of 
 		averaged sample, where the optimal values vary. We do not calibrate :math:`\\alpha` with 
 		mass as suggested by
-		`Gao et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.387..536G>`_ because we do 
-		not reproduce this relation in our data in Diemer 2022c.
+		`Gao et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.387..536G>`__ because we do 
+		not reproduce this relation in our data (Diemer 2022c).
 		
 		The truncation ratius :math:`r_{\\rm t}` is calibrated as suggested by DK14 for
 		Gamma-selected samples. If ``selected_by = 'M'``, we use a new parametrization because the 
@@ -168,10 +192,11 @@ class GenericD22Profile(profile_base.HaloDensityProfile):
 			Redshift
 		Gamma: float
 			The mass accretion rate over the past dynamical time, which is defined as the crossing 
-			time (see func:`~halo.mass_so.dynamicalTime` or Diemer 2017 for details). The definition 
-			in the DK14 profile is slightly different, but the definitions are close enough that they
-			can be used interchangeably without great loss of accuracy. The Gamma parameter only needs 
-			to be passed if ``selected_by == 'Gamma'``.
+			time (see the :func:`~halo.mass_so.dynamicalTime` function or 
+			`Diemer 2017 <https://ui.adsabs.harvard.edu/abs/2017ApJS..231....5D/abstract>`__ for 
+			details). The definition in the DK14 profile is slightly different, but the definitions are close 
+			enough that they can be used interchangeably without great loss of accuracy. The Gamma 
+			parameter only needs to be passed if ``selected_by == 'Gamma'``.
 
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -213,11 +238,11 @@ class GenericD22Profile(profile_base.HaloDensityProfile):
 
 	def setNativeParameters(self, M, c, z, mdef, selected_by = None, Gamma = None, **kwargs):
 		"""
-		Set the native Diemer22 parameters from mass and concentration (and optionally others).
+		Set the native parameters from mass and concentration (and optionally others).
 
-		The D22 profile has five free parameters, which are set by this function. The mass and 
-		concentration must be given as :math:`M_{\rm 200m}` and :math:`c_{\rm 200m}`. Other 
-		mass definitions demand iteration, which can be achieved with the initialization routine
+		The truncated exponential profile has five free parameters, which are set by this function. 
+		The mass and concentration must be given as :math:`M_{\\rm 200m}` and :math:`c_{\\rm 200m}`. 
+		Other mass definitions demand iteration, which can be achieved with the initialization routine
 		in the parent class. This function ignores the presence of outer profiles.
 	
 		Parameters
@@ -237,7 +262,7 @@ class GenericD22Profile(profile_base.HaloDensityProfile):
 			rate ``Gamma``.
 		Gamma: float
 			The mass accretion rate as defined in DK14. This parameter only needs to be passed if 
-			``selected_by == 'Gamma'``.
+			``selected_by == 'Gamma'``. See comments in :func:`deriveParameters` function above.
 		"""
 
 		if selected_by is None:
@@ -264,6 +289,9 @@ class GenericD22Profile(profile_base.HaloDensityProfile):
 		"""
 		The linear derivative of the inner density, :math:`d \\rho_{\\rm inner} / dr`. 
 		
+		For the truncated exponential profile, the logarithmic derivative is much easier to 
+		evaluate. Thus, this function converts the logarithmic to the linear derivative.
+		
 		Parameters
 		-------------------------------------------------------------------------------------------
 		r: array_like
@@ -288,7 +316,7 @@ class GenericD22Profile(profile_base.HaloDensityProfile):
 
 class ModelAProfile(GenericD22Profile):
 	"""
-	The Diemer 2022 density profile (default version).
+	The Diemer 2022 (truncated exponential) density profile (default version).
 	
 	The redshift must always be passed to this constructor, regardless of whether the 
 	fundamental parameters or a mass and concentration are given.
@@ -319,16 +347,11 @@ class ModelAProfile(GenericD22Profile):
 		profile are set, in particular those that describe the steepening term.
 	Gamma: float
 		The mass accretion rate over the past dynamical time, which is defined as the crossing 
-		time (see func:`~halo.mass_so.dynamicalTime` or Diemer 2017 for details). The definition 
-		in the DK14 profile is slightly different, but the definitions are close enough that they
-		can be used interchangeably without great loss of accuracy. The Gamma parameter only needs 
-		to be passed if ``selected_by == 'Gamma'``.
-	acc_warn: float
-		If the function achieves a relative accuracy in matching ``M`` less than this value, a 
-		warning is printed.
-	acc_err: float
-		If the function achieves a relative accuracy in matching ``M`` less than this value, an 
-		exception is raised.
+		time (see the :func:`~halo.mass_so.dynamicalTime` function or 
+		`Diemer 2017 <https://ui.adsabs.harvard.edu/abs/2017ApJS..231....5D/abstract>`__ for 
+		details). The definition in the DK14 profile is slightly different, but the definitions are close 
+		enough that they can be used interchangeably without great loss of accuracy. The Gamma 
+		parameter only needs to be passed if ``selected_by == 'Gamma'``.
 	"""
 	
 	###############################################################################################
@@ -379,10 +402,6 @@ class ModelAProfile(GenericD22Profile):
 	def densityDerivativeLogInner(self, r):
 		"""
 		The logarithmic derivative of the inner density, :math:`d \log(\\rho_{\\rm inner}) / d \log(r)`. 
-
-		This function evaluates the logarithmic derivative based on the linear derivative. If there
-		is an analytic expression for the logarithmic derivative, child classes should overwrite 
-		this function.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -453,10 +472,10 @@ class ModelAProfile(GenericD22Profile):
 
 class ModelBProfile(GenericD22Profile):
 	"""
-	The Diemer 2022 density profile (Model B).
+	The Diemer 2022 (truncated exponential) density profile (Model B).
 	
-	This version corrects a minor flaw in the default Diemer22 model: the logarithmic slope at the
-	scale radius is not -2 in the default model (called Model A). In this Model B, this condition
+	This version corrects a minor flaw in the default model: the logarithmic slope at the
+	scale radius is not -2 in the default Model A. In this Model B, this condition
 	is enforced at the cost of an extra term, which gradually adjusts the slope between the center
 	(where it is still zero) and the scale radius, where it offsets the effect of the truncation
 	term. However, this correction is usually very small (except for extreme values of beta or 
@@ -497,16 +516,11 @@ class ModelBProfile(GenericD22Profile):
 		profile are set, in particular those that describe the steepening term.
 	Gamma: float
 		The mass accretion rate over the past dynamical time, which is defined as the crossing 
-		time (see func:`~halo.mass_so.dynamicalTime` or Diemer 2017 for details). The definition 
-		in the DK14 profile is slightly different, but the definitions are close enough that they
-		can be used interchangeably without great loss of accuracy. The Gamma parameter only needs 
-		to be passed if ``selected_by == 'Gamma'``.
-	acc_warn: float
-		If the function achieves a relative accuracy in matching ``M`` less than this value, a 
-		warning is printed.
-	acc_err: float
-		If the function achieves a relative accuracy in matching ``M`` less than this value, an 
-		exception is raised.
+		time (see the :func:`~halo.mass_so.dynamicalTime` function or 
+		`Diemer 2017 <https://ui.adsabs.harvard.edu/abs/2017ApJS..231....5D/abstract>`__ for 
+		details). The definition in the DK14 profile is slightly different, but the definitions are close 
+		enough that they can be used interchangeably without great loss of accuracy. The Gamma 
+		parameter only needs to be passed if ``selected_by == 'Gamma'``.
 	"""
 	
 	###############################################################################################
@@ -533,7 +547,7 @@ class ModelBProfile(GenericD22Profile):
 		Set the native Diemer22 parameters from mass and concentration (and optionally others).
 
 		The D22 profile has five free parameters, which are set by this function. The mass and 
-		concentration must be given as :math:`M_{\rm 200m}` and :math:`c_{\rm 200m}`. Other 
+		concentration must be given as :math:`M_{\\rm 200m}` and :math:`c_{\\rm 200m}`. Other 
 		mass definitions demand iteration, which can be achieved with the initialization routine
 		in the parent class. This function ignores the presence of outer profiles.
 	
@@ -604,10 +618,6 @@ class ModelBProfile(GenericD22Profile):
 	def densityDerivativeLogInner(self, r):
 		"""
 		The logarithmic derivative of the inner density, :math:`d \log(\\rho_{\\rm inner}) / d \log(r)`. 
-
-		This function evaluates the logarithmic derivative based on the linear derivative. If there
-		is an analytic expression for the logarithmic derivative, child classes should overwrite 
-		this function.
 
 		Parameters
 		-------------------------------------------------------------------------------------------

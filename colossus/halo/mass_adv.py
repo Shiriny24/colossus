@@ -30,7 +30,7 @@ module), but the user can choose a different model. This function is not include
 Alternative mass definitions
 ---------------------------------------------------------------------------------------------------
 
-`More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`_ suggested two alternative
+`More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`__ suggested two alternative
 mass definitions, namely the splashback radius and the mass within four scale radii. For the
 former, please see the :doc:`halo_splashback` module. This module implements :math:`M_{<4r_s}`, the
 mass within four scale radii::
@@ -118,7 +118,7 @@ def M4rs(M, z, mdef, c = None):
 	Convert a spherical overdensity mass to :math:`M_{<4rs}`.
 	
 	Evaluates the mass within four scale radii, assuming an NFW profile. See 
-	`More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`_ for the rationale 
+	`More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`__ for the rationale 
 	behind this definition.
 
 	Parameters

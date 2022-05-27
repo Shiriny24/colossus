@@ -11,9 +11,9 @@ Colossus is compatible with both Python 2.7 and Python 3.x. However, the code is
 mostly tested in Python 3, which is thus the recommended version. Colossus requires the following 
 standard packages:
 
-* `numpy <http://www.numpy.org/>`_
-* `scipy <https://www.scipy.org/>`_
-* `six <https://pypi.org/project/six/>`_
+* `numpy <http://www.numpy.org/>`__
+* `scipy <https://www.scipy.org/>`__
+* `six <https://pypi.org/project/six/>`__
 
 Some tutorial notebooks also use other packages, for example matplotlib for plotting.
 
@@ -33,7 +33,7 @@ You might need to prefix this command with ``sudo``. To update the code, execute
 
 If the numpy and scipy packages are not already installed, you can similarly install them with the 
 pip command. For more information, please see the 
-`pip documentation <https://packaging.python.org/tutorials/installing-packages/>`_.
+`pip documentation <https://packaging.python.org/tutorials/installing-packages/>`__.
 
 .. rubric:: Repository installation
 
@@ -55,7 +55,7 @@ where the path is, of course, replaced with the location of Colossus on your sys
 
 If, for some reason, you wish to avoid using mercurial or pip, you can install Colossus manually 
 by downloading the current repository contents from the
-`repository site <https://bitbucket.org/bdiemer/colossus/src/master/>`_. The disadvantage of this method 
+`repository site <https://bitbucket.org/bdiemer/colossus/src/master/>`__. The disadvantage of this method 
 is that it makes updating the code relatively cumbersome.
 
 .. rubric:: Running unit tests
@@ -79,4 +79,4 @@ The output should look something like this::
    OK
        
 If any errors occur, please send the output to the 
-`author <http://www.benediktdiemer.com/contact/>`_.
+`author <http://www.benediktdiemer.com/contact/>`__.

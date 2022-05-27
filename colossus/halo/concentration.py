@@ -41,7 +41,7 @@ assume a particular form of the density profile (see the documentation of the
 	concentration by up to ~15-20% for certain mass definitions, masses, and redshifts. Using 
 	the DK14 profile (see the :mod:`halo.profile_dk14` module) for the mass conversion gives 
 	slightly improved results, but the conversion is slower. Please see Appendix C in 
-	`Diemer & Kravtsov 2015 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_ for details.
+	`Diemer & Kravtsov 2015 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`__ for details.
 
 .. note::
 	The user must ensure that the cosmology is set consistently. Many concentration models were 
@@ -67,25 +67,25 @@ parameter to the :func:`concentration` function:
 	============== ================ ================== =========== =============== ============================================================================
 	ID             Native mdefs     M-range (z=0)      z-range     Cosmology       Reference
 	============== ================ ================== =========== =============== ============================================================================
-	bullock01	   200c             Almost any         Any         Any             `Bullock et al. 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.321..559B>`_
-	duffy08        200c, vir, 200m  1E11 < M < 1E15    0 < z < 2   WMAP5           `Duffy et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.390L..64D>`_
-	klypin11       vir              3E10 < M < 5E14    0           WMAP7           `Klypin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...740..102K>`_
-	prada12        200c             Any                Any         Any             `Prada et al. 2012 <http://adsabs.harvard.edu/abs/2012MNRAS.423.3018P>`_
-	bhattacharya13 200c, vir, 200m  2E12 < M < 2E15    0 < z < 2   WMAP7           `Bhattacharya et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...32B>`_
-	dutton14       200c, vir        M > 1E10           0 < z < 5   planck13        `Dutton & Maccio 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.441.3359D>`_
-	diemer15_orig  200c             Any                Any         Any             `Diemer & Kravtsov 2015 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_
-	diemer15       200c             Any                Any         Any             `Diemer & Joyce 2019 <https://ui.adsabs.harvard.edu//#abs/2018arXiv180907326D/abstract>`_
-	klypin16_m     200c, vir        M > 1E10           0 < z < 5   planck13/WMAP7  `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
-	klypin16_nu    200c, vir        M > 1E10           0 < z < 5   planck13        `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
-	ludlow16       200c             Any                Any         Any             `Ludlow et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2016MNRAS.460.1214L/abstract>`_
-	child18        200c             M > 2.1E11         0 < z < 4   WMAP7           `Child et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2018ApJ...859...55C/abstract>`_
-	diemer19       200c             Any                Any         Any             `Diemer & Joyce 2019 <https://ui.adsabs.harvard.edu/abs/2019ApJ...871..168D/abstract>`_
-	ishiyama21     500c, 200c, vir  Any                Any         Any             `Ishiyama et al. 2021 <https://ui.adsabs.harvard.edu/abs/2021MNRAS.506.4210I/abstract>`_
+	bullock01	   200c             Almost any         Any         Any             `Bullock et al. 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.321..559B>`__
+	duffy08        200c, vir, 200m  1E11 < M < 1E15    0 < z < 2   WMAP5           `Duffy et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.390L..64D>`__
+	klypin11       vir              3E10 < M < 5E14    0           WMAP7           `Klypin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...740..102K>`__
+	prada12        200c             Any                Any         Any             `Prada et al. 2012 <http://adsabs.harvard.edu/abs/2012MNRAS.423.3018P>`__
+	bhattacharya13 200c, vir, 200m  2E12 < M < 2E15    0 < z < 2   WMAP7           `Bhattacharya et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...32B>`__
+	dutton14       200c, vir        M > 1E10           0 < z < 5   planck13        `Dutton & Maccio 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.441.3359D>`__
+	diemer15_orig  200c             Any                Any         Any             `Diemer & Kravtsov 2015 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`__
+	diemer15       200c             Any                Any         Any             `Diemer & Joyce 2019 <https://ui.adsabs.harvard.edu//#abs/2018arXiv180907326D/abstract>`__
+	klypin16_m     200c, vir        M > 1E10           0 < z < 5   planck13/WMAP7  `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`__
+	klypin16_nu    200c, vir        M > 1E10           0 < z < 5   planck13        `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`__
+	ludlow16       200c             Any                Any         Any             `Ludlow et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2016MNRAS.460.1214L/abstract>`__
+	child18        200c             M > 2.1E11         0 < z < 4   WMAP7           `Child et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2018ApJ...859...55C/abstract>`__
+	diemer19       200c             Any                Any         Any             `Diemer & Joyce 2019 <https://ui.adsabs.harvard.edu/abs/2019ApJ...871..168D/abstract>`__
+	ishiyama21     500c, 200c, vir  Any                Any         Any             `Ishiyama et al. 2021 <https://ui.adsabs.harvard.edu/abs/2021MNRAS.506.4210I/abstract>`__
 	============== ================ ================== =========== =============== ============================================================================
 
 The original version of the ``diemer15`` model suffered from a small numerical error, a corrected
 set of parameters is given in 
-`Diemer & Joyce 2019 <https://ui.adsabs.harvard.edu//#abs/2018arXiv180907326D/abstract>`_. The differences 
+`Diemer & Joyce 2019 <https://ui.adsabs.harvard.edu//#abs/2018arXiv180907326D/abstract>`__. The differences 
 between the models are less than 5%, but the original model should be used only for the purpose 
 of backwards compatibility.
 
@@ -454,7 +454,7 @@ def modelBullock01(M200c, z):
 	The model of Bullock et al 2001.
 	
 	This function implements the improved version of 
-	`Maccio et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.391.1940M>`_. The model is 
+	`Maccio et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.391.1940M>`__. The model is 
 	universal, but limited by the finite growth factor in a given cosmology which means that the 
 	model cannot be evaluated for arbitrarily large masses (halos that will never collapse).
 	  

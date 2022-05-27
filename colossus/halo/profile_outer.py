@@ -533,7 +533,7 @@ class OuterTermPowerLaw(OuterTerm):
 		independent parameter any more.
 	"""
 	
-	def __init__(self, norm = None, slope = None, pivot = None, pivot_factor = None, 
+	def __init__(self, norm = None, slope = None, pivot = 'R200m', pivot_factor = 5.0, 
 				z = None, max_rho = defaults.HALO_PROFILE_OUTER_PL_MAXRHO, **kwargs):
 
 		if norm is None:

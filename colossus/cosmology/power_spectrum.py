@@ -24,9 +24,9 @@ be passed as the ``model`` parameter to the :func:`transferFunction` function:
 	================== ==================================================================================== ======================================
 	ID                 Reference                                                                            Comment
 	================== ==================================================================================== ======================================
-	sugiyama95         `Sugiyama 1995 <https://ui.adsabs.harvard.edu/abs/1995ApJS..100..281S/abstract>`_    A semi-analytical fitting function
-	eisenstein98       `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_          A semi-analytical fitting function
-	eisenstein98_zb    `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_          The zero-baryon version, i.e., no BAO
+	sugiyama95         `Sugiyama 1995 <https://ui.adsabs.harvard.edu/abs/1995ApJS..100..281S/abstract>`__   A semi-analytical fitting function
+	eisenstein98       `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`__         A semi-analytical fitting function
+	eisenstein98_zb    `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`__         The zero-baryon version, i.e., no BAO
 	================== ==================================================================================== ======================================
 
 ---------------------------------------------------------------------------------------------------
@@ -134,9 +134,9 @@ def modelSugiyama95(k, h, Om0, Ob0, Tcmb0):
 	The transfer function according to Sugiyama 1995.
 	
 	This function computes the 
-	`Sugiyama 1995 <https://ui.adsabs.harvard.edu/abs/1995ApJS..100..281S/abstract>`_ 
+	`Sugiyama 1995 <https://ui.adsabs.harvard.edu/abs/1995ApJS..100..281S/abstract>`__ 
 	approximation to the transfer function at a scale k, which is based on the 
-	`Bardeen et al. 1986 <https://ui.adsabs.harvard.edu/abs/1986ApJ...304...15B/abstract>`_
+	`Bardeen et al. 1986 <https://ui.adsabs.harvard.edu/abs/1986ApJ...304...15B/abstract>`__
 	formulation. Note that this approximation is not as accurate as the ``eisenstein98`` model,
 	with deviations of about 10-20% in the power spectrum, variance, and correlation function.
 
@@ -182,12 +182,12 @@ def modelEisenstein98(k, h, Om0, Ob0, Tcmb0):
 	The transfer function according to Eisenstein & Hu 1998.
 	
 	This function computes the 
-	`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_ approximation 
+	`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`__ approximation 
 	to the transfer function at a scale k. The code was adapted from Matt Becker's cosmocalc 
 	code.
 	
 	This function was tested against numerical calculations based on the CAMB code 
-	(`Lewis et al. 2000 <http://adsabs.harvard.edu/abs/2000ApJ...538..473L>`_) and found to be
+	(`Lewis et al. 2000 <http://adsabs.harvard.edu/abs/2000ApJ...538..473L>`__) and found to be
 	accurate to 5\% or better up to k of about 100 h/Mpc (see the Colossus code paper for 
 	details). 
 

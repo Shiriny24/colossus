@@ -24,9 +24,9 @@ definitions of the splashback radius, for example the radius where the logarithm
 density profile is steepest, or definitions derived from the actual distribution of particle 
 apocenters. For more information, please see the papers that first suggested the splashback 
 radius, namely
-`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_,
-`Adhikari et al. 2014 <http://adsabs.harvard.edu/abs/2014JCAP...11..019A>`_,
-and `More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`_, as well as any of the
+`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`__,
+`Adhikari et al. 2014 <http://adsabs.harvard.edu/abs/2014JCAP...11..019A>`__,
+and `More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`__, as well as any of the
 model papers listed below.
 
 This module implements a number of theoretical models and fitting functions for the splashback
@@ -56,7 +56,7 @@ Note that the mass accretion rate is defined in different ways depending on whic
 In theoretical models, :math:`\\Gamma` typically stands for the instantaneous accretion rate
 :math:`s = d \\log(M) / d \\log(a)`. In other models, it means the mass accretion rate measured
 over either a fixed time interval as in 
-`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_, or measured
+`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`__, or measured
 over a dynamical time. Please consult the model papers for details. The following code example 
 shows how to calculate :math:`R_{\\rm sp}/R_{\\rm 200m}` when only the mass of a halo is known::
 
@@ -92,11 +92,11 @@ parameter to the :func:`splashbackModel` and :func:`splashbackRadius` functions:
 	============== ==================== =========================== =========================================
 	ID             Predicts...          ...as a function of...      Reference
 	============== ==================== =========================== =========================================
-	adhikari14     Rsp/Msp              (Gamma, z)                  `Adhikari et al. 2014 <http://adsabs.harvard.edu/abs/2014JCAP...11..019A>`_
-	more15         Rsp/Msp              (Gamma, z, M) or (z, M)     `More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`_
-	shi16          Rsp/Msp              (Gamma, z)                  `Shi 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.459.3711S>`_
-	mansfield17    Rsp/Msp, Scatter     (Gamma, z, M)               `Mansfield et al. 2017 <http://adsabs.harvard.edu/abs/2017ApJ...841...34M>`_
-	diemer17       Rsp/Msp, Scatter     (Gamma, z, M) or (z, M)     `Diemer et al. 2017 <http://adsabs.harvard.edu/abs/2017ApJ...843..140D>`_
+	adhikari14     Rsp/Msp              (Gamma, z)                  `Adhikari et al. 2014 <http://adsabs.harvard.edu/abs/2014JCAP...11..019A>`__
+	more15         Rsp/Msp              (Gamma, z, M) or (z, M)     `More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`__
+	shi16          Rsp/Msp              (Gamma, z)                  `Shi 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.459.3711S>`__
+	mansfield17    Rsp/Msp, Scatter     (Gamma, z, M)               `Mansfield et al. 2017 <http://adsabs.harvard.edu/abs/2017ApJ...841...34M>`__
+	diemer17       Rsp/Msp, Scatter     (Gamma, z, M) or (z, M)     `Diemer et al. 2017 <http://adsabs.harvard.edu/abs/2017ApJ...843..140D>`__
 	diemer20       Rsp/Msp, Scatter     (Gamma, z, M) or (z, M)     Diemer 2020
 	============== ==================== =========================== =========================================
 
@@ -786,7 +786,7 @@ def modelMore15RspR200m(nu200m = None, z = None, Gamma = None, statistic = 'medi
 	Gamma: array_like
 		Mass accretion rate; can be a number or a numpy array. This model was calibrated with 
 		Gamma computed according to the definition of 
-		`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_.
+		`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`__.
 	statistic: str
 		Can be ``mean`` or ``median``, determining whether the fit was performed on the mean or 
 		median density profile of a halo sample.
@@ -835,7 +835,7 @@ def modelMore15MspM200m(nu200m = None, z = None, Gamma = None, statistic = 'medi
 	Gamma: array_like
 		Mass accretion rate; can be a number or a numpy array. This model was calibrated with 
 		Gamma computed according to the definition of 
-		`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_.
+		`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`__.
 	statistic: str
 		Can be ``mean`` or ``median``, determining whether the fit was performed on the mean or 
 		median density profile of a halo sample.
@@ -922,7 +922,7 @@ def modelMansfield17RspR200m(Gamma, Om, nu200m):
 	Gamma: array_like
 		Mass accretion rate; can be a number or a numpy array. This model was calibrated with 
 		Gamma computed according to the definition of 
-		`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_.
+		`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`__.
 	Om: array_like
 		Matter density of the universe in units of the critical density; can be a number or a 
 		numpy array.
@@ -963,7 +963,7 @@ def modelMansfield17MspM200m(Gamma, Om):
 	Gamma: array_like
 		Mass accretion rate; can be a number or a numpy array. This model was calibrated with 
 		Gamma computed according to the definition of 
-		`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_.
+		`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`__.
 	Om: array_like
 		Matter density of the universe in units of the critical density; can be a number or a 
 		numpy array.		

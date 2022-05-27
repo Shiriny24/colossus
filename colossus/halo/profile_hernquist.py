@@ -13,11 +13,11 @@ general introduction to the Colossus density profile module.
 Basics
 ---------------------------------------------------------------------------------------------------
 
-The Hernquist profile (`Hernquist 1990 <http://adsabs.harvard.edu/abs/1990ApJ...356..359H>`_) is 
+The Hernquist profile (`Hernquist 1990 <http://adsabs.harvard.edu/abs/1990ApJ...356..359H>`__) is 
 defined by the density function
 
-	.. math::
-		\\rho(r) = \\frac{\\rho_s}{\\left(\\frac{r}{r_s}\\right) \\left(1 + \\frac{r}{r_s}\\right)^{3}}
+.. math::
+	\\rho(r) = \\frac{\\rho_s}{\\left(\\frac{r}{r_s}\\right) \\left(1 + \\frac{r}{r_s}\\right)^{3}}
 
 The profile class can be initialized by either passing its fundamental parameters 
 :math:`\\rho_{\\rm s}` and :math:`r_{\\rm s}`, but the more convenient initialization is via mass 
@@ -26,7 +26,7 @@ and concentration::
 	from colossus.cosmology import cosmology
 	from colossus.halo import profile_hernquist
 	
-	cosmology.setCosmology('planck15')
+	cosmology.setCosmology('planck18')
 	p_hernquist = profile_einasto.HernquistProfile(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir')
 
 Please see the :doc:`tutorials` for more code examples.

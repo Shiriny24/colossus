@@ -4,53 +4,86 @@ Version history
 
 See below for a listing of the most important code and interface changes in Colossus, starting with
 version 1.1.0. You can download older versions from the 
-`PyPi History <https://pypi.org/project/colossus/#history>`_ for Colossus.
+`PyPi History <https://pypi.org/project/colossus/#history>`__ for Colossus.
 
 .. rubric:: Version 1.3.0 (released XX/XX/2022)
 
-The main content of this update is a ground-up rewrite of the halo density profiles module. 
-Some of the following changes are unfortunately not backwards compatible. 
+The main content of this update is...
 
-The general philosophy of the new structure is to generalize the creation of profiles as much
-as possible, including the addition of outer (infalling) terms. The function signatures have been
-radically simplified to mostly take arbitrary keyword arguments, which are parsed by the respective
-constructors and functions called by them. 
+The density profiles module has been reworked entirely. Some of the following changes are 
+unfortunately not backwards compatible, as discussed below. The general philosophy of the new 
+structure is to generalize the creation of profiles as much as possible, including the addition of 
+outer terms. The constructor function signatures have been radically simplified to mostly take 
+arbitrary keyword arguments, which are parsed by the respective constructors and by the functions 
+called in turn. Please feel free to get in touch if you have trouble migrating your code to the 
+new version. The main changes are as follows:
 
-Please feel free to get in touch if you have trouble migrating your code to the new version. The
-main changes are as follows:
+* Generalized construction of profiles
 
-* The profile constructor was generalized to work with the keyword arguments given by the user. A
-  derived class now only needs to list its parameter (and perhaps option) names, and the parent
-  constructor attempts to construct a profile from these arguments. If not all native parameters
-  are given, the constructor looks for a function called ``setNativeParameters`` that sets the
-  parameters based on mass, concentration, and redshift. Aside from this function, the entire
-  logic for creating profiles is not contained in the parent class.
-* The ``setNativeParameters`` needs to be able to accept any mass definition unless the 
-  ``allowed_mdefs`` parameter is set when calling the parent constructor. 
-* The generalized constructor fixes a previous issue when creating profiles with outer
-  (infalling) terms. If the profile parameters are determined from a mass and concentration,
-  and the outer profile depends on a radius such as R200m, the process of finding the profile
-  parameters is iterative. This iteration was not performed for all profiles, but is now.
-* In the DK14 profile, all options have been removed as they are only needed for the 
-  constructor.
-* The ``getDK14ProfileWithOuterTerms`` function has been removed from the DK14 profile module, 
-  and has been replaced by the general :func:`profile_composite.compositeProfile` function. The
-  signature is similar, but the parameter names are now consistent with the constructors of the 
-  respective outer terms. 
-* The function :func:`halo.profile_dk14.DK14Profile.M4rs` has been removed. The result can easily
-  be found by evaluating the enclosed mass within four scale radii.
-* For the NFW profile, the ``fundamentalParameters`` function (which has now been replaced by
-  ``setNativeParameters``) was a class method, meaning that it could be called without calling the
-  constructor first. This routine has been renamed to ``nativeParameters``.
-* All derived classes must contain a normalization ``rhos`` because this variable is used to
-  renormalize the profile in the presence of outer terms. 
-* Added the new Diemer 2022 density profile (orbiting and infalling terms).
-* Numerical derivative is more efficient.
-* New unit tests.
-* The user can now pass parameter bounds in least-squares fits.
-* The MCMC fits can now also be performed in log space.
-* All parameters, including those of the outer profiles, are now by default fit in log space.
-  This can lead to slightly different results compared to previous versions.
+  * The profile constructor was generalized to work with the keyword arguments given by the user. A
+    derived class now only needs to list its parameter (and perhaps option) names, and the parent
+    constructor attempts to construct a profile from these arguments. If not all native parameters
+    are given, the constructor looks for a function called ``setNativeParameters`` that sets the
+    parameters based on mass, concentration, and redshift. Aside from this function, the entire
+    logic for creating profiles is now contained in the parent class.
+
+  * Child classes now must implement a :func:`~halo.profile_base.HaloDensityProfile.setNativeParameters`
+    function that needs to be able to accept any mass definition unless the ``allowed_mdefs``
+    parameter is set when calling the parent constructor. 
+
+  * All derived classes must now contain a normalization ``rhos`` because this variable is used to
+    renormalize the profile in the presence of outer terms. The exception are parameter-free
+    profiles, such as splines.
+
+  * The generalized constructor fixes a previous issue when creating profiles with outer
+    (infalling) terms. If the profile parameters are determined from a mass and concentration,
+    and the outer profile depends on a radius such as R200m, the process of finding the profile
+    parameters is iterative. This iteration was not performed for all profiles.
+
+* Easier construction of composite (inner + outer) profiles
+  
+  * The new :func:`~halo.profile_composite.compositeProfile` function allows the user to easily
+    create any combination of inner and outer profiles using shortcodes.
+  * The user is responsible for passing the appropriate parameters to this function; otherwise,
+    respective constructors throw errors.
+
+* The new :doc:`halo_profile_diemer22` has been added; this form separately describes the orbiting
+  and infalling components and is now recommended over the DK14 profile.
+
+* The DK14 profile has been reworked
+
+  * In the DK14 profile, all options have been removed as they are only needed for the 
+    constructor.
+  * The ``getDK14ProfileWithOuterTerms`` function has been removed from the DK14 profile module, 
+    and has been replaced by the general :func:`~halo.profile_composite.compositeProfile` function. The
+    signature is similar, but the parameter names are now consistent with the constructors of the 
+    respective outer terms. 
+  * The function ``DK14Profile.M4rs`` has been removed. The result can easily
+    be found by evaluating the enclosed mass within four scale radii.
+
+* Changes in other profile modules
+
+  * For the NFW profile, the ``fundamentalParameters`` function (which has now been replaced by
+    :func:`~halo.profile_nfw.NFWProfile.setNativeParameters`) was a class method, meaning that 
+    it could be called without calling the constructor first. This routine has been renamed to 
+    :func:`~halo.profile_nfw.NFWProfile.nativeParameters`.
+  
+* Fitting
+
+  * The transformation between linear and log parameters has been radically simplified. All 
+    parameters, including those of the outer profiles, are now by default fit in log space.
+    This can lead to slightly different results compared to previous versions. The user can change
+    this behavior by overwriting certain functions.
+  * The old ``scipy.optimize.leastsq`` function was replaced by the newer 
+    ``scipy.optimize.least_squares`` interface, which contains more advanced algorithms such 
+    ``trf`` (the new default fitter).
+  * The user can now pass parameter bounds in least-squares fits.
+  * MCMC fits can now also be performed in log space by default to ensure the positivity of the 
+    parameters.
+
+* All profile documentation pages have been overhauled.
+* The profile :doc:`tutorials` have been improved and expanded.
+* The unit test suite has been improved and expanded.
 
 A few other changes:
 
@@ -157,7 +190,7 @@ the sigma function.
 .. rubric:: Version 1.2.10 (released 08/05/2019)
 
 The changes in this version were largely inspired by a detailed comparison with the 
-`Core Cosmology Library <https://github.com/LSSTDESC/CCL>`_ (CCL) by the LSST-DESC. 
+`Core Cosmology Library <https://github.com/LSSTDESC/CCL>`__ (CCL) by the LSST-DESC. 
 
 * Physical and astronomical constants were updated to IAU 2015 / PDG 2018 standard, including
   the definition of parsec/kpc/Mpc and the solar mass. Those changes translate into changes in 
@@ -237,7 +270,7 @@ This version corresponds to the published version of the code paper.
 * Many small fixes to the documentation, thanks to Jerry Maggioncalda for his careful proofreading!
 * Activated continuous integration (i.e., automatically running the unit test suite after every
   commit). Thanks to Joseph Kuruvilla for setting that up!
-* The `Diemer & Joyce 2018 <https://ui.adsabs.harvard.edu/?#abs/2018arXiv180907326D>`_
+* The `Diemer & Joyce 2018 <https://ui.adsabs.harvard.edu/?#abs/2018arXiv180907326D>`__
   concentration model is presented in its published form. The routine was
   sped up through a pre-computed, stored interpolation table.
 * The :func:`~halo.profile_nfw.NFWProfile.xDelta` function in the :doc:`halo_profile_nfw` module was
@@ -291,7 +324,7 @@ Other changes:
 
 * The function ``plotChain`` was removed from the :doc:`utils_mcmc` module to avoid including the
   ``matplotlib`` library. The function is still available as part of the
-  `MCMC tutorial <_static/tutorial_utils_mcmc.html>`_.
+  `MCMC tutorial <_static/tutorial_utils_mcmc.html>`__.
 * Numerous small improvements were made in the documentation. 
 
 .. rubric:: Version 1.2.1 (released 12/13/2017)

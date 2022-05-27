@@ -35,7 +35,7 @@ are also returned.
 
 Pseudo-evolution is the evolution of a spherical overdensity halo radius, mass, and concentration 
 due to an evolving reference density (see 
-`Diemer et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...25D>`_ for more information). 
+`Diemer et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...25D>`__ for more information). 
 The :func:`pseudoEvolve` function is a general implementation of this effect. The function 
 assumes a profile that is fixed in physical units, and computes how the radius, mass and 
 concentration evolve due to changes in redshift (at fixed mass definition). In the following 
@@ -256,7 +256,7 @@ def pseudoEvolve(M, c, mdef, z_i, z_f,
 
 	This function computes the evolution of spherical overdensity mass and radius due to a changing 
 	reference density, an effect called 'pseudo-evolution' (e.g.,
-	`Diemer et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...25D>`_). The user passes 
+	`Diemer et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...25D>`__). The user passes 
 	the mass and concentration of the density profile, together with a redshift and mass definition 
 	to which ``M`` and ``c`` refer.
 	
