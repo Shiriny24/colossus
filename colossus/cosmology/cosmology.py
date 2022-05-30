@@ -106,9 +106,9 @@ cosmologies with the :func:`fromAstropy` function::
 	ns = 0.96
 	
 	astropy_cosmo = astropy.cosmology.FlatLambdaCDM(**params)
-	colossus_cosmo = cosmology.fromAstropy(astropy_cosmo, sigma8, ns, name = 'my_cosmo')
+	colossus_cosmo = cosmology.fromAstropy(astropy_cosmo, sigma8, ns, cosmo_name = 'my_cosmo')
 
-The ``name`` parameter is not necessary if a name is set in the Astropy cosmology. The ``sigma8``
+The ``cosmo_name`` parameter is not necessary if a name is set in the Astropy cosmology. The ``sigma8``
 and ``ns`` parameters must be set by the user because the Astropy cosmology does not contain them
 (because it does not compute power spectrum-related quantities). The conversion supports the 
 ``LambdaCDM``, ``FlatLambdaCDM``, ``wCDM``, ``FlatwCDM``, ``w0waCDM``, and ``Flatw0waCDM`` 
