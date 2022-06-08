@@ -2053,10 +2053,15 @@ class Cosmology(object):
 	# table created here is complicated, with extra resolution around the BAO scale.
 	#
 	# We need to separately treat the cases of models that can cover the entire range of the 
-	# Colossus P(k) lookup table, and user-supplied, tabulate 
+	# Colossus P(k) lookup table, and user-supplied, tabulated power spectra.
+	#
+	# Note that executing this function with the ignore_norm option can lead to funny behavior,
+	# as in, the interpolator is created ignoring the normalization. This will lead to 
+	# unnormalized values of sigma and other quantities later. Thus, it matters whether the 
+	# function is first called with ignore_norm False or True.
 
 	def _matterPowerSpectrumInterpolator(self, model = defaults.POWER_SPECTRUM_MODEL, 
-										path = None, inverse = False):
+										path = None, inverse = False, ignore_norm = False):
 		
 		# We need to be a little careful in the case of a path being given. It is possible 
 		# that the power spectrum from the corresponding table has been evaluated and thus
@@ -2102,7 +2107,7 @@ class Cosmology(object):
 					k_computed += self.k_Pk_Nbins[i]
 				
 				# If the Pk data is not > 0, this leads to serious crashes
-				data_Pk = self._matterPowerSpectrumExact(data_k, model = model, ignore_norm = False)
+				data_Pk = self._matterPowerSpectrumExact(data_k, model = model, ignore_norm = ignore_norm)
 				if (np.min(data_Pk) <= 0.0):
 					raise Exception('Got zero or negative data in power spectrum from model %s, cannot compute log.' % model)
 
@@ -2128,10 +2133,10 @@ class Cosmology(object):
 						raise Exception('Please set persistence to read in order to load a power spectrum from a file.')
 					else:
 						raise Exception('Could not load power spectrum table from path "%s".' % (path))
-					
+				
 				table_k = 10**table[0]
 				table_P = self._matterPowerSpectrumExact(table_k, model = model, path = path,
-														ignore_norm = False)
+														ignore_norm = ignore_norm)
 				table[1] = np.log10(table_P)
 				self.storageUser.storeObject(table_name, table, persistent = False)
 				
@@ -2403,7 +2408,7 @@ class Cosmology(object):
 			# get the interpolator object and use it directly, rather than using the P(k) function.
 			ps_interpolator = None
 			if (not exact_ps) and self.interpolation:
-				ps_interpolator = self._matterPowerSpectrumInterpolator(**ps_args)
+				ps_interpolator = self._matterPowerSpectrumInterpolator(ignore_norm = ignore_norm, **ps_args)
 
 			# The infinite integral over k often causes trouble when the tophat filter is used. Thus,
 			# we determine sensible limits and integrate over a finite k-volume. The limits are
