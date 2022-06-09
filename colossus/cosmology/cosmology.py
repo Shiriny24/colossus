@@ -1988,7 +1988,7 @@ class Cosmology(object):
 
 	def _matterPowerSpectrumLimits(self, model = defaults.POWER_SPECTRUM_MODEL, path = None):
 		
-		if path is None:
+		if (model in power_spectrum.models) and (path is None):
 			k_min = self.k_Pk[0]
 			k_max = self.k_Pk[-1]
 		else:

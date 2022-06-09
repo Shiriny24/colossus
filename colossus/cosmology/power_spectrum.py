@@ -24,9 +24,10 @@ be passed as the ``model`` parameter to the :func:`transferFunction` function:
 	================== ==================================================================================== ======================================
 	ID                 Reference                                                                            Comment
 	================== ==================================================================================== ======================================
-	sugiyama95         `Sugiyama 1995 <https://ui.adsabs.harvard.edu/abs/1995ApJS..100..281S/abstract>`__   A semi-analytical fitting function
+	sugiyama95         `Sugiyama 1995 <https://ui.adsabs.harvard.edu/abs/1995ApJS..100..281S>`__            A semi-analytical fitting function
 	eisenstein98       `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`__         A semi-analytical fitting function
 	eisenstein98_zb    `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`__         The zero-baryon version, i.e., no BAO
+	camb               `Lewis et al. 2000 <https://ui.adsabs.harvard.edu/abs/2000ApJ...538..473L>`__        The CAMB Boltzmann code
 	================== ==================================================================================== ======================================
 
 ---------------------------------------------------------------------------------------------------
@@ -36,10 +37,12 @@ Module contents
 .. autosummary::
 	PowerSpectrumModel
 	models
+	powerSpectrum
 	transferFunction
 	modelSugiyama95
 	modelEisenstein98
 	modelEisenstein98ZeroBaryon
+	modelCamb
 	
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -50,6 +53,7 @@ Module reference
 
 import numpy as np
 from collections import OrderedDict
+import warnings
 
 from colossus import defaults
 from colossus.utils import utilities
@@ -60,11 +64,24 @@ class PowerSpectrumModel():
 	"""
 	Characteristics of power spectrum models.
 	
-	This object is currently empty. The :data:`models` dictionary contains one item of this 
-	class for each available model.
+	The :data:`models` dictionary contains one item of this class for each available model.
+
+	Parameters
+	-------------------------------------------------------------------------------------------
+	output: str
+		Indicates the quantity a given model outputs, which can be the transfer function (``tf``)
+		or the power spectrum (``ps``).
+	allowed_types: array_like
+		List of strings that indicate different types of power spectra that can be returned. By
+		default, the ``total`` PS is returned, but some models (i.e., Boltzmann codes) can also
+		compute the spectra of components such as CDM only.
 	"""
 		
-	def __init__(self):
+	def __init__(self, output = 'tf', allowed_types = ['total']):
+		
+		self.output = output
+		self.allowed_types = allowed_types
+		
 		return
 
 ###################################################################################################
@@ -79,12 +96,65 @@ An ordered dictionary containing one :class:`PowerSpectrumModel` entry for each 
 models['sugiyama95'] = PowerSpectrumModel()
 models['eisenstein98'] = PowerSpectrumModel()
 models['eisenstein98_zb'] = PowerSpectrumModel()
+models['camb'] = PowerSpectrumModel(output = 'pk', allowed_types = ['total', 'cdm'])
+
+###################################################################################################
+
+def powerSpectrum(model, k, cosmo, **tf_args):
+	"""
+	The power spectrum as a function of wavenumber.
+	
+	The transfer function transforms the spectrum of primordial fluctuations into the
+	linear power spectrum of the matter density fluctuations. The primordial power spectrum is 
+	usually described as a power law, leading to a power spectrum
+	
+	.. math::
+		P(k) = T(k)^2 k^{n_s}
+		
+	where P(k) is the matter power spectrum, T(k) is the transfer function, and :math:`n_s` is 
+	the tilt of the primordial power spectrum. See the :class:`~cosmology.cosmology.Cosmology` 
+	class for further  details on the cosmological parameters.
+
+	Parameters
+	-------------------------------------------------------------------------------------------
+	k: array_like
+		The wavenumber k (in comoving h/Mpc); can be a number or a numpy array.
+
+	Returns
+	-------------------------------------------------------------------------------------------
+	Pk: array_like
+		The power spectrum; has the same dimensions as ``k``.
+	"""
+
+	if model == 'sugiyama95':
+		P = modelSugiyama95(k, cosmo.h, cosmo.Om0, cosmo.Ob0, cosmo.Tcmb0)
+	elif model == 'eisenstein98':
+		P = modelEisenstein98(k, cosmo.h, cosmo.Om0, cosmo.Ob0, cosmo.Tcmb0)
+	elif model == 'eisenstein98_zb':
+		P = modelEisenstein98ZeroBaryon(k, cosmo.h, cosmo.Om0, cosmo.Ob0, cosmo.Tcmb0)
+	elif model == 'camb':
+		P = modelCamb(k, cosmo, **tf_args)
+	else:
+		raise Exception('Unknown model, %s.' % model)
+	
+	if models[model].output == 'tf':
+		P = P**2 * k**cosmo.ns
+		
+	return P
+
+###################################################################################################
+
+def modelCamb(k, cosmo, ps_type = 'total', **kwargs):
+	
+	return
 
 ###################################################################################################
 
 def transferFunction(k, h, Om0, Ob0, Tcmb0, model = defaults.POWER_SPECTRUM_MODEL):
 	"""
-	The transfer function.
+	The transfer function (deprecated).
+	
+	This function is deprecated, :func:`powerSpectrum` should be used instead.
 	
 	The transfer function transforms the spectrum of primordial fluctuations into the
 	linear power spectrum of the matter density fluctuations. The primordial power spectrum is 
@@ -115,6 +185,8 @@ def transferFunction(k, h, Om0, Ob0, Tcmb0, model = defaults.POWER_SPECTRUM_MODE
 	Tk: array_like
 		The transfer function; has the same dimensions as ``k``.
 	"""
+	
+	warnings.warn('transferFunction() is deprecated and will be removed in a future version. Please use powerSpectrum() instead.')
 	
 	if model == 'sugiyama95':
 		T = modelSugiyama95(k, h, Om0, Ob0, Tcmb0)
