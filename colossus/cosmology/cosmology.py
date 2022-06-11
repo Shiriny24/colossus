@@ -1957,24 +1957,33 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	def _matterPowerSpectrumName(self, model):
+	def _matterPowerSpectrumName(self, model, **tf_args):
 		
-		return 'ps_%s' % (model)
+		name = 'ps_%s' % (model)
+
+		if ('ps_type' in tf_args) and (tf_args['ps_type'] != 'tot'):
+			name += '-%s' % (tf_args['ps_type'])
+		
+		return name
 	
 	###############################################################################################
 
-	def _matterPowerSpectrumNormName(self, model):
+	def _matterPowerSpectrumNormName(self, model, **tf_args):
 		
-		return 'ps_norm_%s' % (model)
+		name = self._matterPowerSpectrumName(model, **tf_args)
+		name = 'ps_norm_' + name[3:]
+		
+		return name
 	
 	###############################################################################################
 
-	def _matterPowerSpectrumNorm(self, model, path = None):
+	def _matterPowerSpectrumNorm(self, model, path = None, **tf_args):
 
-		norm_name = self._matterPowerSpectrumNormName(model)
+		norm_name = self._matterPowerSpectrumNormName(model, **tf_args)
 		norm = self.storageUser.getStoredObject(norm_name)
 		if norm is None:
 			ps_args = {'model': model, 'path': path}
+			ps_args.update(tf_args)
 			sigma_8Mpc = self._sigmaExact(8.0, filt = 'tophat', ps_args = ps_args, exact_ps = True, 
 										ignore_norm = True)
 			norm = (self.sigma8 / sigma_8Mpc)**2
@@ -1986,13 +1995,17 @@ class Cosmology(object):
 
 	# Utility to get the min and max k for which a power spectrum is valid. Only for internal use.
 
-	def _matterPowerSpectrumLimits(self, model = defaults.POWER_SPECTRUM_MODEL, path = None):
+	def _matterPowerSpectrumLimits(self, model = defaults.POWER_SPECTRUM_MODEL, path = None,
+								**tf_args):
 		
-		if (model in power_spectrum.models) and (path is None):
-			k_min = self.k_Pk[0]
-			k_max = self.k_Pk[-1]
+		if (model in power_spectrum.models):
+			k_min, k_max = power_spectrum.powerSpectrumLimits(model, **tf_args)
+			if k_min is None:
+				k_min = self.k_Pk[0]
+			if k_max is None:
+				k_max = self.k_Pk[-1]
 		else:
-			table_name = self._matterPowerSpectrumName(model)
+			table_name = self._matterPowerSpectrumName(model, **tf_args)
 			table = self.storageUser.getStoredObject(table_name, path = path)
 			if table is None:
 				raise Exception('Could not load data table, %s.' % (table_name))
@@ -2004,7 +2017,7 @@ class Cosmology(object):
 	###############################################################################################
 
 	def _matterPowerSpectrumExact(self, k, model = defaults.POWER_SPECTRUM_MODEL, path = None,
-								ignore_norm = False):
+								ignore_norm = False, **tf_args):
 
 		if self.power_law:
 			
@@ -2013,12 +2026,11 @@ class Cosmology(object):
 		
 		elif model in power_spectrum.models:
 			
-			T = power_spectrum.transferFunction(k, self.h, self.Om0, self.Ob0, self.Tcmb0, model = model)
-			Pk = T * T * k**self.ns
+			Pk = power_spectrum.powerSpectrum(k, model, self, output = 'ps', **tf_args)
 
 		else:
 			
-			table_name = self._matterPowerSpectrumName(model)
+			table_name = self._matterPowerSpectrumName(model, **tf_args)
 			table = self.storageUser.getStoredObject(table_name, path = path)
 			
 			if table is None:
@@ -2040,7 +2052,7 @@ class Cosmology(object):
 		# interpolation = False; otherwise, we get into an infinite loop of computing sigma8, P(k), 
 		# sigma8 etc.
 		if not ignore_norm:
-			norm = self._matterPowerSpectrumNorm(model, path = path)
+			norm = self._matterPowerSpectrumNorm(model, path = path, **tf_args)
 			Pk *= norm
 
 		return Pk
@@ -2061,7 +2073,7 @@ class Cosmology(object):
 	# function is first called with ignore_norm False or True.
 
 	def _matterPowerSpectrumInterpolator(self, model = defaults.POWER_SPECTRUM_MODEL, 
-										path = None, inverse = False, ignore_norm = False):
+						path = None, inverse = False, ignore_norm = False, **tf_args):
 		
 		# We need to be a little careful in the case of a path being given. It is possible 
 		# that the power spectrum from the corresponding table has been evaluated and thus
@@ -2069,13 +2081,13 @@ class Cosmology(object):
 		# the power spectrum has not been normalized yet. In that case, we should not call the
 		# function that creates the interpolator because it *will* create an unnormalized
 		# interpolator.
-		table_name = self._matterPowerSpectrumName(model)
+		table_name = self._matterPowerSpectrumName(model, **tf_args)
 		if path is None:
 			interpolator = self.storageUser.getStoredObject(table_name,
 										interpolator = True, inverse = inverse)
 		else:
 			interpolator = None
-			norm_name = self._matterPowerSpectrumNormName(model)
+			norm_name = self._matterPowerSpectrumNormName(model, **tf_args)
 			norm = self.storageUser.getStoredObject(norm_name)
 			if norm == 1.0:
 				interpolator = self.storageUser.getStoredObject(table_name,
@@ -2122,7 +2134,7 @@ class Cosmology(object):
 				# to the correct sigma8 which happens in the exact Pk function.
 				if self.print_info:
 					print('Cosmology.matterPowerSpectrum: Loading power spectrum from file %s.' % (path))				
-				table_name = self._matterPowerSpectrumName(model)
+				table_name = self._matterPowerSpectrumName(model, **tf_args)
 				table = self.storageUser.getStoredObject(table_name, path = path)
 				
 				# If the stored object function returns None, that can be because persistence is 
@@ -2143,7 +2155,7 @@ class Cosmology(object):
 				# We also need to overwrite the norm with one, otherwise the interpolator will not
 				# match up with the result of the exact power spectrum function which will find the
 				# new, normed interpolator but still apply the old normalization.
-				norm_name = self._matterPowerSpectrumNormName(model)
+				norm_name = self._matterPowerSpectrumNormName(model, **tf_args)
 				self.storageUser.storeObject(norm_name, 1.0, persistent = False)
 
 			interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, 
@@ -2154,12 +2166,12 @@ class Cosmology(object):
 	###############################################################################################
 
 	def matterPowerSpectrum(self, k, z = 0.0, model = defaults.POWER_SPECTRUM_MODEL, path = None,
-						derivative = False):
+						derivative = False, **tf_args):
 		"""
 		The matter power spectrum at a scale k.
 		
 		By default, the power spectrum is computed using a model for the transfer function 
-		(see the :func:`~cosmology.power_spectrum.transferFunction` function). The default 
+		(see the :func:`~cosmology.power_spectrum.powerSpectrum` function). The default 
 		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`__ 
 		approximation is accurate to about 5%, and the interpolation introduces errors 
 		significantly smaller than that.
@@ -2202,6 +2214,8 @@ class Cosmology(object):
 			:math:`({\\rm Mpc}/h)^3`).
 		derivative: bool
 			If False, return P(k). If True, return :math:`d \log(P) / d \log(k)`.
+		tf_args: kwargs
+			Arguments passed to the :func:`~cosmology.power_spectrum.powerSpectrum` function.
 			
 		Returns
 		-------------------------------------------------------------------------------------------
@@ -2213,7 +2227,7 @@ class Cosmology(object):
 
 		if self.interpolation:
 			
-			interpolator = self._matterPowerSpectrumInterpolator(model, path)
+			interpolator = self._matterPowerSpectrumInterpolator(model, path, **tf_args)
 			
 			# If the requested radius is outside the range, give a detailed error message.
 			k_req = np.min(k)
@@ -2421,6 +2435,9 @@ class Cosmology(object):
 			# use the limits of the table.
 			#
 			# If the user has decided both kmin and kmax, there is no need to find them numerically.
+			
+			# TODO also if using Boltzmann code
+			
 			if ('path' in ps_args) and (ps_args['path'] is not None):
 
 				if kmin is not None:

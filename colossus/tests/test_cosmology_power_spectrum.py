@@ -28,10 +28,12 @@ class TCTransferFunction(test_colossus.ColosssusTestCase):
 		cosmology.setCosmology('planck15', {'persistence': ''})
 		pass
 	
-	def test_transferFunctionEisenstein98(self):
+	def test_transferFunction(self):
 		models = power_spectrum.models
 		cosmo = cosmology.getCurrent()
 		for m in models.keys():
+			if m in ['camb']:
+				continue
 			msg = 'Failure in model = %s' % (m)
 			if m == 'sugiyama95':
 				correct = [9.811438043156e-01, 1.349997806341e-08]
@@ -42,8 +44,7 @@ class TCTransferFunction(test_colossus.ColosssusTestCase):
 			else:
 				msg = 'Unknown model, %s.' % m
 				raise Exception(msg)
-			T = power_spectrum.transferFunction(TEST_K, cosmo.h, cosmo.Om0, cosmo.Ob0, cosmo.Tcmb0, 
-										model = m)
+			T = power_spectrum.powerSpectrum(TEST_K, m, cosmo, output = 'tf')
 			self.assertAlmostEqualArray(T, correct, msg = msg)
 
 ###################################################################################################

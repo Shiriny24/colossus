@@ -16,7 +16,7 @@ Power spectrum models
 ---------------------------------------------------------------------------------------------------
 
 The following models are supported, and are listed in the :data:`models` dictionary. Their ID can 
-be passed as the ``model`` parameter to the :func:`transferFunction` function: 
+be passed as the ``model`` parameter to the :func:`powerSpectrum` function: 
 
 .. table::
 	:widths: auto
@@ -38,7 +38,6 @@ Module contents
 	PowerSpectrumModel
 	models
 	powerSpectrum
-	transferFunction
 	modelSugiyama95
 	modelEisenstein98
 	modelEisenstein98ZeroBaryon
@@ -78,7 +77,7 @@ class PowerSpectrumModel():
 	The :data:`models` dictionary contains one item of this class for each available model.
 
 	Parameters
-	-------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------
 	output: str
 		Indicates the quantity a given model outputs, which can be the transfer function (``tf``)
 		or the power spectrum (``ps``).
@@ -107,13 +106,13 @@ An ordered dictionary containing one :class:`PowerSpectrumModel` entry for each 
 models['sugiyama95'] = PowerSpectrumModel()
 models['eisenstein98'] = PowerSpectrumModel()
 models['eisenstein98_zb'] = PowerSpectrumModel()
-models['camb'] = PowerSpectrumModel(output = 'pk', allowed_types = ['total', 'cdm'])
+models['camb'] = PowerSpectrumModel(output = 'ps', allowed_types = ['total', 'cdm'])
 
 ###################################################################################################
 
-def powerSpectrum(model, k, cosmo, **tf_args):
+def powerSpectrum(k, model, cosmo, output = 'ps', **tf_args):
 	"""
-	The power spectrum as a function of wavenumber.
+	The power spectrum (or transfer function) as a function of wavenumber.
 	
 	The transfer function transforms the spectrum of primordial fluctuations into the
 	linear power spectrum of the matter density fluctuations. The primordial power spectrum is 
@@ -127,31 +126,84 @@ def powerSpectrum(model, k, cosmo, **tf_args):
 	class for further  details on the cosmological parameters.
 
 	Parameters
-	-------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------
 	k: array_like
 		The wavenumber k (in comoving h/Mpc); can be a number or a numpy array.
-
+	model: str
+		The power spectrum model (see table above).
+	cosmo: cosmology
+		A :class:`~cosmology.cosmology.Cosmology` object.
+	output: str
+		Indicates which quantity should be returned, namely the transfer function (``tf``)
+		or the power spectrum (``ps``).
+	tf_args: kwargs
+		Keyword arguments that are passed to the function evaluating the given model.
+		
 	Returns
-	-------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------
 	Pk: array_like
 		The power spectrum; has the same dimensions as ``k``.
 	"""
 
 	if model == 'sugiyama95':
-		P = modelSugiyama95(k, cosmo.h, cosmo.Om0, cosmo.Ob0, cosmo.Tcmb0)
+		ret = modelSugiyama95(k, cosmo.h, cosmo.Om0, cosmo.Ob0, cosmo.Tcmb0)
 	elif model == 'eisenstein98':
-		P = modelEisenstein98(k, cosmo.h, cosmo.Om0, cosmo.Ob0, cosmo.Tcmb0)
+		ret = modelEisenstein98(k, cosmo.h, cosmo.Om0, cosmo.Ob0, cosmo.Tcmb0)
 	elif model == 'eisenstein98_zb':
-		P = modelEisenstein98ZeroBaryon(k, cosmo.h, cosmo.Om0, cosmo.Ob0, cosmo.Tcmb0)
+		ret = modelEisenstein98ZeroBaryon(k, cosmo.h, cosmo.Om0, cosmo.Ob0, cosmo.Tcmb0)
 	elif model == 'camb':
-		P = modelCamb(k, cosmo, **tf_args)
+		ret = modelCamb(k, cosmo, **tf_args)
 	else:
 		raise Exception('Unknown model, %s.' % model)
 	
-	if models[model].output == 'tf':
-		P = P**2 * k**cosmo.ns
+	if output != models[model].output:
+		if (models[model].output == 'tf') and (output == 'ps'):
+			ret = ret**2 * k**cosmo.ns
+		elif (models[model].output == 'ps') and (output == 'tf'):
+			ret = np.sqrt(ret / k**cosmo.ns)
+		else:
+			raise Exception('Unrecognized combination of model (%s) and output (%s) quantities.' \
+						% (models[model].output, output))
+			
+	return ret
+
+###################################################################################################
+
+def powerSpectrumLimits(model, **tf_args):
+	"""
+	The lower and upper wavenumbers between which a model can be evaluated.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	model: str
+		The power spectrum model (see table above).
+	tf_args: kwargs
+		Keyword arguments that are passed to the function evaluating the given model. These 
+		arguments need to be consistent with those passed when the model is evaluated.
 		
-	return P
+	Returns
+	-----------------------------------------------------------------------------------------------
+	kmin: float
+		The lowest wavenumber (in comoving h/Mpc) where the model can be evaluated.
+	kmax: float
+		The highest wavenumber (in comoving h/Mpc) where the model can be evaluated.
+	"""
+
+	kmin = None
+	kmax = None
+
+	if model in ['sugiyama95', 'eisenstein98', 'eisenstein98_zb']:
+		pass
+	elif model == 'camb':
+		kmin = CAMB_KMIN
+		if 'kmax' in tf_args:
+			kmax = tf_args[kmax]
+		else:
+			kmax = CAMB_KMAX
+	else:
+		raise Exception('Unknown model, %s.' % model)
+	
+	return kmin, kmax
 
 ###################################################################################################
 
@@ -161,7 +213,7 @@ def modelCamb(k, cosmo, ps_type = 'tot', kmax = CAMB_KMAX, **kwargs):
 	
 	This function translates a Colossus Cosmology object into parameters for the CAMB code and 
 	computes the power spectrum. See the 
-	`CAMB documentation <https://camb.readthedocs.io/en/latest/index.html>'__ for information
+	`CAMB documentation <https://camb.readthedocs.io/en/latest/index.html>`__ for information
 	on possible keyword arguments and details about the calculations.
 
 	Parameters
@@ -295,7 +347,7 @@ def transferFunction(k, h, Om0, Ob0, Tcmb0, model = defaults.POWER_SPECTRUM_MODE
 	class for further  details on the cosmological parameters.
 
 	Parameters
-	-------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------
 	k: array_like
 		The wavenumber k (in comoving h/Mpc); can be a number or a numpy array.
 	h: float
@@ -308,7 +360,7 @@ def transferFunction(k, h, Om0, Ob0, Tcmb0, model = defaults.POWER_SPECTRUM_MODE
 		The temperature of the CMB at z = 0 in Kelvin.
 
 	Returns
-	-------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------
 	Tk: array_like
 		The transfer function; has the same dimensions as ``k``.
 	"""
@@ -391,7 +443,7 @@ def modelEisenstein98(k, h, Om0, Ob0, Tcmb0):
 	details). 
 
 	Parameters
-	-------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------
 	k: array_like
 		The wavenumber k (in comoving h/Mpc); can be a number or a numpy array.
 	h: float
