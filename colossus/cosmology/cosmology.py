@@ -1962,37 +1962,13 @@ class Cosmology(object):
 
 	def _matterPowerSpectrumName(self, model, **tf_args):
 		
-		name = 'ps_%s' % (model)
-
-		if ('ps_type' in tf_args) and (tf_args['ps_type'] != 'tot'):
-			name += '-%s' % (tf_args['ps_type'])
-		
-		return name
+		return 'ps_%s' % (power_spectrum.powerSpectrumModelName(model, **tf_args))
 	
 	###############################################################################################
 
 	def _matterPowerSpectrumNormName(self, model, **tf_args):
 		
-		name = self._matterPowerSpectrumName(model, **tf_args)
-		name = 'ps_norm_' + name[3:]
-		
-		return name
-	
-	###############################################################################################
-
-	def _matterPowerSpectrumNorm(self, model, path = None, **tf_args):
-
-		norm_name = self._matterPowerSpectrumNormName(model, **tf_args)
-		norm = self.storageUser.getStoredObject(norm_name)
-		if norm is None:
-			ps_args = {'model': model, 'path': path}
-			ps_args.update(tf_args)
-			sigma_8Mpc = self._sigmaExact(8.0, filt = 'tophat', ps_args = ps_args, exact_ps = True, 
-										ignore_norm = True)
-			norm = (self.sigma8 / sigma_8Mpc)**2
-			self.storageUser.storeObject(norm_name, norm, persistent = False)	
-			
-		return norm
+		return 'ps_norm_%s' % (power_spectrum.powerSpectrumModelName(model, **tf_args))
 	
 	###############################################################################################
 
@@ -2059,7 +2035,7 @@ class Cosmology(object):
 		# interpolation = False; otherwise, we get into an infinite loop of computing sigma8, P(k), 
 		# sigma8 etc.
 		if not ignore_norm:
-			norm = self._matterPowerSpectrumNorm(model, path = path, **tf_args)
+			norm = self.matterPowerSpectrumNorm(model, path = path, **tf_args)
 			Pk *= norm
 
 		return Pk
@@ -2136,7 +2112,7 @@ class Cosmology(object):
 					data_k = 10**np.linspace(np.log10(kmin), np.log10(kmax), self.k_Pk_Nbins_equal)
 				
 				# If the Pk data is not > 0, this leads to serious crashes
-				data_Pk = self._matterPowerSpectrumExact(data_k, model = model, ignore_norm = ignore_norm)
+				data_Pk = self._matterPowerSpectrumExact(data_k, model = model, ignore_norm = ignore_norm, **tf_args)
 				if (np.min(data_Pk) <= 0.0):
 					raise Exception('Got zero or negative data in power spectrum from model %s, cannot compute log.' % model)
 
@@ -2281,6 +2257,46 @@ class Cosmology(object):
 			Pk *= self.growthFactor(z)**2
 
 		return Pk
+	
+	###############################################################################################
+
+	def matterPowerSpectrumNorm(self, model, path = None, **tf_args):
+		"""
+		The normalization of the power spectrum to the given sigma8.
+		
+		Internally, Colossus normalizes all power spectra such that they integrate to the value of
+		sigma8 set in the cosmology object, regardless of whether the power spectrum was generated
+		using a fitting function, table, or Boltzmann code. In some cases, these normalizations 
+		may be useful, for example when comparing the original amplitude of the power spectra of
+		components such as dark matter and baryons.
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		model: str
+			A model for the power spectrum (see the :mod:`cosmology.power_spectrum` module).
+		tf_args: kwargs
+			Arguments passed to the :func:`~cosmology.power_spectrum.powerSpectrum` function.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		norm: float
+			The number that, when multiplied with the power spectrum as output by the 
+			:func:`~cosmology.power_spectrum.powerSpectrum` function, normalizes the spectrum to 
+			the sigma8 set in the cosmology. Note that this number can take on arbitrary values
+			that depend on the power spectrum models and/or user-defined parameters.
+		"""
+
+		norm_name = self._matterPowerSpectrumNormName(model, **tf_args)
+		norm = self.storageUser.getStoredObject(norm_name)
+		if norm is None:
+			ps_args = {'model': model, 'path': path}
+			ps_args.update(tf_args)
+			sigma_8Mpc = self._sigmaExact(8.0, filt = 'tophat', ps_args = ps_args, exact_ps = True, 
+										ignore_norm = True)
+			norm = (self.sigma8 / sigma_8Mpc)**2
+			self.storageUser.storeObject(norm_name, norm, persistent = False)	
+			
+		return norm
 	
 	###############################################################################################
 
@@ -2581,7 +2597,8 @@ class Cosmology(object):
 			raise Exception('The ps_args dictionary must contain the model keyword, even if the power spectrum is loaded from file. Found %s.' \
 						% (str(ps_args)))
 		
-		table_name = 'sigma%d_%s_%s_%s' % (j, self.name, ps_args['model'], filt)
+		ps_model_name = self._matterPowerSpectrumName(**ps_args)
+		table_name = 'sigma%d_%s_%s_%s' % (j, self.name, ps_model_name, filt)
 		if kmin is not None:
 			table_name += '_kmin%.4e' % (kmin)
 		if kmax is not None:
@@ -2826,7 +2843,7 @@ class Cosmology(object):
 		# the other PS-related functions.
 		if self.power_law:
 			xi = cf_power_law(self.power_law_n, R)
-			norm = self._matterPowerSpectrumNorm(**ps_args)
+			norm = self.matterPowerSpectrumNorm(**ps_args)
 			xi *= norm
 			
 		else:
@@ -2866,7 +2883,12 @@ class Cosmology(object):
 
 	def _correlationFunctionInterpolator(self, ps_args):
 
-		table_name = 'correlation_%s_%s' % (self.name, ps_args['model'])
+		if not 'model' in ps_args:
+			raise Exception('The ps_args dictionary must contain the model keyword, even if the power spectrum is loaded from file. Found %s.' \
+						% (str(ps_args)))
+
+		ps_model_name = self._matterPowerSpectrumName(**ps_args)
+		table_name = 'correlation_%s_%s' % (self.name, ps_model_name)
 		interpolator = self.storageUser.getStoredObject(table_name, interpolator = True)
 		
 		if interpolator is None:

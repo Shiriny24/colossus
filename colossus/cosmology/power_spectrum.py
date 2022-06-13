@@ -69,12 +69,6 @@ CAMB_KMAX = 1E3
 different upper limit, but that may increase the runtime significantly."""
 
 ###################################################################################################
-# GLOBAL VARIABLES
-###################################################################################################
-
-camb_results = None
-
-###################################################################################################
 
 class PowerSpectrumModel():
 	"""
@@ -172,6 +166,39 @@ def powerSpectrum(k, model, cosmo, output = 'ps', **tf_args):
 						% (models[model].output, output))
 			
 	return ret
+
+###################################################################################################
+
+def powerSpectrumModelName(model, **tf_args):
+	"""
+	A unique internal name for the given power spectrum model (and parameters).
+	
+	By default, the internal name used for power spectrum models is just the name of the model 
+	itself, but there are certain parameters that alter the spectrum so much that Colossus keeps
+	track of separate spectra. In particular, the user can request the spectra of components such
+	as dark matter and baryons (see :func:`powerSpectrum`), which are folded into the unique 
+	model name.	
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	model: str
+		The power spectrum model (see table above).
+	tf_args: kwargs
+		Keyword arguments that are passed to the function evaluating the given model. These 
+		arguments need to be consistent with those passed when the model is evaluated.
+		
+	Returns
+	-----------------------------------------------------------------------------------------------
+	name: str
+		A unique name for this power spectrum model.
+	"""
+
+	name = model
+
+	if ('ps_type' in tf_args) and (tf_args['ps_type'] != 'tot'):
+		name += '-%s' % (tf_args['ps_type'])
+	
+	return name
 
 ###################################################################################################
 
@@ -275,8 +302,10 @@ def modelCamb(k, cosmo, ps_type = 'tot', kmax = CAMB_KMAX, **kwargs):
 		kmin_eval = k_array[0]
 		kmax_eval = k_array[-1]
 		nk_eval = len(k_array)
-	
-	global camb_results
+
+	# Get camb_results from storage of cosmology object. This way, we know that the object is 
+	# deleted when the cosmology changes, and that we are not dealing with multiple cosmologies.
+	camb_results = cosmo.storageUser.getStoredObject('camb_results')
 
 	if camb_results is None:
 	
@@ -320,10 +349,15 @@ def modelCamb(k, cosmo, ps_type = 'tot', kmax = CAMB_KMAX, **kwargs):
 	
 		# Set parameters for transfer function
 		cp.set_matter_power(redshifts = [0.0], kmax = kmax, accurate_massive_neutrino_transfers = False)
-		cp.Transfer.high_precision = False
+		cp.Transfer.high_precision = True
 		
 		# Initialize CAMB calculations
 		camb_results = camb.get_results(cp)
+		
+		# Store the results in the cosmology's storage system, but do not write it to disk between
+		# runs (because the user might make different choices about the CAMB parameters, which 
+		# would be hard to keep track of).
+		cosmo.storageUser.storeObject('camb_results', camb_results, persistent = False)
 	
 	# Evaluate power spectrum
 	k_camb, _, P = camb_results.get_matter_power_spectrum(kmin_eval, kmax_eval, npoints = nk_eval, 
