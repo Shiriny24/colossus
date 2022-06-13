@@ -149,6 +149,7 @@ Module reference
 import numpy as np
 import scipy.interpolate
 from collections import OrderedDict
+import warnings
 
 from colossus import defaults
 from colossus.utils import utilities
@@ -387,7 +388,7 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 	mask, _ = utilities.getArray(mask)
 	x = x[mask]
 	if np.count_nonzero(mask) == 0:
-		print('WARNING: Found no input values within the limits of model %s.' % model)
+		warnings.warn('Found no input values within the limits of model %s.' % model)
 		return np.array([]), mask
 	if q_in == 'Gamma':
 		Gamma = x

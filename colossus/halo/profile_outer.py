@@ -59,6 +59,7 @@ import scipy.misc
 import abc
 import collections
 import six
+import warnings
 
 from colossus.utils import utilities
 from colossus import defaults
@@ -316,7 +317,7 @@ class OuterTermMeanDensity(OuterTerm):
 			An array of zeros.
 		"""
 		
-		print('WARNING: Ignoring surface density of mean-density outer profile. This term should be removed before evaluating the surface density.')
+		warnings.warn('Ignoring surface density of mean-density outer profile. This term should be removed before evaluating the surface density.')
 		
 		return r * 0.0
 

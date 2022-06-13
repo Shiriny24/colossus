@@ -6,11 +6,39 @@ See below for a listing of the most important code and interface changes in Colo
 version 1.1.0. You can download older versions from the 
 `PyPi History <https://pypi.org/project/colossus/#history>`__ for Colossus.
 
-.. rubric:: Version 1.3.0 (released XX/XX/2022)
+.. rubric:: Version 1.3.0 (released 06/13/2022)
 
-The main content of this update is...
+This update represents a major new version. The two essential changes are a) the inclusion of 
+power spectra computed by the CAMB Boltzmann code and b) a totally reworked halo density profile 
+module.
 
-The density profiles module has been reworked entirely. Some of the following changes are 
+First, the :mod:`~cosmology.cosmology` module has been updated significantly to allow for the direct
+inclusion of CAMB power spectra. Some of the main changes are:
+
+* The user can request a new ``camb`` power spectrum model that is evaluated internally via CAMB's
+  python interface. This is much simpler to use than manually created, tabulated power spectra
+  because Colossus correctly sets the important cosmological parameters and CAMB options.
+* The ``camb`` module is now an optional dependency that will only ever be important if 
+  required. If it is not installed, an error is thrown.
+* To accommodate such generalized power spectrum models, the ``transferFunction()`` function has 
+  been deprecated and will be removed in a future release. Instead, power spectra or transfer
+  functions can be 
+  evaluated with the :func:`~cosmology.power_spectrum.powerSpectrum` function. However, in general
+  the :func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum` function within the cosmology
+  object should be used for simplicitiy and consistency.
+* The parameters to the power spectrum have been further generalized as a ``ps_args`` dictionary.
+  If any parameters are passed, this dictionary needs to be kept consistent between all functions.
+  For the CAMB model, passed parameters are fed to the initialization of the CAMB object, 
+  allowing the user to set a wide range of options. 
+* The previous ``path`` argument is now also part of ``ps_args`` in all functions (it was already
+  in some functions).
+* The public functions :func:`~cosmology.power_spectrum.powerSpectrumModelName` and 
+  :func:`~cosmology.power_spectrum.powerSpectrumLimits` have been added to the power spectrum
+  module, and :func:`~cosmology.cosmology.Cosmology.matterPowerSpectrumNorm` has been added to the
+  :class:`~cosmology.cosmology.Cosmology` class. The latter allows the user insight into the 
+  normalization used to keep power spectra consistent to a fixed value of sigma8.
+
+Second, the density profiles module has been reworked entirely. Some of the following changes are 
 unfortunately not backwards compatible, as discussed below. The general philosophy of the new 
 structure is to generalize the creation of profiles as much as possible, including the addition of 
 outer terms. The constructor function signatures have been radically simplified to mostly take 

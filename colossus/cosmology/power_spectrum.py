@@ -6,29 +6,9 @@
 ###################################################################################################
 
 """
-This module implements models for the matter power spectrum, or more exactly, for the transfer 
-function. Generally speaking, the transfer function should be evaluated using the 
+This module implements models for the matter power spectrum, which can be evaluated using the 
 :func:`~cosmology.cosmology.Cosmology.matterPowerSpectrum` function. This module is automatically
 imported with the cosmology module.
-
----------------------------------------------------------------------------------------------------
-Power spectrum models
----------------------------------------------------------------------------------------------------
-
-The following models are supported, and are listed in the :data:`models` dictionary. Their ID can 
-be passed as the ``model`` parameter to the :func:`powerSpectrum` function: 
-
-.. table::
-	:widths: auto
-
-	================== ==================================================================================== ======================================
-	ID                 Reference                                                                            Comment
-	================== ==================================================================================== ======================================
-	sugiyama95         `Sugiyama 1995 <https://ui.adsabs.harvard.edu/abs/1995ApJS..100..281S>`__            A semi-analytical fitting function
-	eisenstein98       `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`__         A semi-analytical fitting function
-	eisenstein98_zb    `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`__         The zero-baryon version, i.e., no BAO
-	camb               `Lewis et al. 2000 <https://ui.adsabs.harvard.edu/abs/2000ApJ...538..473L>`__        The CAMB Boltzmann code
-	================== ==================================================================================== ======================================
 
 ---------------------------------------------------------------------------------------------------
 Module contents
@@ -42,7 +22,7 @@ Module contents
 	modelEisenstein98
 	modelEisenstein98ZeroBaryon
 	modelCamb
-	
+
 ---------------------------------------------------------------------------------------------------
 Module reference
 ---------------------------------------------------------------------------------------------------
@@ -87,7 +67,7 @@ class PowerSpectrumModel():
 		compute the spectra of components such as CDM only.
 	"""
 		
-	def __init__(self, output = 'tf', allowed_types = ['total']):
+	def __init__(self, output = None, allowed_types = None):
 		
 		self.output = output
 		self.allowed_types = allowed_types
@@ -103,9 +83,9 @@ Dictionary containing a list of models.
 An ordered dictionary containing one :class:`PowerSpectrumModel` entry for each model.
 """
 
-models['sugiyama95'] = PowerSpectrumModel()
-models['eisenstein98'] = PowerSpectrumModel()
-models['eisenstein98_zb'] = PowerSpectrumModel()
+models['sugiyama95'] = PowerSpectrumModel(output = 'tf', allowed_types = ['total'])
+models['eisenstein98'] = PowerSpectrumModel(output = 'tf', allowed_types = ['total'])
+models['eisenstein98_zb'] = PowerSpectrumModel(output = 'tf', allowed_types = ['total'])
 models['camb'] = PowerSpectrumModel(output = 'ps', allowed_types = ['total', 'cdm'])
 
 ###################################################################################################
@@ -116,7 +96,7 @@ def powerSpectrum(k, model, cosmo, output = 'ps', **kwargs):
 	
 	The transfer function transforms the spectrum of primordial fluctuations into the
 	linear power spectrum of the matter density fluctuations. The primordial power spectrum is 
-	usually described as a power law, leading to a power spectrum
+	usually described as a power law, leading to a power spectrum of
 	
 	.. math::
 		P(k) = T(k)^2 k^{n_s}
@@ -234,7 +214,7 @@ def powerSpectrumLimits(model, **ps_args):
 	elif model == 'camb':
 		kmin = CAMB_KMIN
 		if 'kmax' in ps_args:
-			kmax = ps_args[kmax]
+			kmax = ps_args['kmax']
 		else:
 			kmax = CAMB_KMAX
 	else:
@@ -251,7 +231,14 @@ def modelCamb(k, cosmo, ps_type = 'tot', kmax = CAMB_KMAX, **kwargs):
 	This function translates a Colossus Cosmology object into parameters for the CAMB code and 
 	computes the power spectrum. See the 
 	`CAMB documentation <https://camb.readthedocs.io/en/latest/index.html>`__ for information
-	on possible keyword arguments and details about the calculations.
+	on possible keyword arguments and details about the calculations. We deliberately turn off
+	the reionization component of the power spectrum, since that is usually not desired for 
+	large-scale structure and halo calculations. 
+	
+	In general, we leave as many parameters as possible to their default values in order to take
+	advantage of future optimizations in the CAMB code. This means, on the other hand, that the
+	results depend slightly on the code version. This function was tested with versions up to 
+	CAMB 1.3.5.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------

@@ -23,7 +23,8 @@ Colossus is developed with the following chief design goals in mind:
   astrophysical quantities in a single or in a few lines of code. For this purpose, numerous fitting 
   functions have been pre-programmed.
 * *Stand-alone, pure python:* No dependencies beyond numpy and scipy, no C modules to be compiled. 
-  You can install Colossus either as a python package using pip or clone the repository.
+  You can install Colossus either as a python package using pip or clone the repository. 
+  Optionally, external Boltzmann solvers can be used.
 * *Performance:* Computationally intensive routines have been optimized for speed, often using 
   interpolation tables. Virtually all functions accept either numbers or numpy arrays as input.
   

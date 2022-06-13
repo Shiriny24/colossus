@@ -310,7 +310,7 @@ class HaloDensityProfile():
 			raise Exception('Profile parameters not converged (%.1f percent error).' % (abs(err) * 100.0))
 		
 		if abs(err) > acc_warn:
-			print('WARNING: Profile parameters converged to an accuracy of %.1f percent.' \
+			warnings.warn('Profile parameters converged to an accuracy of %.1f percent.' \
 				% (abs(err) * 100.0))
 		
 		# Remove the R200m option if it was not originally present. Otherwise this option can 
@@ -1777,7 +1777,7 @@ class HaloDensityProfile():
 				residual = np.sum(diff**2) / (len(r) - N_par_fit)
 				cov *= residual
 			else:
-				print('WARNING: Could not determine uncertainties on fitted parameters. Set all uncertainties to zero.')
+				warnings.warn('Could not determine uncertainties on fitted parameters. Set all uncertainties to zero.')
 				err = np.zeros((2, N_par_fit), float)
 						
 		else:

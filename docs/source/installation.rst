@@ -15,7 +15,11 @@ standard packages:
 * `scipy <https://www.scipy.org/>`__
 * `six <https://pypi.org/project/six/>`__
 
-Some tutorial notebooks also use other packages, for example matplotlib for plotting.
+Some tutorial notebooks also use other packages, for example matplotlib for plotting. In addition,
+the following dependencies are optional:
+
+* `astropy <https://www.astropy.org/>`__ (only if the astropy cosmology converter is used)
+* `camb <https://camb.readthedocs.io/en/latest/index.html>`__ (only if a CAMB power spectrum is requested)
 
 .. rubric:: Package installation
 

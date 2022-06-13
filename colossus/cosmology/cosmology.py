@@ -141,35 +141,35 @@ The following sets of cosmological parameters can be chosen using the
 .. table::
 	:widths: auto
 
-	================== ================================================================================= =========== ===============================================
-	ID                 Paper                                                                             Location    Explanation
-	================== ================================================================================= =========== ===============================================
-	planck18-only      `Planck Collab. 2018 <https://arxiv.org/abs/1807.06209>`__                        Table 2     Best-fit, Planck only (column 5) 					
-	planck18           `Planck Collab. 2018 <https://arxiv.org/abs/1807.06209>`__ 	                     Table 2     Best-fit with BAO (column 6)			
-	planck15-only  	   `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`__     Table 4     Best-fit, Planck only (column 2) 					
-	planck15           `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`__ 	 Table 4     Best-fit with ext (column 6)			
-	planck13-only      `Planck Collab. 2013 <http://adsabs.harvard.edu/abs/2014A%26A...571A..16P>`__     Table 2     Best-fit, Planck only 					
-	planck13           `Planck Collab. 2013 <http://adsabs.harvard.edu/abs/2014A%26A...571A..16P>`__     Table 5     Best-fit with BAO etc. 					
-	WMAP9-only         `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`__       Table 2     Max. likelihood, WMAP only 				
-	WMAP9-ML           `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`__       Table 2     Max. likelihood, with eCMB, BAO and H0 	
-	WMAP9              `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`__       Table 4     Best-fit, with eCMB, BAO and H0 		
-	WMAP7-only         `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`__       Table 1     Max. likelihood, WMAP only 				
-	WMAP7-ML           `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`__       Table 1     Max. likelihood, with BAO and H0 		
-	WMAP7 	           `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`__	     Table 1     Best-fit, with BAO and H0 				
-	WMAP5-only         `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`__	     Table 1     Max. likelihood, WMAP only 			
-	WMAP5-ML           `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`__	     Table 1     Max. likelihood, with BAO and SN 		
-	WMAP5 	           `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`__	     Table 1     Best-fit, with BAO and SN 			
-	WMAP3-ML           `Spergel et al. 2007 <http://adsabs.harvard.edu/abs/2007ApJS..170..377S>`__       Table 2     Max.likelihood, WMAP only 				
-	WMAP3              `Spergel et al. 2007 <http://adsabs.harvard.edu/abs/2007ApJS..170..377S>`__       Table 5     Best fit, WMAP only 					
-	WMAP1-ML           `Spergel et al. 2003 <http://adsabs.harvard.edu/abs/2003ApJS..148..175S>`__       Table 1/4   Max.likelihood, WMAP only 				
-	WMAP1              `Spergel et al. 2003 <http://adsabs.harvard.edu/abs/2003ApJS..148..175S>`__       Table 7/4   Best fit, WMAP only 					
-	illustris          `Vogelsberger et al. 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.444.1518V>`__  --          Cosmology of the Illustris simulation
-	bolshoi	           `Klypin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...740..102K>`__        --          Cosmology of the Bolshoi simulation
-	multidark-planck   `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`__        Table 1     Cosmology of the Multidark-Planck simulations
-	millennium         `Springel et al. 2005 <http://adsabs.harvard.edu/abs/2005Natur.435..629S>`__      --          Cosmology of the Millennium simulation 
-	EdS                --                                                                                --          Einstein-de Sitter cosmology
-	powerlaw           --                                                                                --          Default settings for power-law cosms.
-	================== ================================================================================= =========== ===============================================
+	==================== ================================================================================= =========== ===============================================
+	ID                   Paper                                                                             Location    Explanation
+	==================== ================================================================================= =========== ===============================================
+	``planck18-only``    `Planck Collab. 2018 <https://arxiv.org/abs/1807.06209>`__                        Table 2     Best-fit, Planck only (column 5) 					
+	``planck18``         `Planck Collab. 2018 <https://arxiv.org/abs/1807.06209>`__ 	                     Table 2     Best-fit with BAO (column 6)			
+	``planck15-only``    `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`__     Table 4     Best-fit, Planck only (column 2) 					
+	``planck15``         `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`__ 	 Table 4     Best-fit with ext (column 6)			
+	``planck13-only``    `Planck Collab. 2013 <http://adsabs.harvard.edu/abs/2014A%26A...571A..16P>`__     Table 2     Best-fit, Planck only 					
+	``planck13``         `Planck Collab. 2013 <http://adsabs.harvard.edu/abs/2014A%26A...571A..16P>`__     Table 5     Best-fit with BAO etc. 					
+	``WMAP9-only``       `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`__       Table 2     Max. likelihood, WMAP only 				
+	``WMAP9-ML``         `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`__       Table 2     Max. likelihood, with eCMB, BAO and H0 	
+	``WMAP9``            `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`__       Table 4     Best-fit, with eCMB, BAO and H0 		
+	``WMAP7-only``       `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`__       Table 1     Max. likelihood, WMAP only 				
+	``WMAP7-ML``         `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`__       Table 1     Max. likelihood, with BAO and H0 		
+	``WMAP7`` 	         `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`__	     Table 1     Best-fit, with BAO and H0 				
+	``WMAP5-only``       `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`__	     Table 1     Max. likelihood, WMAP only 			
+	``WMAP5-ML``         `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`__	     Table 1     Max. likelihood, with BAO and SN 		
+	``WMAP5`` 	         `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`__	     Table 1     Best-fit, with BAO and SN 			
+	``WMAP3-ML``         `Spergel et al. 2007 <http://adsabs.harvard.edu/abs/2007ApJS..170..377S>`__       Table 2     Max.likelihood, WMAP only 				
+	``WMAP3``            `Spergel et al. 2007 <http://adsabs.harvard.edu/abs/2007ApJS..170..377S>`__       Table 5     Best fit, WMAP only 					
+	``WMAP1-ML``         `Spergel et al. 2003 <http://adsabs.harvard.edu/abs/2003ApJS..148..175S>`__       Table 1/4   Max.likelihood, WMAP only 				
+	``WMAP1``            `Spergel et al. 2003 <http://adsabs.harvard.edu/abs/2003ApJS..148..175S>`__       Table 7/4   Best fit, WMAP only 					
+	``illustris``        `Vogelsberger et al. 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.444.1518V>`__  --          Cosmology of the Illustris simulation
+	``bolshoi``	         `Klypin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...740..102K>`__        --          Cosmology of the Bolshoi simulation
+	``multidark-planck`` `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`__        Table 1     Cosmology of the Multidark-Planck simulations
+	``millennium``       `Springel et al. 2005 <http://adsabs.harvard.edu/abs/2005Natur.435..629S>`__      --          Cosmology of the Millennium simulation 
+	``EdS``              --                                                                                --          Einstein-de Sitter cosmology
+	``powerlaw``         --                                                                                --          Default settings for power-law cosms.
+	==================== ================================================================================= =========== ===============================================
 
 Those cosmologies that refer to particular simulations (such as ``bolshoi`` and ``millennium``) are
 generally set to ignore relativistic species, i.e. photons and neutrinos, because they are not
@@ -216,12 +216,71 @@ Please note that the redshift range into the future is reduced from :math:`z = -
 models to avoid numerical issues.
 
 ---------------------------------------------------------------------------------------------------
-Power spectrum models
+Power spectrum, variance, correlation function
 ---------------------------------------------------------------------------------------------------
 
-By default, Colossus relies on fitting functions for the matter power spectrum which, in turn,
-is the basis for the variance and correlation function. These models are implemented in the 
-:mod:`~cosmology.power_spectrum` module, documented at the bottom of this file.
+Many calculations in large-scale structure are based on the the power spectrum of matter 
+fluctuations (:func:`Cosmology.matterPowerSpectrum`), the variance within a given radius
+(:func:`Cosmology.sigma`), or the 2-point correlation function 
+(:func:`Cosmology.correlationFunction`). The latter two quantities represent integrals over the 
+power spectrum. All models for the power spectrum are housed in a separate 
+:mod:`~cosmology.power_spectrum` module, and can be evaluated with the general 
+:func:`~cosmology.power_spectrum.powerSpectrum` function. However, in general, only functions 
+internal to the :class:`Cosmology` class should be needed::
+
+	k = 10**np.linspace(-2.0, 3.0, 100)
+	R = 10**np.linspace(-2.0, 2.0, 100)
+	
+	P = cosmo.matterPowerSpectrum(k, z = 1.0)
+	variance = cosmo.sigma(R, z = 1.0)
+	corr = cosmo.correlationFunction(R, z = 1.0)
+
+The following models for the power spectrum are supported, and are listed in the 
+:data:`~cosmology.power_spectrum.models` dictionary. Their ID can be passed as the ``model`` 
+parameter to the power spectrum functions. 
+
+.. table::
+	:widths: auto
+
+	====================== =============================================================== ==================================================================================== ======================================
+	Model ID               Function                                                        Reference                                                                            Comment
+	====================== =============================================================== ==================================================================================== ======================================
+	``sugiyama95``         :func:`~cosmology.power_spectrum.modelSugiyama95`               `Sugiyama 1995 <https://ui.adsabs.harvard.edu/abs/1995ApJS..100..281S>`__            A semi-analytical fitting function
+	``eisenstein98``       :func:`~cosmology.power_spectrum.modelEisenstein98`             `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`__         A semi-analytical fitting function (default)
+	``eisenstein98_zb``    :func:`~cosmology.power_spectrum.modelEisenstein98ZeroBaryon`   `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`__         The zero-baryon version, i.e., no BAO
+	``camb``               :func:`~cosmology.power_spectrum.modelCamb`                     `Lewis et al. 2000 <https://ui.adsabs.harvard.edu/abs/2000ApJ...538..473L>`__        The CAMB Boltzmann code (installed separately)
+	====================== =============================================================== ==================================================================================== ======================================
+	
+By default, Colossus computes the power spectrum using the ``eisenstein98`` fitting function
+because it is accurate to better than 5%, fast, and does not need externally installed tools. 
+While this model takes numerous physical effects into account, it overestimates the power on small
+scales (:math:`k \\sim 100\\ h/{\\rm Mpc}`) because it neglects baryon pressure. Moreover, the model
+always assumes three massless neutrino species, regardless of what is chosen in a given 
+cosmology.
+
+One alternative is to use the ``camb`` Boltzmann solver (see the 
+`CAMB documentation <https://camb.readthedocs.io/en/latest/index.html>`__ for details). This code
+(and its python interface) must be installed externally, e.g., using pip. The first evaluation of
+the power spectrum for a given cosmology can take a few seconds. However, CAMB takes a rich set
+of physics into account and can be flexibly tuned using the ``ps_args`` parameters. One downside
+is that the range of wavenumbers is limited, which can lead to an underestimation of the
+variance on small scales. See the :func:`~cosmology.power_spectrum.modelCamb` function for
+details.
+
+All functions that rely on the matter power spectrum (such as variance, correlation function, and 
+functions that depend on them) accept a ``ps_args`` dictionary through which the user can set the 
+power spectrum model and parameters. When evaluating the power spectrum (or functions that rely on 
+it) with non-default parameters, it is important to keep those parameters consistent across 
+calculations. In the following example, we evaluate the power spectrum and variance of dark matter 
+only based on a CAMB code, using an increased maximum wavenumber::
+	
+	ps_args = dict(model = 'camb', kmax = 5E3, ps_type = 'cdm')
+	
+	P = cosmo.matterPowerSpectrum(k, **ps_args)
+	variance = cosmo.sigma(R, **ps_args)
+
+The additional arguments can also be passed to all functions in the :doc:`lss` and :doc:`halo`
+modules that use the power spectrum. See the :doc:`tutorials` for more code examples.	
 
 ---------------------------------------------------------------------------------------------------
 Derivatives and inverses
@@ -283,6 +342,7 @@ Module reference
 import numpy as np
 import scipy.integrate
 from collections import OrderedDict
+import warnings
 
 from colossus import defaults
 from colossus import settings
@@ -664,13 +724,16 @@ class Cosmology(object):
 			An astropy.cosmology.FLRW class object.
 		"""
 		
-		import astropy.cosmology
+		try:
+			import astropy.cosmology
+		except:
+			raise Exception('Astropy could not be imported. Please make sure it is installed and in the PYTHON_PATH.')
 		
 		if self.power_law:
 			raise Exception('Cannot convert power-law cosmology to astropy.')
 		
 		if not self.relspecies:
-			print('WARNING: Cannot convert setting to ignore relativistic species to Astropy.')
+			warnings.warn('Cannot convert setting to ignore relativistic species to Astropy.')
 
 		params = {'name': self.name, 'H0': self.H0, 'Om0': self.Om0, 'Ob0': self.Ob0, 
 				'Tcmb0': self.Tcmb0, 'Neff': self.Neff}
@@ -2641,7 +2704,7 @@ class Cosmology(object):
 
 	###############################################################################################
 	
-	def sigma(self, R, z, j = 0, filt = 'tophat', inverse = False, derivative = False, 
+	def sigma(self, R, z = 0.0, j = 0, filt = 'tophat', inverse = False, derivative = False, 
 							kmin = None, kmax = None, ps_args = defaults.PS_ARGS):
 		"""
 		The rms variance of the linear density field on a scale R, :math:`\\sigma(R)`.
@@ -3198,7 +3261,7 @@ def fromAstropy(astropy_cosmo, sigma8, ns, cosmo_name = None, **kwargs):
 		cosmo_name = astropy_cosmo.name
 	
 	if astropy_cosmo.has_massive_nu:
-		print('WARNING: Astropy cosmology class contains massive neutrinos, which are not taken into account in Colossus.')
+		warnings.warn('Astropy cosmology class contains massive neutrinos, which are not taken into account in Colossus.')
 
 	params = dict(
 	        flat = (astropy_cosmo.Ok0 == 0.0),
