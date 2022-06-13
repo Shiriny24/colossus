@@ -177,6 +177,9 @@ def powerSpectrumModelName(model, **ps_args):
 
 	if ('ps_type' in ps_args) and (ps_args['ps_type'] != 'tot'):
 		name += '-%s' % (ps_args['ps_type'])
+		
+	if ('kmax' in ps_args) and (ps_args['kmax'] is not None):
+		name += '-kmax%.4e' % (ps_args['kmax'])
 	
 	return name
 
@@ -239,6 +242,10 @@ def modelCamb(k, cosmo, ps_type = 'tot', kmax = CAMB_KMAX, **kwargs):
 	advantage of future optimizations in the CAMB code. This means, on the other hand, that the
 	results depend slightly on the code version. This function was tested with versions up to 
 	CAMB 1.3.5.
+	
+	Important note: Colossus automatically keeps track of multiple versions of the power spectrum
+	if different ``ps_type`` and ``kmax`` parameters are passed, but NOT for different keyword
+	arguments (see ``kwargs`` below).
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -264,7 +271,10 @@ def modelCamb(k, cosmo, ps_type = 'tot', kmax = CAMB_KMAX, **kwargs):
 		the variance :func:`~cosmology.cosmology.Cosmology.sigma` for radii close to kmax, the
 		variance will be underestimated due to the missing high-k modes in the power spectrum.
 	kwargs: kwargs
-		Arguments that are passed to the set_params() function in CAMB (see documentation).
+		Arguments that are passed to the set_params() function in CAMB (see documentation). Note
+		that Colossus does not keep track of different versions of the power spectra created with
+		different kwargs. If multiple spectra are to be computed, it is easiest to create multiple
+		cosmology objects.
 
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -292,7 +302,8 @@ def modelCamb(k, cosmo, ps_type = 'tot', kmax = CAMB_KMAX, **kwargs):
 
 	# Get camb_results from storage of cosmology object. This way, we know that the object is 
 	# deleted when the cosmology changes, and that we are not dealing with multiple cosmologies.
-	camb_results = cosmo.storageUser.getStoredObject('camb_results')
+	object_name = powerSpectrumModelName('camb', ps_type = ps_type, kmax = kmax) + '_results'
+	camb_results = cosmo.storageUser.getStoredObject(object_name)
 
 	if camb_results is None:
 	
@@ -344,7 +355,7 @@ def modelCamb(k, cosmo, ps_type = 'tot', kmax = CAMB_KMAX, **kwargs):
 		# Store the results in the cosmology's storage system, but do not write it to disk between
 		# runs (because the user might make different choices about the CAMB parameters, which 
 		# would be hard to keep track of).
-		cosmo.storageUser.storeObject('camb_results', camb_results, persistent = False)
+		cosmo.storageUser.storeObject(object_name, camb_results, persistent = False)
 	
 	# Evaluate power spectrum
 	k_camb, _, P = camb_results.get_matter_power_spectrum(kmin_eval, kmax_eval, npoints = nk_eval, 

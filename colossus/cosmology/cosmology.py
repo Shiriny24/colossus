@@ -3080,7 +3080,7 @@ class Cosmology(object):
 # Setter / getter functions for cosmologies
 ###################################################################################################
 
-def setCosmology(cosmo_name, params = None):
+def setCosmology(cosmo_name, params = None, **kwargs):
 	"""
 	Set a cosmology.
 	
@@ -3096,7 +3096,12 @@ def setCosmology(cosmo_name, params = None):
 		case the ``params`` dictionary needs to be provided.
 	params: dictionary
 		The parameters of the constructor of the :class:`Cosmology` class. Not necessary if
-		``cosmo_name`` is the name of a pre-set cosmology.
+		``cosmo_name`` is the name of a pre-set cosmology. Alternatively, keyword arguments can be
+		set directly.
+	kwargs: kwargs
+		A set of keyword arguments that are passed to the constructor of the cosmology class. 
+		Equivalent to setting a dictionary in ``params``, but these arguments overwrite ``params``
+		if a parameter is present in both.
 
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -3111,6 +3116,7 @@ def setCosmology(cosmo_name, params = None):
 		param_dict['power_law_n'] = n
 		if params is not None:
 			param_dict.update(params)
+		param_dict.update(kwargs)
 
 	elif cosmo_name == 'powerlaw':
 		raise Exception('Power-law cosmology must be called with slope n, e.g. powerlaw_-1.5.')
@@ -3119,10 +3125,14 @@ def setCosmology(cosmo_name, params = None):
 		param_dict = cosmologies[cosmo_name].copy()
 		if params is not None:
 			param_dict.update(params)
+		param_dict.update(kwargs)
 			
 	else:
 		if params is not None:
 			param_dict = params.copy()
+			param_dict.update(kwargs)
+		elif len(kwargs) > 0:
+			param_dict = kwargs.copy()
 		else:
 			raise Exception('Invalid cosmology (%s).' % (cosmo_name))
 		
@@ -3134,7 +3144,7 @@ def setCosmology(cosmo_name, params = None):
 
 ###################################################################################################
 
-def addCosmology(cosmo_name, params):
+def addCosmology(cosmo_name, params, **kwargs):
 	"""
 	Add a set of cosmological parameters to the global list.
 	
@@ -3147,9 +3157,15 @@ def addCosmology(cosmo_name, params):
 		The name of the cosmology.
 	params: dictionary
 		A set of parameters for the constructor of the Cosmology class.
+	kwargs: kwargs
+		A set of keyword arguments that are passed to the constructor of the cosmology class. 
+		Equivalent to setting a dictionary in ``params``, but these arguments overwrite ``params``
+		if a parameter is present in both.
 	"""
 	
-	cosmologies[cosmo_name] = params
+	param_dict = params.copy()
+	param_dict.update(kwargs)
+	cosmologies[cosmo_name] = param_dict
 	
 	return 
 

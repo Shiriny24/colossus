@@ -115,6 +115,9 @@ new version. The main changes are as follows:
 
 A few other changes:
 
+* The cosmology setter functions :func:`~cosmology.cosmology.setCosmology` and 
+  :func:`~cosmology.cosmology.addCosmology` now support keyword arguments in addition 
+  to a dictionary, which makes setting and overwriting parameters more convenient.
 * Small bug fix where evaluating the dark energy density for an array of redshifts sometimes
   returned a number instead of an array.
 * Convert np.int to int and np.float to float to avoid deprecation warnings.
