@@ -1960,27 +1960,26 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	def _matterPowerSpectrumName(self, model, **tf_args):
+	def _matterPowerSpectrumName(self, model, **ps_args):
 		
-		return 'ps_%s' % (power_spectrum.powerSpectrumModelName(model, **tf_args))
+		return 'ps_%s' % (power_spectrum.powerSpectrumModelName(model, **ps_args))
 	
 	###############################################################################################
 
-	def _matterPowerSpectrumNormName(self, model, **tf_args):
+	def _matterPowerSpectrumNormName(self, model, **ps_args):
 		
-		return 'ps_norm_%s' % (power_spectrum.powerSpectrumModelName(model, **tf_args))
+		return 'ps_norm_%s' % (power_spectrum.powerSpectrumModelName(model, **ps_args))
 	
 	###############################################################################################
 
 	# Utility to get the min and max k for which a power spectrum is valid. Only for internal use.
 
-	def _matterPowerSpectrumLimits(self, model = defaults.POWER_SPECTRUM_MODEL, path = None,
-								**tf_args):
+	def _matterPowerSpectrumLimits(self, model = defaults.POWER_SPECTRUM_MODEL, **ps_args):
 		
 		is_unlimited = False
 		
 		if (model in power_spectrum.models):
-			k_min, k_max = power_spectrum.powerSpectrumLimits(model, **tf_args)
+			k_min, k_max = power_spectrum.powerSpectrumLimits(model, **ps_args)
 			if (k_min is None):
 				if (k_max is not None):
 					raise Exception('Internal error.')
@@ -1988,8 +1987,11 @@ class Cosmology(object):
 				k_max = self.k_Pk[-1]
 				is_unlimited = True
 		else:
-			table_name = self._matterPowerSpectrumName(model, **tf_args)
-			table = self.storageUser.getStoredObject(table_name, path = path)
+			if (not 'path' in ps_args) or (ps_args['path'] is None):
+				raise Exception('Power spectrum model %s is not a known model, need a path to a file but found path = None.' \
+							% (model))
+			table_name = self._matterPowerSpectrumName(model, **ps_args)
+			table = self.storageUser.getStoredObject(table_name, path = ps_args['path'])
 			if table is None:
 				raise Exception('Could not load data table, %s.' % (table_name))
 			k_min = 10**table[0][0]
@@ -1999,8 +2001,8 @@ class Cosmology(object):
 		
 	###############################################################################################
 
-	def _matterPowerSpectrumExact(self, k, model = defaults.POWER_SPECTRUM_MODEL, path = None,
-								ignore_norm = False, **tf_args):
+	def _matterPowerSpectrumExact(self, k, model = defaults.POWER_SPECTRUM_MODEL, 
+								ignore_norm = False, **ps_args):
 
 		if self.power_law:
 			
@@ -2009,12 +2011,15 @@ class Cosmology(object):
 		
 		elif model in power_spectrum.models:
 			
-			Pk = power_spectrum.powerSpectrum(k, model, self, output = 'ps', **tf_args)
+			Pk = power_spectrum.powerSpectrum(k, model, self, output = 'ps', **ps_args)
 
 		else:
+
+			if (not 'path' in ps_args) or (ps_args['path'] is None):
+				raise Exception('If power spectrum model is not a known model, need a path to a file but found path = None.')
 			
-			table_name = self._matterPowerSpectrumName(model, **tf_args)
-			table = self.storageUser.getStoredObject(table_name, path = path)
+			table_name = self._matterPowerSpectrumName(model, **ps_args)
+			table = self.storageUser.getStoredObject(table_name, path = ps_args['path'])
 			
 			if table is None:
 				raise Exception('Could not load data table, %s. Please check that the power spectrum model name is valid.' \
@@ -2035,7 +2040,7 @@ class Cosmology(object):
 		# interpolation = False; otherwise, we get into an infinite loop of computing sigma8, P(k), 
 		# sigma8 etc.
 		if not ignore_norm:
-			norm = self.matterPowerSpectrumNorm(model, path = path, **tf_args)
+			norm = self.matterPowerSpectrumNorm(model, **ps_args)
 			Pk *= norm
 
 		return Pk
@@ -2056,7 +2061,7 @@ class Cosmology(object):
 	# function is first called with ignore_norm False or True.
 
 	def _matterPowerSpectrumInterpolator(self, model = defaults.POWER_SPECTRUM_MODEL, 
-						path = None, inverse = False, ignore_norm = False, **tf_args):
+						inverse = False, ignore_norm = False, **ps_args):
 		
 		# We need to be a little careful in the case of a path being given. It is possible 
 		# that the power spectrum from the corresponding table has been evaluated and thus
@@ -2064,13 +2069,13 @@ class Cosmology(object):
 		# the power spectrum has not been normalized yet. In that case, we should not call the
 		# function that creates the interpolator because it *will* create an unnormalized
 		# interpolator.
-		table_name = self._matterPowerSpectrumName(model, **tf_args)
-		if path is None:
+		table_name = self._matterPowerSpectrumName(model, **ps_args)
+		if (not 'path' in ps_args) or (ps_args['path'] is None):
 			interpolator = self.storageUser.getStoredObject(table_name,
 										interpolator = True, inverse = inverse)
 		else:
 			interpolator = None
-			norm_name = self._matterPowerSpectrumNormName(model, **tf_args)
+			norm_name = self._matterPowerSpectrumNormName(model, **ps_args)
 			norm = self.storageUser.getStoredObject(norm_name)
 			if norm == 1.0:
 				interpolator = self.storageUser.getStoredObject(table_name,
@@ -2079,7 +2084,7 @@ class Cosmology(object):
 		# If we could not find the interpolator, the underlying data table probably has not been
 		# created yet.
 		if interpolator is None:
-			if path is None:
+			if (not 'path' in ps_args) or (ps_args['path'] is None):
 				
 				# We are dealing with a non-user supplied power spectrum, meaning we can decide the
 				# k array for the table. If the power spectrum has no limits (e.g., for fitting 
@@ -2089,7 +2094,7 @@ class Cosmology(object):
 				if self.print_info:
 					print('Cosmology.matterPowerSpectrum: Computing lookup table.')
 				
-				kmin, kmax = power_spectrum.powerSpectrumLimits(model, **tf_args)
+				kmin, kmax = power_spectrum.powerSpectrumLimits(model, **ps_args)
 				if (kmin is None) or (kmax is None):
 					data_k = np.zeros((np.sum(self.k_Pk_Nbins) + 1), float)
 					n_regions = len(self.k_Pk_Nbins)
@@ -2112,7 +2117,7 @@ class Cosmology(object):
 					data_k = 10**np.linspace(np.log10(kmin), np.log10(kmax), self.k_Pk_Nbins_equal)
 				
 				# If the Pk data is not > 0, this leads to serious crashes
-				data_Pk = self._matterPowerSpectrumExact(data_k, model = model, ignore_norm = ignore_norm, **tf_args)
+				data_Pk = self._matterPowerSpectrumExact(data_k, model = model, ignore_norm = ignore_norm, **ps_args)
 				if (np.min(data_Pk) <= 0.0):
 					raise Exception('Got zero or negative data in power spectrum from model %s, cannot compute log.' % model)
 
@@ -2126,9 +2131,9 @@ class Cosmology(object):
 				# If the interpolator has not been created yet, we need to normalize the table
 				# to the correct sigma8 which happens in the exact Pk function.
 				if self.print_info:
-					print('Cosmology.matterPowerSpectrum: Loading power spectrum from file %s.' % (path))				
-				table_name = self._matterPowerSpectrumName(model, **tf_args)
-				table = self.storageUser.getStoredObject(table_name, path = path)
+					print('Cosmology.matterPowerSpectrum: Loading power spectrum from file %s.' % (ps_args['path']))				
+				table_name = self._matterPowerSpectrumName(model, **ps_args)
+				table = self.storageUser.getStoredObject(table_name, path = ps_args['path'])
 				
 				# If the stored object function returns None, that can be because persistence is 
 				# turned off altogether, in which case we should return an informative error
@@ -2137,18 +2142,18 @@ class Cosmology(object):
 					if not self.storageUser.persistence_read:
 						raise Exception('Please set persistence to read in order to load a power spectrum from a file.')
 					else:
-						raise Exception('Could not load power spectrum table from path "%s".' % (path))
+						raise Exception('Could not load power spectrum table from path "%s".' % (ps_args['path']))
 				
 				table_k = 10**table[0]
-				table_P = self._matterPowerSpectrumExact(table_k, model = model, path = path,
-														ignore_norm = ignore_norm)
+				table_P = self._matterPowerSpectrumExact(table_k, model = model, 
+														ignore_norm = ignore_norm, **ps_args)
 				table[1] = np.log10(table_P)
 				self.storageUser.storeObject(table_name, table, persistent = False)
 				
 				# We also need to overwrite the norm with one, otherwise the interpolator will not
 				# match up with the result of the exact power spectrum function which will find the
 				# new, normed interpolator but still apply the old normalization.
-				norm_name = self._matterPowerSpectrumNormName(model, **tf_args)
+				norm_name = self._matterPowerSpectrumNormName(model, **ps_args)
 				self.storageUser.storeObject(norm_name, 1.0, persistent = False)
 
 			interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, 
@@ -2158,10 +2163,15 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	def matterPowerSpectrum(self, k, z = 0.0, model = defaults.POWER_SPECTRUM_MODEL, path = None,
-						derivative = False, **tf_args):
+	def matterPowerSpectrum(self, k, z = 0.0, model = defaults.POWER_SPECTRUM_MODEL,
+						derivative = False, **ps_args):
 		"""
 		The matter power spectrum at a scale k.
+		
+		This general function can return power spectra computed by a variety of models, tables,
+		or Boltzmann codes, as described in the :func:`~cosmology.power_spectrum.powerSpectrum`
+		function. By default, an interpolation table is generated once and future calls to this
+		function will return interpolated values.
 		
 		By default, the power spectrum is computed using a model for the transfer function 
 		(see the :func:`~cosmology.power_spectrum.powerSpectrum` function). The default 
@@ -2170,13 +2180,12 @@ class Cosmology(object):
 		significantly smaller than that.
 		
 		Alternatively, the user can supply the path to a file with a tabulated power spectrum 
-		using the ``path`` parameter. The file must contain two columns, :math:`\log_{10}(k)`
-		and :math:`\log_{10}(P)` where k and P(k) are in the same units as in this function. This
-		table is interpolated with a third-order spline. Note that the tabulated spectrum is 
-		normalized to the value if :math:`\sigma_8` set in the cosmology.
-		
-		Also note that if a power spectrum is to be read from a file, the ``persistence`` 
-		parameter must allow for reading (though not necessarily writing) of files.
+		by passing a ``path`` parameter in the keyword arguments. The file must contain two 
+		columns, :math:`\log_{10}(k)` and :math:`\log_{10}(P)` where k and P(k) are in the same 
+		units as in this function. This table is interpolated with a third-order spline. Note that 
+		the tabulated spectrum is normalized to the value if :math:`\sigma_8` set in the cosmology.
+		If a power spectrum is to be read from a file, the ``persistence`` parameter must allow for 
+		reading (though not necessarily writing) of files.
 
 		Warnings
 		-------------------------------------------------------------------------------------------
@@ -2201,18 +2210,17 @@ class Cosmology(object):
 			tabulated power spectrum is used (see ``path`` parameter), this name must still be 
 			passed. Internally, the power spectrum is saved using this name, so the name must not 
 			overlap with any other models.
-		path: str
-			A path to a file containing the power spectrum as a table, where the two columns are
-			:math:`\log_{10}(k)` (in comoving h/Mpc) and :math:`\log_{10}(P)` (in 
-			:math:`({\\rm Mpc}/h)^3`).
 		derivative: bool
 			If False, return P(k). If True, return :math:`d \log(P) / d \log(k)`.
-		tf_args: kwargs
-			Arguments passed to the :func:`~cosmology.power_spectrum.powerSpectrum` function.
+		ps_args: kwargs
+			Arguments passed to the :func:`~cosmology.power_spectrum.powerSpectrum` function. One
+			parameter can be ``path``, which can contain a tabulated power spectrum, where the two 
+			columns are :math:`\log_{10}(k)` (in comoving h/Mpc) and :math:`\log_{10}(P)` (in
+			:math:`({\\rm Mpc}/h)^3`).
 			
 		Returns
 		-------------------------------------------------------------------------------------------
-		Pk: array_like
+		P: array_like
 			The matter power spectrum; has the same dimensions as k and units of 
 			:math:`({\\rm Mpc}/h)^3`. Alternatively, the dimensionless logarithmic derivative if 
 			``derivative == True``.
@@ -2220,7 +2228,7 @@ class Cosmology(object):
 
 		if self.interpolation:
 			
-			interpolator = self._matterPowerSpectrumInterpolator(model, path, **tf_args)
+			interpolator = self._matterPowerSpectrumInterpolator(model, **ps_args)
 			
 			# If the requested radius is outside the range, give a detailed error message.
 			k_req = np.min(k)
@@ -2247,11 +2255,9 @@ class Cosmology(object):
 			if utilities.isArray(k):
 				Pk = np.zeros_like(k)
 				for i in range(len(k)):
-					Pk[i] = self._matterPowerSpectrumExact(k[i], model = model, path = path,
-														ignore_norm = False)
+					Pk[i] = self._matterPowerSpectrumExact(k[i], model = model, ignore_norm = False, **ps_args)
 			else:
-				Pk = self._matterPowerSpectrumExact(k, model = model, path = path, 
-												ignore_norm = False)
+				Pk = self._matterPowerSpectrumExact(k, model = model, ignore_norm = False, **ps_args)
 
 		if not derivative:
 			Pk *= self.growthFactor(z)**2
@@ -2260,7 +2266,7 @@ class Cosmology(object):
 	
 	###############################################################################################
 
-	def matterPowerSpectrumNorm(self, model, path = None, **tf_args):
+	def matterPowerSpectrumNorm(self, model, **ps_args):
 		"""
 		The normalization of the power spectrum to the given sigma8.
 		
@@ -2274,7 +2280,7 @@ class Cosmology(object):
 		-------------------------------------------------------------------------------------------
 		model: str
 			A model for the power spectrum (see the :mod:`cosmology.power_spectrum` module).
-		tf_args: kwargs
+		ps_args: kwargs
 			Arguments passed to the :func:`~cosmology.power_spectrum.powerSpectrum` function.
 			
 		Returns
@@ -2286,12 +2292,12 @@ class Cosmology(object):
 			that depend on the power spectrum models and/or user-defined parameters.
 		"""
 
-		norm_name = self._matterPowerSpectrumNormName(model, **tf_args)
+		norm_name = self._matterPowerSpectrumNormName(model, **ps_args)
 		norm = self.storageUser.getStoredObject(norm_name)
 		if norm is None:
-			ps_args = {'model': model, 'path': path}
-			ps_args.update(tf_args)
-			sigma_8Mpc = self._sigmaExact(8.0, filt = 'tophat', ps_args = ps_args, exact_ps = True, 
+			ps_args_ = {'model': model}
+			ps_args_.update(ps_args)
+			sigma_8Mpc = self._sigmaExact(8.0, filt = 'tophat', ps_args = ps_args_, exact_ps = True, 
 										ignore_norm = True)
 			norm = (self.sigma8 / sigma_8Mpc)**2
 			self.storageUser.storeObject(norm_name, norm, persistent = False)	

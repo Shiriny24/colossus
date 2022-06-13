@@ -110,7 +110,7 @@ models['camb'] = PowerSpectrumModel(output = 'ps', allowed_types = ['total', 'cd
 
 ###################################################################################################
 
-def powerSpectrum(k, model, cosmo, output = 'ps', **tf_args):
+def powerSpectrum(k, model, cosmo, output = 'ps', **kwargs):
 	"""
 	The power spectrum (or transfer function) as a function of wavenumber.
 	
@@ -136,7 +136,7 @@ def powerSpectrum(k, model, cosmo, output = 'ps', **tf_args):
 	output: str
 		Indicates which quantity should be returned, namely the transfer function (``tf``)
 		or the power spectrum (``ps``).
-	tf_args: kwargs
+	kwargs: kwargs
 		Keyword arguments that are passed to the function evaluating the given model.
 		
 	Returns
@@ -152,7 +152,7 @@ def powerSpectrum(k, model, cosmo, output = 'ps', **tf_args):
 	elif model == 'eisenstein98_zb':
 		ret = modelEisenstein98ZeroBaryon(k, cosmo.h, cosmo.Om0, cosmo.Ob0, cosmo.Tcmb0)
 	elif model == 'camb':
-		ret = modelCamb(k, cosmo, **tf_args)
+		ret = modelCamb(k, cosmo, **kwargs)
 	else:
 		raise Exception('Unknown model, %s.' % model)
 	
@@ -169,7 +169,7 @@ def powerSpectrum(k, model, cosmo, output = 'ps', **tf_args):
 
 ###################################################################################################
 
-def powerSpectrumModelName(model, **tf_args):
+def powerSpectrumModelName(model, **ps_args):
 	"""
 	A unique internal name for the given power spectrum model (and parameters).
 	
@@ -183,7 +183,7 @@ def powerSpectrumModelName(model, **tf_args):
 	-----------------------------------------------------------------------------------------------
 	model: str
 		The power spectrum model (see table above).
-	tf_args: kwargs
+	ps_args: kwargs
 		Keyword arguments that are passed to the function evaluating the given model. These 
 		arguments need to be consistent with those passed when the model is evaluated.
 		
@@ -195,14 +195,14 @@ def powerSpectrumModelName(model, **tf_args):
 
 	name = model
 
-	if ('ps_type' in tf_args) and (tf_args['ps_type'] != 'tot'):
-		name += '-%s' % (tf_args['ps_type'])
+	if ('ps_type' in ps_args) and (ps_args['ps_type'] != 'tot'):
+		name += '-%s' % (ps_args['ps_type'])
 	
 	return name
 
 ###################################################################################################
 
-def powerSpectrumLimits(model, **tf_args):
+def powerSpectrumLimits(model, **ps_args):
 	"""
 	The lower and upper wavenumbers between which a model can be evaluated.
 	
@@ -214,7 +214,7 @@ def powerSpectrumLimits(model, **tf_args):
 	-----------------------------------------------------------------------------------------------
 	model: str
 		The power spectrum model (see table above).
-	tf_args: kwargs
+	ps_args: kwargs
 		Keyword arguments that are passed to the function evaluating the given model. These 
 		arguments need to be consistent with those passed when the model is evaluated.
 		
@@ -233,8 +233,8 @@ def powerSpectrumLimits(model, **tf_args):
 		pass
 	elif model == 'camb':
 		kmin = CAMB_KMIN
-		if 'kmax' in tf_args:
-			kmax = tf_args[kmax]
+		if 'kmax' in ps_args:
+			kmax = ps_args[kmax]
 		else:
 			kmax = CAMB_KMAX
 	else:
