@@ -58,6 +58,8 @@ from colossus import defaults
 from colossus.utils import utilities
 
 ###################################################################################################
+# CONSTANTS
+###################################################################################################
 
 CAMB_KMIN = 1E-4
 """The minimum wavenumber for which P(k) can be evaluated by CAMB."""
@@ -65,6 +67,10 @@ CAMB_KMIN = 1E-4
 CAMB_KMAX = 1E3
 """The default maximum wavenumber for which P(k) can be evaluated by CAMB. The user can set a 
 different upper limit, but that may increase the runtime significantly."""
+
+###################################################################################################
+# GLOBAL VARIABLES
+###################################################################################################
 
 camb_results = None
 
@@ -172,6 +178,10 @@ def powerSpectrum(k, model, cosmo, output = 'ps', **tf_args):
 def powerSpectrumLimits(model, **tf_args):
 	"""
 	The lower and upper wavenumbers between which a model can be evaluated.
+	
+	This function returns (None, None) for fitting functions that do not have a k-limit, and two
+	floats for tabulated power spectra, Boltzmann codes, or other models that do have defined
+	limits.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
@@ -248,6 +258,11 @@ def modelCamb(k, cosmo, ps_type = 'tot', kmax = CAMB_KMAX, **kwargs):
 		The power spectrum in units of :math:`({\\rm Mpc}/h)^3`; has the same dimensions as ``k``.
 	"""
 
+	try:
+		import camb
+	except:
+		raise Exception('Could not find CAMB python unit. Please make sure it is installed and in the PYTHON_PATH.')
+
 	# Check k input; CAMB can only evaluate evenly spaced arrays. Even if the user has requested
 	# only a single wavenumber, we need to pass at least two.
 	k_array, is_array = utilities.getArray(k)
@@ -260,13 +275,10 @@ def modelCamb(k, cosmo, ps_type = 'tot', kmax = CAMB_KMAX, **kwargs):
 		kmin_eval = k_array[0]
 		kmax_eval = k_array[-1]
 		nk_eval = len(k_array)
+	
+	global camb_results
 
 	if camb_results is None:
-		
-		try:
-			import camb
-		except:
-			raise Exception('Could not find CAMB python unit. Please make sure it is installed and in the PYTHON_PATH.')
 	
 		# Warn if interpolation is turned off, as this will be very slow for the CAMB model.
 		if (not cosmo.interpolation):
@@ -288,7 +300,7 @@ def modelCamb(k, cosmo, ps_type = 'tot', kmax = CAMB_KMAX, **kwargs):
 						Want_cl_2D_array = False, Want_CMB_lensing = False, 
 						DoLensing = False, NonLinear = False, WantTransfer = True)
 		camb_args.update(kwargs)
-		cp = camb.set_params(camb_args)
+		cp = camb.set_params(**camb_args)
 	
 		# Set dark energy model
 		cp.DarkEnergy = camb.dark_energy.DarkEnergyFluid()
@@ -308,7 +320,7 @@ def modelCamb(k, cosmo, ps_type = 'tot', kmax = CAMB_KMAX, **kwargs):
 	
 		# Set parameters for transfer function
 		cp.set_matter_power(redshifts = [0.0], kmax = kmax, accurate_massive_neutrino_transfers = False)
-		cp.Transfer.high_precision = True
+		cp.Transfer.high_precision = False
 		
 		# Initialize CAMB calculations
 		camb_results = camb.get_results(cp)
@@ -316,6 +328,7 @@ def modelCamb(k, cosmo, ps_type = 'tot', kmax = CAMB_KMAX, **kwargs):
 	# Evaluate power spectrum
 	k_camb, _, P = camb_results.get_matter_power_spectrum(kmin_eval, kmax_eval, npoints = nk_eval, 
 														var1 = 'delta_%s' % (ps_type))
+	P = P[0]
 	
 	# We check that the wavenumbers returned by CAMB match the input.
 	if np.max(np.abs((k_camb - k_array) / k_array)) > 1E-4:

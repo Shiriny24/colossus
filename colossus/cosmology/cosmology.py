@@ -528,9 +528,12 @@ class Cosmology(object):
 		# Lookup table for P(k). The Pk_norm field is only needed if interpolation == False.
 		# Note that the binning is highly irregular for P(k), since much more resolution is
 		# needed at the BAO scale and around the bend in the power spectrum. Thus, the binning
-		# is split into multiple regions with different resolutions.
+		# is split into multiple regions with different resolutions. For some applications, we
+		# also need regularly spaced binning. Here, we choose a relatively high number of bins
+		# to be safe.
 		self.k_Pk = [1E-20, 1E-4, 5E-2, 1E0, 1E6, 1E20]
 		self.k_Pk_Nbins = [10, 30, 60, 20, 10]
+		self.k_Pk_Nbins_equal = 800
 		
 		# Lookup table for sigma. Note that the nominal accuracy to which the integral is 
 		# evaluated should match with the accuracy of the interpolation which is set by Nbins.
@@ -1998,12 +2001,16 @@ class Cosmology(object):
 	def _matterPowerSpectrumLimits(self, model = defaults.POWER_SPECTRUM_MODEL, path = None,
 								**tf_args):
 		
+		is_unlimited = False
+		
 		if (model in power_spectrum.models):
 			k_min, k_max = power_spectrum.powerSpectrumLimits(model, **tf_args)
-			if k_min is None:
+			if (k_min is None):
+				if (k_max is not None):
+					raise Exception('Internal error.')
 				k_min = self.k_Pk[0]
-			if k_max is None:
 				k_max = self.k_Pk[-1]
+				is_unlimited = True
 		else:
 			table_name = self._matterPowerSpectrumName(model, **tf_args)
 			table = self.storageUser.getStoredObject(table_name, path = path)
@@ -2012,7 +2019,7 @@ class Cosmology(object):
 			k_min = 10**table[0][0]
 			k_max = 10**table[0][-1]
 				
-		return k_min, k_max
+		return k_min, k_max, is_unlimited
 		
 	###############################################################################################
 
@@ -2099,24 +2106,34 @@ class Cosmology(object):
 			if path is None:
 				
 				# We are dealing with a non-user supplied power spectrum, meaning we can decide the
-				# k array for the table.
+				# k array for the table. If the power spectrum has no limits (e.g., for fitting 
+				# functions), we use a smartly spaced, very wide k-array. If there are limits, we
+				# need to respect those and set an evenly spaced k-array (because some Boltzmann
+				# codes demand equal spacing).
 				if self.print_info:
-					print('Cosmology.matterPowerSpectrum: Computing lookup table.')				
-				data_k = np.zeros((np.sum(self.k_Pk_Nbins) + 1), float)
-				n_regions = len(self.k_Pk_Nbins)
-				k_computed = 0
-				for i in range(n_regions):
-					log_min = np.log10(self.k_Pk[i])
-					log_max = np.log10(self.k_Pk[i + 1])
-					log_range = log_max - log_min
-					bin_width = log_range / self.k_Pk_Nbins[i]
-					if i == n_regions - 1:
-						data_k[k_computed:k_computed + self.k_Pk_Nbins[i] + 1] = \
-							10**np.arange(log_min, log_max + bin_width, bin_width)
-					else:
-						data_k[k_computed:k_computed + self.k_Pk_Nbins[i]] = \
-							10**np.arange(log_min, log_max, bin_width)
-					k_computed += self.k_Pk_Nbins[i]
+					print('Cosmology.matterPowerSpectrum: Computing lookup table.')
+				
+				kmin, kmax = power_spectrum.powerSpectrumLimits(model, **tf_args)
+				if (kmin is None) or (kmax is None):
+					data_k = np.zeros((np.sum(self.k_Pk_Nbins) + 1), float)
+					n_regions = len(self.k_Pk_Nbins)
+					k_computed = 0
+					for i in range(n_regions):
+						log_min = np.log10(self.k_Pk[i])
+						log_max = np.log10(self.k_Pk[i + 1])
+						log_range = log_max - log_min
+						bin_width = log_range / self.k_Pk_Nbins[i]
+						if i == n_regions - 1:
+							data_k[k_computed:k_computed + self.k_Pk_Nbins[i] + 1] = \
+								10**np.arange(log_min, log_max + bin_width, bin_width)
+						else:
+							data_k[k_computed:k_computed + self.k_Pk_Nbins[i]] = \
+								10**np.arange(log_min, log_max, bin_width)
+						k_computed += self.k_Pk_Nbins[i]
+				else:
+					if (kmin is None) or (kmax is None):
+						raise Exception('Need both kmin and kmax in order to set up P(k) table.')
+					data_k = 10**np.linspace(np.log10(kmin), np.log10(kmax), self.k_Pk_Nbins_equal)
 				
 				# If the Pk data is not > 0, this leads to serious crashes
 				data_Pk = self._matterPowerSpectrumExact(data_k, model = model, ignore_norm = ignore_norm)
@@ -2424,42 +2441,35 @@ class Cosmology(object):
 			if (not exact_ps) and self.interpolation:
 				ps_interpolator = self._matterPowerSpectrumInterpolator(ignore_norm = ignore_norm, **ps_args)
 
-			# The infinite integral over k often causes trouble when the tophat filter is used. Thus,
-			# we determine sensible limits and integrate over a finite k-volume. The limits are
-			# determined by demanding that the integrand is some factor, 1E-6, smaller than at its
-			# maximum. 
-			test_k_min, test_k_max = self._matterPowerSpectrumLimits(**ps_args)
-
-			#For tabulated power spectra, we need to be careful not to exceed their 
-			# limits, even if the integrand has not reached the desired low value. Thus, we simply
-			# use the limits of the table.
-			#
-			# If the user has decided both kmin and kmax, there is no need to find them numerically.
+			# The infinite integral over k often causes trouble when the tophat filter is used. 
+			# Thus, we determine sensible limits and integrate over a finite k-volume. We need to 
+			# treat two cases:
+			# 
+			# 1) The power spectrum model has limits in k-space. We accept those limits and
+			#    overwrite them with user-defined limits, checking that the latter do not exceed 
+			#    the bounds of the model.
+			# 2) We determine limits by demanding that the integrand is some factor, 1E-6, smaller 
+			#    than at its maximum. 
 			
-			# TODO also if using Boltzmann code
+			model_k_min, model_k_max, is_unlimited = self._matterPowerSpectrumLimits(**ps_args)
 			
-			if ('path' in ps_args) and (ps_args['path'] is not None):
+			if not is_unlimited:
 
 				if kmin is not None:
-					if kmin < test_k_min:
-						raise Exception('Found user kmin %.2e but lower limit of tabulated spectrum is %.2e.' % (kmin, test_k_min))
+					if kmin < model_k_min:
+						raise Exception('Found user kmin %.2e but lower limit of PS model %s is %.2e.' \
+									% (kmin, ps_args['model'], model_k_min))
 					min_k_use = np.log(kmin)
 				else:
-					min_k_use = np.log(test_k_min * 1.0001)
+					min_k_use = np.log(model_k_min * 1.0001)
 
 				if kmax is not None:
-					if kmax > test_k_max:
-						raise Exception('Found user kmax %.2e but upper limit of tabulated spectrum is %.2e.' % (kmax, test_k_max))
+					if kmax > model_k_max:
+						raise Exception('Found user kmax %.2e but upper limit of PS model %s is %.2e.' \
+									% (kmax, ps_args['model'], model_k_max))
 					max_k_use = np.log(kmax)
 				else:
-					max_k_use = np.log(test_k_max * 0.9999)
-					
-			elif (kmin is not None) and (kmax is not None):
-				
-				# If the user has imposed both limits, we trust that they are the correct ones
-				# and perform no search for good limits.
-				min_k_use = np.log(kmin)
-				max_k_use = np.log(kmax)
+					max_k_use = np.log(model_k_max * 0.9999)
 				
 			else:
 				
@@ -2479,11 +2489,11 @@ class Cosmology(object):
 				if kmin is not None:
 					test_k_min = kmin
 				else:
-					test_k_min = max(test_k_min * 1.0001, 1E-7)
+					test_k_min = max(model_k_min * 1.0001, 1E-7)
 				if kmax is not None:
 					test_k_max = kmax
 				else:
-					test_k_max = min(test_k_max * 0.9999, 1E25)
+					test_k_max = min(model_k_max * 0.9999, 1E25)
 				if test_k_max <= test_k_min:
 					raise Exception('Preliminary maximum limit of sigma integration (%.4e) is smaller than minimum (%.4e).' \
 							% (test_k_max, test_k_min))
@@ -2551,7 +2561,7 @@ class Cosmology(object):
 			sigma = np.sqrt(sigma2 / 2.0 / np.pi**2)
 		
 		if np.isnan(sigma):
-			raise Exception('Result is nan (cosmology %s, filter %s, R %.2e, j %d.' % (self.name, filt, R, j))
+			raise Exception('sigma is nan (cosmology %s, filter %s, R %.2e, j %d.' % (self.name, filt, R, j))
 			
 		return sigma
 	
@@ -2833,7 +2843,7 @@ class Cosmology(object):
 	
 			# If we are using a tabulated power spectrum, we just use the limits of that table IF they 
 			# are more stringent than those already determined.
-			k_min_model, k_max_model = self._matterPowerSpectrumLimits(**ps_args)
+			k_min_model, k_max_model, _ = self._matterPowerSpectrumLimits(**ps_args)
 			k_min = max(k_min, k_min_model * 1.0001)
 			k_max = min(k_max, k_max_model * 0.9999)
 	
