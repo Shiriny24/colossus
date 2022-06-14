@@ -38,20 +38,25 @@ used in multiple ways:
 
 * Set one of the pre-defined cosmologies, but overwrite certain parameters::
 	
-	cosmology.setCosmology('planck18', {'print_warnings': False})
+	cosmology.setCosmology('planck18', print_warnings = False)
+
+* Use an existing cosmology, overwrite parameters, and rename it. This might be better if we want 
+  to overwrite important cosmological parameters::
+  
+    cosmology.setCosmology('myCosmo', params = cosmology.cosmologies['planck18'], Om0 = 0.28)
 
 * Add a new cosmology to the global list of available cosmologies. This has the advantage that the 
   new cosmology can be set from anywhere in the code. Only the main cosmological parameters are 
   mandatory, all other parameters can be left to their default values::
 	
 	params = {'flat': True, 'H0': 67.2, 'Om0': 0.31, 'Ob0': 0.049, 'sigma8': 0.81, 'ns': 0.95}
-	cosmology.addCosmology('myCosmo', params)
+	cosmology.addCosmology('myCosmo', **params)
 	cosmo = cosmology.setCosmology('myCosmo')
 
 * Set a new cosmology without adding it to the global list of available cosmologies::
 	
 	params = {'flat': True, 'H0': 67.2, 'Om0': 0.31, 'Ob0': 0.049, 'sigma8': 0.81, 'ns': 0.95}
-	cosmo = cosmology.setCosmology('myCosmo', params)
+	cosmo = cosmology.setCosmology('myCosmo', **params)
 
 * Set a self-similar cosmology with a power-law power spectrum of a certain slope, and the 
   default settings set in the ``powerlaw`` cosmology::
@@ -185,31 +190,24 @@ dark energy as a cosmological constant and contain no curvature. To add curvatur
 flatness must be overwritten, and the dark energy content of the universe must be set (which is 
 otherwise computed from the matter and relativistic contributions)::
 
-	params = cosmology.cosmologies['planck18']
-	params['flat'] = False
-	params['Ode0'] = 0.75
-	cosmo = cosmology.setCosmology('planck_curvature', params)
+	cosmo = cosmology.setCosmology('planck_curvature', params = cosmology.cosmologies['planck18'], 
+									flat = False, Ode0 = 0.85)
 	
 Multiple models for the dark energy equation of state parameter :math:`w(z)` are implemented, 
 namely a cosmological constant (:math:`w=-1`), a constant :math:`w`, a linearly varying 
 :math:`w(z) = w_0 + w_a (1 - a)`, and arbitrary user-supplied functions for :math:`w(z)`. To set, 
 for example, a linearly varying EOS, we change the ``de_model`` parameter::
 
-	params = cosmology.cosmologies['planck18']
-	params['de_model'] = 'w0wa'
-	params['w0'] = -0.8
-	params['wa'] = 0.1
-	cosmo = cosmology.setCosmology('planck_w0wa', params)
-
+	cosmo = cosmology.setCosmology('planck_w0wa', params = cosmology.cosmologies['planck18'], 
+									de_model = 'w0wa', w0 = -0.8, wa = 0.1)
+								
 We can implement more exotic models by supplying an arbitrary function::
 
 	def wz_func(z):
 		return -1.0 + 0.1 * z
 		
-	params = cosmology.cosmologies['planck18']
-	params['de_model'] = 'user'
-	params['wz_function'] = wz_func
-	cosmo = cosmology.setCosmology('planck_wz', params)
+	cosmo = cosmology.setCosmology('planck_wz', params = cosmology.cosmologies['planck18'], 
+									de_model = 'user', wz_function = wz_func)
 
 Please note that the redshift range into the future is reduced from :math:`z = -0.995` 
 (:math:`a = 200`) to :math:`z = 0.9` (:math:`a = 10`) for the ``w0wa`` and ``user`` dark energy 
@@ -318,7 +316,7 @@ default, tabulated, stored in files, and re-loaded when the same cosmology is se
 where functions are evaluated few times, but for a large number of cosmologies), the user can turn 
 this behavior off::
 
-	cosmo = cosmology.setCosmology('planck18', {'interpolation': False, 'persistence': ''})
+	cosmo = cosmology.setCosmology('planck18', interpolation = False, persistence = '')
 
 For more details, please see the documentation of the ``interpolation`` and ``persistence`` 
 parameters. In order to turn off the interpolation temporarily, the user can simply switch the 
@@ -3144,7 +3142,7 @@ def setCosmology(cosmo_name, params = None, **kwargs):
 
 ###################################################################################################
 
-def addCosmology(cosmo_name, params, **kwargs):
+def addCosmology(cosmo_name, params = {}, **kwargs):
 	"""
 	Add a set of cosmological parameters to the global list.
 	
