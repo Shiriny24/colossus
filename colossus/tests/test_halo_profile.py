@@ -96,7 +96,7 @@ class TCCreation(test_colossus.ColosssusTestCase):
 				p1 = self.p_objs[j](M = self.M, c = self.c, z = self.z, mdef = self.mdef, outer_terms = outer_terms)
 				pars = p1.par.copy()
 				pars.update(p1.opt)
-				p2 = self.p_objs[j](**pars, outer_terms = outer_terms)
+				p2 = self.p_objs[j](outer_terms = outer_terms, **pars)
 				for k in p1.par:
 					self.assertAlmostEqual(p1.par[k], p2.par[k], places = TEST_N_DIGITS_LOW)
 				M200m_1 = p1.MDelta(self.z, '200m')
