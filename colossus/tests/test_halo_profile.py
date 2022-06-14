@@ -58,7 +58,9 @@ class TCCreation(test_colossus.ColosssusTestCase):
 
 		for i in range(len(self.p_objs)):		
 			p1 = self.p_objs[i](M = self.M, c = self.c, z = self.z, mdef = self.mdef)
-			p2 = self.p_objs[i](z = self.z, **p1.par, **p1.opt)
+			pars = p1.par.copy()
+			pars.update(p1.opt)
+			p2 = self.p_objs[i](z = self.z, **pars)
 			for k in p1.par:
 				self.assertAlmostEqual(p1.par[k], p2.par[k], places = TEST_N_DIGITS_LOW)
 
@@ -92,7 +94,9 @@ class TCCreation(test_colossus.ColosssusTestCase):
 					outer_terms.append(ot_obj)
 				
 				p1 = self.p_objs[j](M = self.M, c = self.c, z = self.z, mdef = self.mdef, outer_terms = outer_terms)
-				p2 = self.p_objs[j](**p1.par, **p1.opt, outer_terms = outer_terms)
+				pars = p1.par.copy()
+				pars.update(p1.opt)
+				p2 = self.p_objs[j](**pars, outer_terms = outer_terms)
 				for k in p1.par:
 					self.assertAlmostEqual(p1.par[k], p2.par[k], places = TEST_N_DIGITS_LOW)
 				M200m_1 = p1.MDelta(self.z, '200m')
@@ -103,8 +107,10 @@ class TCCreation(test_colossus.ColosssusTestCase):
 				pname = all_profs_inner[j]		
 				p1 = profile_composite.compositeProfile(inner_name = pname, outer_names = ot_set, 
 							M = self.M, c = self.c, mdef = self.mdef, **ot_par_all)
+				pars = p1.par.copy()
+				pars.update(p1.opt)
 				p2 = profile_composite.compositeProfile(inner_name = pname, outer_names = ot_set, 
-							**p1.par, **p1.opt)
+							**pars)
 				for k in p1.par:
 					self.assertAlmostEqual(p1.par[k], p2.par[k], places = TEST_N_DIGITS_LOW)
 
