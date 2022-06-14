@@ -3,7 +3,7 @@ Colossus
 
 Colossus is an astrophysics toolkit, the name is an acronym for **CO**\ smology, 
 ha\ **LO**\ , and large-**S**\ cale **S**\ tr\ **U**\ cture tool\ **S**\ . Please consult 
-the `Online Documentation <https://bdiemer.bitbucket.io/colossus/>`_ for details.
+the `Online Documentation <https://bdiemer.bitbucket.io/colossus/>`__ for details.
 
 Installation
 ------------
@@ -50,10 +50,10 @@ Main Developer: Benedikt Diemer (diemer@umd.edu)
 
 Contributors:   Matt Becker, Michael Joyce, Andrey Kravtsov, Steven Murray, Riccardo Seppi
 
-License:        MIT. Copyright (c) 2014-2021
+License:        MIT. Copyright (c) 2014-2022
 
 If you use Colossus for a publication, please cite the code paper 
-(`Diemer 2018 <https://ui.adsabs.harvard.edu/abs/2018ApJS..239...35D/abstract>`_). Many 
+(`Diemer 2018 <https://ui.adsabs.harvard.edu/abs/2018ApJS..239...35D/abstract>`__). Many 
 Colossus routines implement the results of other papers. If you use such routines, please take care 
 to cite the relevant papers as well (they will be mentioned in the function and/or module 
 documentation).

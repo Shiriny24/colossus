@@ -79,5 +79,5 @@ RHO_CRIT_0_MPC3 = 2.77536627245708E11
 
 DELTA_COLLAPSE = 1.68647
 """The linear overdensity threshold for halo collapse according to the spherical top-hat collapse 
-model (`Gunn & Gott 1972 <http://adsabs.harvard.edu/abs/1972ApJ...176....1G>`_). This number 
+model (`Gunn & Gott 1972 <http://adsabs.harvard.edu/abs/1972ApJ...176....1G>`__). This number 
 corresponds to :math:`3/5 (3\pi/2)^{2/3}` and is modified very slightly in a non-EdS universe."""

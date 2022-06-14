@@ -7,7 +7,7 @@
 
 """
 This module implements a Markov Chain Monte-Carlo sampler based on the 
-`Goodman & Weare 2010 <http://adsabs.harvard.edu/abs/2010CAMCS...5...65G>`_ algorithm. The code was
+`Goodman & Weare 2010 <http://adsabs.harvard.edu/abs/2010CAMCS...5...65G>`__ algorithm. The code was
 originally written by Andrey Kravtsov and adapted for Colossus by Benedikt Diemer.
 
 ---------------------------------------------------------------------------------------------------
@@ -123,7 +123,7 @@ def initWalkers(x_initial,
 	"""
 	
 	if nwalkers % 2:
-		raise ValueError("The number of walkers must be divisible by 2.")
+		raise ValueError('The number of walkers must be divisible by 2.')
 
 	nparams = len(x_initial)
 	walkers = np.zeros([2, nwalkers // 2, nparams])
@@ -137,7 +137,7 @@ def initWalkers(x_initial,
 		step_array = x_initial * initial_step
 		
 	for i in range(nparams):
-		walkers[:, :, i] = np.reshape(np.random.normal(x_initial[i], step_array[i], nwalkers),
+		walkers[:, :, i] = np.reshape(np.random.normal(x_initial[i], np.abs(step_array[i]), nwalkers),
 										(2, nwalkers // 2))
 
 	return walkers
@@ -204,9 +204,9 @@ def runChain(L_func, walkers, args = (),
 	# ---------------------------------------------------------------------------------------------
 
 	if len(walkers.shape) != 3:
-		raise ValueError("The walkers array must be 3-dimensional.")
+		raise ValueError('The walkers array must be 3-dimensional.')
 	if len(walkers) != 2:
-		raise ValueError("The first dimension of the walkers array must have length 1.")
+		raise ValueError('The first dimension of the walkers array must have length 1.')
 	nwalkers = len(walkers[0]) * 2
 	nparams = len(walkers[0][0])
 	
@@ -407,7 +407,7 @@ def analyzeChain(chain, param_names = None, percentiles = [68.27, 95.45, 99.73],
 	x_stddev = np.std(chain, axis = 0)
 
 	nperc = len(percentiles)
-	x_percentiles = np.zeros((nperc, 2, nparams), np.float)
+	x_percentiles = np.zeros((nperc, 2, nparams), float)
 	for i in range(nperc):
 		half_percentile = (100.0 - percentiles[i]) / 2.0
 		x_percentiles[i, 0, :] = np.percentile(chain, half_percentile, axis = 0)

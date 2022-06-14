@@ -53,12 +53,12 @@ suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_mass.TCMassD
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_mass.TCMassAdv))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_splashback.TCSplashbackModel))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_splashback.TCSplashbackRadius))
-suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_profile.TCBase))
-suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_profile.TCInner))
-suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_profile.TCOuter))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_profile.TCCreation))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_profile.TCInnerRoutines))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_profile.TCOuterRoutines))
+suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_profile.TCNumerical))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_profile.TCFitting))
 suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_profile.TCNFW))
-suites.append(unittest.TestLoader().loadTestsFromTestCase(test_halo_profile.TCDK14))
 
 # Run tests
 suite = unittest.TestSuite(suites)

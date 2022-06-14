@@ -430,7 +430,7 @@ class TCDarkEnergyGrowthFactor(CosmologyTestCase):
 			my_cosmo_1 = {'flat': True, 'H0': 100 * 0.693, 'Om0': 0.287, 'Ob0': 0.043, 'sigma8': 0.820, 'ns': 1, 
 						'persistence': '', 'interpolation': interpolation}
 			my_cosmo_2 = {'flat': True, 'H0': 100 * 0.693, 'Om0': 0.287, 'Ob0': 0.043, 'sigma8': 0.820, 'ns': 1, 
-						'persistence': '', 'interpolation': interpolation, "de_model": "w0", "w0": -1.0}
+						'persistence': '', 'interpolation': interpolation, 'de_model': 'w0', 'w0': -1.0}
 			cosmo1 = cosmology.setCosmology('test_1', my_cosmo_1)
 			D1 = cosmo1.growthFactor(z)
 			cosmo2 = cosmology.setCosmology('test_2', my_cosmo_2)

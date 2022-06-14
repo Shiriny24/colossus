@@ -13,11 +13,11 @@ general introduction to the Colossus density profile module.
 Basics
 ---------------------------------------------------------------------------------------------------
 
-The Hernquist profile (`Hernquist 1990 <http://adsabs.harvard.edu/abs/1990ApJ...356..359H>`_) is 
+The Hernquist profile (`Hernquist 1990 <http://adsabs.harvard.edu/abs/1990ApJ...356..359H>`__) is 
 defined by the density function
 
-	.. math::
-		\\rho(r) = \\frac{\\rho_s}{\\left(\\frac{r}{r_s}\\right) \\left(1 + \\frac{r}{r_s}\\right)^{3}}
+.. math::
+	\\rho(r) = \\frac{\\rho_s}{\\left(\\frac{r}{r_s}\\right) \\left(1 + \\frac{r}{r_s}\\right)^{3}}
 
 The profile class can be initialized by either passing its fundamental parameters 
 :math:`\\rho_{\\rm s}` and :math:`r_{\\rm s}`, but the more convenient initialization is via mass 
@@ -26,7 +26,7 @@ and concentration::
 	from colossus.cosmology import cosmology
 	from colossus.halo import profile_hernquist
 	
-	cosmology.setCosmology('planck15')
+	cosmology.setCosmology('planck18')
 	p_hernquist = profile_einasto.HernquistProfile(M = 1E12, c = 10.0, z = 0.0, mdef = 'vir')
 
 Please see the :doc:`tutorials` for more code examples.
@@ -37,6 +37,7 @@ Module reference
 """
 
 import numpy as np
+import warnings
 
 from colossus.halo import mass_so
 from colossus.halo import profile_base
@@ -75,33 +76,22 @@ class HernquistProfile(profile_base.HaloDensityProfile):
 	# CONSTRUCTOR
 	###############################################################################################
 
-	def __init__(self, rhos = None, rs = None,
-				M = None, c = None, z = None, mdef = None, **kwargs):
+	def __init__(self, **kwargs):
 	
 		self.par_names = ['rhos', 'rs']
 		self.opt_names = []
+		
 		profile_base.HaloDensityProfile.__init__(self, **kwargs)
 
-		# The fundamental way to define a Hernquist profile by the central density and scale radius
-		if rhos is not None and rs is not None:
-			self.par['rhos'] = rhos
-			self.par['rs'] = rs
-
-		# Alternatively, the user can give a mass and concentration, together with mass definition
-		# and redshift.
-		elif M is not None and c is not None and mdef is not None and z is not None:
-			self.par['rhos'], self.par['rs'] = self.fundamentalParameters(M, c, z, mdef)
-		
-		else:
-			msg = 'A Hernquist profile must be define either using rhos and rs, or M, c, mdef, and z.'
-			raise Exception(msg)
-		
+		# We need an initial radius to guess Rmax.
+		self.r_guess = self.par['rs']
+	
 		return
 
 	###############################################################################################
 
 	@classmethod
-	def fundamentalParameters(cls, M, c, z, mdef):
+	def nativeParameters(cls, M, c, z, mdef):
 		"""
 		The fundamental Hernquist parameters, :math:`\\rho_{\\rm s}` and :math:`r_{\\rm s}`, from 
 		mass and concentration.
@@ -138,6 +128,44 @@ class HernquistProfile(profile_base.HaloDensityProfile):
 		return rhos, rs
 
 	###############################################################################################
+
+	@classmethod
+	def fundamentalParameters(cls, M, c, z, mdef):
+		
+		warnings.warn('The function HernquistProfile.fundamentalParameters is deprecated and has been renamed to nativeParameters.')
+		rhos, rs = cls.nativeParameters(M, c, z, mdef)
+		
+		return rhos, rs
+
+	###############################################################################################
+
+	def setNativeParameters(self, M, c, z, mdef, **kwargs):
+		"""
+		Set the native Hernquist parameters from mass and concentration.
+
+		The Hernquist profile has :math:`\\rho_s` and :math:`r_{\\rm s}` as internal parameters, 
+		which are computed from a mass and concentration. This function ignores the presence of 
+		outer profiles.
+	
+		Parameters
+		-------------------------------------------------------------------------------------------
+		M: float
+			Spherical overdensity mass in :math:`M_{\odot}/h`.
+		c: float
+			The concentration, :math:`c = R / r_{\\rm s}`, corresponding to the given halo mass and 
+			mass definition.
+		z: float
+			Redshift
+		mdef: str
+			The mass definition in which ``M`` and ``c`` are given. See :doc:`halo_mass` for 
+			details.
+		"""
+		
+		self.par['rhos'], self.par['rs'] = self.nativeParameters(M, c, z, mdef)
+		
+		return
+
+	###############################################################################################
 	
 	def densityInner(self, r):
 		"""
@@ -162,7 +190,7 @@ class HernquistProfile(profile_base.HaloDensityProfile):
 
 	###############################################################################################
 
-	def enclosedMassInner(self, r, accuracy = None, ):
+	def enclosedMassInner(self, r, accuracy = None):
 		"""
 		The mass enclosed within radius r due to the inner profile term.
 

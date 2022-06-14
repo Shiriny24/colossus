@@ -15,7 +15,7 @@ Basics
 
 There are two levels of storage: all stored fields are stored in dictionaries in memory. The data
 can be of any type, if persistent storage is used the data must be 
-`pickleable <https://docs.python.org/3/library/pickle.html#what-can-be-pickled-and-unpickled>`_. 
+`pickleable <https://docs.python.org/3/library/pickle.html#what-can-be-pickled-and-unpickled>`__. 
 The persistent storage can be turned on and off by the user, both generally and for each field 
 individually. 
 
@@ -220,7 +220,7 @@ class StorageUser():
 			filename_pickle = self.getUniqueFilename()
 			if os.path.exists(filename_pickle):
 				try:
-					input_file = open(filename_pickle, "rb")
+					input_file = open(filename_pickle, 'rb')
 					self.storage_pers = pickle.load(input_file)
 					
 					# Check if a version was stored with this file. If not, assume it is old.
@@ -278,7 +278,7 @@ class StorageUser():
 			
 			if self.persistence_write:
 				filename_pickle = self.getUniqueFilename()
-				output_file = open(filename_pickle, "wb")
+				output_file = open(filename_pickle, 'wb')
 				pickle.dump(self.storage_pers, output_file, pickle.HIGHEST_PROTOCOL)
 				output_file.close()  
 
@@ -435,7 +435,7 @@ class StorageUser():
 							raise Exception('While inverting interpolator %s, found not monotonically increasing values.' \
 										% (object_name))
 						elif (np.min(np.diff(object_raw[1])) == 0.0):
-							mask = np.ones(len(object_raw[1]), np.bool)
+							mask = np.ones(len(object_raw[1]), bool)
 							mask[1:] = (np.diff(object_raw[1]) > 0.0)
 							n_removed = len(mask) - np.count_nonzero(mask)
 							warnings.warn('While inverting interpolator %s, removed %d flat values from the data.' \

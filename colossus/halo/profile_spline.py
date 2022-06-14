@@ -95,7 +95,7 @@ class SplineProfile(profile_base.HaloDensityProfile):
 		
 		self.par_names = []
 		self.opt_names = []
-		profile_base.HaloDensityProfile.__init__(self)
+		profile_base.HaloDensityProfile.__init__(self, ignore_params = True)
 		
 		self.rmin = np.min(r)
 		self.rmax = np.max(r)
@@ -104,8 +104,7 @@ class SplineProfile(profile_base.HaloDensityProfile):
 		self.max_RDelta = self.rmax
 
 		if rho is None and M is None:
-			msg = 'Either mass or density must be specified.'
-			raise Exception(msg)
+			raise Exception('Either mass or density must be specified.')
 		
 		self.rho_spline = None
 		self.M_spline = None
@@ -160,6 +159,11 @@ class SplineProfile(profile_base.HaloDensityProfile):
 
 		return
 
+	###############################################################################################
+
+	def setNativeParameters(self, M, c, z, mdef, **kwargs):
+		return 
+	
 	###############################################################################################
 	# METHODS BOUND TO THE CLASS
 	###############################################################################################
@@ -264,3 +268,5 @@ class SplineProfile(profile_base.HaloDensityProfile):
 		"""		
 
 		return np.exp(self.M_spline(np.log(r)))
+
+###################################################################################################

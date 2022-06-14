@@ -38,20 +38,25 @@ used in multiple ways:
 
 * Set one of the pre-defined cosmologies, but overwrite certain parameters::
 	
-	cosmology.setCosmology('planck18', {'print_warnings': False})
+	cosmology.setCosmology('planck18', print_warnings = False)
+
+* Use an existing cosmology, overwrite parameters, and rename it. This might be better if we want 
+  to overwrite important cosmological parameters::
+  
+    cosmology.setCosmology('myCosmo', params = cosmology.cosmologies['planck18'], Om0 = 0.28)
 
 * Add a new cosmology to the global list of available cosmologies. This has the advantage that the 
   new cosmology can be set from anywhere in the code. Only the main cosmological parameters are 
   mandatory, all other parameters can be left to their default values::
 	
 	params = {'flat': True, 'H0': 67.2, 'Om0': 0.31, 'Ob0': 0.049, 'sigma8': 0.81, 'ns': 0.95}
-	cosmology.addCosmology('myCosmo', params)
+	cosmology.addCosmology('myCosmo', **params)
 	cosmo = cosmology.setCosmology('myCosmo')
 
 * Set a new cosmology without adding it to the global list of available cosmologies::
 	
 	params = {'flat': True, 'H0': 67.2, 'Om0': 0.31, 'Ob0': 0.049, 'sigma8': 0.81, 'ns': 0.95}
-	cosmo = cosmology.setCosmology('myCosmo', params)
+	cosmo = cosmology.setCosmology('myCosmo', **params)
 
 * Set a self-similar cosmology with a power-law power spectrum of a certain slope, and the 
   default settings set in the ``powerlaw`` cosmology::
@@ -96,7 +101,7 @@ Converting to and from Astropy cosmologies
 ***************************************************************************************************
 
 Colossus can easily interface with the cosmology module of the popular 
-`Astropy <https://www.astropy.org/>`_ code. Astropy cosmology objects can be converted to Colossus 
+`Astropy <https://www.astropy.org/>`__ code. Astropy cosmology objects can be converted to Colossus 
 cosmologies with the :func:`fromAstropy` function::
 
 	import astropy.cosmology
@@ -141,35 +146,35 @@ The following sets of cosmological parameters can be chosen using the
 .. table::
 	:widths: auto
 
-	================== ================================================================================ =========== ===============================================
-	ID                 Paper                                                                            Location    Explanation
-	================== ================================================================================ =========== ===============================================
-	planck18-only      `Planck Collab. 2018 <https://arxiv.org/abs/1807.06209>`_                        Table 2     Best-fit, Planck only (column 5) 					
-	planck18           `Planck Collab. 2018 <https://arxiv.org/abs/1807.06209>`_ 	                    Table 2     Best-fit with BAO (column 6)			
-	planck15-only  	   `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`_     Table 4     Best-fit, Planck only (column 2) 					
-	planck15           `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`_ 	Table 4     Best-fit with ext (column 6)			
-	planck13-only      `Planck Collab. 2013 <http://adsabs.harvard.edu/abs/2014A%26A...571A..16P>`_     Table 2     Best-fit, Planck only 					
-	planck13           `Planck Collab. 2013 <http://adsabs.harvard.edu/abs/2014A%26A...571A..16P>`_     Table 5     Best-fit with BAO etc. 					
-	WMAP9-only         `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`_       Table 2     Max. likelihood, WMAP only 				
-	WMAP9-ML           `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`_       Table 2     Max. likelihood, with eCMB, BAO and H0 	
-	WMAP9              `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`_       Table 4     Best-fit, with eCMB, BAO and H0 		
-	WMAP7-only         `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`_       Table 1     Max. likelihood, WMAP only 				
-	WMAP7-ML           `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`_       Table 1     Max. likelihood, with BAO and H0 		
-	WMAP7 	           `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`_	    Table 1     Best-fit, with BAO and H0 				
-	WMAP5-only         `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`_	    Table 1     Max. likelihood, WMAP only 			
-	WMAP5-ML           `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`_	    Table 1     Max. likelihood, with BAO and SN 		
-	WMAP5 	           `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`_	    Table 1     Best-fit, with BAO and SN 			
-	WMAP3-ML           `Spergel et al. 2007 <http://adsabs.harvard.edu/abs/2007ApJS..170..377S>`_       Table 2     Max.likelihood, WMAP only 				
-	WMAP3              `Spergel et al. 2007 <http://adsabs.harvard.edu/abs/2007ApJS..170..377S>`_       Table 5     Best fit, WMAP only 					
-	WMAP1-ML           `Spergel et al. 2003 <http://adsabs.harvard.edu/abs/2003ApJS..148..175S>`_       Table 1/4   Max.likelihood, WMAP only 				
-	WMAP1              `Spergel et al. 2003 <http://adsabs.harvard.edu/abs/2003ApJS..148..175S>`_       Table 7/4   Best fit, WMAP only 					
-	illustris          `Vogelsberger et al. 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.444.1518V>`_  --          Cosmology of the Illustris simulation
-	bolshoi	           `Klypin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...740..102K>`_        --          Cosmology of the Bolshoi simulation
-	multidark-planck   `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_        Table 1     Cosmology of the Multidark-Planck simulations
-	millennium         `Springel et al. 2005 <http://adsabs.harvard.edu/abs/2005Natur.435..629S>`_      --          Cosmology of the Millennium simulation 
-	EdS                --                                                                               --          Einstein-de Sitter cosmology
-	powerlaw           --                                                                               --          Default settings for power-law cosms.
-	================== ================================================================================ =========== ===============================================
+	==================== ================================================================================= =========== ===============================================
+	ID                   Paper                                                                             Location    Explanation
+	==================== ================================================================================= =========== ===============================================
+	``planck18-only``    `Planck Collab. 2018 <https://arxiv.org/abs/1807.06209>`__                        Table 2     Best-fit, Planck only (column 5) 					
+	``planck18``         `Planck Collab. 2018 <https://arxiv.org/abs/1807.06209>`__ 	                     Table 2     Best-fit with BAO (column 6)			
+	``planck15-only``    `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`__     Table 4     Best-fit, Planck only (column 2) 					
+	``planck15``         `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`__ 	 Table 4     Best-fit with ext (column 6)			
+	``planck13-only``    `Planck Collab. 2013 <http://adsabs.harvard.edu/abs/2014A%26A...571A..16P>`__     Table 2     Best-fit, Planck only 					
+	``planck13``         `Planck Collab. 2013 <http://adsabs.harvard.edu/abs/2014A%26A...571A..16P>`__     Table 5     Best-fit with BAO etc. 					
+	``WMAP9-only``       `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`__       Table 2     Max. likelihood, WMAP only 				
+	``WMAP9-ML``         `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`__       Table 2     Max. likelihood, with eCMB, BAO and H0 	
+	``WMAP9``            `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`__       Table 4     Best-fit, with eCMB, BAO and H0 		
+	``WMAP7-only``       `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`__       Table 1     Max. likelihood, WMAP only 				
+	``WMAP7-ML``         `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`__       Table 1     Max. likelihood, with BAO and H0 		
+	``WMAP7`` 	         `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`__	     Table 1     Best-fit, with BAO and H0 				
+	``WMAP5-only``       `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`__	     Table 1     Max. likelihood, WMAP only 			
+	``WMAP5-ML``         `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`__	     Table 1     Max. likelihood, with BAO and SN 		
+	``WMAP5`` 	         `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`__	     Table 1     Best-fit, with BAO and SN 			
+	``WMAP3-ML``         `Spergel et al. 2007 <http://adsabs.harvard.edu/abs/2007ApJS..170..377S>`__       Table 2     Max.likelihood, WMAP only 				
+	``WMAP3``            `Spergel et al. 2007 <http://adsabs.harvard.edu/abs/2007ApJS..170..377S>`__       Table 5     Best fit, WMAP only 					
+	``WMAP1-ML``         `Spergel et al. 2003 <http://adsabs.harvard.edu/abs/2003ApJS..148..175S>`__       Table 1/4   Max.likelihood, WMAP only 				
+	``WMAP1``            `Spergel et al. 2003 <http://adsabs.harvard.edu/abs/2003ApJS..148..175S>`__       Table 7/4   Best fit, WMAP only 					
+	``illustris``        `Vogelsberger et al. 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.444.1518V>`__  --          Cosmology of the Illustris simulation
+	``bolshoi``	         `Klypin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...740..102K>`__        --          Cosmology of the Bolshoi simulation
+	``multidark-planck`` `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`__        Table 1     Cosmology of the Multidark-Planck simulations
+	``millennium``       `Springel et al. 2005 <http://adsabs.harvard.edu/abs/2005Natur.435..629S>`__      --          Cosmology of the Millennium simulation 
+	``EdS``              --                                                                                --          Einstein-de Sitter cosmology
+	``powerlaw``         --                                                                                --          Default settings for power-law cosms.
+	==================== ================================================================================= =========== ===============================================
 
 Those cosmologies that refer to particular simulations (such as ``bolshoi`` and ``millennium``) are
 generally set to ignore relativistic species, i.e. photons and neutrinos, because they are not
@@ -185,43 +190,95 @@ dark energy as a cosmological constant and contain no curvature. To add curvatur
 flatness must be overwritten, and the dark energy content of the universe must be set (which is 
 otherwise computed from the matter and relativistic contributions)::
 
-	params = cosmology.cosmologies['planck18']
-	params['flat'] = False
-	params['Ode0'] = 0.75
-	cosmo = cosmology.setCosmology('planck_curvature', params)
+	cosmo = cosmology.setCosmology('planck_curvature', params = cosmology.cosmologies['planck18'], 
+									flat = False, Ode0 = 0.85)
 	
 Multiple models for the dark energy equation of state parameter :math:`w(z)` are implemented, 
 namely a cosmological constant (:math:`w=-1`), a constant :math:`w`, a linearly varying 
 :math:`w(z) = w_0 + w_a (1 - a)`, and arbitrary user-supplied functions for :math:`w(z)`. To set, 
 for example, a linearly varying EOS, we change the ``de_model`` parameter::
 
-	params = cosmology.cosmologies['planck18']
-	params['de_model'] = 'w0wa'
-	params['w0'] = -0.8
-	params['wa'] = 0.1
-	cosmo = cosmology.setCosmology('planck_w0wa', params)
-
+	cosmo = cosmology.setCosmology('planck_w0wa', params = cosmology.cosmologies['planck18'], 
+									de_model = 'w0wa', w0 = -0.8, wa = 0.1)
+								
 We can implement more exotic models by supplying an arbitrary function::
 
 	def wz_func(z):
 		return -1.0 + 0.1 * z
 		
-	params = cosmology.cosmologies['planck18']
-	params['de_model'] = 'user'
-	params['wz_function'] = wz_func
-	cosmo = cosmology.setCosmology('planck_wz', params)
+	cosmo = cosmology.setCosmology('planck_wz', params = cosmology.cosmologies['planck18'], 
+									de_model = 'user', wz_function = wz_func)
 
 Please note that the redshift range into the future is reduced from :math:`z = -0.995` 
 (:math:`a = 200`) to :math:`z = 0.9` (:math:`a = 10`) for the ``w0wa`` and ``user`` dark energy 
 models to avoid numerical issues.
 
 ---------------------------------------------------------------------------------------------------
-Power spectrum models
+Power spectrum, variance, correlation function
 ---------------------------------------------------------------------------------------------------
 
-By default, Colossus relies on fitting functions for the matter power spectrum which, in turn,
-is the basis for the variance and correlation function. These models are implemented in the 
-:mod:`~cosmology.power_spectrum` module, documented at the bottom of this file.
+Many calculations in large-scale structure are based on the the power spectrum of matter 
+fluctuations (:func:`Cosmology.matterPowerSpectrum`), the variance within a given radius
+(:func:`Cosmology.sigma`), or the 2-point correlation function 
+(:func:`Cosmology.correlationFunction`). The latter two quantities represent integrals over the 
+power spectrum. All models for the power spectrum are housed in a separate 
+:mod:`~cosmology.power_spectrum` module, and can be evaluated with the general 
+:func:`~cosmology.power_spectrum.powerSpectrum` function. However, in general, only functions 
+internal to the :class:`Cosmology` class should be needed::
+
+	k = 10**np.linspace(-2.0, 3.0, 100)
+	R = 10**np.linspace(-2.0, 2.0, 100)
+	
+	P = cosmo.matterPowerSpectrum(k, z = 1.0)
+	variance = cosmo.sigma(R, z = 1.0)
+	corr = cosmo.correlationFunction(R, z = 1.0)
+
+The following models for the power spectrum are supported, and are listed in the 
+:data:`~cosmology.power_spectrum.models` dictionary. Their ID can be passed as the ``model`` 
+parameter to the power spectrum functions. 
+
+.. table::
+	:widths: auto
+
+	====================== =============================================================== ==================================================================================== ======================================
+	Model ID               Function                                                        Reference                                                                            Comment
+	====================== =============================================================== ==================================================================================== ======================================
+	``sugiyama95``         :func:`~cosmology.power_spectrum.modelSugiyama95`               `Sugiyama 1995 <https://ui.adsabs.harvard.edu/abs/1995ApJS..100..281S>`__            A semi-analytical fitting function
+	``eisenstein98``       :func:`~cosmology.power_spectrum.modelEisenstein98`             `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`__         A semi-analytical fitting function (default)
+	``eisenstein98_zb``    :func:`~cosmology.power_spectrum.modelEisenstein98ZeroBaryon`   `Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`__         The zero-baryon version, i.e., no BAO
+	``camb``               :func:`~cosmology.power_spectrum.modelCamb`                     `Lewis et al. 2000 <https://ui.adsabs.harvard.edu/abs/2000ApJ...538..473L>`__        The CAMB Boltzmann code (installed separately)
+	====================== =============================================================== ==================================================================================== ======================================
+	
+By default, Colossus computes the power spectrum using the ``eisenstein98`` fitting function
+because it is accurate to better than 5%, fast, and does not need externally installed tools. 
+While this model takes numerous physical effects into account, it overestimates the power on small
+scales (:math:`k \\sim 100\\ h/{\\rm Mpc}`) because it neglects baryon pressure. Moreover, the model
+always assumes three massless neutrino species, regardless of what is chosen in a given 
+cosmology.
+
+One alternative is to use the ``camb`` Boltzmann solver (see the 
+`CAMB documentation <https://camb.readthedocs.io/en/latest/index.html>`__ for details). This code
+(and its python interface) must be installed externally, e.g., using pip. The first evaluation of
+the power spectrum for a given cosmology can take a few seconds. However, CAMB takes a rich set
+of physics into account and can be flexibly tuned using the ``ps_args`` parameters. One downside
+is that the range of wavenumbers is limited, which can lead to an underestimation of the
+variance on small scales. See the :func:`~cosmology.power_spectrum.modelCamb` function for
+details.
+
+All functions that rely on the matter power spectrum (such as variance, correlation function, and 
+functions that depend on them) accept a ``ps_args`` dictionary through which the user can set the 
+power spectrum model and parameters. When evaluating the power spectrum (or functions that rely on 
+it) with non-default parameters, it is important to keep those parameters consistent across 
+calculations. In the following example, we evaluate the power spectrum and variance of dark matter 
+only based on a CAMB code, using an increased maximum wavenumber::
+	
+	ps_args = dict(model = 'camb', kmax = 5E3, ps_type = 'cdm')
+	
+	P = cosmo.matterPowerSpectrum(k, **ps_args)
+	variance = cosmo.sigma(R, **ps_args)
+
+The additional arguments can also be passed to all functions in the :doc:`lss` and :doc:`halo`
+modules that use the power spectrum. See the :doc:`tutorials` for more code examples.	
 
 ---------------------------------------------------------------------------------------------------
 Derivatives and inverses
@@ -259,7 +316,7 @@ default, tabulated, stored in files, and re-loaded when the same cosmology is se
 where functions are evaluated few times, but for a large number of cosmologies), the user can turn 
 this behavior off::
 
-	cosmo = cosmology.setCosmology('planck18', {'interpolation': False, 'persistence': ''})
+	cosmo = cosmology.setCosmology('planck18', interpolation = False, persistence = '')
 
 For more details, please see the documentation of the ``interpolation`` and ``persistence`` 
 parameters. In order to turn off the interpolation temporarily, the user can simply switch the 
@@ -283,6 +340,7 @@ Module reference
 import numpy as np
 import scipy.integrate
 from collections import OrderedDict
+import warnings
 
 from colossus import defaults
 from colossus import settings
@@ -347,9 +405,9 @@ class Cosmology(object):
 	sub-dominant impact on the computations. For such parameters, default values are pre-set so 
 	that the user does not have to choose them manually. This includes the CMB temperature today 
 	(``Tcmb0`` = 2.7255 K, 
-	`Fixsen 2009 <https://ui.adsabs.harvard.edu//#abs/2009ApJ...707..916F/abstract>`_) 
+	`Fixsen 2009 <https://ui.adsabs.harvard.edu//#abs/2009ApJ...707..916F/abstract>`__) 
 	and the effective number of neutrino species (``Neff`` = 3.046, 
-	`Planck Collaboration 2018 <https://arxiv.org/abs/1807.06209>`_). These 
+	`Planck Collaboration 2018 <https://arxiv.org/abs/1807.06209>`__). These 
 	values are compatible with the most recent observational measurements and can be changed by 
 	the user if necessary.
 	
@@ -387,7 +445,7 @@ class Cosmology(object):
 		of state can either be a cosmological constant (``de_model = lambda``), a constant w 
 		(``de_model = w0``, the ``w0`` parameter must be set), a linear function of the scale 
 		factor according to the parameterization of 
-		`Linder 2003 <http://adsabs.harvard.edu/abs/2003PhRvL..90i1301L>`_ where 
+		`Linder 2003 <http://adsabs.harvard.edu/abs/2003PhRvL..90i1301L>`__ where 
 		:math:`w(z) = w_0 + w_a (1 - a)`  (``de_model = w0wa``, the ``w0`` and ``wa`` parameters 
 		must be set), or a function supplied by the user (``de_model = user``). In the latter case, 
 		the w(z) function must be passed using the ``wz_function`` parameter.
@@ -528,9 +586,12 @@ class Cosmology(object):
 		# Lookup table for P(k). The Pk_norm field is only needed if interpolation == False.
 		# Note that the binning is highly irregular for P(k), since much more resolution is
 		# needed at the BAO scale and around the bend in the power spectrum. Thus, the binning
-		# is split into multiple regions with different resolutions.
+		# is split into multiple regions with different resolutions. For some applications, we
+		# also need regularly spaced binning. Here, we choose a relatively high number of bins
+		# to be safe.
 		self.k_Pk = [1E-20, 1E-4, 5E-2, 1E0, 1E6, 1E20]
 		self.k_Pk_Nbins = [10, 30, 60, 20, 10]
+		self.k_Pk_Nbins_equal = 800
 		
 		# Lookup table for sigma. Note that the nominal accuracy to which the integral is 
 		# evaluated should match with the accuracy of the interpolation which is set by Nbins.
@@ -637,7 +698,7 @@ class Cosmology(object):
 		
 		if self.storageUser.checkForChangedHash():
 			if self.print_warnings:
-				print("Cosmology: Detected change in cosmological parameters.")
+				print('Cosmology: Detected change in cosmological parameters.')
 			self._deriveParameters()
 			self.storageUser.resetStorage()
 			
@@ -661,13 +722,16 @@ class Cosmology(object):
 			An astropy.cosmology.FLRW class object.
 		"""
 		
-		import astropy.cosmology
+		try:
+			import astropy.cosmology
+		except:
+			raise Exception('Astropy could not be imported. Please make sure it is installed and in the PYTHON_PATH.')
 		
 		if self.power_law:
 			raise Exception('Cannot convert power-law cosmology to astropy.')
 		
 		if not self.relspecies:
-			print('WARNING: Cannot convert setting to ignore relativistic species to Astropy.')
+			warnings.warn('Cannot convert setting to ignore relativistic species to Astropy.')
 
 		params = {'name': self.name, 'H0': self.H0, 'Om0': self.Om0, 'Ob0': self.Ob0, 
 				'Tcmb0': self.Tcmb0, 'Neff': self.Neff}
@@ -772,7 +836,10 @@ class Cosmology(object):
 		
 		if self.de_model == 'lambda':
 			
-			de_z = 1.0
+			if utilities.isArray(z):
+				de_z = np.ones_like(z, float)
+			else:
+				de_z = 1.0
 		
 		elif self.de_model == 'w0':
 			
@@ -786,7 +853,7 @@ class Cosmology(object):
 		elif self.de_model == 'user':
 			
 			z_array, is_array = utilities.getArray(z)
-			z_array = z_array.astype(np.float)
+			z_array = z_array.astype(float)
 			de_z = np.zeros_like(z_array)
 			for i in range(len(z_array)):
 				integral, _ = scipy.integrate.quad(_de_integrand, 0, np.log(1.0 + z_array[i]))
@@ -917,7 +984,7 @@ class Cosmology(object):
 		
 		if use_array:
 			if min_is_array and max_is_array and len(z_min) != len(z_max):
-				raise Exception("If both z_min and z_max are arrays, they need to have the same size.")
+				raise Exception('If both z_min and z_max are arrays, they need to have the same size.')
 			integ = np.zeros_like(z_min_use)
 			for i in range(len(z_min_use)):
 				integ[i], _ = scipy.integrate.quad(integrand, z_min_use[i], z_max_use[i])
@@ -959,7 +1026,7 @@ class Cosmology(object):
 		
 		if interpolator is None:
 			if self.print_info:
-				print("Computing lookup table in z.")
+				print('Computing lookup table in z.')
 			
 			if future:
 				log_min = np.log(1.0 + self.z_min_compute)
@@ -973,7 +1040,7 @@ class Cosmology(object):
 			self.storageUser.storeObject(table_name, np.array([zp1_log_table, x_table]))
 				
 			if self.print_info:
-				print("Lookup table completed.")
+				print('Lookup table completed.')
 			interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, inverse = inverse)
 		
 		return interpolator
@@ -1009,17 +1076,15 @@ class Cosmology(object):
 			
 			if np.min(z) < min_:
 				if inverse:
-					msg = "Value f = %.3f outside range of interpolation table (min. %.3f)." % (np.min(z), min_)
+					raise Exception('Value f = %.3f outside range of interpolation table (min. %.3f).' % (np.min(z), min_))
 				else:
-					msg = "Redshift z = %.3f outside range of interpolation table (min. z is %.3f)." % (np.min(z), min_)
-				raise Exception(msg)
+					raise Exception('Redshift z = %.3f outside range of interpolation table (min. z is %.3f).' % (np.min(z), min_))
 				
 			if np.max(z) > max_:
 				if inverse:
-					msg = "Value f = %.3f outside range of interpolation table (max. f is %.3f)." % (np.max(z), max_)
+					raise Exception('Value f = %.3f outside range of interpolation table (max. f is %.3f).' % (np.max(z), max_))
 				else:
-					msg = "Redshift z = %.3f outside range of interpolation table (max. z is %.3f)." % (np.max(z), max_)
-				raise Exception(msg)
+					raise Exception('Redshift z = %.3f outside range of interpolation table (max. z is %.3f).' % (np.max(z), max_))
 
 			if inverse:
 				f = z
@@ -1054,9 +1119,9 @@ class Cosmology(object):
 				
 		else:
 			if derivative > 0:
-				raise Exception("Derivative can only be evaluated if interpolation == True.")
+				raise Exception('Derivative can only be evaluated if interpolation == True.')
 			if inverse:
-				raise Exception("Inverse can only be evaluated if interpolation == True.")
+				raise Exception('Inverse can only be evaluated if interpolation == True.')
 
 			ret = func(z)
 		
@@ -1185,7 +1250,7 @@ class Cosmology(object):
 		line-of-sight distance is returned,
 		
 		.. math::
-			d_{\\rm com,los}(z) = \\frac{c}{H_0} \\int_{0}^{z} \\frac{1}{E(z)} .
+			d_{\\rm com,los}(z) = \\frac{c}{H_0} \\int_{0}^{z} \\frac{1}{E(z)} {\\rm d}z .
 		
 		However, if ``transverse = False``, the function returns the comoving distance between two
 		points separated by an angle of one radian at ``z_max`` (if ``z_min`` is zero). This 
@@ -1368,7 +1433,7 @@ class Cosmology(object):
 		The sound horizon at recombination.
 
 		This function returns the sound horizon in Mpc/h, according to 
-		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_, Equation 26. 
+		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`__, Equation 26. 
 		This fitting function is accurate to 2% where :math:`\Omega_{\\rm b} h^2 > 0.0125` and 
 		:math:`0.025 < \Omega_{\\rm m} h^2 < 0.5`.
 
@@ -1728,17 +1793,17 @@ class Cosmology(object):
 		matter density field. There are three regimes: 
 		
 		* In the matter-radiation regime, we use an approximate analytical formula (Equation 5 in 
-		  `Gnedin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..194...46G>`_. If 
+		  `Gnedin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..194...46G>`__. If 
 		  relativistic species are ignored, :math:`D_+(z) \propto a`. 
 		* In the matter-dominated regime, :math:`D_+(z) \propto a`. 
 		* In the matter-dark energy regime, we evaluate :math:`D_+(z)` 
 		  through integration as defined in 
-		  `Eisenstein & Hu 1999 <http://adsabs.harvard.edu/abs/1999ApJ...511....5E>`_, Equation 8 
-		  (see also `Heath 1977 <http://adsabs.harvard.edu/abs/1977MNRAS.179..351H>`_) for 
+		  `Eisenstein & Hu 1999 <http://adsabs.harvard.edu/abs/1999ApJ...511....5E>`__, Equation 8 
+		  (see also `Heath 1977 <http://adsabs.harvard.edu/abs/1977MNRAS.179..351H>`__) for 
 		  LCDM cosmologies. For cosmologies where :math:`w(z) \\neq -1`, this expression is not
 		  valid and we instead solve the ordinary differential equation for the evolution of the
 		  growth factor (Equation 11 in 
-		  `Linder & Jenkins 2003 <https://ui.adsabs.harvard.edu//#abs/2003MNRAS.346..573L/abstract>`_).
+		  `Linder & Jenkins 2003 <https://ui.adsabs.harvard.edu//#abs/2003MNRAS.346..573L/abstract>`__).
 		
 		At the transition between the integral and analytic approximation regimes, the two 
 		expressions do not quite match up, with differences of the order <1E-3. in order to avoid
@@ -1747,7 +1812,7 @@ class Cosmology(object):
 		
 		The normalization is such that the growth factor approaches :math:`D_+(a) = a` in the 
 		matter-dominated regime. There are other normalizations of the growth factor (e.g., 
-		`Percival 2005 <http://adsabs.harvard.edu/abs/2005A%26A...443..819P>`_, Equation 15), but 
+		`Percival 2005 <http://adsabs.harvard.edu/abs/2005A%26A...443..819P>`__, Equation 15), but 
 		since we almost always care about the growth factor normalized to z = 0, the normalization 
 		does not matter too much (see the :func:`growthFactor` function).
 		
@@ -1852,7 +1917,7 @@ class Cosmology(object):
 		# -----------------------------------------------------------------------------------------
 
 		z_arr, is_array = utilities.getArray(z)
-		z_arr = z_arr.astype(np.float)
+		z_arr = z_arr.astype(float)
 		D = np.zeros_like(z_arr)
 		
 		# Create a transition regime centered around z = 10 in log space, but only if relativistic
@@ -1869,7 +1934,7 @@ class Cosmology(object):
 			mask2 = z_arr > (zt2)
 			mask3 = mask1 & mask2
 		else:
-			mask1 = np.ones_like(z_arr, np.bool)
+			mask1 = np.ones_like(z_arr, bool)
 			
 		# Compute D from integration at low redshift, or integrate ODEs in the case of non-LCDM
 		# dark energy.
@@ -1956,55 +2021,49 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	def _matterPowerSpectrumName(self, model):
+	def _matterPowerSpectrumName(self, model, **ps_args):
 		
-		return 'ps_%s' % (model)
+		return 'ps_%s' % (power_spectrum.powerSpectrumModelName(model, **ps_args))
 	
 	###############################################################################################
 
-	def _matterPowerSpectrumNormName(self, model):
+	def _matterPowerSpectrumNormName(self, model, **ps_args):
 		
-		return 'ps_norm_%s' % (model)
-	
-	###############################################################################################
-
-	def _matterPowerSpectrumNorm(self, model, path = None):
-
-		norm_name = self._matterPowerSpectrumNormName(model)
-		norm = self.storageUser.getStoredObject(norm_name)
-		if norm is None:
-			ps_args = {'model': model, 'path': path}
-			sigma_8Mpc = self._sigmaExact(8.0, filt = 'tophat', ps_args = ps_args, exact_ps = True, 
-										ignore_norm = True)
-			norm = (self.sigma8 / sigma_8Mpc)**2
-			self.storageUser.storeObject(norm_name, norm, persistent = False)	
-			
-		return norm
+		return 'ps_norm_%s' % (power_spectrum.powerSpectrumModelName(model, **ps_args))
 	
 	###############################################################################################
 
 	# Utility to get the min and max k for which a power spectrum is valid. Only for internal use.
 
-	def _matterPowerSpectrumLimits(self, model = defaults.POWER_SPECTRUM_MODEL, path = None):
+	def _matterPowerSpectrumLimits(self, model = defaults.POWER_SPECTRUM_MODEL, **ps_args):
 		
-		if path is None:
-			k_min = self.k_Pk[0]
-			k_max = self.k_Pk[-1]
+		is_unlimited = False
+		
+		if (model in power_spectrum.models):
+			k_min, k_max = power_spectrum.powerSpectrumLimits(model, **ps_args)
+			if (k_min is None):
+				if (k_max is not None):
+					raise Exception('Internal error.')
+				k_min = self.k_Pk[0]
+				k_max = self.k_Pk[-1]
+				is_unlimited = True
 		else:
-			table_name = self._matterPowerSpectrumName(model)
-			table = self.storageUser.getStoredObject(table_name, path = path)
+			if (not 'path' in ps_args) or (ps_args['path'] is None):
+				raise Exception('Power spectrum model %s is not a known model, need a path to a file but found path = None.' \
+							% (model))
+			table_name = self._matterPowerSpectrumName(model, **ps_args)
+			table = self.storageUser.getStoredObject(table_name, path = ps_args['path'])
 			if table is None:
-				msg = "Could not load data table, %s." % (table_name)
-				raise Exception(msg)
+				raise Exception('Could not load data table, %s.' % (table_name))
 			k_min = 10**table[0][0]
 			k_max = 10**table[0][-1]
 				
-		return k_min, k_max
+		return k_min, k_max, is_unlimited
 		
 	###############################################################################################
 
-	def _matterPowerSpectrumExact(self, k, model = defaults.POWER_SPECTRUM_MODEL, path = None,
-								ignore_norm = False):
+	def _matterPowerSpectrumExact(self, k, model = defaults.POWER_SPECTRUM_MODEL, 
+								ignore_norm = False, **ps_args):
 
 		if self.power_law:
 			
@@ -2013,26 +2072,25 @@ class Cosmology(object):
 		
 		elif model in power_spectrum.models:
 			
-			T = power_spectrum.transferFunction(k, self.h, self.Om0, self.Ob0, self.Tcmb0, model = model)
-			Pk = T * T * k**self.ns
+			Pk = power_spectrum.powerSpectrum(k, model, self, output = 'ps', **ps_args)
 
 		else:
+
+			if (not 'path' in ps_args) or (ps_args['path'] is None):
+				raise Exception('If power spectrum model is not a known model, need a path to a file but found path = None.')
 			
-			table_name = self._matterPowerSpectrumName(model)
-			table = self.storageUser.getStoredObject(table_name, path = path)
+			table_name = self._matterPowerSpectrumName(model, **ps_args)
+			table = self.storageUser.getStoredObject(table_name, path = ps_args['path'])
 			
 			if table is None:
-				msg = "Could not load data table, %s. Please check that the power spectrum model name is valid." \
-					% (table_name)
-				raise Exception(msg)
+				raise Exception('Could not load data table, %s. Please check that the power spectrum model name is valid.' \
+					% (table_name))
 			k_min = 10**table[0][0]
 			if np.min(k) < k_min:
-				msg = "k (%.2e) is smaller than min. k in table (%.2e)." % (np.min(k), k_min)
-				raise Exception(msg)
+				raise Exception('k (%.2e) is smaller than min. k in table (%.2e).' % (np.min(k), k_min))
 			k_max = 10**table[0][-1]
 			if np.max(k) > k_max:
-				msg = "k (%.2e) is larger than max. k in table (%.2e)." % (np.max(k), k_max)
-				raise Exception(msg)
+				raise Exception('k (%.2e) is larger than max. k in table (%.2e).' % (np.max(k), k_max))
 
 			# We do not store the interpolator here, because it might have the wrong normalization.
 			interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, 
@@ -2043,7 +2101,7 @@ class Cosmology(object):
 		# interpolation = False; otherwise, we get into an infinite loop of computing sigma8, P(k), 
 		# sigma8 etc.
 		if not ignore_norm:
-			norm = self._matterPowerSpectrumNorm(model, path = path)
+			norm = self.matterPowerSpectrumNorm(model, **ps_args)
 			Pk *= norm
 
 		return Pk
@@ -2056,10 +2114,15 @@ class Cosmology(object):
 	# table created here is complicated, with extra resolution around the BAO scale.
 	#
 	# We need to separately treat the cases of models that can cover the entire range of the 
-	# Colossus P(k) lookup table, and user-supplied, tabulate 
+	# Colossus P(k) lookup table, and user-supplied, tabulated power spectra.
+	#
+	# Note that executing this function with the ignore_norm option can lead to funny behavior,
+	# as in, the interpolator is created ignoring the normalization. This will lead to 
+	# unnormalized values of sigma and other quantities later. Thus, it matters whether the 
+	# function is first called with ignore_norm False or True.
 
 	def _matterPowerSpectrumInterpolator(self, model = defaults.POWER_SPECTRUM_MODEL, 
-										path = None, inverse = False):
+						inverse = False, ignore_norm = False, **ps_args):
 		
 		# We need to be a little careful in the case of a path being given. It is possible 
 		# that the power spectrum from the corresponding table has been evaluated and thus
@@ -2067,13 +2130,13 @@ class Cosmology(object):
 		# the power spectrum has not been normalized yet. In that case, we should not call the
 		# function that creates the interpolator because it *will* create an unnormalized
 		# interpolator.
-		table_name = self._matterPowerSpectrumName(model)
-		if path is None:
+		table_name = self._matterPowerSpectrumName(model, **ps_args)
+		if (not 'path' in ps_args) or (ps_args['path'] is None):
 			interpolator = self.storageUser.getStoredObject(table_name,
 										interpolator = True, inverse = inverse)
 		else:
 			interpolator = None
-			norm_name = self._matterPowerSpectrumNormName(model)
+			norm_name = self._matterPowerSpectrumNormName(model, **ps_args)
 			norm = self.storageUser.getStoredObject(norm_name)
 			if norm == 1.0:
 				interpolator = self.storageUser.getStoredObject(table_name,
@@ -2082,46 +2145,56 @@ class Cosmology(object):
 		# If we could not find the interpolator, the underlying data table probably has not been
 		# created yet.
 		if interpolator is None:
-			if path is None:
+			if (not 'path' in ps_args) or (ps_args['path'] is None):
 				
 				# We are dealing with a non-user supplied power spectrum, meaning we can decide the
-				# k array for the table.
+				# k array for the table. If the power spectrum has no limits (e.g., for fitting 
+				# functions), we use a smartly spaced, very wide k-array. If there are limits, we
+				# need to respect those and set an evenly spaced k-array (because some Boltzmann
+				# codes demand equal spacing).
 				if self.print_info:
-					print("Cosmology.matterPowerSpectrum: Computing lookup table.")				
-				data_k = np.zeros((np.sum(self.k_Pk_Nbins) + 1), np.float)
-				n_regions = len(self.k_Pk_Nbins)
-				k_computed = 0
-				for i in range(n_regions):
-					log_min = np.log10(self.k_Pk[i])
-					log_max = np.log10(self.k_Pk[i + 1])
-					log_range = log_max - log_min
-					bin_width = log_range / self.k_Pk_Nbins[i]
-					if i == n_regions - 1:
-						data_k[k_computed:k_computed + self.k_Pk_Nbins[i] + 1] = \
-							10**np.arange(log_min, log_max + bin_width, bin_width)
-					else:
-						data_k[k_computed:k_computed + self.k_Pk_Nbins[i]] = \
-							10**np.arange(log_min, log_max, bin_width)
-					k_computed += self.k_Pk_Nbins[i]
+					print('Cosmology.matterPowerSpectrum: Computing lookup table.')
+				
+				kmin, kmax = power_spectrum.powerSpectrumLimits(model, **ps_args)
+				if (kmin is None) or (kmax is None):
+					data_k = np.zeros((np.sum(self.k_Pk_Nbins) + 1), float)
+					n_regions = len(self.k_Pk_Nbins)
+					k_computed = 0
+					for i in range(n_regions):
+						log_min = np.log10(self.k_Pk[i])
+						log_max = np.log10(self.k_Pk[i + 1])
+						log_range = log_max - log_min
+						bin_width = log_range / self.k_Pk_Nbins[i]
+						if i == n_regions - 1:
+							data_k[k_computed:k_computed + self.k_Pk_Nbins[i] + 1] = \
+								10**np.arange(log_min, log_max + bin_width, bin_width)
+						else:
+							data_k[k_computed:k_computed + self.k_Pk_Nbins[i]] = \
+								10**np.arange(log_min, log_max, bin_width)
+						k_computed += self.k_Pk_Nbins[i]
+				else:
+					if (kmin is None) or (kmax is None):
+						raise Exception('Need both kmin and kmax in order to set up P(k) table.')
+					data_k = 10**np.linspace(np.log10(kmin), np.log10(kmax), self.k_Pk_Nbins_equal)
 				
 				# If the Pk data is not > 0, this leads to serious crashes
-				data_Pk = self._matterPowerSpectrumExact(data_k, model = model, ignore_norm = False)
+				data_Pk = self._matterPowerSpectrumExact(data_k, model = model, ignore_norm = ignore_norm, **ps_args)
 				if (np.min(data_Pk) <= 0.0):
 					raise Exception('Got zero or negative data in power spectrum from model %s, cannot compute log.' % model)
 
 				table_ = np.array([np.log10(data_k), np.log10(data_Pk)])
 				self.storageUser.storeObject(table_name, table_)
 				if self.print_info:
-					print("Cosmology.matterPowerSpectrum: Lookup table completed.")	
+					print('Cosmology.matterPowerSpectrum: Lookup table completed.')	
 
 			else:
 				
 				# If the interpolator has not been created yet, we need to normalize the table
 				# to the correct sigma8 which happens in the exact Pk function.
 				if self.print_info:
-					print("Cosmology.matterPowerSpectrum: Loading power spectrum from file %s." % (path))				
-				table_name = self._matterPowerSpectrumName(model)
-				table = self.storageUser.getStoredObject(table_name, path = path)
+					print('Cosmology.matterPowerSpectrum: Loading power spectrum from file %s.' % (ps_args['path']))				
+				table_name = self._matterPowerSpectrumName(model, **ps_args)
+				table = self.storageUser.getStoredObject(table_name, path = ps_args['path'])
 				
 				# If the stored object function returns None, that can be because persistence is 
 				# turned off altogether, in which case we should return an informative error
@@ -2130,18 +2203,18 @@ class Cosmology(object):
 					if not self.storageUser.persistence_read:
 						raise Exception('Please set persistence to read in order to load a power spectrum from a file.')
 					else:
-						raise Exception('Could not load power spectrum table from path "%s".' % (path))
-					
+						raise Exception('Could not load power spectrum table from path "%s".' % (ps_args['path']))
+				
 				table_k = 10**table[0]
-				table_P = self._matterPowerSpectrumExact(table_k, model = model, path = path,
-														ignore_norm = False)
+				table_P = self._matterPowerSpectrumExact(table_k, model = model, 
+														ignore_norm = ignore_norm, **ps_args)
 				table[1] = np.log10(table_P)
 				self.storageUser.storeObject(table_name, table, persistent = False)
 				
 				# We also need to overwrite the norm with one, otherwise the interpolator will not
 				# match up with the result of the exact power spectrum function which will find the
 				# new, normed interpolator but still apply the old normalization.
-				norm_name = self._matterPowerSpectrumNormName(model)
+				norm_name = self._matterPowerSpectrumNormName(model, **ps_args)
 				self.storageUser.storeObject(norm_name, 1.0, persistent = False)
 
 			interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, 
@@ -2151,25 +2224,29 @@ class Cosmology(object):
 
 	###############################################################################################
 
-	def matterPowerSpectrum(self, k, z = 0.0, model = defaults.POWER_SPECTRUM_MODEL, path = None,
-						derivative = False):
+	def matterPowerSpectrum(self, k, z = 0.0, model = defaults.POWER_SPECTRUM_MODEL,
+						derivative = False, **ps_args):
 		"""
 		The matter power spectrum at a scale k.
 		
+		This general function can return power spectra computed by a variety of models, tables,
+		or Boltzmann codes, as described in the :func:`~cosmology.power_spectrum.powerSpectrum`
+		function. By default, an interpolation table is generated once and future calls to this
+		function will return interpolated values.
+		
 		By default, the power spectrum is computed using a model for the transfer function 
-		(see the :func:`~cosmology.power_spectrum.transferFunction` function). The default 
-		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_ 
+		(see the :func:`~cosmology.power_spectrum.powerSpectrum` function). The default 
+		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`__ 
 		approximation is accurate to about 5%, and the interpolation introduces errors 
 		significantly smaller than that.
 		
 		Alternatively, the user can supply the path to a file with a tabulated power spectrum 
-		using the ``path`` parameter. The file must contain two columns, :math:`\log_{10}(k)`
-		and :math:`\log_{10}(P)` where k and P(k) are in the same units as in this function. This
-		table is interpolated with a third-order spline. Note that the tabulated spectrum is 
-		normalized to the value if :math:`\sigma_8` set in the cosmology.
-		
-		Also note that if a power spectrum is to be read from a file, the ``persistence`` 
-		parameter must allow for reading (though not necessarily writing) of files.
+		by passing a ``path`` parameter in the keyword arguments. The file must contain two 
+		columns, :math:`\log_{10}(k)` and :math:`\log_{10}(P)` where k and P(k) are in the same 
+		units as in this function. This table is interpolated with a third-order spline. Note that 
+		the tabulated spectrum is normalized to the value if :math:`\sigma_8` set in the cosmology.
+		If a power spectrum is to be read from a file, the ``persistence`` parameter must allow for 
+		reading (though not necessarily writing) of files.
 
 		Warnings
 		-------------------------------------------------------------------------------------------
@@ -2194,16 +2271,17 @@ class Cosmology(object):
 			tabulated power spectrum is used (see ``path`` parameter), this name must still be 
 			passed. Internally, the power spectrum is saved using this name, so the name must not 
 			overlap with any other models.
-		path: str
-			A path to a file containing the power spectrum as a table, where the two columns are
-			:math:`\log_{10}(k)` (in comoving h/Mpc) and :math:`\log_{10}(P)` (in 
-			:math:`({\\rm Mpc}/h)^3`).
 		derivative: bool
 			If False, return P(k). If True, return :math:`d \log(P) / d \log(k)`.
+		ps_args: kwargs
+			Arguments passed to the :func:`~cosmology.power_spectrum.powerSpectrum` function. One
+			parameter can be ``path``, which can contain a tabulated power spectrum, where the two 
+			columns are :math:`\log_{10}(k)` (in comoving h/Mpc) and :math:`\log_{10}(P)` (in
+			:math:`({\\rm Mpc}/h)^3`).
 			
 		Returns
 		-------------------------------------------------------------------------------------------
-		Pk: array_like
+		P: array_like
 			The matter power spectrum; has the same dimensions as k and units of 
 			:math:`({\\rm Mpc}/h)^3`. Alternatively, the dimensionless logarithmic derivative if 
 			``derivative == True``.
@@ -2211,20 +2289,18 @@ class Cosmology(object):
 
 		if self.interpolation:
 			
-			interpolator = self._matterPowerSpectrumInterpolator(model, path)
+			interpolator = self._matterPowerSpectrumInterpolator(model, **ps_args)
 			
 			# If the requested radius is outside the range, give a detailed error message.
 			k_req = np.min(k)
 			k_min = 10**interpolator.get_knots()[0]
 			if k_req < k_min:
-				msg = "k = %.2e is too small (min. k = %.2e)" % (k_req, k_min)
-				raise Exception(msg)
+				raise Exception('k = %.2e is too small (min. k = %.2e)' % (k_req, k_min))
 
 			k_req = np.max(k)
 			k_max = 10**interpolator.get_knots()[-1]
 			if k_req > k_max:
-				msg = "k = %.2e is too large (max. k = %.2e)" % (k_req, k_max)
-				raise Exception(msg)
+				raise Exception('k = %.2e is too large (max. k = %.2e)' % (k_req, k_max))
 
 			if derivative:
 				Pk = interpolator(np.log10(k), nu = 1)
@@ -2235,21 +2311,59 @@ class Cosmology(object):
 		else:
 			
 			if derivative:
-				raise Exception("Derivative can only be evaluated if interpolation == True.")
+				raise Exception('Derivative can only be evaluated if interpolation == True.')
 
 			if utilities.isArray(k):
 				Pk = np.zeros_like(k)
 				for i in range(len(k)):
-					Pk[i] = self._matterPowerSpectrumExact(k[i], model = model, path = path,
-														ignore_norm = False)
+					Pk[i] = self._matterPowerSpectrumExact(k[i], model = model, ignore_norm = False, **ps_args)
 			else:
-				Pk = self._matterPowerSpectrumExact(k, model = model, path = path, 
-												ignore_norm = False)
+				Pk = self._matterPowerSpectrumExact(k, model = model, ignore_norm = False, **ps_args)
 
 		if not derivative:
 			Pk *= self.growthFactor(z)**2
 
 		return Pk
+	
+	###############################################################################################
+
+	def matterPowerSpectrumNorm(self, model, **ps_args):
+		"""
+		The normalization of the power spectrum to the given sigma8.
+		
+		Internally, Colossus normalizes all power spectra such that they integrate to the value of
+		sigma8 set in the cosmology object, regardless of whether the power spectrum was generated
+		using a fitting function, table, or Boltzmann code. In some cases, these normalizations 
+		may be useful, for example when comparing the original amplitude of the power spectra of
+		components such as dark matter and baryons.
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		model: str
+			A model for the power spectrum (see the :mod:`cosmology.power_spectrum` module).
+		ps_args: kwargs
+			Arguments passed to the :func:`~cosmology.power_spectrum.powerSpectrum` function.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		norm: float
+			The number that, when multiplied with the power spectrum as output by the 
+			:func:`~cosmology.power_spectrum.powerSpectrum` function, normalizes the spectrum to 
+			the sigma8 set in the cosmology. Note that this number can take on arbitrary values
+			that depend on the power spectrum models and/or user-defined parameters.
+		"""
+
+		norm_name = self._matterPowerSpectrumNormName(model, **ps_args)
+		norm = self.storageUser.getStoredObject(norm_name)
+		if norm is None:
+			ps_args_ = {'model': model}
+			ps_args_.update(ps_args)
+			sigma_8Mpc = self._sigmaExact(8.0, filt = 'tophat', ps_args = ps_args_, exact_ps = True, 
+										ignore_norm = True)
+			norm = (self.sigma8 / sigma_8Mpc)**2
+			self.storageUser.storeObject(norm_name, norm, persistent = False)	
+			
+		return norm
 	
 	###############################################################################################
 
@@ -2308,8 +2422,7 @@ class Cosmology(object):
 			ret = np.exp(-x**2 * 0.5)
 		
 		else:
-			msg = "Invalid filter, %s." % (filt)
-			raise Exception(msg)
+			raise Exception('Invalid filter, %s.' % (filt))
 			
 		return ret
 
@@ -2409,41 +2522,37 @@ class Cosmology(object):
 			# get the interpolator object and use it directly, rather than using the P(k) function.
 			ps_interpolator = None
 			if (not exact_ps) and self.interpolation:
-				ps_interpolator = self._matterPowerSpectrumInterpolator(**ps_args)
+				ps_interpolator = self._matterPowerSpectrumInterpolator(ignore_norm = ignore_norm, **ps_args)
 
-			# The infinite integral over k often causes trouble when the tophat filter is used. Thus,
-			# we determine sensible limits and integrate over a finite k-volume. The limits are
-			# determined by demanding that the integrand is some factor, 1E-6, smaller than at its
-			# maximum. 
-			test_k_min, test_k_max = self._matterPowerSpectrumLimits(**ps_args)
-
-			#For tabulated power spectra, we need to be careful not to exceed their 
-			# limits, even if the integrand has not reached the desired low value. Thus, we simply
-			# use the limits of the table.
-			#
-			# If the user has decided both kmin and kmax, there is no need to find them numerically.
-			if ('path' in ps_args) and (ps_args['path'] is not None):
+			# The infinite integral over k often causes trouble when the tophat filter is used. 
+			# Thus, we determine sensible limits and integrate over a finite k-volume. We need to 
+			# treat two cases:
+			# 
+			# 1) The power spectrum model has limits in k-space. We accept those limits and
+			#    overwrite them with user-defined limits, checking that the latter do not exceed 
+			#    the bounds of the model.
+			# 2) We determine limits by demanding that the integrand is some factor, 1E-6, smaller 
+			#    than at its maximum. 
+			
+			model_k_min, model_k_max, is_unlimited = self._matterPowerSpectrumLimits(**ps_args)
+			
+			if not is_unlimited:
 
 				if kmin is not None:
-					if kmin < test_k_min:
-						raise Exception('Found user kmin %.2e but lower limit of tabulated spectrum is %.2e.' % (kmin, test_k_min))
+					if kmin < model_k_min:
+						raise Exception('Found user kmin %.2e but lower limit of PS model %s is %.2e.' \
+									% (kmin, ps_args['model'], model_k_min))
 					min_k_use = np.log(kmin)
 				else:
-					min_k_use = np.log(test_k_min * 1.0001)
+					min_k_use = np.log(model_k_min * 1.0001)
 
 				if kmax is not None:
-					if kmax > test_k_max:
-						raise Exception('Found user kmax %.2e but upper limit of tabulated spectrum is %.2e.' % (kmax, test_k_max))
+					if kmax > model_k_max:
+						raise Exception('Found user kmax %.2e but upper limit of PS model %s is %.2e.' \
+									% (kmax, ps_args['model'], model_k_max))
 					max_k_use = np.log(kmax)
 				else:
-					max_k_use = np.log(test_k_max * 0.9999)
-					
-			elif (kmin is not None) and (kmax is not None):
-				
-				# If the user has imposed both limits, we trust that they are the correct ones
-				# and perform no search for good limits.
-				min_k_use = np.log(kmin)
-				max_k_use = np.log(kmax)
+					max_k_use = np.log(model_k_max * 0.9999)
 				
 			else:
 				
@@ -2463,11 +2572,11 @@ class Cosmology(object):
 				if kmin is not None:
 					test_k_min = kmin
 				else:
-					test_k_min = max(test_k_min * 1.0001, 1E-7)
+					test_k_min = max(model_k_min * 1.0001, 1E-7)
 				if kmax is not None:
 					test_k_max = kmax
 				else:
-					test_k_max = min(test_k_max * 0.9999, 1E25)
+					test_k_max = min(model_k_max * 0.9999, 1E25)
 				if test_k_max <= test_k_min:
 					raise Exception('Preliminary maximum limit of sigma integration (%.4e) is smaller than minimum (%.4e).' \
 							% (test_k_max, test_k_min))
@@ -2493,7 +2602,7 @@ class Cosmology(object):
 							print('Test k (in h/Mpc) and sigma-integrand:')
 							print(np.exp(test_k))
 							print(test_k_integrand)
-							raise Exception("Could not find lower integration limit for sigma. Value of integrand at limit (%.2e) is %.2e of max, too high." \
+							raise Exception('Could not find lower integration limit for sigma. Value of integrand at limit (%.2e) is %.2e of max, too high.' \
 								% (test_k_integrand[min_index + 1], test_k_integrand[min_index + 1] / integrand_max))
 					min_k_use = test_k[min_index]
 				else:
@@ -2509,7 +2618,7 @@ class Cosmology(object):
 							print('Test k (in h/Mpc) and sigma-integrand:')
 							print(np.exp(test_k))
 							print(test_k_integrand)
-							raise Exception("Could not find upper integration limit for sigma. Value of integrand at limit (%.2e) is %.2e of max, too high." \
+							raise Exception('Could not find upper integration limit for sigma. Value of integrand at limit (%.2e) is %.2e of max, too high.' \
 								% (test_k_integrand[max_index - 1], test_k_integrand[max_index - 1] / integrand_max))
 					max_k_use = test_k[max_index]
 				else:
@@ -2535,8 +2644,7 @@ class Cosmology(object):
 			sigma = np.sqrt(sigma2 / 2.0 / np.pi**2)
 		
 		if np.isnan(sigma):
-			msg = "Result is nan (cosmology %s, filter %s, R %.2e, j %d." % (self.name, filt, R, j)
-			raise Exception(msg)
+			raise Exception('sigma is nan (cosmology %s, filter %s, R %.2e, j %d.' % (self.name, filt, R, j))
 			
 		return sigma
 	
@@ -2556,7 +2664,8 @@ class Cosmology(object):
 			raise Exception('The ps_args dictionary must contain the model keyword, even if the power spectrum is loaded from file. Found %s.' \
 						% (str(ps_args)))
 		
-		table_name = 'sigma%d_%s_%s_%s' % (j, self.name, ps_args['model'], filt)
+		ps_model_name = self._matterPowerSpectrumName(**ps_args)
+		table_name = 'sigma%d_%s_%s_%s' % (j, self.name, ps_model_name, filt)
 		if kmin is not None:
 			table_name += '_kmin%.4e' % (kmin)
 		if kmax is not None:
@@ -2566,7 +2675,7 @@ class Cosmology(object):
 		
 		if interpolator is None:
 			if self.print_info:
-				print("Cosmology.sigma: Computing lookup table.")
+				print('Cosmology.sigma: Computing lookup table.')
 			max_log = np.log10(self.R_max_sigma)
 			log_range = max_log - np.log10(self.R_min_sigma)
 			max_loglog = np.log10(log_range + 1.0)
@@ -2585,7 +2694,7 @@ class Cosmology(object):
 			table_ = np.array([np.log10(data_R), np.log10(data_sigma)])
 			self.storageUser.storeObject(table_name, table_)
 			if self.print_info:
-				print("Cosmology.sigma: Lookup table completed.")
+				print('Cosmology.sigma: Lookup table completed.')
 
 			interpolator = self.storageUser.getStoredObject(table_name, interpolator = True, inverse = inverse)
 	
@@ -2593,7 +2702,7 @@ class Cosmology(object):
 
 	###############################################################################################
 	
-	def sigma(self, R, z, j = 0, filt = 'tophat', inverse = False, derivative = False, 
+	def sigma(self, R, z = 0.0, j = 0, filt = 'tophat', inverse = False, derivative = False, 
 							kmin = None, kmax = None, ps_args = defaults.PS_ARGS):
 		"""
 		The rms variance of the linear density field on a scale R, :math:`\\sigma(R)`.
@@ -2608,7 +2717,7 @@ class Cosmology(object):
 		of :func:`filterFunction` for possible filters.
 		
 		By default, the power spectrum is computed using the transfer function approximation of 
-		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_ (see the 
+		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`__ (see the 
 		:mod:`cosmology.power_spectrum` module). With this approximation, the variance is accurate
 		to about 2% or better (see the Colossus code paper for details). Using a tabulated power 
 		spectrum can make this computation more accurate, but please note that the limits of the 
@@ -2616,7 +2725,7 @@ class Cosmology(object):
 		
 		Higher moments of the variance (such as :math:`\sigma_1`, :math:`\sigma_2` etc) can be 
 		computed by setting j > 0 (see 
-		`Bardeen et al. 1986 <http://adsabs.harvard.edu/abs/1986ApJ...304...15B>`_). Furthermore, 
+		`Bardeen et al. 1986 <http://adsabs.harvard.edu/abs/1986ApJ...304...15B>`__). Furthermore, 
 		the logarithmic derivative :math:`d \log(\sigma) / d \log(R)` can be evaluated by setting 
 		``derivative == True``.
 		
@@ -2630,7 +2739,7 @@ class Cosmology(object):
 		j: integer
 			The order of the integral. j = 0 corresponds to the variance, j = 1 to the same integral 
 			with an extra :math:`k^2` term etc; see 
-			`Bardeen et al. 1986 <http://adsabs.harvard.edu/abs/1986ApJ...304...15B>`_ for 
+			`Bardeen et al. 1986 <http://adsabs.harvard.edu/abs/1986ApJ...304...15B>`__ for 
 			mathematical details.
 		filt: str
 			Either ``tophat``, ``sharp-k`` or ``gaussian`` (see :func:`filterFunction`). Higher 
@@ -2685,16 +2794,14 @@ class Cosmology(object):
 				R_req = np.min(R)
 				if R_req < self.R_min_sigma:
 					M_min = 4.0 / 3.0 * np.pi * self.R_min_sigma**3 * self.rho_m(0.0) * 1E9
-					msg = "R = %.2e is too small (min. R = %.2e, min. M = %.2e)" \
-						% (R_req, self.R_min_sigma, M_min)
-					raise Exception(msg)
+					raise Exception('R = %.2e is too small (min. R = %.2e, min. M = %.2e)' \
+						% (R_req, self.R_min_sigma, M_min))
 			
 				R_req = np.max(R)
 				if R_req > self.R_max_sigma:
 					M_max = 4.0 / 3.0 * np.pi * self.R_max_sigma**3 * self.rho_m(0.0) * 1E9
-					msg = "R = %.2e is too large (max. R = %.2e, max. M = %.2e)" \
-						% (R_req, self.R_max_sigma, M_max)
-					raise Exception(msg)
+					raise Exception('R = %.2e is too large (max. R = %.2e, max. M = %.2e)' \
+						% (R_req, self.R_max_sigma, M_max))
 	
 				if derivative:
 					ret = interpolator(np.log10(R), nu = 1)
@@ -2732,13 +2839,13 @@ class Cosmology(object):
 				# If the requested sigma is outside the range, give a detailed error message.
 				sigma_req = np.max(sigma_)
 				if sigma_req > sigma_max:
-					msg = "Variance sigma = %.2e is too large to invert to radius (max. sigma = %.2e)." % (sigma_req, sigma_max)
-					raise Exception(msg)
+					raise Exception('Variance sigma = %.2e is too large to invert to radius (max. sigma = %.2e).' \
+								% (sigma_req, sigma_max))
 					
 				sigma_req = np.min(sigma_)
 				if sigma_req < sigma_min:
-					msg = "Variance sigma = %.2e is too small to invert to radius (min. sigma = %.2e)." % (sigma_req, sigma_min)
-					raise Exception(msg)
+					raise Exception('Variance sigma = %.2e is too small to invert to radius (min. sigma = %.2e).' \
+								% (sigma_req, sigma_min))
 				
 				# Interpolate to get R(sigma)
 				if derivative: 
@@ -2803,7 +2910,7 @@ class Cosmology(object):
 		# the other PS-related functions.
 		if self.power_law:
 			xi = cf_power_law(self.power_law_n, R)
-			norm = self._matterPowerSpectrumNorm(**ps_args)
+			norm = self.matterPowerSpectrumNorm(**ps_args)
 			xi *= norm
 			
 		else:
@@ -2820,7 +2927,7 @@ class Cosmology(object):
 	
 			# If we are using a tabulated power spectrum, we just use the limits of that table IF they 
 			# are more stringent than those already determined.
-			k_min_model, k_max_model = self._matterPowerSpectrumLimits(**ps_args)
+			k_min_model, k_max_model, _ = self._matterPowerSpectrumLimits(**ps_args)
 			k_min = max(k_min, k_min_model * 1.0001)
 			k_max = min(k_max, k_max_model * 0.9999)
 	
@@ -2831,8 +2938,7 @@ class Cosmology(object):
 			xi /= 2.0 * np.pi**2
 	
 			if np.isnan(xi):
-				msg = 'Result is nan (cosmology %s, R %.2e).' % (self.name, R)
-				raise Exception(msg)
+				raise Exception('Result is nan (cosmology %s, R %.2e).' % (self.name, R))
 
 		return xi
 	
@@ -2844,14 +2950,19 @@ class Cosmology(object):
 
 	def _correlationFunctionInterpolator(self, ps_args):
 
-		table_name = 'correlation_%s_%s' % (self.name, ps_args['model'])
+		if not 'model' in ps_args:
+			raise Exception('The ps_args dictionary must contain the model keyword, even if the power spectrum is loaded from file. Found %s.' \
+						% (str(ps_args)))
+
+		ps_model_name = self._matterPowerSpectrumName(**ps_args)
+		table_name = 'correlation_%s_%s' % (self.name, ps_model_name)
 		interpolator = self.storageUser.getStoredObject(table_name, interpolator = True)
 		
 		if interpolator is None:
 			if self.print_info:
-				print("correlationFunction: Computing lookup table. This may take a few minutes, please do not interrupt.")
+				print('correlationFunction: Computing lookup table. This may take a few minutes, please do not interrupt.')
 			
-			data_R = np.zeros((np.sum(self.R_xi_Nbins) + 1), np.float)
+			data_R = np.zeros((np.sum(self.R_xi_Nbins) + 1), float)
 			n_regions = len(self.R_xi_Nbins)
 			k_computed = 0
 
@@ -2879,7 +2990,7 @@ class Cosmology(object):
 			table_ = np.array([data_R, data_xi])
 			self.storageUser.storeObject(table_name, table_)
 			if self.print_info:
-				print("correlationFunction: Lookup table completed.")
+				print('correlationFunction: Lookup table completed.')
 			interpolator = self.storageUser.getStoredObject(table_name, interpolator = True)
 		
 		return interpolator
@@ -2897,7 +3008,7 @@ class Cosmology(object):
 		
 		where P(k) is the :func:`matterPowerSpectrum`. By default, the power spectrum is computed 
 		using the transfer function approximation of 
-		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`_ (see the 
+		`Eisenstein & Hu 1998 <http://adsabs.harvard.edu/abs/1998ApJ...496..605E>`__ (see the 
 		:mod:`cosmology.power_spectrum` module). With this approximation, the correlation function
 		is accurate to ~5% over the range :math:`10^{-2} < R < 200` (see the Colossus code paper 
 		for details). Using a tabulated power spectrum can make this computation more accurate, 
@@ -2933,13 +3044,11 @@ class Cosmology(object):
 			# If the requested radius is outside the range, give a detailed error message.
 			R_req = np.min(R)
 			if R_req < self.R_xi[0]:
-				msg = 'R = %.2e is too small (min. R = %.2e)' % (R_req, self.R_xi[0])
-				raise Exception(msg)
+				raise Exception('R = %.2e is too small (min. R = %.2e)' % (R_req, self.R_xi[0]))
 		
 			R_req = np.max(R)
 			if R_req > self.R_xi[-1]:
-				msg = 'R = %.2e is too large (max. R = %.2e)' % (R_req, self.R_xi[-1])
-				raise Exception(msg)
+				raise Exception('R = %.2e is too large (max. R = %.2e)' % (R_req, self.R_xi[-1]))
 	
 			# Interpolate to get xi(R). Note that the interpolation is performed in linear 
 			# space, since xi can be negative.
@@ -2969,7 +3078,7 @@ class Cosmology(object):
 # Setter / getter functions for cosmologies
 ###################################################################################################
 
-def setCosmology(cosmo_name, params = None):
+def setCosmology(cosmo_name, params = None, **kwargs):
 	"""
 	Set a cosmology.
 	
@@ -2985,7 +3094,12 @@ def setCosmology(cosmo_name, params = None):
 		case the ``params`` dictionary needs to be provided.
 	params: dictionary
 		The parameters of the constructor of the :class:`Cosmology` class. Not necessary if
-		``cosmo_name`` is the name of a pre-set cosmology.
+		``cosmo_name`` is the name of a pre-set cosmology. Alternatively, keyword arguments can be
+		set directly.
+	kwargs: kwargs
+		A set of keyword arguments that are passed to the constructor of the cosmology class. 
+		Equivalent to setting a dictionary in ``params``, but these arguments overwrite ``params``
+		if a parameter is present in both.
 
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -3000,6 +3114,7 @@ def setCosmology(cosmo_name, params = None):
 		param_dict['power_law_n'] = n
 		if params is not None:
 			param_dict.update(params)
+		param_dict.update(kwargs)
 
 	elif cosmo_name == 'powerlaw':
 		raise Exception('Power-law cosmology must be called with slope n, e.g. powerlaw_-1.5.')
@@ -3008,13 +3123,16 @@ def setCosmology(cosmo_name, params = None):
 		param_dict = cosmologies[cosmo_name].copy()
 		if params is not None:
 			param_dict.update(params)
+		param_dict.update(kwargs)
 			
 	else:
 		if params is not None:
 			param_dict = params.copy()
+			param_dict.update(kwargs)
+		elif len(kwargs) > 0:
+			param_dict = kwargs.copy()
 		else:
-			msg = "Invalid cosmology (%s)." % (cosmo_name)
-			raise Exception(msg)
+			raise Exception('Invalid cosmology (%s).' % (cosmo_name))
 		
 	param_dict['name'] = cosmo_name
 	cosmo = Cosmology(**(param_dict))
@@ -3024,7 +3142,7 @@ def setCosmology(cosmo_name, params = None):
 
 ###################################################################################################
 
-def addCosmology(cosmo_name, params):
+def addCosmology(cosmo_name, params = {}, **kwargs):
 	"""
 	Add a set of cosmological parameters to the global list.
 	
@@ -3037,9 +3155,15 @@ def addCosmology(cosmo_name, params):
 		The name of the cosmology.
 	params: dictionary
 		A set of parameters for the constructor of the Cosmology class.
+	kwargs: kwargs
+		A set of keyword arguments that are passed to the constructor of the cosmology class. 
+		Equivalent to setting a dictionary in ``params``, but these arguments overwrite ``params``
+		if a parameter is present in both.
 	"""
 	
-	cosmologies[cosmo_name] = params
+	param_dict = params.copy()
+	param_dict.update(kwargs)
+	cosmologies[cosmo_name] = param_dict
 	
 	return 
 
@@ -3151,7 +3275,7 @@ def fromAstropy(astropy_cosmo, sigma8, ns, cosmo_name = None, **kwargs):
 		cosmo_name = astropy_cosmo.name
 	
 	if astropy_cosmo.has_massive_nu:
-		print('WARNING: Astropy cosmology class contains massive neutrinos, which are not taken into account in Colossus.')
+		warnings.warn('Astropy cosmology class contains massive neutrinos, which are not taken into account in Colossus.')
 
 	params = dict(
 	        flat = (astropy_cosmo.Ok0 == 0.0),

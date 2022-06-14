@@ -35,7 +35,7 @@ are also returned.
 
 Pseudo-evolution is the evolution of a spherical overdensity halo radius, mass, and concentration 
 due to an evolving reference density (see 
-`Diemer et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...25D>`_ for more information). 
+`Diemer et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...25D>`__ for more information). 
 The :func:`pseudoEvolve` function is a general implementation of this effect. The function 
 assumes a profile that is fixed in physical units, and computes how the radius, mass and 
 concentration evolve due to changes in redshift (at fixed mass definition). In the following 
@@ -148,8 +148,8 @@ def evolveSO(M_i, c_i, z_i, mdef_i, z_f, mdef_f,
 	# Both M and c can be numbers or arrays
 	M_i_array, M_is_array = utilities.getArray(M_i)
 	c_i_array, c_is_array = utilities.getArray(c_i)
-	M_i_array = M_i_array.astype(np.float)
-	c_i_array = c_i_array.astype(np.float)
+	M_i_array = M_i_array.astype(float)
+	c_i_array = c_i_array.astype(float)
 	if not M_is_array and not c_is_array:
 		M_i = M_i_array
 		c_i = c_i_array
@@ -174,7 +174,7 @@ def evolveSO(M_i, c_i, z_i, mdef_i, z_f, mdef_f,
 	if profile == 'nfw':
 		
 		# We do not instantiate NFW profile objects, but instead use the faster static functions
-		rhos, rs = profile_nfw.NFWProfile.fundamentalParameters(M_i, c_i, z_i, mdef_i)
+		rhos, rs = profile_nfw.NFWProfile.nativeParameters(M_i, c_i, z_i, mdef_i)
 		density_threshold = mass_so.densityThreshold(z_f, mdef_f)
 		cnew = profile_nfw.NFWProfile.xDelta(rhos, density_threshold)
 		Rnew = rs * cnew
@@ -187,8 +187,7 @@ def evolveSO(M_i, c_i, z_i, mdef_i, z_f, mdef_f,
 			cnew[i] = Rnew[i] / prof.par['rs']
 
 	else:
-		msg = 'This function is not defined for profile %s.' % (profile)
-		raise Exception(msg)
+		raise Exception('This function is not defined for profile %s.' % (profile))
 
 	if not M_is_array and not c_is_array:
 		Rnew = Rnew[0]
@@ -257,7 +256,7 @@ def pseudoEvolve(M, c, mdef, z_i, z_f,
 
 	This function computes the evolution of spherical overdensity mass and radius due to a changing 
 	reference density, an effect called 'pseudo-evolution' (e.g.,
-	`Diemer et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...25D>`_). The user passes 
+	`Diemer et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...25D>`__). The user passes 
 	the mass and concentration of the density profile, together with a redshift and mass definition 
 	to which ``M`` and ``c`` refer.
 	

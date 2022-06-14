@@ -18,6 +18,8 @@ Module contents
 	getCodeDir
 	isArray
 	getArray
+	safeLog
+	safeExp
 
 ---------------------------------------------------------------------------------------------------
 Module reference
@@ -28,6 +30,19 @@ import os
 import numpy as np
 import sys
 import six
+
+###################################################################################################
+# CONSTANTS
+###################################################################################################
+
+max_float_exp = 100.0
+"""
+Highest exponent that is safe for the log/exp functions in numpy. Overflows can occur when higher
+exponentials are called.
+"""
+
+min_float_log = np.exp(-max_float_exp)
+max_float_log = np.exp(max_float_exp)
 
 ###################################################################################################
 
@@ -156,8 +171,7 @@ def getHomeDir():
 
 	else:
 	
-		msg = 'Unknown operating system type, %s. Cannot find home directory.' % os.name
-		raise Warning(msg)
+		raise Warning('Unknown operating system type, %s. Cannot find home directory.' % os.name)
 		home_dir = None
 	
 	return home_dir
@@ -232,5 +246,81 @@ def getArray(var):
 		var_ret = np.array([var])
 		
 	return var_ret, is_array 
+
+###################################################################################################
+
+# An exponential function that avoids overruns. If the exponent is smaller than -100, the result
+# is zero; if it is larger than 100, it is set to e^100.
+
+def safeLog(x):
+	"""
+	Natural log with check for overrun.
+	
+	This function checks whether any elements in a given numpy array are larger than the maximum
+	(positive or negative) exponent. If so, the corresponding elements are set to the min and max
+	floats that are allowed.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	x: array_like
+		Variable to be taken the log of.
+	
+	Returns
+	-----------------------------------------------------------------------------------------------
+	log: array_like
+		Log of x
+	"""
+	
+	if np.any(x > max_float_log) or np.any(x < min_float_log):
+
+		f = np.zeros_like(x)
+		mask_lo = (x < min_float_log)
+		mask_hi = (x > max_float_log)
+		mask_val = np.logical_not(mask_lo) & np.logical_not(mask_hi)
+		
+		f[mask_lo] = -max_float_exp
+		f[mask_hi] = max_float_exp
+		f[mask_val] = np.log(x[mask_val])
+		
+		return f
+	
+	else:
+		return np.log(x)
+
+###################################################################################################
+
+def safeExp(x):
+	"""
+	Natural exp with check for overrun.
+	
+	This function checks whether any elements in a given numpy array are larger than the maximum
+	(positive or negative) exponent. If so, the corresponding elements are set to the min and max
+	floats that are allowed.
+
+	Parameters
+	-----------------------------------------------------------------------------------------------
+	x: array_like
+		Variable to be taken the exponential of.
+	
+	Returns
+	-----------------------------------------------------------------------------------------------
+	log: array_like
+		Exponential of x
+	"""
+	
+	if np.any(x > max_float_exp) or np.any(x < -max_float_exp):
+
+		f = np.zeros_like(x)
+		mask_lo = (x > -max_float_exp)
+		mask_hi = (x > max_float_exp)
+		mask_val = mask_lo & np.logical_not(mask_hi)
+		
+		f[mask_hi] = np.exp(max_float_exp)
+		f[mask_val] = np.exp(x[mask_val])
+		
+		return f
+	
+	else:
+		return np.exp(x)
 
 ###################################################################################################

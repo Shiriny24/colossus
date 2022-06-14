@@ -9,15 +9,15 @@ import numpy as np
 import unittest
 
 from colossus.tests import test_colossus
+from colossus import defaults
 from colossus.utils import utilities
 from colossus.cosmology import cosmology
 from colossus.halo import mass_so
-from colossus.halo import profile_outer
-from colossus.halo import profile_nfw
-from colossus.halo import profile_einasto
-from colossus.halo import profile_dk14
 from colossus.halo import profile_base
+from colossus.halo import profile_outer
+from colossus.halo import profile_composite
 from colossus.halo import profile_spline
+from colossus.halo import profile_nfw
 from colossus.halo import concentration
 
 ###################################################################################################
@@ -29,8 +29,199 @@ from colossus.halo import concentration
 
 TEST_N_DIGITS_LOW = 4
 
+all_profs_inner = ['nfw', 'einasto', 'hernquist', 'dk14', 'diemer22', 'diemer22b']
+
 ###################################################################################################
-# TEST CASE: BASE CLASS
+# TEST CASE: CREATE PROFILES WITH OUTER PROFILES MANUALLY AND AS COMPOSITE
+###################################################################################################
+
+# Create profiles in different ways and compare the parameters, which should be the same. Also
+# make sure that M/c are reproduced when outer profiles are added, and that the composite profile
+# function does the same thing as a manually constructed composite profile.
+
+class TCCreation(test_colossus.ColosssusTestCase):
+
+	def setUp(self):
+		cosmology.setCosmology('planck18', {'persistence': ''})
+		self.M = 1E14
+		self.c = 7.0
+		self.z = 1.0
+		self.mdef = '200c'
+		cosmology.setCosmology('planck18')
+		self.ot_sets = [['pl'], ['infalling'], ['infalling', 'mean']]
+		self.p_objs = []
+		for pname in all_profs_inner:
+			p_obj = profile_composite.getProfileClass(pname)
+			self.p_objs.append(p_obj)
+	
+	def test_creation_inner(self):
+
+		for i in range(len(self.p_objs)):		
+			p1 = self.p_objs[i](M = self.M, c = self.c, z = self.z, mdef = self.mdef)
+			p2 = self.p_objs[i](z = self.z, **p1.par, **p1.opt)
+			for k in p1.par:
+				self.assertAlmostEqual(p1.par[k], p2.par[k], places = TEST_N_DIGITS_LOW)
+
+	def test_creation_outer(self):
+		
+		for j in range(len(self.p_objs)):
+			for i in range(len(self.ot_sets)):
+				
+				ot_set = self.ot_sets[i]		
+				outer_terms = []
+				ot_par_all = {}
+				for j in range(len(ot_set)):
+					if ot_set[j] == 'mean':
+						ot_cls = profile_outer.OuterTermMeanDensity
+						ot_par = dict(z = self.z)
+					elif ot_set[j] == 'cf':
+						ot_cls = profile_outer.OuterTermCorrelationFunction
+						ot_par = dict(derive_bias_from = 'R200m', z = self.z)
+					elif ot_set[j] == 'pl':
+						ot_cls = profile_outer.OuterTermPowerLaw
+						ot_par = dict(norm = defaults.HALO_PROFILE_DK14_PL_NORM, 
+								slope = defaults.HALO_PROFILE_DK14_PL_SLOPE, 
+								pivot = 'R200m', pivot_factor = 5.0, z = self.z)
+					elif ot_set[j] == 'infalling':
+						ot_cls = profile_outer.OuterTermInfalling
+						ot_par = dict(pl_delta_1 = 10.0, pl_s = 1.5, z = self.z)
+					else:
+						raise Exception('Unknown outer term, %s.' % (ot_set[j]))			
+					ot_obj = ot_cls(**ot_par)
+					ot_par_all.update(ot_par)
+					outer_terms.append(ot_obj)
+				
+				p1 = self.p_objs[j](M = self.M, c = self.c, z = self.z, mdef = self.mdef, outer_terms = outer_terms)
+				p2 = self.p_objs[j](**p1.par, **p1.opt, outer_terms = outer_terms)
+				for k in p1.par:
+					self.assertAlmostEqual(p1.par[k], p2.par[k], places = TEST_N_DIGITS_LOW)
+				M200m_1 = p1.MDelta(self.z, '200m')
+				M200m_2 = p2.MDelta(self.z, '200m')
+				self.assertAlmostEqual(M200m_1, M200m_2, places = TEST_N_DIGITS_LOW)
+
+				# Use wrapper	
+				pname = all_profs_inner[j]		
+				p1 = profile_composite.compositeProfile(inner_name = pname, outer_names = ot_set, 
+							M = self.M, c = self.c, mdef = self.mdef, **ot_par_all)
+				p2 = profile_composite.compositeProfile(inner_name = pname, outer_names = ot_set, 
+							**p1.par, **p1.opt)
+				for k in p1.par:
+					self.assertAlmostEqual(p1.par[k], p2.par[k], places = TEST_N_DIGITS_LOW)
+
+				# Check returned mass and concentration
+				R_out, M_out = p1.RMDelta(self.z, self.mdef)
+				R_in = mass_so.M_to_R(self.M, self.z, self.mdef)
+				self.assertAlmostEqual(M_out, self.M, places = TEST_N_DIGITS_LOW)
+				self.assertAlmostEqual(R_out, R_in, places = TEST_N_DIGITS_LOW)
+				if 'rs' in p1.par:
+					c_out = R_out / p1.par['rs']
+					self.assertAlmostEqual(c_out, self.c, places = TEST_N_DIGITS_LOW)
+
+###################################################################################################
+# TEST CASE: PROFILE VALUES FOR INNER PROFILES
+###################################################################################################
+
+class TCInnerRoutines(test_colossus.ColosssusTestCase):
+
+	def setUp(self):
+		cosmology.setCosmology('WMAP9', {'persistence': ''})
+		
+		M = 4E14
+		c = 5.7
+		mdef = '200c'
+		z = 0.2
+		
+		self.p = []
+		for pname in all_profs_inner:
+			self.p.append(profile_composite.compositeProfile(pname, outer_names = [],
+													M = M, c = c, mdef = mdef, z = z))
+	
+	def test_inner(self, verbose = False):
+		
+		r = 576.2
+
+		correct_rho        = [ 8.781156022850e+04,  8.848655923451e+04,  6.508442621097e+04,  8.937952887979e+04,  8.970741078041e+04,  8.984157864964e+04]
+		correct_Menc       = [ 2.363195068242e+14,  2.429904593149e+14,  3.066430903109e+14,  2.472947091540e+14,  2.420824778583e+14,  2.416121908814e+14]
+		correct_Sigma      = [ 1.146341922088e+08,  1.071236351793e+08,  6.723110548665e+07,  1.007139029621e+08,  1.031419685910e+08,  1.034057813596e+08]
+		correct_DeltaSigma = [ 1.857620896175e+08,  1.923774224862e+08,  2.658087731973e+08,  1.964939959965e+08,  1.910168003712e+08,  1.904880671894e+08]
+		correct_derLin     = [-3.794338964922e+02, -3.945881359017e+02, -3.653675818059e+02, -4.043399435091e+02, -3.921603673917e+02, -3.920898434231e+02]
+		correct_derLog     = [-2.489761149783e+00, -2.569448805258e+00, -3.234641724491e+00, -2.606644702315e+00, -2.518886697602e+00, -2.514672729221e+00]
+		correct_vcirc      = [ 1.328139530786e+03,  1.346754788545e+03,  1.512900996528e+03,  1.358630405956e+03,  1.344236227010e+03,  1.342929886866e+03]
+		correct_vmax       = [ 1.338948895668e+03,  1.360299204142e+03,  1.735263473078e+03,  1.373151750154e+03,  1.355718897847e+03,  1.353746005809e+03]
+		correct_rdelta     = [ 1.010859075063e+03,  1.013948476519e+03,  1.026753136588e+03,  1.016405547922e+03,  1.014857297856e+03,  1.014738141595e+03]
+
+		for i in range(len(self.p)):
+			
+			q = self.p[i].density(r)
+			self.assertAlmostEqual(q, correct_rho[i], places = TEST_N_DIGITS_LOW)
+			
+			q = self.p[i].enclosedMass(r)
+			self.assertAlmostEqual(q, correct_Menc[i], places = TEST_N_DIGITS_LOW)
+
+			q = self.p[i].surfaceDensity(r)
+			self.assertAlmostEqual(q, correct_Sigma[i], places = TEST_N_DIGITS_LOW)
+
+			q = self.p[i].deltaSigma(r)
+			self.assertAlmostEqual(q, correct_DeltaSigma[i], places = TEST_N_DIGITS_LOW)
+
+			q = self.p[i].densityDerivativeLin(r)
+			self.assertAlmostEqual(q, correct_derLin[i], places = TEST_N_DIGITS_LOW)
+
+			q = self.p[i].densityDerivativeLog(r)
+			self.assertAlmostEqual(q, correct_derLog[i], places = TEST_N_DIGITS_LOW)
+
+			q = self.p[i].circularVelocity(r)
+			self.assertAlmostEqual(q, correct_vcirc[i], places = TEST_N_DIGITS_LOW)
+
+			q, _ = self.p[i].Vmax()
+			self.assertAlmostEqual(q, correct_vmax[i], places = TEST_N_DIGITS_LOW)
+
+			q = self.p[i].RDelta(0.7, mdef = 'vir')
+			self.assertAlmostEqual(q, correct_rdelta[i], places = TEST_N_DIGITS_LOW)
+
+###################################################################################################
+# TEST CASE: OUTER PROFILES
+###################################################################################################
+
+class TCOuterRoutines(test_colossus.ColosssusTestCase):
+
+	def setUp(self):
+		cosmology.setCosmology('WMAP9', {'persistence': ''})
+
+		z = 0.2
+		M = 4E12
+		c = 5.7
+		mdef = '200c'
+
+		self.t = []
+		self.t.append(profile_outer.OuterTermMeanDensity(z = z))
+		self.t.append(profile_outer.OuterTermCorrelationFunction(z = z, bias = 2.2))
+		self.t.append(profile_outer.OuterTermPowerLaw(z = z, norm = 2.0, slope = 1.4, 
+										max_rho = 1200.0, pivot = 'fixed', pivot_factor = 257.0))
+		self.t.append(profile_outer.OuterTermInfalling(z = z, pl_delta_1 = 10.0, pl_s = 1.4, 
+										pl_delta_max = 1200.0))
+		
+		self.p = []
+		for i in range(len(self.t)):
+			self.p.append(profile_nfw.NFWProfile(M = M, c = c, mdef = mdef, z = z, outer_terms = [self.t[i]]))
+	
+	def test_outer(self, verbose = False):
+		
+		r = 980.2
+
+		correct_rho = [4.321019370749e+02, 1.405026434021e+03, 3.350273919041e+02, 6.115469636994e+02]
+		correct_der = [-8.769648316169e-01, -1.827787576477e+00, -9.316967625779e-01, -1.300382848541e+00]
+
+		for i in range(len(self.p)):
+			
+			q = self.p[i].density(r)
+			self.assertAlmostEqual(q, correct_rho[i])
+
+			q = self.p[i].densityDerivativeLin(r)
+			self.assertAlmostEqual(q, correct_der[i])
+
+###################################################################################################
+# TEST CASE: NUMERICAL ROUTINES IN BASE CLASS
 ###################################################################################################
 
 # This test case compares three different implementations of the NFW density profile: 
@@ -40,7 +231,7 @@ TEST_N_DIGITS_LOW = 4
 # - a discrete profile where density and/or mass are given as arrays. Three cases are tested, with
 #   only rho, only M, and both ('ArrayRho', 'ArrayM', and 'ArrayRhoM').
 
-class TCBase(test_colossus.ColosssusTestCase):
+class TCNumerical(test_colossus.ColosssusTestCase):
 
 	def setUp(self):
 		cosmology.setCosmology('WMAP9', {'persistence': ''})
@@ -62,10 +253,7 @@ class TCBase(test_colossus.ColosssusTestCase):
 				
 				self.par_names = ['rhos', 'rs']
 				self.opt_names = []
-				profile_base.HaloDensityProfile.__init__(self)
-				
-				self.par['rhos'] = rhos
-				self.par['rs'] = rs
+				profile_base.HaloDensityProfile.__init__(self, rhos = rhos, rs = rs)
 				
 				return
 			
@@ -76,6 +264,10 @@ class TCBase(test_colossus.ColosssusTestCase):
 				
 				return density
 		
+			def setNativeParameters(self, M, c, z, mdef, **kwargs):
+				
+				return
+
 		# Properties of the test halo
 		M = 1E12
 		c = 10.0
@@ -118,9 +310,9 @@ class TCBase(test_colossus.ColosssusTestCase):
 	
 		if verbose:
 			utilities.printLine()
-			print(("Profile properties as a function of radius"))
+			print(('Profile properties as a function of radius'))
 			utilities.printLine()
-			print(("Density"))
+			print(('Density'))
 		
 		for i in range(len(profs)):
 			res = profs[i].density(r_test)
@@ -134,7 +326,7 @@ class TCBase(test_colossus.ColosssusTestCase):
 							
 		if verbose:
 			utilities.printLine()
-			print(("Density Linear Derivative"))
+			print(('Density Linear Derivative'))
 		
 		for i in range(len(profs)):
 			res = profs[i].densityDerivativeLin(r_test)
@@ -148,7 +340,7 @@ class TCBase(test_colossus.ColosssusTestCase):
 	
 		if verbose:
 			utilities.printLine()
-			print(("Density Logarithmic Derivative"))
+			print(('Density Logarithmic Derivative'))
 		
 		for i in range(len(profs)):
 			res = profs[i].densityDerivativeLog(r_test)
@@ -162,7 +354,7 @@ class TCBase(test_colossus.ColosssusTestCase):
 		
 		if verbose:
 			utilities.printLine()
-			print(("Enclosed mass"))
+			print(('Enclosed mass'))
 		
 		for i in range(len(profs)):
 			res = profs[i].enclosedMass(r_test)
@@ -176,7 +368,7 @@ class TCBase(test_colossus.ColosssusTestCase):
 	
 		if verbose:
 			utilities.printLine()
-			print(("Surface density"))
+			print(('Surface density'))
 		
 		for i in range(len(profs)):
 			res = profs[i].surfaceDensity(r_test)
@@ -190,7 +382,7 @@ class TCBase(test_colossus.ColosssusTestCase):
 	
 		if verbose:
 			utilities.printLine()
-			print(("Circular velocity"))
+			print(('Circular velocity'))
 		
 		for i in range(len(profs)):
 			res = profs[i].circularVelocity(r_test)
@@ -204,7 +396,7 @@ class TCBase(test_colossus.ColosssusTestCase):
 		
 		if verbose:
 			utilities.printLine()
-			print(("Rmax"))
+			print(('Rmax'))
 		
 		for i in range(len(profs)):
 			_, res = profs[i].Vmax()
@@ -218,7 +410,7 @@ class TCBase(test_colossus.ColosssusTestCase):
 		
 		if verbose:
 			utilities.printLine()
-			print(("Vmax"))
+			print(('Vmax'))
 		
 		for i in range(len(profs)):
 			res, _ = profs[i].Vmax()
@@ -232,9 +424,9 @@ class TCBase(test_colossus.ColosssusTestCase):
 	
 		if verbose:
 			utilities.printLine()
-			print(("Spherical overdensity radii and masses"))
+			print(('Spherical overdensity radii and masses'))
 			utilities.printLine()
-			print(("Spherical overdensity radius"))
+			print(('Spherical overdensity radius'))
 		
 		for i in range(len(profs)):
 			res = profs[i].RDelta(z_test, mdef_test)
@@ -248,7 +440,7 @@ class TCBase(test_colossus.ColosssusTestCase):
 	
 		if verbose:
 			utilities.printLine()
-			print(("Spherical overdensity mass"))
+			print(('Spherical overdensity mass'))
 		
 		for i in range(len(profs)):
 			res = profs[i].MDelta(z_test, mdef_test)
@@ -259,107 +451,6 @@ class TCBase(test_colossus.ColosssusTestCase):
 				self.assertLess(max_diff, self.MAX_DIFF_SO_M, 'Difference in SO mass too large.')
 				if verbose:
 					print(('Profile: %12s    Max diff: %9.2e' % (prof_names[i], max_diff)))
-
-###################################################################################################
-# TEST CASE: PROFILE VALUES FOR INNER PROFILES
-###################################################################################################
-
-class TCInner(test_colossus.ColosssusTestCase):
-
-	def setUp(self):
-		cosmology.setCosmology('WMAP9', {'persistence': ''})
-		
-		M = 4E14
-		c = 5.7
-		mdef = '200c'
-		z = 0.2
-		
-		self.p = []
-		self.p.append(profile_nfw.NFWProfile(M = M, c = c, mdef = mdef, z = z))
-		self.p.append(profile_einasto.EinastoProfile(M = M, c = c, mdef = mdef, z = z))
-		self.p.append(profile_dk14.DK14Profile(M = M, c = c, mdef = mdef, z = z))
-	
-	def test_inner(self, verbose = False):
-		
-		r = 576.2
-
-		correct_rho        = [ 8.781156022850e+04,  8.848655923451e+04,  8.937952887979e+04]
-		correct_Menc       = [ 2.363195068242e+14,  2.429904593149e+14,  2.472947091540e+14]
-		correct_Sigma      = [ 1.146341922088e+08,  1.071236351793e+08,  1.007139029621e+08]
-		correct_DeltaSigma = [ 1.857620896175e+08,  1.923774224862e+08,  1.964939959965e+08]
-		correct_derLin     = [-3.794338964922e+02, -3.945881359017e+02, -4.043399435091e+02]
-		correct_derLog     = [-2.489761149783e+00, -2.569448805258e+00, -2.606644702315e+00]
-		correct_vcirc      = [ 1.328139530786e+03,  1.346754788545e+03,  1.358630405956e+03]
-		correct_vmax       = [ 1.338948895668e+03,  1.360299204142e+03,  1.373151750154e+03]
-		correct_rdelta     = [ 1.010859075063e+03,  1.013948476519e+03,  1.016405547922e+03]
-
-		for i in range(len(self.p)):
-			
-			q = self.p[i].density(r)
-			self.assertAlmostEqual(q, correct_rho[i], places = TEST_N_DIGITS_LOW)
-			
-			q = self.p[i].enclosedMass(r)
-			self.assertAlmostEqual(q, correct_Menc[i], places = TEST_N_DIGITS_LOW)
-
-			q = self.p[i].surfaceDensity(r)
-			self.assertAlmostEqual(q, correct_Sigma[i], places = TEST_N_DIGITS_LOW)
-
-			q = self.p[i].deltaSigma(r)
-			self.assertAlmostEqual(q, correct_DeltaSigma[i], places = TEST_N_DIGITS_LOW)
-
-			q = self.p[i].densityDerivativeLin(r)
-			self.assertAlmostEqual(q, correct_derLin[i], places = TEST_N_DIGITS_LOW)
-
-			q = self.p[i].densityDerivativeLog(r)
-			self.assertAlmostEqual(q, correct_derLog[i], places = TEST_N_DIGITS_LOW)
-
-			q = self.p[i].circularVelocity(r)
-			self.assertAlmostEqual(q, correct_vcirc[i], places = TEST_N_DIGITS_LOW)
-
-			q, _ = self.p[i].Vmax()
-			self.assertAlmostEqual(q, correct_vmax[i], places = TEST_N_DIGITS_LOW)
-
-			q = self.p[i].RDelta(0.7, mdef = 'vir')
-			self.assertAlmostEqual(q, correct_rdelta[i], places = TEST_N_DIGITS_LOW)
-
-###################################################################################################
-# TEST CASE: OUTER PROFILES
-###################################################################################################
-
-class TCOuter(test_colossus.ColosssusTestCase):
-
-	def setUp(self):
-		cosmology.setCosmology('WMAP9', {'persistence': ''})
-
-		z = 0.2
-		M = 4E12
-		c = 5.7
-		mdef = '200c'
-
-		self.t = []
-		self.t.append(profile_outer.OuterTermMeanDensity(z = z))
-		self.t.append(profile_outer.OuterTermCorrelationFunction(z = z, bias = 2.2))
-		self.t.append(profile_outer.OuterTermPowerLaw(z = z, norm = 2.0, slope = 1.4, 
-										max_rho = 1200.0, pivot = 'fixed', pivot_factor = 257.0))
-		
-		self.p = []
-		for i in range(len(self.t)):
-			self.p.append(profile_nfw.NFWProfile(M = M, c = c, mdef = mdef, z = z, outer_terms = [self.t[i]]))
-	
-	def test_outer(self, verbose = False):
-		
-		r = 980.2
-
-		correct_rho = [4.327067272015e+02, 1.422622188829e+03, 3.374785723377e+02]
-		correct_der = [-8.787645509546e-01, -1.880148583702e+00, -9.389909240274e-01]
-
-		for i in range(len(self.p)):
-			
-			q = self.p[i].density(r)
-			self.assertAlmostEqual(q, correct_rho[i])
-
-			q = self.p[i].densityDerivativeLin(r)
-			self.assertAlmostEqual(q, correct_der[i])
 
 ###################################################################################################
 # TEST CASE: FITTING
@@ -390,7 +481,7 @@ class TCFitting(test_colossus.ColosssusTestCase):
 		x_true = self.p.getParameterArray(mask)
 		ini_guess = x_true * 1.5
 		self.p.setParameterArray(ini_guess, mask = mask)
-		dict = self.p.fit(r, q, 'rho', q_err = q_err, verbose = False, mask = mask, tolerance = 1E-6)
+		dummy = self.p.fit(r, q, 'rho', q_err = q_err, verbose = False, mask = mask, tolerance = 1E-6)
 		x = self.p.getParameterArray(mask = mask)
 		acc = abs(x / x_true - 1.0)
 		
@@ -425,70 +516,6 @@ class TCNFW(test_colossus.ColosssusTestCase):
 		
 		self.assertLess(diff1, 1E-8)
 		self.assertLess(diff2, 1E-2)
-
-###################################################################################################
-# TEST CASE: DK14 SPECIAL FUNCTIONS
-###################################################################################################
-
-# This test case checks whether the iterative setting of R200m works in the DK14 profile
-
-class TCDK14(test_colossus.ColosssusTestCase):
-
-	def setUp(self):
-		cosmology.setCosmology('planck15', {'persistence': ''})
-		self.M = 1E14
-		self.c = 7.0
-		self.z = 1.0
-		self.mdef = '200c'
-	
-	# Test 1: No outer terms	
-	def test_DK14ConstructorInner(self):
-		
-		p1 = profile_dk14.DK14Profile(M = self.M, c = self.c, z = self.z, mdef = self.mdef)
-		p2 = profile_dk14.DK14Profile(z = self.z, 
-					rhos = p1.par['rhos'], rs = p1.par['rs'], rt = p1.par['rt'], 
-					alpha = p1.par['alpha'], beta = p1.par['beta'], gamma = p1.par['gamma'])
-		self.assertAlmostEqual(p1.opt['R200m'], p2.opt['R200m'], places = 3)
-
-	# Test 2: With outer terms
-	def test_DK14ConstructorOuter(self):
-
-		power_law_norm = 3.0
-		ot_pl = profile_outer.OuterTermPowerLaw(norm = power_law_norm, 
-								slope = 1.5, pivot = 'R200m', pivot_factor = 5.0, z = self.z,
-								max_rho = 1000.0)
-		p1 = profile_dk14.DK14Profile(M = self.M, c = self.c, z = self.z, mdef = self.mdef, 
-									outer_terms = [ot_pl])
-		p2 = profile_dk14.DK14Profile(z = self.z, 
-					rhos = p1.par['rhos'], rs = p1.par['rs'], rt = p1.par['rt'], 
-					alpha = p1.par['alpha'], beta = p1.par['beta'], gamma = p1.par['gamma'], 
-					outer_terms = [ot_pl])
-		self.assertAlmostEqual(p1.opt['R200m'], p2.opt['R200m'], places = 3)
-
-	# Test 3: Using wrapper function
-	def test_DK14ConstructorWrapper(self):
-
-		power_law_norm = 3.0
-		p1 = profile_dk14.getDK14ProfileWithOuterTerms(M = self.M, c = self.c, z = self.z, mdef = self.mdef, 
-					outer_term_names = ['pl'], power_law_norm = power_law_norm)
-		p2 = profile_dk14.getDK14ProfileWithOuterTerms(z = self.z, 
-					rhos = p1.par['rhos'], rs = p1.par['rs'], rt = p1.par['rt'], 
-					alpha = p1.par['alpha'], beta = p1.par['beta'], gamma = p1.par['gamma'], 
-					outer_term_names = ['pl'], power_law_norm = power_law_norm)
-		self.assertAlmostEqual(p1.opt['R200m'], p2.opt['R200m'], places = 3)
-
-	# Test 4: Using the correlation function. This test is skipped because it is very slow
-	
-# 	def test_DK14ConstructorCorrelationFunction(self):
-# 		
-# 		ot_cf = profile_outer.OuterTermCorrelationFunction(derive_bias_from = 'R200m', z = self.z)
-# 		p1 = profile_dk14.DK14Profile(M = self.M, c = self.c, z = self.z, mdef = self.mdef, 
-# 									outer_terms = [ot_cf])
-# 		p2 = profile_dk14.DK14Profile(z = self.z, 
-# 					rhos = p1.par['rhos'], rs = p1.par['rs'], rt = p1.par['rt'], 
-# 					alpha = p1.par['alpha'], beta = p1.par['beta'], gamma = p1.par['gamma'], 
-# 					outer_terms = [ot_cf])
-# 		self.assertAlmostEqual(p1.opt['R200m'], p2.opt['R200m'], places = 3)
 
 ###################################################################################################
 # TRIGGER

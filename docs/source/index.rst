@@ -23,7 +23,8 @@ Colossus is developed with the following chief design goals in mind:
   astrophysical quantities in a single or in a few lines of code. For this purpose, numerous fitting 
   functions have been pre-programmed.
 * *Stand-alone, pure python:* No dependencies beyond numpy and scipy, no C modules to be compiled. 
-  You can install Colossus either as a python package using pip or clone the repository.
+  You can install Colossus either as a python package using pip or clone the repository. 
+  Optionally, external Boltzmann solvers can be used.
 * *Performance:* Computationally intensive routines have been optimized for speed, often using 
   interpolation tables. Virtually all functions accept either numbers or numpy arrays as input.
   
@@ -31,7 +32,7 @@ The easiest way to learn how to use Colossus is to follow the examples in the :d
 The :ref:`search` is useful when looking for specific functions. While Colossus has been tested 
 extensively, there is no guarantee that it is free of bugs. Use it at your own risk, and please 
 report any errors, inconveniences and unclear documentation to the 
-`author <http://www.benediktdiemer.com/>`_.
+`author <http://www.benediktdiemer.com/>`__.
 
 ****************
 License & Citing
@@ -41,10 +42,10 @@ Main Developer: Benedikt Diemer (diemer@umd.edu)
 
 Contributors: Matt Becker, Michael Joyce, Andrey Kravtsov, Steven Murray
 
-License: MIT. Copyright (c) 2014-2021
+License: MIT. Copyright (c) 2014-2022
 
 If you use Colossus for a publication, please cite the code paper 
-(`Diemer 2018 <https://ui.adsabs.harvard.edu/abs/2018ApJS..239...35D/abstract>`_). Many Colossus 
+(`Diemer 2018 <https://ui.adsabs.harvard.edu/abs/2018ApJS..239...35D/abstract>`__). Many Colossus 
 routines implement the results of other papers. If you use such routines, please take care to 
 cite the relevant papers as well (they will be mentioned in the function and/or module 
 documentation).

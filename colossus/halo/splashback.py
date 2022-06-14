@@ -24,9 +24,9 @@ definitions of the splashback radius, for example the radius where the logarithm
 density profile is steepest, or definitions derived from the actual distribution of particle 
 apocenters. For more information, please see the papers that first suggested the splashback 
 radius, namely
-`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_,
-`Adhikari et al. 2014 <http://adsabs.harvard.edu/abs/2014JCAP...11..019A>`_,
-and `More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`_, as well as any of the
+`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`__,
+`Adhikari et al. 2014 <http://adsabs.harvard.edu/abs/2014JCAP...11..019A>`__,
+and `More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`__, as well as any of the
 model papers listed below.
 
 This module implements a number of theoretical models and fitting functions for the splashback
@@ -56,7 +56,7 @@ Note that the mass accretion rate is defined in different ways depending on whic
 In theoretical models, :math:`\\Gamma` typically stands for the instantaneous accretion rate
 :math:`s = d \\log(M) / d \\log(a)`. In other models, it means the mass accretion rate measured
 over either a fixed time interval as in 
-`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_, or measured
+`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`__, or measured
 over a dynamical time. Please consult the model papers for details. The following code example 
 shows how to calculate :math:`R_{\\rm sp}/R_{\\rm 200m}` when only the mass of a halo is known::
 
@@ -92,11 +92,11 @@ parameter to the :func:`splashbackModel` and :func:`splashbackRadius` functions:
 	============== ==================== =========================== =========================================
 	ID             Predicts...          ...as a function of...      Reference
 	============== ==================== =========================== =========================================
-	adhikari14     Rsp/Msp              (Gamma, z)                  `Adhikari et al. 2014 <http://adsabs.harvard.edu/abs/2014JCAP...11..019A>`_
-	more15         Rsp/Msp              (Gamma, z, M) or (z, M)     `More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`_
-	shi16          Rsp/Msp              (Gamma, z)                  `Shi 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.459.3711S>`_
-	mansfield17    Rsp/Msp, Scatter     (Gamma, z, M)               `Mansfield et al. 2017 <http://adsabs.harvard.edu/abs/2017ApJ...841...34M>`_
-	diemer17       Rsp/Msp, Scatter     (Gamma, z, M) or (z, M)     `Diemer et al. 2017 <http://adsabs.harvard.edu/abs/2017ApJ...843..140D>`_
+	adhikari14     Rsp/Msp              (Gamma, z)                  `Adhikari et al. 2014 <http://adsabs.harvard.edu/abs/2014JCAP...11..019A>`__
+	more15         Rsp/Msp              (Gamma, z, M) or (z, M)     `More et al. 2015 <http://adsabs.harvard.edu/abs/2015ApJ...810...36M>`__
+	shi16          Rsp/Msp              (Gamma, z)                  `Shi 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.459.3711S>`__
+	mansfield17    Rsp/Msp, Scatter     (Gamma, z, M)               `Mansfield et al. 2017 <http://adsabs.harvard.edu/abs/2017ApJ...841...34M>`__
+	diemer17       Rsp/Msp, Scatter     (Gamma, z, M) or (z, M)     `Diemer et al. 2017 <http://adsabs.harvard.edu/abs/2017ApJ...843..140D>`__
 	diemer20       Rsp/Msp, Scatter     (Gamma, z, M) or (z, M)     Diemer 2020
 	============== ==================== =========================== =========================================
 
@@ -149,6 +149,7 @@ Module reference
 import numpy as np
 import scipy.interpolate
 from collections import OrderedDict
+import warnings
 
 from colossus import defaults
 from colossus.utils import utilities
@@ -317,11 +318,12 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 		to be mixed up with the definition ``rspdef`` used in the ``diemer20`` model.
 	rspdef: str
 		The definition of the splashback radius. This parameter is ignored by most models, but 
-		used by the ``diemer20`` model to distinguish the ``mean`` of the apocenter distribution
-		or higher percentiles (e.g. ``percentile75``). The function also accepts the newer notation
-		used in the SPARTA code, namely ``sp-apr-mn`` for the mean and ``sp-apr-p75`` and so on
-		for percentiles. For models that use this parameter (``diemer17`` and ``diemer20``), it 
-		must be given, otherwise the function throws an error.
+		used by the ``diemer17`` and ``diemer20`` models to distinguish the ``mean`` of the 
+		apocenter distribution or higher percentiles (e.g. ``percentile75``). The function also 
+		accepts the newer notation used in the SPARTA code, namely ``sp-apr-mn`` for the mean and 
+		``sp-apr-p75`` and so on for percentiles. For models that use this parameter (``diemer17`` 
+		and ``diemer20``), it must be given, otherwise the function throws an error. The acceptable
+		range of percentiles is between 50 and 90.
 	
 	Returns
 	-----------------------------------------------------------------------------------------------
@@ -382,11 +384,11 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 	elif q_in == 'nu200m':
 		x = nu200m
 	x, is_array = utilities.getArray(x)
-	x = x.astype(np.float)
+	x = x.astype(float)
 	mask, _ = utilities.getArray(mask)
 	x = x[mask]
 	if np.count_nonzero(mask) == 0:
-		print('WARNING: Found no input values within the limits of model %s.' % model)
+		warnings.warn('Found no input values within the limits of model %s.' % model)
 		return np.array([]), mask
 	if q_in == 'Gamma':
 		Gamma = x
@@ -455,9 +457,9 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 			mspm200m = modelMansfield17MspM200m(x, Om)
 			ret = mspm200m * 200.0 / rspr200m**3
 		elif q_out == 'RspR200m-1s':
-			ret = np.ones((len(x)), np.float) * 0.046
+			ret = np.ones((len(x)), float) * 0.046
 		elif q_out == 'MspM200m-1s':
-			ret = np.ones((len(x)), np.float) * 0.054
+			ret = np.ones((len(x)), float) * 0.054
 	
 	elif model in ['diemer17', 'diemer20']:
 
@@ -491,11 +493,11 @@ def splashbackModel(q_out, Gamma = None, nu200m = None, z = None,
 		else:
 			if q_in == 'nu200m':
 				if q_out == 'RspR200m-1s':
-					ret = np.ones((len(mask)), np.float) * 0.07
+					ret = np.ones((len(mask)), float) * 0.07
 				elif q_out == 'MspM200m-1s':
-					ret = np.ones((len(mask)), np.float) * 0.07
+					ret = np.ones((len(mask)), float) * 0.07
 				elif q_out == 'Deltasp-1s':
-					ret = np.ones((len(mask)), np.float) * 0.15
+					ret = np.ones((len(mask)), float) * 0.15
 				else:
 					raise Exception('Unknown quantity, %s.' % (q_out))
 			else:
@@ -600,10 +602,10 @@ def splashbackRadius(z, mdef, R = None, M = None, c = None, Gamma = None,
 	
 	if R is not None:
 		R, is_array = utilities.getArray(R)
-		R = R.astype(np.float)
+		R = R.astype(float)
 	else:
 		M, is_array = utilities.getArray(M)
-		M = M.astype(np.float)
+		M = M.astype(float)
 	
 	if mdef == '200m':
 		if R is None:
@@ -712,16 +714,14 @@ def modelAdhikari14Deltasp(s, Om):
 		[6.070e+01, 6.233e+01, 6.427e+01, 6.661e+01, 6.947e+01, 7.295e+01, 7.719e+01, 8.227e+01, 8.731e+01, 9.444e+01, 1.026e+02, 1.117e+02, 1.218e+02, 1.326e+02, 1.441e+02, 1.559e+02, 1.679e+02, 1.799e+02, 1.920e+02, 2.045e+02],
 		[5.953e+01, 6.114e+01, 6.304e+01, 6.534e+01, 6.814e+01, 7.156e+01, 7.572e+01, 8.070e+01, 8.565e+01, 9.264e+01, 1.006e+02, 1.096e+02, 1.194e+02, 1.301e+02, 1.413e+02, 1.529e+02, 1.647e+02, 1.764e+02, 1.883e+02, 2.005e+02]])
 
-	Om_ = np.ones((len(s)), np.float) * Om
+	Om_ = np.ones((len(s)), float) * Om
 	interp = scipy.interpolate.RectBivariateSpline(bins_Om, bins_s, Deltasp)
 	Delta = interp(Om_, s, grid = False)
 	
 	if np.max(s) > np.max(bins_s):
-		msg = 'Found s = %.2f, greater than max %.2f.' % (np.max(s), np.max(bins_s))
-		raise Exception(msg)
+		raise Exception('Found s = %.2f, greater than max %.2f.' % (np.max(s), np.max(bins_s)))
 	if np.min(s) < np.min(bins_s):
-		msg = 'Found s = %.2f, smaller than min %.2f.' % (np.min(s), np.min(bins_s))
-		raise Exception(msg)
+		raise Exception('Found s = %.2f, smaller than min %.2f.' % (np.min(s), np.min(bins_s)))
 	
 	c = np.interp(s, bins_s, c)
 	if np.count_nonzero(c < 0.0) > 0:
@@ -759,7 +759,7 @@ def modelAdhikari14RspR200m(Delta, c, z):
 
 	cosmo = cosmology.getCurrent()
 	rho_m = cosmo.rho_m(z)
-	rhos, rs = profile_nfw.NFWProfile.fundamentalParameters(1E10, c, z, 'vir')
+	rhos, rs = profile_nfw.NFWProfile.nativeParameters(1E10, c, z, 'vir')
 	xsp = profile_nfw.NFWProfile.xDelta(rhos, Delta * rho_m)
 	Rsp = xsp * rs
 	x200m = profile_nfw.NFWProfile.xDelta(rhos, 200.0 * rho_m)
@@ -787,7 +787,7 @@ def modelMore15RspR200m(nu200m = None, z = None, Gamma = None, statistic = 'medi
 	Gamma: array_like
 		Mass accretion rate; can be a number or a numpy array. This model was calibrated with 
 		Gamma computed according to the definition of 
-		`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_.
+		`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`__.
 	statistic: str
 		Can be ``mean`` or ``median``, determining whether the fit was performed on the mean or 
 		median density profile of a halo sample.
@@ -805,19 +805,16 @@ def modelMore15RspR200m(nu200m = None, z = None, Gamma = None, statistic = 'medi
 		elif statistic == 'mean':
 			ratio = 0.58 * (1.0 + 0.63 * cosmo.Om(z)) * (1 + 1.08 * np.exp(-Gamma / 2.26))
 		else:
-			msg = 'Unknown statistic, %s.' % statistic
-			raise Exception(msg)
+			raise Exception('Unknown statistic, %s.' % statistic)
 	elif nu200m is not None:
 		if statistic == 'median':
 			ratio = 0.81 * (1.0 + 0.97 * np.exp(-nu200m / 2.44))
 		elif statistic == 'mean':
 			ratio = 0.88 * (1.0 + 0.77 * np.exp(-nu200m / 1.95))
 		else:
-			msg = 'Unknown statistic, %s.' % statistic
-			raise Exception(msg)
+			raise Exception('Unknown statistic, %s.' % statistic)
 	else:
-		msg = 'Need either Gamma and z, or nu.'
-		raise Exception(msg)
+		raise Exception('Need either Gamma and z, or nu.')
 
 	return ratio
 
@@ -839,7 +836,7 @@ def modelMore15MspM200m(nu200m = None, z = None, Gamma = None, statistic = 'medi
 	Gamma: array_like
 		Mass accretion rate; can be a number or a numpy array. This model was calibrated with 
 		Gamma computed according to the definition of 
-		`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_.
+		`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`__.
 	statistic: str
 		Can be ``mean`` or ``median``, determining whether the fit was performed on the mean or 
 		median density profile of a halo sample.
@@ -857,19 +854,16 @@ def modelMore15MspM200m(nu200m = None, z = None, Gamma = None, statistic = 'medi
 		elif statistic == 'mean':
 			ratio = 0.70 * (1.0 + 0.37 * cosmo.Om(z)) * (1 + 0.62 * np.exp(-Gamma / 2.69))
 		else:
-			msg = 'Unknown statistic, %s.' % statistic
-			raise Exception(msg)
+			raise Exception('Unknown statistic, %s.' % statistic)
 	elif nu200m is not None:
 		if statistic == 'median':
 			ratio = 0.82 * (1.0 + 0.63 * np.exp(-nu200m / 3.52))
 		elif statistic == 'mean':
 			ratio = 0.92 * (1.0 + 0.45 * np.exp(-nu200m / 2.26))
 		else:
-			msg = 'Unknown statistic, %s.' % statistic
-			raise Exception(msg)
+			raise Exception('Unknown statistic, %s.' % statistic)
 	else:
-		msg = 'Need either Gamma and z, or nu.'
-		raise Exception(msg)
+		raise Exception('Need either Gamma and z, or nu.')
 	
 	return ratio
 
@@ -929,7 +923,7 @@ def modelMansfield17RspR200m(Gamma, Om, nu200m):
 	Gamma: array_like
 		Mass accretion rate; can be a number or a numpy array. This model was calibrated with 
 		Gamma computed according to the definition of 
-		`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_.
+		`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`__.
 	Om: array_like
 		Matter density of the universe in units of the critical density; can be a number or a 
 		numpy array.
@@ -970,7 +964,7 @@ def modelMansfield17MspM200m(Gamma, Om):
 	Gamma: array_like
 		Mass accretion rate; can be a number or a numpy array. This model was calibrated with 
 		Gamma computed according to the definition of 
-		`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`_.
+		`Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`__.
 	Om: array_like
 		Matter density of the universe in units of the critical density; can be a number or a 
 		numpy array.		

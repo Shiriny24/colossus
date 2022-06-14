@@ -87,8 +87,7 @@ def parseMassDefinition(mdef):
 		mdef_delta = None
 
 	else:
-		msg = 'Invalid mass definition, %s.' % mdef
-		raise Exception(msg)
+		raise Exception('Invalid mass definition, %s.' % mdef)
 	
 	return mdef_type, mdef_delta
 
@@ -122,8 +121,7 @@ def parseRadiusMassDefinition(rmdef):
 	elif rmdef[0] in ['m', 'M']:
 		radius_mass = 'M'
 	else:
-		msg = 'Invalid identifier, %s. Must be either R for radius or M for mass.' % rmdef[0]
-		raise Exception(msg)
+		raise Exception('Invalid identifier, %s. Must be either R for radius or M for mass.' % rmdef[0])
 	
 	mdef = rmdef[1:]
 	mdef_type, mdef_delta = parseMassDefinition(mdef)
@@ -164,8 +162,7 @@ def densityThreshold(z, mdef):
 	elif mdef_type == 'vir':
 		rho_treshold = deltaVir(z) * cosmo.rho_c(z)
 	else:
-		msg = 'Invalid mass definition, %s.' % mdef
-		raise Exception(msg)
+		raise Exception('Invalid mass definition, %s.' % mdef)
 
 	return rho_treshold
 
@@ -176,7 +173,7 @@ def deltaVir(z):
 	The virial overdensity in units of the critical density.
 	
 	This function uses the fitting formula of 
-	`Bryan & Norman 1998 <http://adsabs.harvard.edu/abs/1998ApJ...495...80B>`_ to determine the 
+	`Bryan & Norman 1998 <http://adsabs.harvard.edu/abs/1998ApJ...495...80B>`__ to determine the 
 	virial overdensity. While the universe is dominated by matter, this overdensity is about 178. 
 	Once dark energy starts to matter, it decreases. 
 	
@@ -305,8 +302,7 @@ def dynamicalTime(z, mdef, definition = 'crossing'):
 	elif definition == 'orbit':
 		t_dyn = t_cross * np.pi
 	else:
-		msg = 'Unknown definition of the dynamical time, %s.' % definition
-		raise Exception(msg)
+		raise Exception('Unknown definition of the dynamical time, %s.' % definition)
 	
 	return t_dyn
 

@@ -108,12 +108,12 @@ class TCMassDefs(test_colossus.ColosssusTestCase):
 		z2 = 3.1
 		M1 = [1.5E8, 1.1E15]
 		c1 = 4.6
-		correct_M = [4.111593775552e+07, 4.332713925617e+14]
-		correct_R = [2.094369802194e+00, 4.591662644483e+02]
-		correct_c = [1.266219510084e+00, 1.428866970421e+00]
+		correct_M = [4.107574772320e+07, 4.332736277298e+14]
+		correct_R = [2.093687177765e+00, 4.591670540319e+02]
+		correct_c = [1.265806807242e+00, 1.428869427504e+00]
 		for i in range(len(M1)):
 			t = profile_outer.OuterTermPowerLaw(norm = 1.0, slope = 1.5, pivot = 'R200m', 
-											pivot_factor = 5.0, z = 0.0)
+											pivot_factor = 5.0, z = z1)
 			M, R, c = mass_defs.evolveSO(M1[i], c1, z1, '200m', z2, 'vir',
 						profile = profile_dk14.DK14Profile, profile_args = {'outer_terms': [t]})
 			self.assertAlmostEqual(M, correct_M[i])

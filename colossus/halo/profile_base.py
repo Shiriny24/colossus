@@ -21,6 +21,7 @@ import abc
 import collections
 import six
 import copy
+import warnings
 
 from colossus import defaults
 from colossus.utils import utilities
@@ -35,23 +36,38 @@ from colossus.halo import mass_so
 @six.add_metaclass(abc.ABCMeta)
 class HaloDensityProfile():
 	"""
-	Abstract base class for a halo density profile in physical units.
+	Abstract base class for a halo density profile.
 	
 	A particular functional form for the density profile can be implemented by inheriting this 
-	class and overwriting the constructor and :func:`density` method. In practice, a number of 
-	other functions should also be overwritten for speed and convenience.
+	class. These child classes must set their parameter and option names before calling this
+	constructor, and they must overwrite the :func:`density` and :func:`setNativeParameters` 
+	methods. In practice, a number of other functions should also be overwritten for speed and 
+	convenience.
 	
-	Furthermore, this base class provides a general implementation of outer profile terms, 
-	i.e. descriptions of the outer profile beyond the virial radius. Thus, these terms can be
+	This base class provides a general implementation of outer profile terms, i.e., descriptions 
+	of the infalling and 2-halo profile beyond the virial radius. These terms can be
 	added to any derived density profile class without adding new code.
 
 	Parameters
-	-------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------
+	allowed_mdefs: list
+		A list of mass definitions that the :func:`setNativeParameters` routine of a derived 
+		class can accept. If ``None``, it is assumed that any definition is acceptable. If the 
+		user passes a mass definition different from the allowed one(s), the constructor
+		automatically iterates to find the correct parameters.
+	ignore_params: bool
+		If True, the constructor does not attempt to set the profile parameters from a given mass
+		and concentration. Instead, the profile is accepted as is. This option should only be set 
+		for parameter-free child classes such as spline profiles.
 	outer_terms: list
-		A list of OuterTerm objects to add to the density profile. 
+		A list of :class:`~.halo.profile_outer.OuterTerm` objects to be added to the density 
+		profile. 
 	"""
 
-	def __init__(self, outer_terms = []):
+	def __init__(self, allowed_mdefs = None, ignore_params = False, outer_terms = [], **kwargs):
+		
+		# -----------------------------------------------------------------------------------------
+		# Set defaults
 		
 		# The radial limits within which the profile is valid. These can be used as integration
 		# limits for surface density, for example.
@@ -65,10 +81,16 @@ class HaloDensityProfile():
 		
 		# For some functions, such as Vmax, we need an intial guess for a radius (in kpc/h).
 		self.r_guess = 100.0
+
+		# -----------------------------------------------------------------------------------------
+		# Process parameter and option names
 		
 		# The parameters of the profile are stored in a dictionary. We separately store the number
 		# of parameters for the inner profile because the total number may include additional 
 		# parameters of the outer profile.
+		if (not ignore_params) and (not 'rhos' in self.par_names):
+			raise Exception('Derived profile classes must have a normalization parameter called "rhos". Found %s.' \
+						% (str(self.par_names)))
 		self.par = collections.OrderedDict()
 		self.N_par = len(self.par_names)
 		self.N_par_inner = len(self.par_names)
@@ -88,6 +110,36 @@ class HaloDensityProfile():
 		self.quantities['M'] = self.enclosedMass
 		self.quantities['Sigma'] = self.surfaceDensity
 		self.quantities['DeltaSigma'] = self.deltaSigma
+
+		# -----------------------------------------------------------------------------------------
+		# Set profile parameters from keyword arguments
+
+		# Check whether all native parameters are given
+		if not ignore_params:
+			native_found = True
+			for p in self.par:
+				if not p in kwargs:
+					native_found = False
+					break
+			
+			if native_found:
+				for p in self.par:
+					self.par[p] = kwargs[p]
+			else:
+				mcz_found = True
+				mcz_args = copy.copy(kwargs)
+				for p in ['M', 'c', 'mdef', 'z']:
+					if not p in kwargs:
+						mcz_found = False
+						break
+					del mcz_args[p]
+	
+				if not mcz_found:
+					raise Exception('A profile must be define either using its native parameters (%s), or (M, c, mdef, z).' \
+								% (str(self.par_names)))
+			
+		# -----------------------------------------------------------------------------------------
+		# Deal with outer profiles
 
 		# Now we also add any parameters for the outer term(s)
 		self._outer_terms = copy.copy(outer_terms)
@@ -119,7 +171,7 @@ class HaloDensityProfile():
 		
 			# For convenience, also store at what positions in the par array the outer parameters
 			# were inserted.
-			pp = np.zeros((N_added), np.int)
+			pp = np.zeros((N_added), int)
 			key_list = list(self.par.keys())
 			for j in range(N_added):
 				pp[j] = key_list.index(added_parameters[j])
@@ -130,8 +182,171 @@ class HaloDensityProfile():
 		self.N_par = len(self.par)
 		self.N_opt = len(self.opt)
 
+		# -----------------------------------------------------------------------------------------
+		# Set parameters from mass; this needs to happen after the outer profiles because their
+		# contribution will figure into the profile normalization. There are two basic ways of 
+		# doing this. If any profile component needs and absolute radial scale 'R200m' to self-
+		# calibrate and we are given the mass in another definition, then we need to iteratively
+		# solve for the parameters. Otherwise, we set 'R200m' if necessary and execute the simple
+		# setNativeParameters() function implemented by the profile object. This sets only the 
+		# inner profile parameters, so if there are outer profile parameters, we normalize the 
+		# rhos parameter.
+
+		# If we are not setting parameters, we exit here.
+		if ignore_params:
+			return
+
+		if not native_found and mcz_found:
+			
+			M, c, z, mdef = kwargs['M'], kwargs['c'], kwargs['z'], kwargs['mdef']
+			do_iterate = ('R200m' in self.opt) and (mdef != '200m')
+			do_iterate = do_iterate or ((allowed_mdefs is not None) and (not mdef in allowed_mdefs))
+			
+			if do_iterate:
+				self._setNativeParametersIteratively(M, c, z, mdef, **mcz_args)
+			else:
+				R = mass_so.M_to_R(M, z, mdef)
+				if 'R200m' in self.opt:
+					self.opt['R200m'] = R
+				self.setNativeParameters(M, c, z, mdef, **mcz_args)
+				self.par['rhos'] *= self._normalizeInner(R, M)
+
+		else:
+			
+			if ('R200m' in self.opt) and (self.opt['R200m'] is None):
+				if 'R200m' in kwargs:
+					self.opt['R200m'] = kwargs['R200m']
+				else:
+					raise Exception('Creating profile from native parameters, but also need R200m option.')
+
+			if ('z' in self.opt) and (self.opt['z'] is None):
+				if 'z' in kwargs:
+					self.opt['z'] = kwargs['z']
+				else:
+					raise Exception('Creating profile from native parameters, but also need z option.')
+
 		return
 
+	###############################################################################################
+	
+	def _setNativeParametersIteratively(self, M, c, z, mdef, 
+							acc_warn = defaults.HALO_PROFILE_ACC_WARN, 
+							acc_err = defaults.HALO_PROFILE_ACC_ERR,
+							**kwargs):
+
+		global R_last
+		
+		# -----------------------------------------------------------------------------------------
+		
+		def radius_diff(R200m, rho_target, R_target):
+			
+			global R_last 
+
+			M200m = mass_so.R_to_M(R200m, z, '200m')
+			c200m = c * R200m / R_target
+			self.opt['R200m'] = R200m
+			self.setNativeParameters(M200m, c200m, z, '200m', **kwargs)
+			self.par['rhos'] *= self._normalizeInner(R200m, M200m)
+			R_guess = self._RDeltaLowlevel(R_last, rho_target)
+			R_last = R_guess
+			
+			return R_guess - R_target
+		
+		# -----------------------------------------------------------------------------------------
+
+		def eq_rdelta_nfw(r, rhos, rs, rho_target):
+			
+			x = r / rs 
+			mu = np.log(1.0 + x) - x / (1.0 + x)
+			diff = 3.0 * rhos * mu / x**3 - rho_target
+			
+			return diff
+		
+		# -----------------------------------------------------------------------------------------
+
+		# Remember whether the 'R200m' option was set at the beginning; if not, we should remove 
+		# it later.
+		has_r200m_opt = ('R200m' in self.opt)
+
+		# Set target radius and density from given mass
+		R_target = mass_so.M_to_R(M, z, mdef)
+		rho_target = mass_so.densityThreshold(z, mdef)
+
+		# We need to estimate R200m but cannot use the NFW profile module because that would 
+		# constitute a circular include. Thus, we manually solve the NFW equations.
+		rho_200m = mass_so.densityThreshold(z, '200m')
+		nfw_rs = R_target / c
+		nfw_mu = np.log(1.0 + c) - c / (1.0 + c)
+		nfw_rhos = M / (nfw_rs**3 * 4.0 * np.pi * nfw_mu)
+		args = nfw_rhos, nfw_rs, rho_200m
+		R200m_guess = scipy.optimize.brentq(eq_rdelta_nfw, R_target / 20.0, R_target * 20.0, args = args, xtol = 0.01)
+
+		# Now iterate to find an R200m that creates a profile with M(R, mdef) = M_given. We 
+		# increase the search range iteratively.		
+		R_last = R_target
+		args = rho_target, R_target
+		guess_tol = [1.2, 2.0, 5.0, 20.0, 100.0]
+		success = False
+		i = -1
+		while not success:
+			i += 1
+			if i >= len(guess_tol):
+				raise Exception('Could not find SO radius.')
+			R_lo = R200m_guess / guess_tol[i]
+			R_hi = R200m_guess * guess_tol[i]
+			val_lo = radius_diff(R_lo, *args)
+			val_hi = radius_diff(R_hi, *args)
+			
+			if val_lo * val_hi < 0.0:
+				self.opt['R200m'] = scipy.optimize.brentq(radius_diff, R_lo, R_hi,
+							args = args, xtol = defaults.HALO_PROFILE_ACC_RADIUS)
+				success = True
+
+		# Check the accuracy of the result; M should be very close to MDelta now
+		M_result = mass_so.R_to_M(R_last, z, mdef)
+		err = (M_result - M) / M
+		
+		if abs(err) > acc_err:
+			raise Exception('Profile parameters not converged (%.1f percent error).' % (abs(err) * 100.0))
+		
+		if abs(err) > acc_warn:
+			warnings.warn('Profile parameters converged to an accuracy of %.1f percent.' \
+				% (abs(err) * 100.0))
+		
+		# Remove the R200m option if it was not originally present. Otherwise this option can 
+		# trigger operations that may be unnecessary for this profile.
+		if not has_r200m_opt:
+			del self.opt['R200m']
+		
+		return
+	
+	###############################################################################################
+
+	@abc.abstractmethod
+	def setNativeParameters(self, M, c, z, mdef, **kwargs):
+		"""
+		Determine the native profile parameters from mass and concentration.
+		
+		Abstract function which must be overwritten by child classes.
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		M: float
+			Spherical overdensity mass in :math:`M_{\odot}/h`.
+		c: float
+			The concentration, :math:`c = R / r_{\\rm s}`, corresponding to the given halo mass and 
+			mass definition.
+		z: float
+			Redshift
+		mdef: str
+			The mass definition in which ``M`` and ``c`` are given. See :doc:`halo_mass` for 
+			details.
+		kwargs: kwargs
+			Parameters passed to the constructor of the child class.
+		"""		
+		
+		return
+	
 	###############################################################################################
 
 	def getParameterArray(self, mask = None):
@@ -139,7 +354,7 @@ class HaloDensityProfile():
 		Returns an array of the profile parameters.
 		
 		The profile parameters are internally stored in an ordered dictionary. For some 
-		applications (e.g., fitting), a simply array is more appropriate.
+		applications (e.g., fitting), a simple array is more appropriate.
 		
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -187,14 +402,12 @@ class HaloDensityProfile():
 				self.par[self.par_names[i]] = pars[i]
 		else:
 			if len(mask) != self.N_par:
-				msg = 'Received %d mask elements for %d parameters.' % \
-					(np.count_nonzero(mask), self.N_par)
-				raise Exception(msg)
+				raise Exception('Received %d mask elements for %d parameters.' % \
+					(np.count_nonzero(mask), self.N_par))
 				
 			if len(pars) != np.count_nonzero(mask):
-				msg = 'Received %d parameters and %d mask elements that are True.' % \
-					(len(pars), np.count_nonzero(mask))
-				raise Exception(msg)
+				raise Exception('Received %d parameters and %d mask elements that are True.' % \
+					(len(pars), np.count_nonzero(mask)))
 			
 			counter = 0
 			for i in range(self.N_par):
@@ -208,14 +421,103 @@ class HaloDensityProfile():
 
 	def update(self):
 		"""
-		Update the profile object after a change in parameters.
+		Update the profile object after a change in parameters or cosmology.
 		
 		If the parameters dictionary has been changed (e.g. by the user or during fitting), this 
 		function must be called to ensure consistency within the profile object. This involves
 		deleting any pre-computed quantities (e.g., tabulated enclosed masses) and re-computing
-		profile properties that depend on the parameters.
+		profile properties that depend on the parameters. The corresponding functions for outer 
+		terms are automatically called as well.
 		"""
 		
+		if 'R200m' in self.opt:
+			self.updateR200m()
+		
+		if self.N_outer > 0:
+			for i in range(self.N_outer):
+				self._outer_terms[i].update()
+		
+		return
+
+	###############################################################################################
+
+	def updateR200m(self):
+		"""
+		Update the internally stored R200m after a parameter change.
+		
+		If the profile has the internal option ``opt['R200m']`` option, that does not stay in sync with
+		the other profile parameters if they are changed (either inside or outside the constructor). 
+		This function adjusts :math:`R_{\\rm 200m}`, in addition to whatever action is taken in the
+		update function of the super class. Note that this adjustment needs to be done iteratively 
+		if any outer profiles rely on :math:`R_{\\rm 200m}`.
+		"""
+
+		# -----------------------------------------------------------------------------------------
+		# This is a special version of the normal difference equation for finding R_Delta. Here, 
+		# the given radius corresponds to R200m, and we set that R200m in the options so that it
+		# can be evaluated by the outer terms.
+		
+		def _thresholdEquationR200m(r, prof_object, density_threshold):
+			
+			prof_object.opt['R200m'] = r
+			diff = self.enclosedMass(r) / 4.0 / np.pi * 3.0 / r**3 - density_threshold
+			
+			return diff
+
+		# -----------------------------------------------------------------------------------------
+
+		GUESS_FACTOR = 5.0
+		MAX_GUESSES = 20
+
+		if not 'z' in self.opt:
+			raise Exception('If R200m is a profile option, z must be too.')
+		density_threshold = mass_so.densityThreshold(self.opt['z'], '200m')
+
+		# If we have not at all computed R200m yet, we don't even have an initial guess for that
+		# computation. But even if we have, the user could have changed the parameters in some 
+		# drastic fashion, for example by lowering the central density significantly to create a 
+		# much less dense halo. Thus, we start from a guess radius and increase / decrease the 
+		# upper/lower bounds until the threshold equation is positive at the lower bound 
+		# (indicating that the density there is higher than the threshold) and negative at the
+		# upper bound. If we do not have a previous R200m, we begin by guessing a concentration of
+		# five.
+		if self.opt['R200m'] is None:
+			R_guess = self.par['rs'] * 5.0
+		else:
+			R_guess = self.opt['R200m']
+
+		R_low = R_guess
+		found = False
+		i = 0
+		while i <= MAX_GUESSES:
+			if _thresholdEquationR200m(R_low, self, density_threshold) > 0.0:
+				found = True
+				break
+			R_low /= GUESS_FACTOR
+			i += 1
+		if not found:
+			raise Exception('Cound not find radius where the enclosed density was smaller than threshold (r %.2e kpc/h, rho_threshold %.2e).' \
+						% (R_low, density_threshold))
+
+		R_high = R_guess
+		found = False
+		i = 0
+		while i <= MAX_GUESSES:
+			if _thresholdEquationR200m(R_high, self, density_threshold) < 0.0:
+				found = True
+				break
+			R_high *= GUESS_FACTOR
+			i += 1
+		if not found:
+			raise Exception('Cound not find radius where the enclosed density was larger than threshold (r %.2e kpc/h, rho_threshold %.2e).' \
+						% (R_high, density_threshold))
+		
+		# Note that we cannot just use the RDelta function here. While that function iterates, it
+		# does not set R200m between iterations, meaning that the outer terms are evaluated with 
+		# the input R200m. 
+		self.opt['R200m'] = scipy.optimize.brentq(_thresholdEquationR200m, R_low, R_high, 
+							args = (self, density_threshold), xtol = defaults.HALO_PROFILE_ACC_RADIUS)
+				
 		return
 
 	###############################################################################################
@@ -259,7 +561,7 @@ class HaloDensityProfile():
 		Returns
 		-------------------------------------------------------------------------------------------
 		density: array_like
-			Density in physical :math:`M_{\odot} h^2 / kpc^3`; has the same dimensions 
+			Density in physical :math:`M_{\odot} h^2 / {\\rm kpc}^3`; has the same dimensions 
 			as ``r``.
 		"""		
 		
@@ -287,7 +589,7 @@ class HaloDensityProfile():
 		"""		
 				
 		r_array, is_array = utilities.getArray(r)
-		r_array = r_array.astype(np.float)
+		r_array = r_array.astype(float)
 		rho_outer = np.zeros_like(r_array)
 		for i in range(self.N_outer):
 			rho_outer += self._outer_terms[i].density(r_array)
@@ -320,7 +622,7 @@ class HaloDensityProfile():
 		drho_dr = self.densityDerivativeLinInner(r)
 		if self.N_outer > 0:
 			drho_dr += self.densityDerivativeLinOuter(r)
-		
+
 		return drho_dr
 
 	###############################################################################################
@@ -345,10 +647,8 @@ class HaloDensityProfile():
 		"""
 		
 		r_use, is_array = utilities.getArray(r)
-		r_use = r_use.astype(np.float)
-		rho_der = np.zeros_like(r_use)
-		for i in range(len(r_use)):	
-			rho_der[i] = scipy.misc.derivative(self.densityInner, r_use[i], dx = 0.001, n = 1, order = 3)
+		r_use = r_use.astype(float)
+		rho_der = scipy.misc.derivative(self.densityInner, r_use, dx = 0.001, n = 1, order = 3)
 		if not is_array:
 			rho_der = rho_der[0]
 
@@ -376,7 +676,7 @@ class HaloDensityProfile():
 		"""
 		
 		r_array, is_array = utilities.getArray(r)
-		rho_der_outer = np.zeros((len(r_array)), np.float)
+		rho_der_outer = np.zeros((len(r_array)), float)
 		for i in range(self.N_outer):
 			rho_der_outer += self._outer_terms[i].densityDerivativeLin(r)
 		if not is_array:
@@ -473,7 +773,7 @@ class HaloDensityProfile():
 			return density_function(r) * 4.0 * np.pi * r**2
 
 		r_use, is_array = utilities.getArray(r)
-		r_use = r_use.astype(np.float)
+		r_use = r_use.astype(float)
 		M = np.zeros_like(r_use)
 		for i in range(len(r_use)):
 			M[i], _ = scipy.integrate.quad(integrand, self.rmin, r_use[i], epsrel = accuracy)
@@ -502,13 +802,15 @@ class HaloDensityProfile():
 			as ``r``.
 		"""		
 
-		return self._enclosedMass(r, accuracy, self.density)
+		return self.enclosedMassInner(r, accuracy = accuracy) + self.enclosedMassOuter(r, accuracy = accuracy)
 
 	###############################################################################################
 
 	def enclosedMassInner(self, r, accuracy = defaults.HALO_PROFILE_ENCLOSED_MASS_ACCURACY):
 		"""
 		The mass enclosed within radius r due to the inner profile term.
+		
+		This function should be overwritten by child classes if an analytical expression exists.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -587,8 +889,7 @@ class HaloDensityProfile():
 		elif mdef is not None and z is not None:
 			Rmax_use = self.RDelta(z, mdef)
 		else:
-			msg = 'The cumulative pdf function needs an outer radius for the profile.'
-			raise Exception(msg)
+			raise Exception('The cumulative pdf function needs an outer radius for the profile.')
 			
 		pdf = self.enclosedMass(r) / self.enclosedMass(Rmax_use)
 		
@@ -633,10 +934,8 @@ class HaloDensityProfile():
 			log_max_r = min(log_max_r, np.log(max_r_integrate))
 
 		if np.max(r) > np.exp(log_max_r) / 10.0:
-			msg = 'Cannot evaluate surface density for radius %.2e, must be smaller than %.2e. ' \
-				% (np.max(r), np.exp(log_max_r) / 10.0)
-			msg += 'You may want to turn the interpolate option off or change the integration limits.'
-			raise Exception(msg)
+			raise Exception('Cannot evaluate surface density for radius %.2e, must be smaller than %.2e. You may want to turn the interpolate option off or change the integration limits.' \
+				% (np.max(r), np.exp(log_max_r) / 10.0))
 
 		if interpolate:
 			table_log_r = np.arange(log_min_r, log_max_r + 0.01, 0.1)
@@ -644,8 +943,7 @@ class HaloDensityProfile():
 			if np.min(rho) < 0.0:
 				print('Current profile parameters:')
 				print(self.par)
-				msg = 'Found negative value in density, cannot create interpolation table. Try computing surface density with interpolate = False.'
-				raise Exception(msg)
+				raise Exception('Found negative value in density, cannot create interpolation table. Try computing surface density with interpolate = False.')
 			if np.min(rho) == 0.0:
 				min_val = np.min(rho[rho > 0.0])
 				rho[rho == 0.0] = min_val
@@ -657,7 +955,7 @@ class HaloDensityProfile():
 			integrand = integrand_exact
 			
 		r_use, is_array = utilities.getArray(r)
-		r_use = r_use.astype(np.float)
+		r_use = r_use.astype(float)
 		surfaceDensity = np.zeros_like(r_use)
 		log_r_use = np.log(r_use)
 		for i in range(len(r_use)):
@@ -665,8 +963,9 @@ class HaloDensityProfile():
 										args = (r_use[i]**2, interp), epsrel = accuracy, limit = 1000)
 			surfaceDensity[i] *= 2.0
 
-		if np.count_nonzero(surfaceDensity < 0.0) > 0:
-			raise Exception('Found negative surface density. Please check the integration limits.')
+		if np.any(surfaceDensity < 0.0):
+			surfaceDensity[surfaceDensity < 0.0] = 0.0
+			warnings.warn('Found negative surface density, set to zero. Please check the integration limits.')
 
 		if not is_array:
 			surfaceDensity = surfaceDensity[0]
@@ -802,7 +1101,7 @@ class HaloDensityProfile():
 		"""
 
 		if utilities.isArray(r):	
-			sigma_outer = np.zeros((len(r)), np.float)
+			sigma_outer = np.zeros((len(r)), float)
 		else:
 			sigma_outer = 0.0
 			
@@ -810,7 +1109,8 @@ class HaloDensityProfile():
 			if 'surfaceDensity' in self._outer_terms[i].__class__.__dict__:
 				sigma_outer += self._outer_terms[i].surfaceDensity(r)
 			else:
-				sigma_outer += self._surfaceDensity(r, self._outer_terms[i].density, interpolate = interpolate, accuracy = accuracy,
+				sigma_outer += self._surfaceDensity(r, self._outer_terms[i].density, 
+						interpolate = interpolate, accuracy = accuracy,
 						max_r_interpolate = max_r_interpolate, max_r_integrate = max_r_integrate)
 
 		return sigma_outer
@@ -833,9 +1133,8 @@ class HaloDensityProfile():
 			return ret
 
 		if np.max(r) > self.rmax:
-			msg = 'Cannot evaluate DeltaSigma for radius %.2e, must be smaller than %.2e for this profile type.' \
-				% (np.max(r), self.rmax)
-			raise Exception(msg)
+			raise Exception('Cannot evaluate DeltaSigma for radius %.2e, must be smaller than %.2e for this profile type.' \
+				% (np.max(r), self.rmax))
 
 		log_min_r = np.log(min_r_interpolate)
 		log_max_r = np.log(np.max(r) * 1.01)
@@ -851,7 +1150,7 @@ class HaloDensityProfile():
 			integrand = integrand_exact
 
 		r_use, is_array = utilities.getArray(r)
-		r_use = r_use.astype(np.float)
+		r_use = r_use.astype(float)
 		deltaSigma = np.zeros_like(r_use)
 		for i in range(len(r_use)):
 			deltaSigma[i], _ = scipy.integrate.quad(integrand, log_min_r, np.log(r_use[i]), 
@@ -1096,6 +1395,9 @@ class HaloDensityProfile():
 		Mr_outer = self.enclosedMassOuter(R)
 		norm = (M - Mr_outer) / Mr_inner
 		
+		if norm <= 0.0:
+			raise Exception('Failure when trying to normalize inner profile because outer profile mass is larger than total.')
+		
 		return norm
 
 	###############################################################################################
@@ -1109,6 +1411,35 @@ class HaloDensityProfile():
 		
 		return diff
 
+	###############################################################################################
+
+	# Low-level function to compute a spherical overdensity radius given an approximate guess.
+	
+	def _RDeltaLowlevel(self, R_guess, density_threshold):
+		
+		guess_tol = [2.0, 5.0, 20.0, 100.0]
+		success = False
+		i = -1
+		
+		args = density_threshold
+		
+		while not success:
+			i += 1
+			if i >= len(guess_tol):
+				raise Exception('Could not find SO radius.')
+			
+			R_lo = R_guess / guess_tol[i]
+			R_hi = R_guess * guess_tol[i]
+			val_lo = self._thresholdEquation(R_lo, args)
+			val_hi = self._thresholdEquation(R_hi, args)
+
+			if val_lo * val_hi < 0.0:
+				R = scipy.optimize.brentq(self._thresholdEquation, R_lo, R_hi, args = args, 
+										xtol = defaults.HALO_PROFILE_ACC_RADIUS)
+				success = True
+		
+		return R
+	
 	###############################################################################################
 
 	def RDelta(self, z, mdef):
@@ -1205,23 +1536,72 @@ class HaloDensityProfile():
 	
 	###############################################################################################
 
-	# Return a numpy array of fitting parameters, given the standard profile parameters. By default, 
-	# the parameters used in a fit are the same as the fundamental parameters. Derived classes 
-	# might want to change that, for example to fit log(p) instead of p if the value can only be 
-	# positive. 
+	def Rsteepest(self, search_range = 10.0):
+		"""
+		The radius where the logarithmic slope of the density profile is steepest.
+		
+		This function finds the radius where the logarithmic slope of the profile is minimal, 
+		within some very generous bounds. The function makes sense only if at least one outer term 
+		has been added because the inner profile steepens with radius without ever become 
+		shallower again (for any reasonable functional form). 
+		
+		The radius of steepest slope is often taken as a proxy for the splashback radius, 
+		:math:`R_{\\rm sp}`, but this correspondence is only approximate because the 
+		:math:`R_{\\rm steep}` is the result of a tradeoff between the orbiting and infalling 
+		profiles, whereas the splashback radius is determined by the dynamics of orbiting 
+		particles. See the :doc:`halo_splashback` section for a detailed description of the 
+		splashback radius.
+		
+		Parameters
+		-------------------------------------------------------------------------------------------
+		search_range: float
+			When searching for the radius of steepest slope, search within this factor of 
+			:math:`R_{\\rm 200m}`, :math:`r_{\\rm s}`, or another initial guess, which is 
+			determined automatically.
+			
+		Returns
+		-------------------------------------------------------------------------------------------
+		Rsteep: float
+			The radius where the slope is steepest, in physical kpc/h.
+		"""
+		
+		if self.N_outer == 0:
+			raise Exception('The steepest radius can only be evaluated if outer terms are set.')
+		
+		if 'R200m' in self.opt:
+			r_guess = self.opt['R200m']
+		elif 'rs' in self.par:
+			r_guess = self.par['rs']
+		else:
+			r_guess = self.r_guess
+		
+		r_steep = scipy.optimize.fminbound(self.densityDerivativeLog, 
+									r_guess / search_range, r_guess * search_range)
+
+		return r_steep
+	
+	###############################################################################################
+
+	# Return a numpy array of fitting parameters, given the standard profile parameters. By 
+	# default, all parameters are fit in log space to ensure positivity. Derived classes might want
+	# to change that, for example if a parameter is allowed to be negative, or if another transform
+	# gives better fit results.
 	#
 	# The p array passed to _fitConvertParams and _fitConvertParamsBack is a copy, meaning these
-	# functions are allowed to manipulate it. 
+	# functions are allowed to manipulate it.
+	#
+	# Note that this function must be able to handle an array of parameter sets, i.e., a 2D p 
+	# array of dimensionality [N_sets, N_par], where the mask refers to the N_par dimension.
 
 	def _fitConvertParams(self, p, mask):
 		
-		return p
+		return np.log(p)
 
 	###############################################################################################
 	
 	def _fitConvertParamsBack(self, p, mask):
 		
-		return p
+		return np.exp(p)
 
 	###############################################################################################
 
@@ -1273,6 +1653,8 @@ class HaloDensityProfile():
 		for j in range(N_par_fit):
 			deriv[j] = np.dot(Q, deriv[j])
 		
+		deriv = deriv.T
+		
 		return deriv
 
 	###############################################################################################
@@ -1290,13 +1672,19 @@ class HaloDensityProfile():
 	# Evaluate the likelihood for a vector of parameter sets x. In this case, the vector is 
 	# evaluated element-by-element, but the function is expected to handle a vector since this 
 	# could be much faster for a simpler likelihood.
+	#
+	# The values of x may have been transformed (e.g., into log space), so we need to convert them
+	# back before evaluating the function.
 	
 	def _fitLikelihood(self, x, r, q, f, covinv, mask):
 
 		n_eval = len(x)
-		res = np.zeros((n_eval), np.float)
+		res = np.zeros((n_eval), float)
+
+		x_lin = self._fitConvertParamsBack(x, mask)
+		
 		for i in range(n_eval):
-			self.setParameterArray(x[i], mask = mask)
+			self.setParameterArray(x_lin[i], mask = mask)
 			res[i] = np.exp(-0.5 * self._fitChi2(r, q, f, covinv))
 		
 		return res
@@ -1306,27 +1694,34 @@ class HaloDensityProfile():
 	# Note that the MCMC fitter does NOT use the converted fitting parameters, but just the 
 	# parameters themselves. Otherwise, interpreting the chain becomes very complicated.
 
-	def _fitMethodMCMC(self, r, q, f, covinv, mask, N_par_fit, verbose,
-				converged_GR, nwalkers, best_fit, initial_step, random_seed,
-				convergence_step, output_every_n):
-		
+	def _fitMethodMCMC(self, r, q, f, covinv, mask, verbose, converged_GR, nwalkers, best_fit, 
+					initial_step, random_seed, convergence_step, output_every_n):
+
+		# Get initial parameters from profile and transform		
 		x0 = self.getParameterArray(mask = mask)
+		x0 = self._fitConvertParams(x0, mask)
+		
+		# Run MCMC
 		args = r, q, f, covinv, mask
 		walkers = mcmc.initWalkers(x0, initial_step = initial_step, nwalkers = nwalkers, random_seed = random_seed)
 		xi = np.reshape(walkers, (len(walkers[0]) * 2, len(walkers[0, 0])))
 		chain_thin, chain_full, R = mcmc.runChain(self._fitLikelihood, walkers, convergence_step = convergence_step,
 							args = args, converged_GR = converged_GR, verbose = verbose, output_every_n = output_every_n)
+		
+		# Convert the chain back into linear / untransformed variables before analysing
+		chain_thin = self._fitConvertParamsBack(chain_thin, mask)
+		chain_full = self._fitConvertParamsBack(chain_full, mask)
 		mean, median, stddev, p = mcmc.analyzeChain(chain_thin, self.par_names, verbose = verbose)
 
-		dict = {}
-		dict['x_initial'] = xi
-		dict['chain_full'] = chain_full
-		dict['chain_thin'] = chain_thin
-		dict['R'] = R
-		dict['x_mean'] = mean
-		dict['x_median'] = median
-		dict['x_stddev'] = stddev
-		dict['x_percentiles'] = p
+		dic = {}
+		dic['x_initial'] = xi
+		dic['chain_full'] = chain_full
+		dic['chain_thin'] = chain_thin
+		dic['R'] = R
+		dic['x_mean'] = mean
+		dic['x_median'] = median
+		dic['x_stddev'] = stddev
+		dic['x_percentiles'] = p
 		
 		if best_fit == 'mean':
 			x = mean
@@ -1335,12 +1730,13 @@ class HaloDensityProfile():
 
 		self.setParameterArray(x, mask = mask)
 		
-		return x, dict
+		return x, dic
 
 	###############################################################################################
 
 	def _fitMethodLeastsq(self, r, q, f, df_inner, df_outer, Q, mask, N_par_fit, verbose,
-						tolerance, maxfev):
+						tolerance, maxfev, use_legacy_leastsq = False, fit_method = 'trf',
+						bounds = None):
 		
 		# Prepare arguments
 		if df_inner is None:
@@ -1357,59 +1753,125 @@ class HaloDensityProfile():
 					s += '%10s' % list(self.par.keys())[i]
 			print(s)
 
-		# Run the actual fit
+		# Run the actual fit. For backwards compatibility, the user can choose the 
+		# use_legacy_leastsq option which uses the old-style scipy solver. 
 		ini_guess = self._fitConvertParams(self.getParameterArray(mask = mask), mask)
-		x_fit, cov, dict, fit_msg, err_code = scipy.optimize.leastsq(self._fitDiffFunction, 
-							ini_guess, Dfun = deriv_func, col_deriv = 1, args = args, 
-							full_output = 1, xtol = tolerance, maxfev = maxfev)
 		
-		# Check the output
-		if not err_code in [1, 2, 3, 4]:
-			msg = 'Fitting failed, message: %s' % (fit_msg)
-			raise Warning(msg)
-
-		# Set the best-fit parameters
-		x = self._fitConvertParamsBack(x_fit, mask)
-		self.setParameterArray(x, mask = mask)
-
-		# The fitter sometimes fails to derive a covariance matrix
-		if cov is not None:
+		if use_legacy_leastsq:
 			
-			# The covariance matrix is in relative units, i.e. needs to be multiplied with the 
-			# residual chi2
-			diff = self._fitDiffFunction(x_fit, *args)
-			residual = np.sum(diff**2) / (len(r) - N_par_fit)
-			cov *= residual
+			if maxfev == 0:
+				warnings.warn('maxfev = 0 is deprecated; please use maxfev = None instead.')
+			if maxfev is None:
+				maxfev = 0
+			x_fit, cov, dic, fit_msg, err_code = scipy.optimize.leastsq(self._fitDiffFunction, 
+							ini_guess, Dfun = deriv_func, col_deriv = False, args = args, 
+							full_output = 1, xtol = tolerance, maxfev = maxfev)
 
-			# Derive an estimate of the uncertainty from the covariance matrix. We need to take into
-			# account that cov refers to the fitting parameters which may not be the same as the 
-			# standard profile parameters.
-			sigma = np.sqrt(np.diag(cov))
-			err = np.zeros((2, N_par_fit), np.float)
+			if not err_code in [1, 2, 3, 4]:
+				raise Exception('Fitting failed, message: %s' % (fit_msg))
+			
+			# The fitter sometimes fails to derive a covariance matrix. If not, the covariance 
+			# matrix is in relative units, i.e. needs to be multiplied with the residual chi2.
+			if cov is not None:
+				diff = self._fitDiffFunction(x_fit, *args)
+				residual = np.sum(diff**2) / (len(r) - N_par_fit)
+				cov *= residual
+			else:
+				warnings.warn('Could not determine uncertainties on fitted parameters. Set all uncertainties to zero.')
+				err = np.zeros((2, N_par_fit), float)
+						
+		else:
+
+			if bounds is None:
+				bounds_use = (-np.inf, np.inf)
+			else:
+				n_par = len(ini_guess)
+				mask_all = np.ones((n_par), bool)
+				bounds_use = np.zeros_like(bounds)
+				bounds = np.array(bounds)
+				if (len(bounds.shape) != 2) or (bounds.shape[0] != 2) or (bounds.shape[1] != n_par):
+					raise Exception('Expected bounds array of shape (2, %d), found %s.' % (n_par, str(bounds.shape)))
+				bounds_use[0, :] = self._fitConvertParams(bounds[0, :], mask_all)
+				bounds_use[1, :] = self._fitConvertParams(bounds[1, :], mask_all)
+				if np.any(np.isnan(bounds_use)):
+					print('Original:')
+					print(bounds)
+					print('Transformed:')
+					print(bounds_use)
+					raise Exception('Found nan in transformed bounds array; please check your bounds.')
+				if np.any(ini_guess < bounds_use[0]) or np.any(ini_guess > bounds_use[1]):
+					print('Bounds (transformed):')
+					print(bounds_use)
+					print('Initial guess (transformed):')
+					print(ini_guess)
+					raise Exception('Initial guess is not within bounds. Please change initial guess.')
+				
+			if deriv_func is None:
+				jac = '2-point'
+			else:
+				jac = deriv_func
+				
+			sol = scipy.optimize.least_squares(self._fitDiffFunction, ini_guess, 
+						args = args, jac = jac, bounds = bounds_use, 
+						method = fit_method, loss = 'linear', tr_solver = None, x_scale = 'jac',
+						max_nfev = maxfev, xtol = tolerance, verbose = 0)
+			
+			x_fit = sol.x
+			cov = sol.jac
+			fit_msg = sol.message
+			dic = {}
+			dic['nfev'] = sol.nfev
+			
+			# With least_squares, the covariance matrix is not returned but can be computed from 
+			# the Jacobian. The units (or normalization) of the resulting covariance matrix depends 
+			# on the uncertainties sigma assumed in the residual function. If we do not have 
+			# meaningful error estimates, the resulting parameter uncertainties would also be 
+			# meaningless. To still compute them, we assume (!) that the fit is good, i.e., 
+			# that chi2/Ndof = 1, and we rescale the covariance matrix accordingly (by multiplying 
+			# with chi2/Ndof). The parameter uncertainties are then estimated from the diagonals of 
+			# the rescaled covariance matrix.
+			chi2ndof = np.sum(sol.fun**2) / (len(sol.fun) - len(sol.x))
+			if chi2ndof <= 0.0:
+				raise Exception('Got invalid chi2/ndof.')
+			try:
+				J = sol.jac
+				cov = np.linalg.inv(J.T.dot(J)) * chi2ndof
+			except:
+				cov = None
+
+		# Derive an estimate of the uncertainty from the covariance matrix. We need to take into
+		# account that cov refers to the fitting parameters which may not be the same as the 
+		# standard profile parameters.
+		if cov is not None:
+
+			diag_vals = np.diag(cov)
+			diag_vals = np.maximum(diag_vals, 0.0)
+			sigma = np.sqrt(diag_vals)
+			err = np.zeros((2, N_par_fit), float)
 			err[0] = self._fitConvertParamsBack(x_fit - sigma, mask)
 			err[1] = self._fitConvertParamsBack(x_fit + sigma, mask)
 
 		else:
 			
-			msg = 'WARNING: Could not determine uncertainties on fitted parameters. Set all uncertainties to zero.'
-			print(msg)
-			err = np.zeros((2, N_par_fit), np.float)
-			
-		dict['x_err'] = err
+			warnings.warn('Could not determine uncertainties on fitted parameters. Set all uncertainties to zero.')
+			err = np.zeros((2, N_par_fit), float)
+
+		# Set the best-fit parameters
+		x = self._fitConvertParamsBack(x_fit, mask)
+		self.setParameterArray(x, mask = mask)
+		dic['x_err'] = err
 
 		# Print solution
 		if verbose:
-			msg = 'Found solution in %d steps. Best-fit parameters:' % (dict['nfev'])
-			print(msg)
+			print('Found solution in %d steps. Best-fit parameters:' % (dic['nfev']))
 			counter = 0
 			for i in range(self.N_par):
 				if mask is None or mask[i]:
-					msg = 'Parameter %10s = %7.2e [%7.2e .. %7.2e]' \
-						% (self.par_names[i], x[counter], err[0, counter], err[1, counter])
+					print('Parameter %10s = %7.2e [%7.2e .. %7.2e]' \
+						% (self.par_names[i], x[counter], err[0, counter], err[1, counter]))
 					counter += 1
-					print(msg)
 					
-		return x, dict
+		return x, dic
 
 	###############################################################################################
 
@@ -1422,13 +1884,13 @@ class HaloDensityProfile():
 		# General fitting options: method, parameters to vary
 		method = 'leastsq', mask = None, verbose = True,
 		# Options specific to leastsq
-		tolerance = 1E-5, maxfev = 0,
+		tolerance = 1E-5, maxfev = None, leastsq_algorithm = 'trf', use_legacy_leastsq = False, bounds = None,
 		# Options specific to the MCMC initialization
-		initial_step = 0.1, nwalkers = 100, random_seed = None,
+		initial_step = 0.01, nwalkers = 100, random_seed = None,
 		# Options specific to running the MCMC chain and its analysis
 		convergence_step = 100, converged_GR = 0.01, best_fit = 'median', output_every_n = 100):
 		"""
-		Fit the density, mass, or surface density profile to a given set of data points.
+		Fit the density, mass, surface density, or DeltaSigma profile to a given set of data points.
 		
 		This function represents a general interface for finding the best-fit parameters of a 
 		halo density profile given a set of data points. These points can represent a number of
@@ -1441,17 +1903,20 @@ class HaloDensityProfile():
 		minimize the absolute difference between points, strongly favoring the high densities at 
 		the center.
 		
-		There are two fundamental methods for performing the fit, a least-squares minimization 
-		(``method = 'leastsq'``) and a Markov-Chain Monte Carlo (``method = 'mcmc'``). The MCMC 
-		method has some specific options (see below). In either case, the current parameters of 
-		the profile instance serve as an initial guess. Finally, the user can choose to vary only 
-		a sub-set of the profile parameters through the ``mask`` parameter.
+		The user can choose to vary only a sub-set of the profile parameters through the ``mask`` 
+		parameter. The current parameters of the profile instance serve as an initial guess. 
 		
-		The function returns a dictionary with outputs that depend on which method is chosen. After
-		this function has completed, the profile instance represents the best-fit profile to the 
-		data points (i.e., its parameters are the best-fit parameters). Note that all output 
-		parameters are bundled into one dictionary. The explanations below refer to the entries in
-		this dictionary.
+		By default, the parameters are transformed into log space during fitting to ensure 
+		positivity. Child classes can change this behavior by overwriting the 
+		``_fitConvertParams()`` and ``_fitConvertParamsBack()`` functions.
+		
+		There are two fundamental methods for performing the fit, a least-squares minimization 
+		(``method = 'leastsq'``) and a Markov-Chain Monte Carlo (``method = 'mcmc'``). Both 
+		variants obey a few specific options (see below). The function returns a dictionary with 
+		outputs that somewhat depend on which method is chosen. After the function has completed, 
+		the profile instance represents the best-fit profile to the data points (i.e., its 
+		parameters are the best-fit parameters). Note that all output parameters are bundled into 
+		one dictionary. The explanations below refer to the entries in this dictionary.
 
 		Parameters
 		-------------------------------------------------------------------------------------------
@@ -1493,7 +1958,23 @@ class HaloDensityProfile():
 			are found.
 		maxfev: int
 			Only active when ``method == 'leastsq'``. The maximum number of function evaluations before
-			the fit is aborted. If zero, the default value of the scipy leastsq function is used.
+			the fit is aborted. If ``None``, the default value of the scipy least_squares function is used.
+		leastsq_algorithm: str
+			Only active when ``method == 'leastsq'``. Can be any of the methods accepted by the 
+			scipy least_squares() function. Default is ``trf`` (trust region reflective), which 
+			works well for profile fits.
+		use_legacy_leastsq: bool
+			Only active when ``method == 'leastsq'``. If ``True``, this setting falls back to the
+			old leastsq() in scipy rather than using the newer least_squares(). Should only be used
+			for backward compatibility.
+		bounds: array_like
+			Only active when ``method == 'leastsq'`` and ``use_legacy_leastsq == False``. If not 
+			None, this parameter must be an array of dimensions [2, N_par], giving two sets (lower
+			and upper limits) of the fitted parameters (not the entire parameter array, if a mask
+			is imposed). The limits must be given in linear space. If the parameters are fitted in
+			log space (or some other transformation), that transformation is automatically applied
+			to the bounds. For example, when fitting in log space (the default), the lower bounds
+			must be positive, but the upper bounds can be np.inf.
 		initial_step: array_like
 			Only active when ``method == 'mcmc'``. The MCMC samples ("walkers") are initially 
 			distributed in a Gaussian around the initial guess. The width of the Gaussian is given
@@ -1593,19 +2074,22 @@ class HaloDensityProfile():
 		if verbose:
 			utilities.printLine()
 
+		# If there is at least one outer profile, and the 'R200m' option exists, this may
+		# indicate a parameter dependence that is not handled, and we output a warning.
+		if (self.N_outer > 0) and ('R200m' in self.opt):
+			warnings.warn('Fitting with an outer profile that may depend on R200m. This dependence is not updated in a fit, and it is recommended to parameterize using a fixed radial scale instead.')
+
 		# Check whether the parameter mask makes sense
 		if mask is None:
-			mask = np.ones((self.N_par), np.bool)
+			mask = np.ones((self.N_par), bool)
 		else:
 			if len(mask) != self.N_par:
-				msg = 'Mask has %d elements, expected %d.' % (len(mask), self.N_par)
-				raise Exception(msg)
+				raise Exception('Mask has %d elements, expected %d.' % (len(mask), self.N_par))
 		N_par_fit = np.count_nonzero(mask)
 		if N_par_fit < 1:
 			raise Exception('The mask contains no True elements, meaning there are no parameters to vary.')
 		if verbose:
-			msg = 'Profile fit: Varying %d / %d parameters.' % (N_par_fit, self.N_par)
-			print(msg)
+			print('Profile fit: Varying %d / %d parameters.' % (N_par_fit, self.N_par))
 		
 		# Set the correct function to evaluate during the fitting process. We could just pass
 		# quantity, but that would mean many evaluations of the dictionary entry.
@@ -1618,10 +2102,10 @@ class HaloDensityProfile():
 		if q_cov is not None:
 			covinv = np.linalg.inv(q_cov)
 		elif q_err is not None:
-			covinv = np.zeros((N, N), np.float)
+			covinv = np.zeros((N, N), float)
 			np.fill_diagonal(covinv, 1.0 / q_err**2)
 		else:
-			covinv = np.identity((N), np.float)
+			covinv = np.identity((N), float)
 
 		# Perform the fit
 		if method == 'mcmc':
@@ -1629,7 +2113,7 @@ class HaloDensityProfile():
 			if q_cov is None and q_err is None:
 				raise Exception('MCMC cannot be run without uncertainty vector or covariance matrix.')
 			
-			x, dict = self._fitMethodMCMC(r, q, f, covinv, mask, N_par_fit, verbose,
+			x, dic = self._fitMethodMCMC(r, q, f, covinv, mask, verbose,
 				converged_GR, nwalkers, best_fit, initial_step, random_seed, convergence_step, output_every_n)
 			
 		elif method == 'leastsq':
@@ -1655,7 +2139,7 @@ class HaloDensityProfile():
 					if N_outer_par > 0:
 						_df_outer = []
 						_df_outer.append(self._outer_terms[i].__class__.__dict__[deriv_name])
-						pp = np.zeros((N_outer_par), np.int)
+						pp = np.zeros((N_outer_par), int)
 						for j in range(N_outer_par):
 							pp[j] = np.count_nonzero(mask[:par_pos[j]])
 						_df_outer.append(pp)
@@ -1697,27 +2181,30 @@ class HaloDensityProfile():
 					Q[:, i] *= np.sqrt(Lambda[i])
 				Q = Q.T
 			elif q_err is not None:
-				Q = np.zeros((N, N), np.float)
+				Q = np.zeros((N, N), float)
 				np.fill_diagonal(Q, 1.0 / q_err)
 			else:
 				Q = covinv
 				
-			x, dict = self._fitMethodLeastsq(r, q, f, df_inner, df_outer,
-									Q, mask, N_par_fit, verbose, tolerance, maxfev)
+			x, dic = self._fitMethodLeastsq(r, q, f, df_inner, df_outer,
+						Q, mask, N_par_fit, verbose, tolerance, maxfev,
+						use_legacy_leastsq = use_legacy_leastsq, fit_method = leastsq_algorithm,
+						bounds = bounds)
 			
 		else:
-			msg = 'Unknown fitting method, %s.' % method
-			raise Exception(msg)
+			raise Exception('Unknown fitting method, %s.' % method)
 		
 		# Compute a few convenient outputs
-		dict['x'] = x
-		dict['q_fit'] = f(r)
-		dict['chi2'] = self._fitChi2(r, q, f, covinv)
-		dict['ndof'] = (len(r) - N_par_fit)
-		dict['chi2_ndof'] = dict['chi2'] / dict['ndof']
+		dic['x'] = x
+		dic['q_fit'] = f(r)
+		dic['chi2'] = self._fitChi2(r, q, f, covinv)
+		dic['ndof'] = (len(r) - N_par_fit)
+		dic['chi2_ndof'] = dic['chi2'] / dic['ndof']
 		
 		if verbose:
-			print('chi2 / Ndof = %.1f / %d = %.2f' % (dict['chi2'], dict['ndof'], dict['chi2_ndof']))
+			print('chi2 / Ndof = %.1f / %d = %.2f' % (dic['chi2'], dic['ndof'], dic['chi2_ndof']))
 			utilities.printLine()
 
-		return dict
+		return dic
+
+###################################################################################################

@@ -41,7 +41,7 @@ assume a particular form of the density profile (see the documentation of the
 	concentration by up to ~15-20% for certain mass definitions, masses, and redshifts. Using 
 	the DK14 profile (see the :mod:`halo.profile_dk14` module) for the mass conversion gives 
 	slightly improved results, but the conversion is slower. Please see Appendix C in 
-	`Diemer & Kravtsov 2015 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_ for details.
+	`Diemer & Kravtsov 2015 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`__ for details.
 
 .. note::
 	The user must ensure that the cosmology is set consistently. Many concentration models were 
@@ -67,25 +67,25 @@ parameter to the :func:`concentration` function:
 	============== ================ ================== =========== =============== ============================================================================
 	ID             Native mdefs     M-range (z=0)      z-range     Cosmology       Reference
 	============== ================ ================== =========== =============== ============================================================================
-	bullock01	   200c             Almost any         Any         Any             `Bullock et al. 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.321..559B>`_
-	duffy08        200c, vir, 200m  1E11 < M < 1E15    0 < z < 2   WMAP5           `Duffy et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.390L..64D>`_
-	klypin11       vir              3E10 < M < 5E14    0           WMAP7           `Klypin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...740..102K>`_
-	prada12        200c             Any                Any         Any             `Prada et al. 2012 <http://adsabs.harvard.edu/abs/2012MNRAS.423.3018P>`_
-	bhattacharya13 200c, vir, 200m  2E12 < M < 2E15    0 < z < 2   WMAP7           `Bhattacharya et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...32B>`_
-	dutton14       200c, vir        M > 1E10           0 < z < 5   planck13        `Dutton & Maccio 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.441.3359D>`_
-	diemer15_orig  200c             Any                Any         Any             `Diemer & Kravtsov 2015 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`_
-	diemer15       200c             Any                Any         Any             `Diemer & Joyce 2019 <https://ui.adsabs.harvard.edu//#abs/2018arXiv180907326D/abstract>`_
-	klypin16_m     200c, vir        M > 1E10           0 < z < 5   planck13/WMAP7  `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
-	klypin16_nu    200c, vir        M > 1E10           0 < z < 5   planck13        `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`_
-	ludlow16       200c             Any                Any         Any             `Ludlow et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2016MNRAS.460.1214L/abstract>`_
-	child18        200c             M > 2.1E11         0 < z < 4   WMAP7           `Child et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2018ApJ...859...55C/abstract>`_
-	diemer19       200c             Any                Any         Any             `Diemer & Joyce 2019 <https://ui.adsabs.harvard.edu/abs/2019ApJ...871..168D/abstract>`_
-	ishiyama21     500c, 200c, vir  Any                Any         Any             `Ishiyama et al. 2021 <https://ui.adsabs.harvard.edu/abs/2021MNRAS.506.4210I/abstract>`_
+	bullock01	   200c             Almost any         Any         Any             `Bullock et al. 2001 <http://adsabs.harvard.edu/abs/2001MNRAS.321..559B>`__
+	duffy08        200c, vir, 200m  1E11 < M < 1E15    0 < z < 2   WMAP5           `Duffy et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.390L..64D>`__
+	klypin11       vir              3E10 < M < 5E14    0           WMAP7           `Klypin et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJ...740..102K>`__
+	prada12        200c             Any                Any         Any             `Prada et al. 2012 <http://adsabs.harvard.edu/abs/2012MNRAS.423.3018P>`__
+	bhattacharya13 200c, vir, 200m  2E12 < M < 2E15    0 < z < 2   WMAP7           `Bhattacharya et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJ...766...32B>`__
+	dutton14       200c, vir        M > 1E10           0 < z < 5   planck13        `Dutton & Maccio 2014 <http://adsabs.harvard.edu/abs/2014MNRAS.441.3359D>`__
+	diemer15_orig  200c             Any                Any         Any             `Diemer & Kravtsov 2015 <http://adsabs.harvard.edu/abs/2015ApJ...799..108D>`__
+	diemer15       200c             Any                Any         Any             `Diemer & Joyce 2019 <https://ui.adsabs.harvard.edu//#abs/2018arXiv180907326D/abstract>`__
+	klypin16_m     200c, vir        M > 1E10           0 < z < 5   planck13/WMAP7  `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`__
+	klypin16_nu    200c, vir        M > 1E10           0 < z < 5   planck13        `Klypin et al. 2016 <http://adsabs.harvard.edu/abs/2016MNRAS.457.4340K>`__
+	ludlow16       200c             Any                Any         Any             `Ludlow et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2016MNRAS.460.1214L/abstract>`__
+	child18        200c             M > 2.1E11         0 < z < 4   WMAP7           `Child et al. 2016 <https://ui.adsabs.harvard.edu//#abs/2018ApJ...859...55C/abstract>`__
+	diemer19       200c             Any                Any         Any             `Diemer & Joyce 2019 <https://ui.adsabs.harvard.edu/abs/2019ApJ...871..168D/abstract>`__
+	ishiyama21     500c, 200c, vir  Any                Any         Any             `Ishiyama et al. 2021 <https://ui.adsabs.harvard.edu/abs/2021MNRAS.506.4210I/abstract>`__
 	============== ================ ================== =========== =============== ============================================================================
 
 The original version of the ``diemer15`` model suffered from a small numerical error, a corrected
 set of parameters is given in 
-`Diemer & Joyce 2019 <https://ui.adsabs.harvard.edu//#abs/2018arXiv180907326D/abstract>`_. The differences 
+`Diemer & Joyce 2019 <https://ui.adsabs.harvard.edu//#abs/2018arXiv180907326D/abstract>`__. The differences 
 between the models are less than 5%, but the original model should be used only for the purpose 
 of backwards compatibility.
 
@@ -238,10 +238,10 @@ INVALID_CONCENTRATION = -1.0
 storageUser = None
 
 def _getName():
-	return "concentration"
+	return 'concentration'
 
 def _getHash():
-	return "concentration"
+	return 'concentration'
 
 def _getStorageUser():
 
@@ -344,8 +344,7 @@ def concentration(M, mdef, z,
 	# Distinguish between models
 		
 	if not model in models.keys():
-		msg = 'Unknown model, %s.' % (model)
-		raise Exception(msg)
+		raise Exception('Unknown model, %s.' % (model))
 	
 	mdefs_model = models[model].mdefs
 	universal = models[model].universal
@@ -375,7 +374,7 @@ def concentration(M, mdef, z,
 		
 		# Convert to array
 		M_array, is_array = utilities.getArray(M)
-		M_array = M_array.astype(np.float)
+		M_array = M_array.astype(float)
 		N = len(M_array)
 		mask = np.ones((N), dtype = bool)
 
@@ -411,14 +410,15 @@ def concentration(M, mdef, z,
 						MDelta = scipy.optimize.brentq(eq, M_min, M_max, args = args_solver)
 					else:
 						j += 1
-				except Exception:
+				except Exception as e:
+					print('ERROR')
+					print(e)
 					break
 
 			if MDelta is None or MDelta < 0.1:
 				if range_warning:
-					msg = 'Could not find concentration for model %s, mass %.2e, mdef %s.' \
-						% (model, M_array[i], mdef)
-					warnings.warn(msg)
+					warnings.warn('Could not find concentration for model %s, mass %.2e, mdef %s.' \
+						% (model, M_array[i], mdef))
 				c[i] = INVALID_CONCENTRATION
 				mask[i] = False
 			
@@ -454,7 +454,7 @@ def modelBullock01(M200c, z):
 	The model of Bullock et al 2001.
 	
 	This function implements the improved version of 
-	`Maccio et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.391.1940M>`_. The model is 
+	`Maccio et al. 2008 <http://adsabs.harvard.edu/abs/2008MNRAS.391.1940M>`__. The model is 
 	universal, but limited by the finite growth factor in a given cosmology which means that the 
 	model cannot be evaluated for arbitrarily large masses (halos that will never collapse).
 	  
@@ -552,8 +552,7 @@ def modelDuffy08(M, z, mdef):
 		B = -0.081
 		C = -1.01
 	else:
-		msg = 'Invalid mass definition for Duffy et al. 2008 model, %s.' % mdef
-		raise Exception(msg)
+		raise Exception('Invalid mass definition for Duffy et al. 2008 model, %s.' % mdef)
 
 	c = A * (M / 2E12)**B * (1.0 + z)**C
 	mask = (M >= 1E11) & (M <= 1E15) & (z <= 2.0)
@@ -686,8 +685,7 @@ def modelBhattacharya13(M, z, mdef):
 	elif mdef == '200m':
 		c_fit = 9.0 * D**1.15 * nu**-0.29
 	else:
-		msg = 'Invalid mass definition for Bhattacharya et al. 2013 model, %s.' % mdef
-		raise Exception(msg)
+		raise Exception('Invalid mass definition for Bhattacharya et al. 2013 model, %s.' % mdef)
 				
 	M_min = 2E12
 	M_max = 2E15
@@ -736,8 +734,7 @@ def modelDutton14(M, z, mdef):
 		a = 0.537 + (1.025 - 0.537) * np.exp(-0.718 * z**1.08)
 		b = -0.097 + 0.024 * z
 	else:
-		msg = 'Invalid mass definition for Dutton & Maccio 2014 model, %s.' % mdef
-		raise Exception(msg)
+		raise Exception('Invalid mass definition for Dutton & Maccio 2014 model, %s.' % mdef)
 	
 	logc = a + b * np.log10(M / 1E12)
 	c = 10**logc
@@ -889,7 +886,7 @@ def _diemer15(nu, n, statistic = 'median', original_params = False):
 		alpha = DIEMER15_MEAN_ALPHA
 		beta = DIEMER15_MEAN_BETA
 	else:
-		raise Exception("Unknown statistic.")
+		raise Exception('Unknown statistic.')
 	
 	c = 0.5 * floor * ((nu0 / nu)**alpha + (nu / nu0)**beta)
 	
@@ -919,7 +916,7 @@ def _diemer15_k_R(M, original_params = False):
 def _diemer15_n(k_R):
 
 	if np.min(k_R) < 0:
-		raise Exception("k_R < 0.")
+		raise Exception('k_R < 0.')
 
 	cosmo = cosmology.getCurrent()
 	
@@ -1002,8 +999,7 @@ def modelKlypin16fromM(M, z, mdef):
 	"""
 	
 	if not mdef in ['200c', 'vir']:
-		msg = 'Invalid mass definition for Klypin et al 2016 m-based model, %s.' % mdef
-		raise Exception(msg)
+		raise Exception('Invalid mass definition for Klypin et al 2016 m-based model, %s.' % mdef)
 
 	cosmo = cosmology.getCurrent()
 
@@ -1030,8 +1026,7 @@ def modelKlypin16fromM(M, z, mdef):
 			M0_bins = [2E6, 7E3, 550.0, 90.0, 11.0, 6.0, 2.5, 1.0]
 		
 	else:
-		msg = 'Invalid cosmology for Klypin et al 2016 m-based model, %s.' % cosmo.name
-		raise Exception(msg)
+		raise Exception('Invalid cosmology for Klypin et al 2016 m-based model, %s.' % cosmo.name)
 
 	C0 = np.interp(z, z_bins, C0_bins)
 	gamma = np.interp(z, z_bins, gamma_bins)
@@ -1090,8 +1085,7 @@ def modelKlypin16fromNu(M, z, mdef):
 		a0_bins = [0.75, 0.9, 0.97, 1.12, 1.28, 1.52, 1.62]
 		b0_bins = [0.567, 0.541, 0.529, 0.496, 0.474, 0.421, 0.393]
 	else:
-		msg = 'Invalid mass definition for Klypin et al 2016 peak height-based model, %s.' % mdef
-		raise Exception(msg)
+		raise Exception('Invalid mass definition for Klypin et al 2016 peak height-based model, %s.' % mdef)
 
 	nu = peaks.peakHeight(M, z)
 	sigma = constants.DELTA_COLLAPSE / nu
@@ -1140,7 +1134,7 @@ def modelLudlow16(M200c, z):
 
 	# Make sure we are dealing with an array
 	M200c, is_array = utilities.getArray(M200c)
-	M200c = M200c.astype(np.float)
+	M200c = M200c.astype(float)
 
 	# We solve this model by computing Equations 6 and 7 in Ludlow+16 for a large range of
 	# concentrations. 
@@ -1179,7 +1173,7 @@ def modelLudlow16(M200c, z):
 	# We can now find the solution by interpolation: the concentration in the c_array vector
 	# appears where lhs - rhs = 0.
 	c200c = np.zeros_like(M200c)
-	mask = np.ones_like(M200c, np.bool)
+	mask = np.ones_like(M200c, bool)
 	for i in range(len(M200c)):
 		lhs_rhs = M_ratio - rhs[:, i]
 		mask_nan = np.logical_not(np.isnan(lhs_rhs))
@@ -1336,7 +1330,7 @@ def _diemer19_general(M, z, params, ps_args = defaults.PS_ARGS):
 		# At very low concentration and shallow slopes, the LHS begins to rise again. This will cause
 		# issues with the inversion. We set those parts of the curve to the minimum concentration of 
 		# a given n bin.
-		mask_ascending = np.ones_like(lhs, np.bool)
+		mask_ascending = np.ones_like(lhs, bool)
 		mask_ascending[:-1, :] = (np.diff(lhs, axis = 0) > 0.0)
 		
 		# Create a table of c as a function of G and n. First, use the absolute min and max of G as 
@@ -1345,7 +1339,7 @@ def _diemer19_general(M, z, params, ps_args = defaults.PS_ARGS):
 		G_max = np.max(lhs)
 		G = np.linspace(G_min, G_max, n_G)
 		
-		gc_table = np.ones((n_G, n_n), np.float) * -10.0
+		gc_table = np.ones((n_G, n_n), float) * -10.0
 		mins = np.zeros_like(n)
 		maxs = np.zeros_like(n)
 		for i in range(n_n):
