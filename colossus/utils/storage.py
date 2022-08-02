@@ -234,7 +234,8 @@ class StorageUser():
 					if utilities.versionIsOlder(settings.PERSISTENCE_OLDEST_VERSION, persistence_version):
 						try:
 							os.remove(filename_pickle)
-							print('Deleted outdated persistence file, no further action needed.')
+							print('Deleted outdated persistence file, no further action needed (%s, versions %s/%s).' \
+								% (filename_pickle, settings.PERSISTENCE_OLDEST_VERSION, persistence_version))
 						except Exception:
 							warnings.warn('Could not delete outdated persistence file %s. Please delete manually.' \
 										% (filename_pickle))

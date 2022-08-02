@@ -116,9 +116,10 @@ def versionIsOlder(v1, v2):
 
 	is_older = False
 	for i in range(3):
-		if n2[i] < n1[i]:
-			is_older = True
-			break
+		if n2[i] == n1[i]:
+			continue
+		is_older = (n2[i] < n1[i])
+		break
 	
 	return is_older
 
