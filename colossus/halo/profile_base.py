@@ -943,7 +943,7 @@ class HaloDensityProfile():
 			if np.min(rho) < 0.0:
 				print('Current profile parameters:')
 				print(self.par)
-				raise Exception('Found negative value in density, cannot create interpolation table. Try computing surface density with interpolate = False.')
+				raise Exception('Found negative value in density, cannot create interpolation table. Try computing surface density with interpolate = False or setting max_r_interpolate if a profile term becomes negative (e.g., the correlation function).')
 			if np.min(rho) == 0.0:
 				min_val = np.min(rho[rho > 0.0])
 				rho[rho == 0.0] = min_val

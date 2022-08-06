@@ -126,6 +126,8 @@ Besides the usual mass and concentration parameters, we also had to pass the bia
 the correlation-function outer term). Once a composite profile has been created, the outer terms 
 are automatically taken into account in all functions such as density, surface density, etc. 
 For details on the available outer terms and their parameters, please see :doc:`halo_profile_outer`.
+Note that in this particular case, the correlation function becomes negative at large radii; thus,
+the integration depth must be limited when computing the surface density.
 
 ---------------
 Fitting

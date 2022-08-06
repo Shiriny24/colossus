@@ -26,7 +26,10 @@ The following outer terms are currently implemented:
   None`` or it can be derived according to the default model of halo bias based on 
   :math:`M_{\\rm 200m}` (in which case ``derive_bias_from = 'R200m'`` and the bias parameter 
   is ignored). The latter option can make the constructor slow because of the iterative 
-  evaluation of bias and :math:`M_{\\rm 200m}`.
+  evaluation of bias and :math:`M_{\\rm 200m}`. Note that the CF becomes negative at some 
+  (relatively large) radius, which leads to errors when computing the surface density or lensing
+  signal. In this case, the integration radius must be limited manually (see the respective
+  function documentation).
 * :class:`OuterTermPowerLaw` (shortcode ``pl``): 
   A power-law profile in overdensity. This form was suggested to be added to the DK14 profile, 
   with a pivot radius of :math:`5 R_{\\rm 200m}`. Note that :math:`R_{\\rm 200m}` is set as a 
@@ -357,6 +360,11 @@ class OuterTermCorrelationFunction(OuterTerm):
 	some radii. However, when integrating this outer term (e.g., when evaluating the surface 
 	density), care must be taken to set the correct integration limits. See the documentation of 
 	the correlation function in the cosmology module for more information.
+	
+	Also note that the correlation function inevitably becomes negative at some radius! This can
+	lead to a number of errors, for example, when computing surface density, where the density
+	profile is integrated to a large radius. These errors can be prevented by manually limiting
+	this integration depth.
 	
 	Parameters
 	-----------------------------------------------------------------------------------------------
