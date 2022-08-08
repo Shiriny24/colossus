@@ -617,6 +617,11 @@ def modelEisenstein98ZeroBaryon(k, h, Om0, Ob0, Tcmb0):
 	:func:`modelEisenstein98` version, and still approximates numerical calculations from a 
 	Boltzmann code to better than 10\%, and almost as accurate when computing the variance or
 	correlation function (see the Colossus code paper for details).
+	
+	If Ob > 0, the assumptions of zero baryons is obviously inconsistent. However, the function
+	executes without a warning because it is most commonly intended as a simplification of the 
+	power spectrum (e.g., to avoid the BAO peaks), not as an actual model for a Universe without
+	baryons.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------
