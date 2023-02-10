@@ -67,10 +67,11 @@ class PowerSpectrumModel():
 		compute the spectra of components such as CDM only.
 	"""
 		
-	def __init__(self, output = None, allowed_types = None):
+	def __init__(self, output = None, allowed_types = None, long_name = ''):
 		
 		self.output = output
 		self.allowed_types = allowed_types
+		self.long_name = long_name
 		
 		return
 
@@ -83,10 +84,10 @@ Dictionary containing a list of models.
 An ordered dictionary containing one :class:`PowerSpectrumModel` entry for each model.
 """
 
-models['sugiyama95'] = PowerSpectrumModel(output = 'tf', allowed_types = ['total'])
-models['eisenstein98'] = PowerSpectrumModel(output = 'tf', allowed_types = ['total'])
-models['eisenstein98_zb'] = PowerSpectrumModel(output = 'tf', allowed_types = ['total'])
-models['camb'] = PowerSpectrumModel(output = 'ps', allowed_types = ['total', 'cdm'])
+models['sugiyama95']      = PowerSpectrumModel(output = 'tf', allowed_types = ['total'],        long_name = 'Sugiyama 1995')
+models['eisenstein98']    = PowerSpectrumModel(output = 'tf', allowed_types = ['total'],        long_name = 'Eisenstein & Hu 1998')
+models['eisenstein98_zb'] = PowerSpectrumModel(output = 'tf', allowed_types = ['total'],        long_name = 'Eisenstein & Hu 1998 (no BAO)')
+models['camb']            = PowerSpectrumModel(output = 'ps', allowed_types = ['total', 'cdm'], long_name = 'CAMB')
 
 ###################################################################################################
 
