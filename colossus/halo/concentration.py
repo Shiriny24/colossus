@@ -122,6 +122,7 @@ Module reference
 import numpy as np
 import scipy.interpolate
 import scipy.optimize
+import scipy.special
 import warnings
 from collections import OrderedDict
 

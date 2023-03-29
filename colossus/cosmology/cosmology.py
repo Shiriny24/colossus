@@ -339,6 +339,7 @@ Module reference
 
 import numpy as np
 import scipy.integrate
+import scipy.special
 from collections import OrderedDict
 import warnings
 
