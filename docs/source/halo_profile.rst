@@ -50,12 +50,12 @@ density profile are currently implemented:
    ``hernquist``     :class:`~halo.profile_hernquist.HernquistProfile`           Hernquist profile                              `Hernquist 1990 <http://adsabs.harvard.edu/abs/1990ApJ...356..359H>`__
    ``nfw``           :class:`~halo.profile_nfw.NFWProfile`                       Navarro-Frenk-White profile                    `Navarro et al. 1997 <http://adsabs.harvard.edu/abs/1997ApJ...490..493N>`__
    ``dk14``          :class:`~halo.profile_dk14.DK14Profile`                     Diemer & Kravtsov profile                      `Diemer & Kravtsov 2014 <http://adsabs.harvard.edu/abs/2014ApJ...789....1D>`__
-   ``diemer22``      :class:`~halo.profile_diemer22.ModelAProfile`               Truncated exponential profile (default)        `Diemer 2022 <https://ui.adsabs.harvard.edu/abs/2022arXiv220503420D/abstract>`__
-   ``diemer22b``     :class:`~halo.profile_diemer22.ModelBProfile`               Truncated exponential profile (adjusted)       `Diemer 2022 <https://ui.adsabs.harvard.edu/abs/2022arXiv220503420D/abstract>`__
+   ``diemer22``      :class:`~halo.profile_diemer23.ModelAProfile`               Truncated exponential profile (default)        `Diemer 2023 <https://ui.adsabs.harvard.edu/abs/2022arXiv220503420D/abstract>`__
+   ``diemer22b``     :class:`~halo.profile_diemer23.ModelBProfile`               Truncated exponential profile (adjusted)       `Diemer 2023 <https://ui.adsabs.harvard.edu/abs/2022arXiv220503420D/abstract>`__
    ``mean``          :class:`~halo.profile_outer.OuterTermMeanDensity`           The mean matter density of the Universe        --
    ``cf``            :class:`~halo.profile_outer.OuterTermCorrelationFunction`   Matter-matter correlation times bias           --
    ``pl``            :class:`~halo.profile_outer.OuterTermPowerLaw`              Power law in overdensity                       --
-   ``infalling``     :class:`~halo.profile_outer.OuterTermInfalling`             Power law with smooth transition to constant   `Diemer 2022 <https://ui.adsabs.harvard.edu/abs/2022arXiv220503420D/abstract>`__
+   ``infalling``     :class:`~halo.profile_outer.OuterTermInfalling`             Power law with smooth transition to constant   `Diemer 2023 <https://ui.adsabs.harvard.edu/abs/2022arXiv220503420D/abstract>`__
    ================= =========================================================== ============================================== =========================
 
 ----------------------

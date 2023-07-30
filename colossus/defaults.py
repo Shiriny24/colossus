@@ -126,11 +126,11 @@ power-law term will not contribute at all."""
 
 HALO_PROFILE_OUTER_D22_DELTA_MAX = 100.0
 """The default asymptotic overdensity of the infalling term at the halo center in the formulation
-of Diemer 2022."""
+of Diemer 2023."""
 
 HALO_PROFILE_OUTER_D22_ZETA = 0.5
 """The default sharpness of the transition of the infalling profile in the formulation of 
-Diemer 2022."""
+Diemer 2023."""
 
 ###################################################################################################
 # MCMC

@@ -659,7 +659,7 @@ class OuterTermPowerLaw(OuterTerm):
 
 class OuterTermInfalling(OuterTerm):
 	"""
-	Infalling term according to Diemer 2022, modeled as a power law with smooth transition.
+	Infalling term according to Diemer 2023, modeled as a power law with smooth transition.
 	
 	This class implements a power-law outer profile with a free normalization and slope, a 
 	fixed or variable pivot radius, and a smooth transition to a maximum value at small radii,
@@ -671,7 +671,7 @@ class OuterTermInfalling(OuterTerm):
 	:math:`s` is the slope, :math:`\\delta_{\\rm max}` is the maximum overdensity at the center of
 	the halo, and :math:`\\zeta` determines how rapidly the profile transitions to this density.
 	Note that a more positive slope means a steeper profile. By default, :math:`\\zeta = 0.5`.
-	In the formulation of Diemer 2022, the pivot radius is :math:`R_{\\rm 200m}`; other radii
+	In the formulation of Diemer 2023, the pivot radius is :math:`R_{\\rm 200m}`; other radii
 	can be chosen but then the profile is not automatically kept up to date if the parameters of
 	the inner profile change.
 	

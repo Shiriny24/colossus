@@ -1,6 +1,6 @@
 ###################################################################################################
 #
-# profile_diemer22.py       (c) Benedikt Diemer
+# profile_diemer23.py       (c) Benedikt Diemer
 #     				    	    diemer@umd.edu
 #
 ###################################################################################################
@@ -50,7 +50,7 @@ create a more accurate profile model. In particular, the fitting function was ca
 median and mean profiles of halo samples selected by mass (``selected_by = 'M'``) and selected by 
 both mass and mass accretion rate (``selected_by = 'Gamma'``). The latter option results in a more 
 accurate representation of the density profile, but the mass accretion rate must be known. See the 
-:func:`~halo.profile_diemer22.ModelAProfile.deriveParameters` function for details.
+:func:`~halo.profile_diemer23.ModelAProfile.deriveParameters` function for details.
 
 ---------------------------------------------------------------------------------------------------
 Adding an infalling profile
@@ -316,7 +316,7 @@ class GenericD22Profile(profile_base.HaloDensityProfile):
 
 class ModelAProfile(GenericD22Profile):
 	"""
-	The Diemer 2022 (truncated exponential) density profile (default version).
+	The Diemer 2023 (truncated exponential) density profile (default version).
 	
 	The redshift must always be passed to this constructor, regardless of whether the 
 	fundamental parameters or a mass and concentration are given.
@@ -472,7 +472,7 @@ class ModelAProfile(GenericD22Profile):
 
 class ModelBProfile(GenericD22Profile):
 	"""
-	The Diemer 2022 (truncated exponential) density profile (Model B).
+	The Diemer 2023 (truncated exponential) density profile (Model B).
 	
 	This version corrects a minor flaw in the default model: the logarithmic slope at the
 	scale radius is not -2 in the default Model A. In this Model B, this condition
