@@ -149,10 +149,10 @@ The following sets of cosmological parameters can be chosen using the
 	==================== ================================================================================= =========== ===============================================
 	ID                   Paper                                                                             Location    Explanation
 	==================== ================================================================================= =========== ===============================================
-	``planck18-only``    `Planck Collab. 2018 <https://arxiv.org/abs/1807.06209>`__                        Table 2     Best-fit, Planck only (column 5) 					
-	``planck18``         `Planck Collab. 2018 <https://arxiv.org/abs/1807.06209>`__ 	                     Table 2     Best-fit with BAO (column 6)			
+	``planck18-only``    `Planck Collab. 2018 <http://adsabs.harvard.edu/abs/2020A%26A...641A...6P>`__     Table 2     Best-fit, Planck only (column 5) 					
+	``planck18``         `Planck Collab. 2018 <http://adsabs.harvard.edu/abs/2020A%26A...641A...6P>`__ 	   Table 2     Best-fit with BAO (column 6)			
 	``planck15-only``    `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`__     Table 4     Best-fit, Planck only (column 2) 					
-	``planck15``         `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`__ 	 Table 4     Best-fit with ext (column 6)			
+	``planck15``         `Planck Collab. 2015 <http://adsabs.harvard.edu/abs/2016A%26A...594A..13P>`__ 	   Table 4     Best-fit with ext (column 6)			
 	``planck13-only``    `Planck Collab. 2013 <http://adsabs.harvard.edu/abs/2014A%26A...571A..16P>`__     Table 2     Best-fit, Planck only 					
 	``planck13``         `Planck Collab. 2013 <http://adsabs.harvard.edu/abs/2014A%26A...571A..16P>`__     Table 5     Best-fit with BAO etc. 					
 	``WMAP9-only``       `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`__       Table 2     Max. likelihood, WMAP only 				
@@ -160,10 +160,10 @@ The following sets of cosmological parameters can be chosen using the
 	``WMAP9``            `Hinshaw et al. 2013 <http://adsabs.harvard.edu/abs/2013ApJS..208...19H>`__       Table 4     Best-fit, with eCMB, BAO and H0 		
 	``WMAP7-only``       `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`__       Table 1     Max. likelihood, WMAP only 				
 	``WMAP7-ML``         `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`__       Table 1     Max. likelihood, with BAO and H0 		
-	``WMAP7`` 	         `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`__	     Table 1     Best-fit, with BAO and H0 				
-	``WMAP5-only``       `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`__	     Table 1     Max. likelihood, WMAP only 			
-	``WMAP5-ML``         `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`__	     Table 1     Max. likelihood, with BAO and SN 		
-	``WMAP5`` 	         `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`__	     Table 1     Best-fit, with BAO and SN 			
+	``WMAP7`` 	         `Komatsu et al. 2011 <http://adsabs.harvard.edu/abs/2011ApJS..192...18K>`__	   Table 1     Best-fit, with BAO and H0 				
+	``WMAP5-only``       `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`__	   Table 1     Max. likelihood, WMAP only 			
+	``WMAP5-ML``         `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`__	   Table 1     Max. likelihood, with BAO and SN 		
+	``WMAP5`` 	         `Komatsu et al. 2009 <http://adsabs.harvard.edu/abs/2009ApJS..180..330K>`__	   Table 1     Best-fit, with BAO and SN 			
 	``WMAP3-ML``         `Spergel et al. 2007 <http://adsabs.harvard.edu/abs/2007ApJS..170..377S>`__       Table 2     Max.likelihood, WMAP only 				
 	``WMAP3``            `Spergel et al. 2007 <http://adsabs.harvard.edu/abs/2007ApJS..170..377S>`__       Table 5     Best fit, WMAP only 					
 	``WMAP1-ML``         `Spergel et al. 2003 <http://adsabs.harvard.edu/abs/2003ApJS..148..175S>`__       Table 1/4   Max.likelihood, WMAP only 				
@@ -339,6 +339,7 @@ Module reference
 
 import numpy as np
 import scipy.integrate
+import scipy.special
 from collections import OrderedDict
 import warnings
 

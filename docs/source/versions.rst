@@ -6,6 +6,12 @@ See below for a listing of the most important code and interface changes in Colo
 version 1.1.0. You can download older versions from the 
 `PyPi History <https://pypi.org/project/colossus/#history>`__ for Colossus.
 
+.. rubric:: Version 1.3.2 (released 07/30/2023)
+
+* Added documentation about errors stemming from the negative correlation function at large 
+  radii (thanks to Antonio Ragagnin for bringing this to my attention!)
+* Other small fixes to documentation.
+
 .. rubric:: Version 1.3.1 (released 08/02/2022)
 
 This version fixes a bug in the version check of the storage system, which erroneously triggered
@@ -80,7 +86,7 @@ new version. The main changes are as follows:
   * The user is responsible for passing the appropriate parameters to this function; otherwise,
     respective constructors throw errors.
 
-* The new :doc:`halo_profile_diemer22` has been added; this form separately describes the orbiting
+* The new :doc:`halo_profile_diemer23` has been added; this form separately describes the orbiting
   and infalling components and is now recommended over the DK14 profile.
 
 * The DK14 profile has been reworked

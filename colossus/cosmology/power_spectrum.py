@@ -67,10 +67,11 @@ class PowerSpectrumModel():
 		compute the spectra of components such as CDM only.
 	"""
 		
-	def __init__(self, output = None, allowed_types = None):
+	def __init__(self, output = None, allowed_types = None, long_name = ''):
 		
 		self.output = output
 		self.allowed_types = allowed_types
+		self.long_name = long_name
 		
 		return
 
@@ -83,10 +84,10 @@ Dictionary containing a list of models.
 An ordered dictionary containing one :class:`PowerSpectrumModel` entry for each model.
 """
 
-models['sugiyama95'] = PowerSpectrumModel(output = 'tf', allowed_types = ['total'])
-models['eisenstein98'] = PowerSpectrumModel(output = 'tf', allowed_types = ['total'])
-models['eisenstein98_zb'] = PowerSpectrumModel(output = 'tf', allowed_types = ['total'])
-models['camb'] = PowerSpectrumModel(output = 'ps', allowed_types = ['total', 'cdm'])
+models['sugiyama95']      = PowerSpectrumModel(output = 'tf', allowed_types = ['total'],        long_name = 'Sugiyama 1995')
+models['eisenstein98']    = PowerSpectrumModel(output = 'tf', allowed_types = ['total'],        long_name = 'Eisenstein & Hu 1998')
+models['eisenstein98_zb'] = PowerSpectrumModel(output = 'tf', allowed_types = ['total'],        long_name = 'Eisenstein & Hu 1998 (no BAO)')
+models['camb']            = PowerSpectrumModel(output = 'ps', allowed_types = ['total', 'cdm'], long_name = 'CAMB')
 
 ###################################################################################################
 
@@ -617,6 +618,11 @@ def modelEisenstein98ZeroBaryon(k, h, Om0, Ob0, Tcmb0):
 	:func:`modelEisenstein98` version, and still approximates numerical calculations from a 
 	Boltzmann code to better than 10\%, and almost as accurate when computing the variance or
 	correlation function (see the Colossus code paper for details).
+	
+	If Ob > 0, the assumptions of zero baryons is obviously inconsistent. However, the function
+	executes without a warning because it is most commonly intended as a simplification of the 
+	power spectrum (e.g., to avoid the BAO peaks), not as an actual model for a Universe without
+	baryons.
 
 	Parameters
 	-----------------------------------------------------------------------------------------------

@@ -1,8 +1,8 @@
 =================================================
-Diemer 2022 (truncated exponential) profile
+Diemer 2023 (truncated exponential) profile
 =================================================
 
-.. automodule:: halo.profile_diemer22
+.. automodule:: halo.profile_diemer23
     :members:
     :inherited-members:
     

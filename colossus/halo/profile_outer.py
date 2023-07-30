@@ -26,7 +26,10 @@ The following outer terms are currently implemented:
   None`` or it can be derived according to the default model of halo bias based on 
   :math:`M_{\\rm 200m}` (in which case ``derive_bias_from = 'R200m'`` and the bias parameter 
   is ignored). The latter option can make the constructor slow because of the iterative 
-  evaluation of bias and :math:`M_{\\rm 200m}`.
+  evaluation of bias and :math:`M_{\\rm 200m}`. Note that the CF becomes negative at some 
+  (relatively large) radius, which leads to errors when computing the surface density or lensing
+  signal. In this case, the integration radius must be limited manually (see the respective
+  function documentation).
 * :class:`OuterTermPowerLaw` (shortcode ``pl``): 
   A power-law profile in overdensity. This form was suggested to be added to the DK14 profile, 
   with a pivot radius of :math:`5 R_{\\rm 200m}`. Note that :math:`R_{\\rm 200m}` is set as a 
@@ -358,6 +361,11 @@ class OuterTermCorrelationFunction(OuterTerm):
 	density), care must be taken to set the correct integration limits. See the documentation of 
 	the correlation function in the cosmology module for more information.
 	
+	Also note that the correlation function inevitably becomes negative at some radius! This can
+	lead to a number of errors, for example, when computing surface density, where the density
+	profile is integrated to a large radius. These errors can be prevented by manually limiting
+	this integration depth.
+	
 	Parameters
 	-----------------------------------------------------------------------------------------------
 	z: float
@@ -651,7 +659,7 @@ class OuterTermPowerLaw(OuterTerm):
 
 class OuterTermInfalling(OuterTerm):
 	"""
-	Infalling term according to Diemer 2022, modeled as a power law with smooth transition.
+	Infalling term according to Diemer 2023, modeled as a power law with smooth transition.
 	
 	This class implements a power-law outer profile with a free normalization and slope, a 
 	fixed or variable pivot radius, and a smooth transition to a maximum value at small radii,
@@ -663,7 +671,7 @@ class OuterTermInfalling(OuterTerm):
 	:math:`s` is the slope, :math:`\\delta_{\\rm max}` is the maximum overdensity at the center of
 	the halo, and :math:`\\zeta` determines how rapidly the profile transitions to this density.
 	Note that a more positive slope means a steeper profile. By default, :math:`\\zeta = 0.5`.
-	In the formulation of Diemer 2022, the pivot radius is :math:`R_{\\rm 200m}`; other radii
+	In the formulation of Diemer 2023, the pivot radius is :math:`R_{\\rm 200m}`; other radii
 	can be chosen but then the profile is not automatically kept up to date if the parameters of
 	the inner profile change.
 	

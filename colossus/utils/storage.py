@@ -160,9 +160,9 @@ class StorageUser():
 		"""
 			
 		hashable_string = self.func_hashstring()
-		hash = hashlib.md5(hashable_string.encode()).hexdigest()
+		hash_ret = hashlib.md5(hashable_string.encode()).hexdigest()
 		
-		return hash
+		return hash_ret
 
 	###############################################################################################
 

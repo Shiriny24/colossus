@@ -30,7 +30,7 @@ from colossus.halo import profile_nfw
 from colossus.halo import profile_hernquist
 from colossus.halo import profile_einasto
 from colossus.halo import profile_dk14
-from colossus.halo import profile_diemer22
+from colossus.halo import profile_diemer23
 
 ###################################################################################################
 
@@ -98,9 +98,9 @@ def getProfileClass(name):
 	elif name == 'dk14':
 		cls = profile_dk14.DK14Profile
 	elif name == 'diemer22':
-		cls = profile_diemer22.ModelAProfile
+		cls = profile_diemer23.ModelAProfile
 	elif name == 'diemer22b':
-		cls = profile_diemer22.ModelBProfile
+		cls = profile_diemer23.ModelBProfile
 	elif name == 'mean':
 		cls = profile_outer.OuterTermMeanDensity
 	elif name == 'cf':
