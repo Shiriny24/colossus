@@ -86,7 +86,7 @@ new version. The main changes are as follows:
   * The user is responsible for passing the appropriate parameters to this function; otherwise,
     respective constructors throw errors.
 
-* The new :doc:`halo_profile_diemer22` has been added; this form separately describes the orbiting
+* The new :doc:`halo_profile_diemer23` has been added; this form separately describes the orbiting
   and infalling components and is now recommended over the DK14 profile.
 
 * The DK14 profile has been reworked
