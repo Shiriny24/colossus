@@ -895,8 +895,9 @@ class Cosmology(object):
 		if self.relspecies:
 			t += self.Or0 * zp1**4
 
-		if t < 0.0:
-			raise Exception('Found negative root in E(z) function at z = %.4f with Om0 = %.5f, Ode0 = %.5f, Ok0 = %.5f, Or0 = %.5f. This can happen in re-collapsing cosmologies, for example.' \
+		t_array, _ = utilities.getArray(t)
+		if np.any(t_array < 0.0):
+			raise Exception('Found negative root in E(z) function at z = %.4f with Om0 = %.5f, Ode0 = %.5f, Ok0 = %.5f, Or0 = %.5f. This case is not implemented in Colossus but can happen in re-collapsing cosmologies, for example.' \
 						% (z, self.Om0, self.Ode0, self.Ok0, self.Or0))
 		E = np.sqrt(t)
 		
