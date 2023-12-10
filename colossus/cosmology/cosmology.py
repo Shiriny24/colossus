@@ -894,6 +894,11 @@ class Cosmology(object):
 			t += self.Ok0 * zp1**2
 		if self.relspecies:
 			t += self.Or0 * zp1**4
+
+		t_array, _ = utilities.getArray(t)
+		if np.any(t_array < 0.0):
+			raise Exception('Found negative root in E(z) function at z = %.4f with Om0 = %.5f, Ode0 = %.5f, Ok0 = %.5f, Or0 = %.5f. This case is not implemented in Colossus but can happen in re-collapsing cosmologies, for example.' \
+						% (z, self.Om0, self.Ode0, self.Ok0, self.Or0))
 		E = np.sqrt(t)
 		
 		return E
@@ -1037,6 +1042,13 @@ class Cosmology(object):
 			zp1_log_table = np.linspace(log_min, log_max, self.z_Nbins)
 			z_table = np.exp(zp1_log_table) - 1.0
 			x_table = func(z_table)
+			
+			if np.any(np.isnan(x_table)) or np.any(np.isinf(x_table)):
+				print('z values:')
+				print(z_table)
+				print('Function values:')
+				print(x_table)
+				raise Exception('Found nan/inf values in table %s (see values above).' % (table_name))
 			
 			self.storageUser.storeObject(table_name, np.array([zp1_log_table, x_table]))
 				

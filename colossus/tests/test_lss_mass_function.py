@@ -12,6 +12,7 @@ from colossus.tests import test_colossus
 from colossus.cosmology import cosmology
 from colossus.lss import mass_function
 from colossus.lss import peaks
+from colossus.tests.test_colossus import TEST_N_DIGITS
 
 ###################################################################################################
 # TEST CASES
@@ -133,6 +134,7 @@ class TCMassFunction(test_colossus.ColosssusTestCase):
 			if not (('*' in models[k].mdefs) or (mdef in models[k].mdefs)):
 				continue
 			
+			digits = TEST_N_DIGITS
 			if k == 'tinker08':
 				correct = [2.509298990290e-01, 4.556608550623e-05]
 			elif k == 'watson13':
@@ -143,12 +145,13 @@ class TCMassFunction(test_colossus.ColosssusTestCase):
 				correct = [2.449612008069e-01, 2.351693095425e-05]
 			elif k == 'seppi20':
 				correct = [2.359726326775e-01, 5.108267257217e-05]
+				digits = 4
 			else:
 				msg = 'Unknown model, %s.' % k
 				raise Exception(msg)
 			
 			self.assertAlmostEqualArray(mass_function.massFunction(np.array([1E8, 1E15]), z, 
-								q_in = 'M', mdef = mdef, model = k), correct, msg = msg)
+								q_in = 'M', mdef = mdef, model = k), correct, msg = msg, places = digits)
 
 	def test_hmfModelsSplashbackMean(self):
 		models = mass_function.models

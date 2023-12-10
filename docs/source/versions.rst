@@ -6,6 +6,14 @@ See below for a listing of the most important code and interface changes in Colo
 version 1.1.0. You can download older versions from the 
 `PyPi History <https://pypi.org/project/colossus/#history>`__ for Colossus.
 
+.. rubric:: Version 1.3.3 (released 12/10/2023)
+
+* Better error message when Colossus encouters recollapsing Universes (e.g., with high matter
+  density). These Universes pose a fundamental challenge to all redshift or scale-factor based
+  interpolation tables, since the x-axis in those tables becomes multi-valued. Such Universes
+  currently must be treated using their symmetry over the point where they begin to recollapse.
+* Various bug fixes.
+
 .. rubric:: Version 1.3.2 (released 07/30/2023)
 
 * Added documentation about errors stemming from the negative correlation function at large 
