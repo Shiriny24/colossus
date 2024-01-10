@@ -1387,7 +1387,9 @@ class Cosmology(object):
 		"""
 		The angular diameter distance to redshift z.
 		
-		The angular diameter distance is the transverse distance that, at redshift z, corresponds 
+		The angular diameter distance is the line-of-sight distance that allows us to compute the 
+		transverse size of an object as if in a non-expanding Universe. In other words, 
+		the angular diameter distance is the transverse distance that, at redshift z, corresponds 
 		to an angle of one radian. Note that the inverse is not available for this function 
 		because it is not strictly increasing or decreasing with redshift, making its inverse
 		multi-valued.
