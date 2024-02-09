@@ -29,7 +29,7 @@ from colossus.halo import concentration
 
 TEST_N_DIGITS_LOW = 4
 
-all_profs_inner = ['nfw', 'einasto', 'hernquist', 'dk14', 'diemer22', 'diemer22b']
+all_profs_inner = ['nfw', 'einasto', 'hernquist', 'dk14', 'diemer23', 'diemer23b']
 
 ###################################################################################################
 # TEST CASE: CREATE PROFILES WITH OUTER PROFILES MANUALLY AND AS COMPOSITE

@@ -1387,7 +1387,9 @@ class Cosmology(object):
 		"""
 		The angular diameter distance to redshift z.
 		
-		The angular diameter distance is the transverse distance that, at redshift z, corresponds 
+		The angular diameter distance is the line-of-sight distance that allows us to compute the 
+		transverse size of an object as if in a non-expanding Universe. In other words, 
+		the angular diameter distance is the transverse distance that, at redshift z, corresponds 
 		to an angle of one radian. Note that the inverse is not available for this function 
 		because it is not strictly increasing or decreasing with redshift, making its inverse
 		multi-valued.
@@ -1632,6 +1634,29 @@ class Cosmology(object):
 		"""
 			
 		return constants.RHO_CRIT_0_KPC3 * self.Or0 * (1.0 + z)**4
+
+	###############################################################################################
+	
+	def rho_k(self, z):
+		"""
+		The density of curvature in the universe at redshift z.
+		
+		While the meaning of the "density" of curvature is not easy to interpret, this term 
+		enters the Friedmann equations (for non-flat universes) just like all the other densities.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		z: array_like
+			Redshift; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		rho_curvature: array_like
+			The equivalent density of curvature in units of physical 
+			:math:`M_{\odot} h^2 / {\\rm kpc}^3`; has the same dimensions as ``z``.
+		"""
+			
+		return constants.RHO_CRIT_0_KPC3 * self.Ok0 * (1.0 + z)**2
 
 	###############################################################################################
 

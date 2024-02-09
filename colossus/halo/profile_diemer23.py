@@ -65,7 +65,7 @@ can easily be created with the :func:`~halo.profile_composite.compositeProfile` 
 	from colossus.halo import profile_composite
 	
 	cosmology.setCosmology('planck18')
-	p = profile_composite.compositeProfile('diemer22', outer_names = ['mean', 'infalling'],
+	p = profile_composite.compositeProfile('diemer23', outer_names = ['mean', 'infalling'],
 				M = 1E12, c = 10.0, z = 0.0, mdef = 'vir', pl_delta_1 = 10.0, pl_s = 1.5)
 
 With a single command, we have created a truncated exponential profile with two outer terms, 

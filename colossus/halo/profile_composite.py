@@ -97,9 +97,9 @@ def getProfileClass(name):
 		cls = profile_einasto.EinastoProfile
 	elif name == 'dk14':
 		cls = profile_dk14.DK14Profile
-	elif name == 'diemer22':
+	elif name == 'diemer23':
 		cls = profile_diemer23.ModelAProfile
-	elif name == 'diemer22b':
+	elif name == 'diemer23b':
 		cls = profile_diemer23.ModelBProfile
 	elif name == 'mean':
 		cls = profile_outer.OuterTermMeanDensity
