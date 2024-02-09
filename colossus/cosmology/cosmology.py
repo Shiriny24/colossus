@@ -1636,6 +1636,29 @@ class Cosmology(object):
 		return constants.RHO_CRIT_0_KPC3 * self.Or0 * (1.0 + z)**4
 
 	###############################################################################################
+	
+	def rho_k(self, z):
+		"""
+		The density of curvature in the universe at redshift z.
+		
+		While the meaning of the "density" of curvature is not easy to interpret, this term 
+		enters the Friedmann equations (for non-flat universes) just like all the other densities.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		z: array_like
+			Redshift; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		rho_curvature: array_like
+			The equivalent density of curvature in units of physical 
+			:math:`M_{\odot} h^2 / {\\rm kpc}^3`; has the same dimensions as ``z``.
+		"""
+			
+		return constants.RHO_CRIT_0_KPC3 * self.Ok0 * (1.0 + z)**2
+
+	###############################################################################################
 
 	def Om(self, z):
 		"""
