@@ -6,6 +6,10 @@ See below for a listing of the most important code and interface changes in Colo
 version 1.1.0. You can download older versions from the 
 `PyPi History <https://pypi.org/project/colossus/#history>`__ for Colossus.
 
+.. rubric:: Version 1.3.5 (released XX/XX/XXXX)
+
+* Added :func:`~cosmology.cosmology.Cosmology.kpcPerArcsec` function to cosmology.
+
 .. rubric:: Version 1.3.4 (released 02/09/2024)
 
 * Added :func:`~cosmology.cosmology.Cosmology.rho_k` function for density of curvature.
