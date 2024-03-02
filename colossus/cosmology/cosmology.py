@@ -1420,6 +1420,28 @@ class Cosmology(object):
 
 	###############################################################################################
 
+	def kpcPerArcsec(self, z):
+		"""
+		The size (in physical kpc) of an object subtending 1 arcsec at a given redshift.
+
+		Parameters
+		-------------------------------------------------------------------------------------------
+		z: array_like
+			Redshift; can be a number or a numpy array.
+
+		Returns
+		-------------------------------------------------------------------------------------------
+		size: array_like
+			The physical size in kpc (not kpc/h); has the same dimensions as ``z``.
+		"""
+
+		# The constant corresponds to (2 pi / 360) * 1000 / 3600
+		s = self.angularDiameterDistance(z) * 0.0048481368 / self.h
+		
+		return s
+
+	###############################################################################################
+
 	# This function is not interpolated because the distance modulus is not defined at z = 0.
 
 	def distanceModulus(self, z):
