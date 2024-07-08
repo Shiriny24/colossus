@@ -5,7 +5,7 @@
 #
 ###################################################################################################
 
-"""
+r"""
 This module is an implementation of the standard FLRW cosmology with a number of dark energy models
 including :math:`\Lambda CDM`, wCDM, and varying dark energy equations of state. The cosmology 
 object models the contributions from dark matter, baryons, curvature, photons, neutrinos, and 
